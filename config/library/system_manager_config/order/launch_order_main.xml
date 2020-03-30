@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+
+<!DOCTYPE launch_order [
+  <!ELEMENT launch_order (order*) >
+
+  <!ELEMENT  order (group+) >
+  <!ATTLIST order
+    oname       ID               #REQUIRED
+    fixed_group CDATA            "NULL"
+  >
+
+  <!ELEMENT  group EMPTY >
+  <!ATTLIST group
+    gname       CDATA            #REQUIRED
+    waittime    CDATA            "0"
+  >
+    
+  <!ENTITY launch_order_body SYSTEM   "launch_order_body.xml">
+]>
+
+<launch_order>
+  &launch_order_body;
+</launch_order>
