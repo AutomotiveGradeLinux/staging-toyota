@@ -1,0 +1,12 @@
+/*
+ * Resource Manager API
+ */
+
+INCLUDE <system_service/resm.h>
+
+RPC_Result RESM_ReqEvent(uint32_t ssnld, const RESM_REQ_EVENT_t* p_reqEvent);
+RPC_Result RESM_GetStatus(uint32_t ssnld, RESM_STATUS_t* p_status);
+RPC_Result RESM_SV_Open(const RESM_RSV_t* p_prim, uint32_t* p_ssnld);
+RPC_Result RESM_SV_Close(uint32_t ssnld);
+RPC_Result RESM_SV_ChkSsnId(uint32_t ssnld);
+
