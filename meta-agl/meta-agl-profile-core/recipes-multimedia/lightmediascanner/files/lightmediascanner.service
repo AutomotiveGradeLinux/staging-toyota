@@ -1,0 +1,12 @@
+[Unit]
+Description=Lightmediascanner (LMS)
+
+[Service]
+Type=dbus
+BusName=org.lightmediascanner
+SmackProcessLabel=User::App::agl-service-mediascanner
+ExecStart=/usr/bin/lightmediascannerd --startup-scan --db-path=/var/volatile/tmp/lightmediascannerd.db --directory=/media
+
+[Install]
+WantedBy=multi-user.target
+Alias=dbus-org.lightmediascanner.service

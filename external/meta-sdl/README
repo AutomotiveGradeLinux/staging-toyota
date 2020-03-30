@@ -1,0 +1,57 @@
+This README file contains information on the contents of the
+sdl layer.
+
+Please see the corresponding sections below for details.
+
+Dependencies
+============
+
+This layer depends on:
+
+  URI: git://git.yoctoproject.org/poky
+  branch: thud
+
+  URI: git://git.openembedded.org/meta-openembedded
+  branch: thud
+
+Patches
+=======
+
+Please send the pull request via github
+
+Maintainer: Phong Tran <tranmanphong@gmail.com>
+
+Table of Contents
+=================
+
+  I. Adding the sdl layer to your build
+ II. Misc
+
+
+I. Adding the sdl layer to your build
+=================================================
+
+In order to use this layer, you need to make the build system aware of
+it.
+
+Assuming the sdl layer exists at the top-level of your
+yocto build tree, you can add it to the build system by adding the
+location of the sdl layer to bblayers.conf, along with any
+other layers needed. e.g.:
+
+  $ source poky/oe-init-build-env build
+  $ bitbake-layers add-layer /path/to/meta-openembedded/meta-oe/
+  $ bitbake-layers add-layer /path/to/meta-openembedded/meta-networking/
+  $ bitbake-layers add-layer /path/to/meta-openembedded/meta-python/
+  $ bitbake-layers add-layer /path/to/meta-sdl/
+
+  configure in local.conf for install sdl-core
+  IMAGE_INSTALL_append = " sdl-core"
+  Use the systemd init manager (this layer only support systemd currently)
+  DISTRO_FEATURES_append = " systemd"
+  VIRTUAL-RUNTIME_init_manager = "systemd"
+
+II. Misc
+========
+
+More reference AGL (Automotive Grade Linux) and GDP (GENIVI Development Platform)

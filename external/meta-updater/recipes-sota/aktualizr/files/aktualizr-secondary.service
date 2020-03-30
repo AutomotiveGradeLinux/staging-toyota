@@ -1,0 +1,12 @@
+[Unit]
+Description=Aktualizr SOTA Client (UPTANE Secondary)
+After=network.target
+
+[Service]
+RestartSec=10
+Restart=always
+ExecStart=/usr/bin/aktualizr-secondary
+
+[Install]
+WantedBy=multi-user.target
+

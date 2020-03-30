@@ -1,0 +1,44 @@
+From 48c11b3d668383cb964fa41a73e6b666f30fea57 Mon Sep 17 00:00:00 2001
+From: Grigory Kletsko <grigory.kletsko@cogentembedded.com>
+Date: Tue, 13 Dec 2016 18:20:11 +0300
+Subject: [PATCH 7/7] Add call for setting fullscreen with IVI
+
+---
+ clients/toytoolkit.h | 3 +++
+ clients/window.c     | 6 ++++++
+ 2 files changed, 9 insertions(+)
+
+diff --git a/clients/toytoolkit.h b/clients/toytoolkit.h
+index 0f6145d..7058c41 100644
+--- a/clients/toytoolkit.h
++++ b/clients/toytoolkit.h
+@@ -444,6 +444,9 @@ window_set_fullscreen(struct window *window, int fullscreen);
+ void
+ window_set_fullscreen_at_output(struct window *window, int fullscreen, struct output *output);
+ 
++void
++window_set_fullscreen_hack(struct window *window, int fullscreen);
++
+ int
+ window_is_maximized(struct window *window);
+ 
+diff --git a/clients/window.c b/clients/window.c
+index d0e2ece..81fb674 100644
+--- a/clients/window.c
++++ b/clients/window.c
+@@ -4624,6 +4624,12 @@ window_set_fullscreen_at_output(struct window *window, int fullscreen, struct ou
+ 		zxdg_toplevel_v6_unset_fullscreen(window->xdg_toplevel);
+ }
+ 
++void
++window_set_fullscreen_hack(struct window *window, int fullscreen)
++{
++	window->fullscreen = fullscreen;
++}
++
+ int
+ window_is_maximized(struct window *window)
+ {
+-- 
+2.7.4
+

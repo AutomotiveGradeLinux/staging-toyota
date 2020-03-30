@@ -1,0 +1,16 @@
+# This file contains a list of recipe maintainers for meta-intel
+
+RECIPE_MAINTAINER_pn-core-image-rt = "Anuj Mittal <anuj.mittal@intel.com>"
+RECIPE_MAINTAINER_pn-core-image-rt-sdk = "Anuj Mittal <anuj.mittal@intel.com>"
+RECIPE_MAINTAINER_pn-gma500-gfx-check = "Anuj Mittal <anuj.mittal@intel.com>"
+RECIPE_MAINTAINER_pn-intel-gpu-tools = "Anuj Mittal <anuj.mittal@intel.com>"
+RECIPE_MAINTAINER_pn-intel-microcode = "Anuj Mittal <anuj.mittal@intel.com>"
+RECIPE_MAINTAINER_pn-core-image-minimal-initramfs = "Anuj Mittal <anuj.mittal@intel.com>"
+RECIPE_MAINTAINER_pn-iucode-tool = "Anuj Mittal <anuj.mittal@intel.com>"
+RECIPE_MAINTAINER_pn-intel-vaapi-driver = "Anuj Mittal <anuj.mittal@intel.com>"
+RECIPE_MAINTAINER_pn-libyami = "Anuj Mittal <anuj.mittal@intel.com>"
+RECIPE_MAINTAINER_pn-libyami-utils = "Anuj Mittal <anuj.mittal@intel.com>"
+RECIPE_MAINTAINER_pn-linux-intel = "Anuj Mittal <anuj.mittal@intel.com>"
+RECIPE_MAINTAINER_pn-linux-intel-rt = "Anuj Mittal <anuj.mittal@intel.com>"
+RECIPE_MAINTAINER_pn-thermald = "Anuj Mittal <anuj.mittal@intel.com>"
+RECIPE_MAINTAINER_pn-xf86-video-ast = "Anuj Mittal <anuj.mittal@intel.com>"
