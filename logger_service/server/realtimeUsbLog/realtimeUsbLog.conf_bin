@@ -1,0 +1,4 @@
+/usr/agl/bin|${OSW_reldbg}
+debug|dbg
+release|rel
+product|rel
