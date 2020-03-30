@@ -1,0 +1,11 @@
+<normal_shutdown>
+  <global_step>
+    <request_list>
+      <request svcid="TSKM_SVCID_TE_RESIDENT"      local_step="last" />
+     <!-- <request svcid="TSKM_SVCID_ACTIVITYMGR"      local_step="last" /> -->
+    </request_list>
+    
+    <next_trans_condition  cond="INI_TERMCOMP_TRANSIENT" />
+  </global_step>
+</normal_shutdown>
+

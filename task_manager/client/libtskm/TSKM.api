@@ -1,0 +1,9 @@
+INCLUDE <system_service/tskm.h>
+
+RPC_Result _TSKM_SvcCtl(TSKM_SVCID_t svcId,const TSKM_SVC_CTL_t* ctl);
+RPC_Result TSKM_SvcGetInfo(TSKM_SVCID_t svcId,TSKM_SVC_INFO_t* svcInfo);
+RPC_Result _TSKM_ErrorReboot(const TSKM_ERROR_REBOOT_t* p_info);
+RPC_Result TSKM_Reboot(const TSKM_RSV_t * p_rsv);
+RPC_Result TSKM_Logging(const TSKM_LOGGING_INFO_t* p_info);
+RPC_Result TSKM_SetWakeupOrder(const TSKM_WAKEUP_ORDER_t* p_order);
+

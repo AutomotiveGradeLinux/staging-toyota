@@ -1,0 +1,5 @@
+<vup_wakeup>
+  <global_step>
+    <next_trans_condition  cond="INI_INITCOMP_NVM_ACCESS" />
+  </global_step>
+</vup_wakeup>
