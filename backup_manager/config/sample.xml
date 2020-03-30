@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<backup>
+  <category name="NandUnsync" nand="true" cacheDram="true" sync="false">
+    <item name="NandUnsync_001" id="1000" size="4491"/>
+    <item name="NandUnsync_002" id="1001" size="18752"/>
+  </category>
+  <category name="NandCycle" nand="true" cacheDram="true" sync="false" backupCycle="30">
+    <item name="NandCycle_001" id="2000" size="32231"/>
+    <item name="NandCycle_002" id="2001" size="8353"/>
+  </category>
+  <category name="NandSync" nand="true" cacheDram="false" sync="true">
+    <item name="NandSync_001" id="3000" size="25120"/>
+    <item name="NandSync_002" id="3001" size="18187"/>
+  </category>
+  <category name="BackupOnly" backupDram="true">
+    <item name="BackupOnly_001" id="4000" size="657"/>
+    <item name="BackupOnly_002" id="4001" size="526"/>
+  </category>
+  <category name="CacheOnly" cacheDram="true">
+    <item name="CacheOnly_001" id="5000" size="8694"/>
+    <item name="CacheOnly_002" id="5001" size="2051"/>
+  </category>
+</backup>

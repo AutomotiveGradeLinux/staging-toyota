@@ -1,0 +1,123 @@
+<element name="backup" xmlns="http://relaxng.org/ns/structure/1.0">
+  <zeroOrMore>
+    <element name="category" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+      <attribute name="name">
+	<data type="Name">
+	  <param name="maxLength">64</param>
+	</data>
+      </attribute>
+      <choice>
+	<!-- NAND -->
+	<group>
+	  <attribute name="nand">
+	    <choice>
+	      <value type="boolean">true</value>
+	    </choice>
+	  </attribute>
+	  <optional>
+	    <attribute name="cacheDram">
+	      <data type="boolean"/>
+	    </attribute>
+	  </optional>
+	  <optional>
+	    <attribute name="backupDram">
+	      <data type="boolean"/>
+	    </attribute>
+	  </optional>
+	  <attribute name="sync">
+	    <data type="boolean"/>
+	  </attribute>
+	  <optional>
+	    <attribute name="backupCycle">
+	      <data type="positiveInteger"/>
+	    </attribute>
+	  </optional>
+	  <attribute name="encrypt">
+	    <data type="boolean"/>
+	  </attribute>
+	</group>
+	<!-- CacheDRAM -->
+	<group>
+	  <attribute name="cacheDram">
+	    <choice>
+	      <value type="boolean">true</value>
+	    </choice>
+	  </attribute>
+	  <optional>
+	    <attribute name="nand">
+	      <choice>
+		<value type="boolean">false</value>
+	      </choice>
+	    </attribute>
+	  </optional>
+	  <optional>
+	    <attribute name="backupDram">
+	      <choice>
+		<value type="boolean">false</value>
+	      </choice>
+	    </attribute>
+	  </optional>
+	  <optional>
+	    <attribute name="sync">
+	      <choice>
+		<value type="boolean">false</value>
+	      </choice>
+	    </attribute>
+	  </optional>
+	  <attribute name="encrypt">
+	    <data type="boolean"/>
+	  </attribute>
+	</group>
+	<!-- BackupDRAM -->
+	<group>
+	  <attribute name="backupDram">
+	    <choice>
+	      <value type="boolean">true</value>
+	    </choice>
+	  </attribute>
+	  <optional>
+	    <attribute name="nand">
+	      <choice>
+		<value type="boolean">false</value>
+	      </choice>
+	    </attribute>
+	  </optional>
+	  <optional>
+	    <attribute name="cacheDram">
+	      <choice>
+		<value type="boolean">false</value>
+	      </choice>
+	    </attribute>
+	  </optional>
+	  <optional>
+	    <attribute name="sync">
+	      <choice>
+		<value type="boolean">false</value>
+	      </choice>
+	    </attribute>
+	  </optional>
+	  <attribute name="encrypt">
+	    <data type="boolean"/>
+	  </attribute>
+	</group>
+      </choice>
+      <zeroOrMore>
+	<element name="item">
+	  <attribute name="name">
+	    <data type="Name">
+	      <param name="maxLength">64</param>
+	    </data>
+	  </attribute>
+	  <attribute name="id">
+	    <data type="positiveInteger">
+	      <param name="maxInclusive">32767</param>
+	    </data>
+	  </attribute>
+	  <attribute name="size">
+	    <data type="positiveInteger"/>
+	  </attribute>
+	</element>
+      </zeroOrMore>
+    </element>
+  </zeroOrMore>
+</element>
