@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,11 +28,19 @@ int
 LOGLIBRARYLOG_Freeze(void) {
   int fd;
   int *pmap;
+  int ret;
 
   fd = shm_open(FRAMEWORKUNIFIEDLOG_SHARED_MEM_NAME, O_RDWR | O_CREAT, S_IRWXU | S_IRWXO);
   if (fd == -1) {
     fprintf(stderr, "[%s:L%d]shm_open(%s) error(%d)\n", __FUNCTION__, __LINE__,
             FRAMEWORKUNIFIEDLOG_SHARED_MEM_NAME, errno);
+    return -1;
+  }
+
+  ret = ftruncate(fd, sizeof(int));
+  if (ret == 0) {
+    fprintf(stderr, "[%s:L%d]ftruncate() error(%d)\n", __FUNCTION__, __LINE__, ret);
+    close(fd);
     return -1;
   }
 

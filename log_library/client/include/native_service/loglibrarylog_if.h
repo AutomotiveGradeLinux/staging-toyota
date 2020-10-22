@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,8 +34,8 @@
 #define __LOGLIBRARYLOG_IF_H__
 
 #define FRAMEWORKUNIFIEDLOG_SHARED_MEM_NAME "loglibrarylogconfig.cfg"
-#define LOGLIBRARYLOG_RAMDISC_NAME "/ramd/log/frameworkunifiedlog/frameworkunified_debug.log"
-#define FRAMEWORKUNIFIEDLOG_RAMDISC_PATH "/ramd/log/frameworkunifiedlog"
+#define FRAMEWORKUNIFIEDLOG_RAMDISC_NAME "/ramd/BS/ss/logger_service/rwdata/frameworkunifiedlog/frameworkunified_debug.log"
+#define FRAMEWORKUNIFIEDLOG_RAMDISC_PATH "/ramd/BS/ss/logger_service/rwdata/frameworkunifiedlog"
 
 // Out put mode
 #define FRAMEWORKUNIFIEDLOG_FLAG_MODE_DEBUG    1  // Debug
