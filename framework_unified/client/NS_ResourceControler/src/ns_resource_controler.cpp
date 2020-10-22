@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,6 +63,10 @@ static frameworkunifiedResource *frameworkunifiedSearchResourse(const char *mod,
 int frameworkunifiedGetResource(const char *mod, const char *key, long *resource) {  // NOLINT  (readability/nolint)
   frameworkunifiedResource *r = frameworkunifiedSearchResourse(mod, key);
   if (r == NULL) {
+    return -1;
+  }
+  if (resource == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "resource is NULL");
     return -1;
   }
   *resource = r->resource;

@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@
 #include <other_service/strlcat.h>
 
 const UI_32 DEFAULT_MSG_PRIORITY  = 10;
-const UI_32 MAX_MESSAGES_STORED_IN_QUEUE = 128;
+const UI_32 MAX_MESSAGES_STORED_IN_QUEUE = 256;
 const UI_32 MAX_SYNC_RESPONSE_STORED_IN_QUEUE = 2;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

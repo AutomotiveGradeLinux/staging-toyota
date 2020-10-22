@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,6 +69,9 @@ typedef enum _NStoSS_LOGGERSERVICEPROTOCOL {
   SS_MSG_LOGGER_CNT_EVTLOG    // NS to event logger thread
 } NStoSS_loggerserviceprotocol;
 
+// Note: Don't remove #paragma pack(1) this is required for the
+// ARM processor, forces data structures to be on a byte boundary
+// all messages should be place in between #pragma pack(1) and #pragma pack()
 #pragma pack(1)
 typedef struct _stLogEvent_ {
   UI_32 ts;

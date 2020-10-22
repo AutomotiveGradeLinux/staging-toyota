@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -459,6 +459,14 @@ class CPassThruInDataHandler {
   ////////////////////////////////////////////////////////////////////////////////////////////////
   EFrameworkunifiedStatus GetBuffer(UI_8 *&f_pui8Buffer, UI_16 &f_ui16BufLength) {
     EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
+    if (f_pui8Buffer == NULL) {
+      FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "f_pui8Buffer is NULL");
+      return eFrameworkunifiedStatusNullPointer;
+    }
+    if (m_pui8CurOffset == NULL) {
+      FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "m_pui8CurOffsetis NULL");
+      return eFrameworkunifiedStatusNullPointer;
+    }
     if (m_ui16RemainingLength >= SIZE_OF_PASSTHRU_PARAM_BUFFERTYPE_HEADER) {
       if (0xB == *m_pui8CurOffset) {  // check if the corresponding data is of type buffer
         m_pui8CurOffset++;
@@ -513,6 +521,10 @@ class CPassThruInDataHandler {
   ////////////////////////////////////////////////////////////////////////////////////////////////
   EFrameworkunifiedStatus GetArrayCount(UI_16 &f_ui16NoOfArrayElements) {
     EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
+    if (m_pui8CurOffset == NULL) {
+      FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "m_pui8CurOffsetis NULL");
+      return eFrameworkunifiedStatusNullPointer;
+    }
     if (m_ui16RemainingLength >= SIZE_OF_PASSTHRU_PARAM_BUFFERTYPE_HEADER) {
       if (0xC == *m_pui8CurOffset) {  // check if the corresponding data is of type array
         m_pui8CurOffset++;
@@ -537,6 +549,7 @@ class CPassThruInDataHandler {
   // template <class DataType>
   // EFrameworkunifiedStatus GetValue(DataType& f_dtOutValue);
 
+
   /*
    *  \return -
    *  eFrameworkunifiedStatusFail - no sufficient data is available
@@ -545,6 +558,10 @@ class CPassThruInDataHandler {
    */
   template <class DataType>
   EFrameworkunifiedStatus GetValue(DataType &l_dtOutValue) {
+    if (m_pui8CurOffset == NULL) {
+      FRAMWEORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "m_pui8CurOffsetis NULL");
+      return eFrameworkunifiedStatusNullPointer;
+    }
     EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
     if (m_ui16RemainingLength >= (sizeof(DataType) + SIZE_OF_PASSTHRU_DATATYPE_IDENTIFIER)) {
       if ((0x1 <= *m_pui8CurOffset) && (*m_pui8CurOffset <= 0x9))  // Get value is applicable only for basic types,
@@ -1000,6 +1017,10 @@ class CPassThruOutDataHandler {
   EFrameworkunifiedStatus SetBuffer(UI_8 *f_pui8Buffer, UI_16 f_ui16BufLength) {
     EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
     // TODO: add error check for resize operation
+    if (f_pui8Buffer == NULL) {
+      FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "f_pui8Buffer is NULL");
+      return eFrameworkunifiedStatusNullPointer;
+    }
     m_ui16TotalLength = static_cast<UI_16>(m_ui16TotalLength + f_ui16BufLength + SIZE_OF_PASSTHRU_PARAM_BUFFERTYPE_HEADER);
     m_vui8Data.resize(m_ui16TotalLength);
     *static_cast<UI_8 *>(static_cast<PVOID>(&m_vui8Data[m_ui16CurOffset])) = 0xB;

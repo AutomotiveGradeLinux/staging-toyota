@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -896,7 +896,7 @@ EFrameworkunifiedStatus CFrameworkunifiedHSMParentFramework::CsFrameworkunifiedR
   try {
     HANDLE l_pHApp = FrameworkunifiedGetAppHandle();
     CHKNULL(l_pHApp);
-    if (FrameworkunifiedIsAutoPublishServiceAvailableEnabled()) {
+    if (FrameworkunifiedIsAutoPublishServiceAvailableEnabled()) {  // LCOV_EXCL_BR_LINE 11:Excluded due to gcov constraints (others)
       // Publish Service available this can also be published from FrameworkunifiedOnStart callback
       if (eFrameworkunifiedStatusOK != (FrameworkunifiedPublishServiceAvailability(l_pHApp, TRUE))) {
         FRAMEWORKUNIFIEDLOG(ZONE_NS_WAR, __FUNCTION__, "warning:Failed to Publish service availability notification:0x%x ",
@@ -929,7 +929,7 @@ EFrameworkunifiedStatus CFrameworkunifiedHSMParentFramework::CsFrameworkunifiedR
     HANDLE l_pHApp = FrameworkunifiedGetAppHandle();
     CHKNULL(l_pHApp);
 
-    if (FrameworkunifiedIsAutoPublishServiceAvailableEnabled()) {
+    if (FrameworkunifiedIsAutoPublishServiceAvailableEnabled()) {  // LCOV_EXCL_BR_LINE 11:Excluded due to gcov constraints (others)
       // Publish Service available this can also be published from FrameworkunifiedOnStart callback
       if (eFrameworkunifiedStatusOK != (FrameworkunifiedPublishServiceAvailability(l_pHApp, FALSE))) {
         FRAMEWORKUNIFIEDLOG(ZONE_NS_WAR, __FUNCTION__, "Warning:Failed to set service availability notification:0x%x ", l_eStatus);

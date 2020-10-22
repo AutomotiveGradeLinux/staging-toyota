@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -94,6 +94,10 @@ HANDLE McOpenSyncSender(PCSTR name) {
 
 static int mcSetMonitorName(char *str, PCSTR name) {
   int len;
+  if (str == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "str is NULL");
+    return -1;
+  }
   *str = '\0';
   len = sprintf(str + 1, "monitorS_%s", name != 0 ? name : NULL);
   return len + 1;
@@ -162,6 +166,10 @@ int mcCloseMonitor(PCSTR name) {
 
 static int mcSetClientName(char *str, PCSTR serverName, PCSTR clientName) {
   int len;
+  if (str == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "str is NULL");
+    return -1;
+  }
   *str = '\0';
   len = sprintf(str + 1, "monitorC_%s:%s", serverName != 0 ? serverName : NULL, clientName != 0 ? clientName : NULL);
   return len + 1;
@@ -208,6 +216,10 @@ error:
 
 int mcSetConnectKey(char *buf, size_t size, PCSTR serverName, PCSTR clientName) {
   int len = snprintf(buf, size, "%s:%s", serverName != 0 ? serverName : NULL, clientName != 0 ? clientName : NULL);
+  if (buf == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "buf is NULL");
+    return -1;
+  }
   buf[size - 1] = '\0';
   return len;
 }
@@ -252,6 +264,10 @@ int mcCloseConnectMonitor(PCSTR serverName, PCSTR clientName) {  // LCOV_EXCL_ST
 static void mcGetClientName(const char *str, char *client_name, size_t size, int pathlen) {
   size_t len = size - 1;
   size_t str_len;
+  if (str == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "str is NULL");
+    return;
+  }
   char *p_div = strchr(str + 1, ':');
   if (p_div == NULL) {
     return;
@@ -259,6 +275,10 @@ static void mcGetClientName(const char *str, char *client_name, size_t size, int
   str_len = (size_t)(pathlen - (p_div - str + 1));
   if (len > str_len) {
     len = str_len;
+  }
+  if (client_name == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "client_name is NULL");
+    return;
   }
   strncpy(client_name, p_div + 1, len);
   client_name[len] = '\0';
@@ -643,6 +663,10 @@ static inline char *ultoa(unsigned long value, char *buf, int radix) {
     *--p = c[value % (unsigned long)radix];
     value /= (unsigned long)radix;
   } while (value);
+  if (buf == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "buf is NULL");
+    return NULL;
+  }
   strcpy(buf, p);
 
   return buf;

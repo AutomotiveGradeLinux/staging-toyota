@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -115,7 +115,9 @@ typedef enum _NS_LOGGER_METHODS {
   LSLOGGER  = 0x04,   /// <Disabled
   LSHAREDMEM  = 0x08    /// <Output to shared memory. this is the default logging method.
 } NS_LoggingMethod_t;
-
+// Note: Don't remove #paragma pack(1) this is required for the
+// ARM processor, forces data structures to be on a byte boundary
+// all messages should be place in between #pragma pack(1) and #pragma pack()
 #pragma pack(1)        // *** DO NOT REMOVE ***
 
 typedef struct tag_Change_Log_Parameters {
@@ -162,7 +164,7 @@ typedef struct _TNS_EnableRcsLogging {
 ///         None
 /// \~english @par Conditions of processing failure
 ///       - Real-time log output switch can be turn on by NsLogSetRealtimeLog() generally.
-///         But in case of FRAMEWORKUNIFIEDLOG_REALTIMELOG_MODE_FREEZE real-time log and/ramd/log/frameworkunifiedlog /will not print out
+///         But in case of FRAMEWORKUNIFIEDLOG_REALTIMELOG_MODE_FREEZE real-time log and/ramd/BS/ss/logger_service/rwdata/frameworkunifiedlog /will not print out
 /// \~~english @par
 ///       - in the following conditions,real-time log will not print out:
 ///        - log output way is LPRINT but f_uiZoneIndex parameter is in [96 to 127]
@@ -185,7 +187,7 @@ typedef struct _TNS_EnableRcsLogging {
 ///        - log output way is LPRINT,real-time log output setting is
 ///          FRAMEWORKUNIFIEDLOG_REALTIMELOG_MODE_USB_DISABLE
 /// \~english @par
-///        in the following conditions /ramd/log/frameworkunifiedlog/ log can not be print out
+///        in the following conditions /ramd/BS/ss/logger_service/rwdata/frameworkunifiedlog/ log can not be print out
 ///        - log file for parameter f_uiZoneIndex and
 ///          log file for parameter FrameworkunifiedLogFlagId which is set by FRAMEWORKUNIFIEDLOG parameter can not be found
 ///        - the ring_buffer of log file(log file for FrameworkunifiedLogFlagId which is set by FRAMEWORKUNIFIEDLOG parameter when
@@ -233,7 +235,7 @@ __attribute__((format(printf, 4, 5)))
 ///        None
 /// \~english @par Conditions of processing failure
 ///       - Real-time log output switch can be turn on by NsLogSetRealtimeLog() generally.
-///         But in case of FRAMEWORKUNIFIEDLOG_REALTIMELOG_MODE_FREEZE real-time log and/ramd/log/frameworkunifiedlog /will not print out
+///         But in case of FRAMEWORKUNIFIEDLOG_REALTIMELOG_MODE_FREEZE real-time log and/ramd/BS/ss/logger_service/rwdata/frameworkunifiedlog /will not print out
 /// \~~english @par
 ///       - in the following conditions,real-time log will not print out:
 ///        - log output way is LPRINT but f_uiZoneIndex parameter is in [96 to 127]
@@ -256,7 +258,7 @@ __attribute__((format(printf, 4, 5)))
 ///        - log output way is LPRINT,real-time log output setting is
 ///          FRAMEWORKUNIFIEDLOG_REALTIMELOG_MODE_USB_DISABLE
 /// \~english @par
-///        in the following conditions /ramd/log/frameworkunifiedlog/ log can not be print out
+///        in the following conditions /ramd/BS/ss/logger_service/rwdata/frameworkunifiedlog/ log can not be print out
 ///        - log file for parameter f_uiZoneIndex and
 ///          log file for parameter FrameworkunifiedLogFlagId which is set by FRAMEWORKUNIFIEDLOG parameter can not be found
 ///        - the ring_buffer of log file(log file for FrameworkunifiedLogFlagId which is set by FRAMEWORKUNIFIEDLOG parameter when
@@ -293,7 +295,7 @@ void NsLog0(const UI_16 p_lLine_i,        // Line number where message was gener
 ///       None
 /// \~english @par Conditions of processing failure
 ///       - Real-time log output switch can be turn on by NsLogSetRealtimeLog() generally.
-///         But in case of FRAMEWORKUNIFIEDLOG_REALTIMELOG_MODE_FREEZE real-time log and/ramd/log/frameworkunifiedlog /will not print out
+///         But in case of FRAMEWORKUNIFIEDLOG_REALTIMELOG_MODE_FREEZE real-time log and/ramd/BS/ss/logger_service/rwdata/frameworkunifiedlog /will not print out
 /// \~~english @par
 ///       - in the following conditions,real-time log will not print out:
 ///        - log output way is LPRINT but f_uiZoneIndex parameter is in [96 to 127]
@@ -316,7 +318,7 @@ void NsLog0(const UI_16 p_lLine_i,        // Line number where message was gener
 ///        - log output way is LPRINT,real-time log output setting is
 ///          FRAMEWORKUNIFIEDLOG_REALTIMELOG_MODE_USB_DISABLE
 /// \~english @par
-///        in the following conditions /ramd/log/frameworkunifiedlog/ log can not be print out
+///        in the following conditions /ramd/BS/ss/logger_service/rwdata/frameworkunifiedlog/ log can not be print out
 ///        - log file for parameter f_uiZoneIndex and
 ///          log file for parameter FrameworkunifiedLogFlagId which is set by FRAMEWORKUNIFIEDLOG parameter can not be found
 ///        - the ring_buffer of log file(log file for FrameworkunifiedLogFlagId which is set by FRAMEWORKUNIFIEDLOG parameter when
@@ -364,7 +366,7 @@ void NsLogTime(const UI_16 f_uiZoneIndex,
 /// \~english @par Detail
 ///         the difference bewteen NsLog and NsLogData:
 ///        - NsLog()will print out real-time log
-///          NsLogData() will not print out real-time log but noly print out logs under /ramd/log/frameworkunifiedlog/
+///          NsLogData() will not print out real-time log but noly print out logs under /ramd/BS/ss/logger_service/rwdata/frameworkunifiedlog/
 ///        - NsLog() will add ZoneIndex, process name, real-time info to log but
 ///          NsLogData() only print out log
 /// \~english @par Classification
@@ -759,9 +761,9 @@ EFrameworkunifiedStatus NsLogGetFrameworkunifiedLogFlag(UI_8 flag_id, UI_8 *mode
 /// \~english @par Detail
 ///        set the real-time log output using the setting value.\n
 ///        need to reboot during ROM start in order to switch to Ethernet output\n
-///        /nv_system/frameworkunifiedlog.ether file will be generated
-///        when mode FRAMEWORKUNIFIEDLOG_REALTIMELOG_MODE_ETHER /nv_system/frameworkunifiedlog.ether\n
-///        and /nv_system/frameworkunifiedlog.ether file will be delated when mode is not FRAMEWORKUNIFIEDLOG_REALTIMELOG_MODE_ETHER
+///        /nv/BS/ns/framework_unified/rwdata/frameworkunifiedlog.ether file will be generated
+///        when mode FRAMEWORKUNIFIEDLOG_REALTIMELOG_MODE_ETHER /nv/BS/ns/framework_unified/rwdata/frameworkunifiedlog.ether\n
+///        and /nv/BS/ns/framework_unified/rwdata/frameworkunifiedlog.ether file will be delated when mode is not FRAMEWORKUNIFIEDLOG_REALTIMELOG_MODE_ETHER
 /// \~english @par Classification
 ///        Public
 /// \~english @par Type

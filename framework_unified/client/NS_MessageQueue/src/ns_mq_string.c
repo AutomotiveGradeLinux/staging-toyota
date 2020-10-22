@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,17 @@
  */
 
 #include <string.h>
+#include <native_service/ns_logger_if.h>
 
 size_t strlcpy(char *dst, const char *src, size_t siz) {
+  if (dst == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "dst is NULL");
+    return 0;
+  }
+  if (src == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "src is NULL");
+    return 0;
+  }
   size_t ret = strlen(src);
 
   if (siz) {
@@ -28,6 +37,14 @@ size_t strlcpy(char *dst, const char *src, size_t siz) {
 }
 
 size_t strlcat(char *dst, const char *src, size_t siz) {
+  if (dst == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "dst is NULL");
+    return 0;
+  }
+  if (src == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "src is NULL");
+    return 0;
+  }
   size_t dsiz = strlen(dst);
   size_t len = strlen(src);
   size_t res = dsiz + len;

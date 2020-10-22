@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -269,7 +269,7 @@ EFrameworkunifiedStatus FrameworkunifiedCreateDispatcher(PCSTR cAppName, HANDLE 
 //////////////////////////////////////////
 EFrameworkunifiedStatus FrameworkunifiedDispatchBlock(HANDLE hApp) {
   EFrameworkunifiedStatus eStatus     = eFrameworkunifiedStatusOK;
-  FRAMEWORKUNIFIEDLOG0(ZONE_NS_DIS, __FUNCTION__, "+");
+//  FRAMEWORKUNIFIEDLOG0(ZONE_NS_DIS, __FUNCTION__, "+");
 
   if (frameworkunifiedCheckValidAppHandle(hApp)) {
     CFrameworkunifiedFrameworkApp *pApp = static_cast<CFrameworkunifiedFrameworkApp *>(hApp);
@@ -281,14 +281,14 @@ EFrameworkunifiedStatus FrameworkunifiedDispatchBlock(HANDLE hApp) {
       FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __FUNCTION__, "Error :: (%d) Failed on McReceive", eStatus);
       // LCOV_EXCL_BR_STOP
     } else {
-      FRAMEWORKUNIFIEDLOG(ZONE_NS_DIS, __FUNCTION__, "Message received on dispatcher:: Source: %s, Cmd: 0x%X, SessionId: %d ",
-             pApp->cMsgSrcName, pApp->uiProtocolCmd, pApp->uiSessionId);
+//      FRAMEWORKUNIFIEDLOG(ZONE_NS_DIS, __FUNCTION__, "Message received on dispatcher:: Source: %s, Cmd: 0x%X, SessionId: %d ",
+//             pApp->cMsgSrcName, pApp->uiProtocolCmd, pApp->uiSessionId);
     }
   } else {
     eStatus = eFrameworkunifiedStatusInvldHandle;
   }
 
-  FRAMEWORKUNIFIEDLOG0(ZONE_NS_DIS, __FUNCTION__, "-");
+//  FRAMEWORKUNIFIEDLOG0(ZONE_NS_DIS, __FUNCTION__, "-");
   return eStatus;
 }
 
@@ -442,14 +442,18 @@ static void frameworkunifiedPrintRusage(HANDLE hApp, const struct rusage &start,
     pApp->max_occupy_time = occupy_time;
   }
 
-  FRAMEWORKUNIFIEDLOG(ZONE_NS_DEBUG_DUMP, __FUNCTION__, "cur:%d.%06d avg:%d.%06d max:%d.%06d",
-         occupy_time / 1000000, occupy_time % 1000000,
-         average / 1000000, average % 1000000,
-         pApp->max_occupy_time / 1000000, pApp->max_occupy_time % 1000000);
+//  FRAMEWORKUNIFIEDLOG(ZONE_NS_DEBUG_DUMP, __FUNCTION__, "cur:%d.%06d avg:%d.%06d max:%d.%06d",
+//         occupy_time / 1000000, occupy_time % 1000000,
+//         average / 1000000, average % 1000000,
+//         pApp->max_occupy_time / 1000000, pApp->max_occupy_time % 1000000);
 }
 
 
 static inline void frameworkunifiedGetRusage(struct rusage *r) {
+  if (r == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "r is NULL");
+    return;
+  }
   memset(r, 0, sizeof(struct rusage));
   if (getrusage(RUSAGE_THREAD, r) == -1) {
     // LCOV_EXCL_BR_START 15:marco defined in "native_service/ns_logger_if.h"
@@ -820,10 +824,10 @@ EFrameworkunifiedStatus FrameworkunifiedDispatchProcess(HANDLE hApp) {
       FrameworkunifiedClearMsgData(hApp);
       eStatus = eFrameworkunifiedStatusOK;
     } else {
-      FRAMEWORKUNIFIEDLOG(ZONE_NS_DIS, __FUNCTION__, "Message processed. Status (0x%X) ::"
-             " Source: %s Command: 0x%x  SessionId: %d.",
-             eStatus, pApp->cMsgSrcName != 0 ? pApp->cMsgSrcName : NULL,
-             pApp->uiProtocolCmd, pApp->uiSessionId);
+//      FRAMEWORKUNIFIEDLOG(ZONE_NS_DIS, __FUNCTION__, "Message processed. Status (0x%X) ::"
+//             " Source: %s Command: 0x%x  SessionId: %d.",
+//             eStatus, pApp->cMsgSrcName != 0 ? pApp->cMsgSrcName : NULL,
+//             pApp->uiProtocolCmd, pApp->uiSessionId);
     }
 
     if (enable_rusage == TRUE) {
@@ -1367,6 +1371,10 @@ EFrameworkunifiedStatus FrameworkunifiedDestroyDispatcherWithoutLoop(HANDLE hApp
 }
 
 static EFrameworkunifiedStatus GetDispatcherMqFD(HANDLE hApp, int *fd) {
+  if (fd == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "fd is NULL");
+    return eFrameworkunifiedStatusNullPointer;
+  }
   EFrameworkunifiedStatus eStatus = eFrameworkunifiedStatusOK;
 
   if (frameworkunifiedCheckValidAppHandle(hApp)) {

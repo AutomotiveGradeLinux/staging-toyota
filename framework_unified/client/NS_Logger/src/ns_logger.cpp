@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,6 @@
 #include <native_service/ns_logger_if.h>
 #include <native_service/ns_eventlogger.h>
 #include <native_service/cl_lockid.h>
-#include <other_service/VP_GetEnv.h>
 
 #ifdef AGL_STUB
 #include <other_service/strlcat.h>
@@ -107,9 +106,11 @@ FRAMEWORKUNIFIEDLOGSYSEVENTPARAM g_FrameworkunifiedLogSysEventParams = {FALSE}; 
 #define ZONEMASK_MAX BITS_IN_TZONE  // ((UI_32)(BITS_IN_TZONE * TZONE_COUNT))
 
 #define FRAMEWORKUNIFIEDLOG_DEFAULT_FLAG_ID (0)
-#define FRAMEWORKUNIFIEDLOG_CONFIG__CWORD84__FN "/usr/agl/conf/ns_logger/ns_logger_frameworkunifiedlog__CWORD84_.cfg"
+#define FRAMEWORKUNIFIEDLOG_CONFIG__CWORD84__FN "/usr/agl/conf/BS/ns/framework_unified/rodata/ns_logger_frameworkunifiedlog__CWORD84_.cfg"
 #define FRAMEWORKUNIFIEDLOG_CONFIG__CWORD84__TMP "ns_logger_frameworkunifiedlog__CWORD84_.tmp"
 #define FRAMEWORKUNIFIEDLOG_CONFIG__CWORD84__NV "ns_logger_frameworkunifiedlog__CWORD84_.cfg"
+
+#define FRAMEWORKUNIFIEDLOG_CONFIG_NV "/nv/BS/ns/framework_unified/rwdata/"
 
 #define FRAMEWORKUNIFIEDLOG_CONFIG_TMP_NV "ns_logger_frameworkunifiedlog_tmp.cfg"
 #ifndef TN_LOGGERRTIME
@@ -148,8 +149,7 @@ static UI_32 g_FrameworkunifiedLogFlagId = FRAMEWORKUNIFIEDLOG_DEFAULT_FLAG_ID;
 static bool g_FrameworkunifiedLogFlagRealTimeLog = TRUE;
 pthread_mutex_t FrameworkunifiedLogMtx = PTHREAD_MUTEX_INITIALIZER;
 
-#define ENABLE_DEBUG_SYSLOG 1
-#if ENABLE_DEBUG_SYSLOG  // for FRAMEWORKUNIFIED_SET_ZONES() error
+#ifdef ENABLE_DEBUG_SYSLOG  // for FRAMEWORKUNIFIED_SET_ZONES() error
 #define DEB_SYSLOG(fmt, ...) {openlog(0, LOG_PID, LOG_USER); \
   syslog(LOG_ERR, "[FRAMEWORKUNIFIEDLOG][ERR]EXE_LINK_PATH(%s)[%s:L%d] " fmt, exe_link_path, \
     __FUNCTION__, __LINE__, ## __VA_ARGS__); \
@@ -160,6 +160,10 @@ pthread_mutex_t FrameworkunifiedLogMtx = PTHREAD_MUTEX_INITIALIZER;
 
 static UI_32
 GetFrameworkunifiedLogRealtimeUartOutput(CNSConfigReader *cfg_reader) {
+  if (cfg_reader == NULL) {
+    return -1;
+  }
+
   std::string output_str = cfg_reader->GetString("REALTIME_LOG.Output");  // LCOV_EXCL_BR_LINE 11:expect branch
 
   if (output_str.compare("UART") == 0) {
@@ -182,6 +186,10 @@ GetFrameworkunifiedLogZoneFileInfo(CNSConfigReader *cfg_reader, std::string &nam
   zone_filesize_key.append(".FileSizeMax");
   std::string zone_force_output_key = name;  // LCOV_EXCL_BR_LINE 11:expect branch
   zone_force_output_key.append(".ForceOutput");
+
+  if (cfg_reader == NULL) {
+    return eFrameworkunifiedStatusNullPointer;
+  }
 
   tbl.ring_buffer = NULL;
   tbl.file_name = cfg_reader->GetString(zone_filename_key);
@@ -207,6 +215,9 @@ GetFrameworkunifiedLogFlagFileInfo(CNSConfigReader *cfg_reader, std::string &nam
   std::string flag_real_time_log_key = name;
   flag_real_time_log_key.append(".Realtimelog");
 
+  if (cfg_reader == NULL) {
+    return eFrameworkunifiedStatusNullPointer;
+  }
 
   tbl.ring_buffer = NULL;
   tbl.file_name = cfg_reader->GetString(flag_filename_key);  // LCOV_EXCL_BR_LINE 11:expect branch
@@ -234,6 +245,10 @@ GetFrameworkunifiedLogFlagFileInfo(CNSConfigReader *cfg_reader, std::string &nam
 static VOID
 GetFrameworkunifiedLogList(CNSConfigReader *cfg_reader, std::vector<std::string> &list,  // NOLINT  (readability/nolint)
               std::string req_list) {
+  if (cfg_reader == NULL) {
+    return;
+  }
+
   std::string list_str = cfg_reader->GetString(req_list);
   if (!list_str.empty()) {
     try {
@@ -267,6 +282,10 @@ IsDefinedFrameworkunifiedLogFlag(CNSConfigReader *cfg_reader, std::string &flag_
                     std::string &exe_name) {  // NOLINT  (readability/nolint)
   UI_32 cnt = 1;
   size_t pos1;
+
+  if (cfg_reader == NULL) {
+    return FALSE;
+  }
 
   while (1) {
     std::string service_key = flag_name;
@@ -378,6 +397,11 @@ CreateFrameworkunifiedLogFileTbl(CNSConfigReader *cfg_reader, std::string &exe_s
 static VOID
 GetFrameworkunifiedLogRingBuffer(const UI_16 zone, CNSRingBuffer **ring_buf) {
   TFrameworkunifiedLogMap::iterator itr = g_FrameworkunifiedLogMap.find(zone);
+
+  if (ring_buf == NULL) {
+    return;
+  }
+
   if (itr == g_FrameworkunifiedLogMap.end()) {
     itr = g_FrameworkunifiedLogFlagMap.find(g_FrameworkunifiedLogFlagId);
     if (itr == g_FrameworkunifiedLogFlagMap.end()) {
@@ -443,6 +467,10 @@ static inline void
 GetShmInfo(int flagId, int *realTimeLog, int *logLevel) {
   volatile ssize_t *p;
 
+  if ((realTimeLog == NULL) || (logLevel == NULL)) {
+    return;
+  }
+
   p = static_cast<ssize_t *>(shm_pmap);
   *realTimeLog = static_cast<int>(p[0]);
   p += 2;
@@ -461,6 +489,10 @@ static BOOL
 NsLogIsZonePrintEnable(const UI_16 zone, UI_8 *mode) {
   int l_realTimeLog = FRAMEWORKUNIFIEDLOG_REALTIMELOG_MODE_OFF;
   int l_loglevel = FRAMEWORKUNIFIEDLOG_FLAG_MODE_RELEASE;
+
+  if (mode == NULL) {
+    return FALSE;
+  }
 
   GetShmInfo(g_FrameworkunifiedLogFlagId, &l_realTimeLog, &l_loglevel);
   *mode = static_cast<UI_8>(l_realTimeLog);
@@ -540,13 +572,14 @@ copyFrameworkunifiedLogCfgFileToNv(void) {
   char c[1];
   ssize_t len;
 
-  std::string config_dirpath = PF_SYS_BS;
-  std::string config_tempname = PF_SYS_BS;  // LCOV_EXCL_BR_LINE 11:expect branch
-  std::string config_filename = PF_SYS_BS;  // LCOV_EXCL_BR_LINE 11:expect branch
-
+  // LCOV_EXCL_BR_START 11:Excluded due to gcov constraints (others)
+  std::string config_dirpath = FRAMEWORKUNIFIEDLOG_CONFIG_NV;
+  std::string config_tempname = FRAMEWORKUNIFIEDLOG_CONFIG_NV;
+  std::string config_filename = FRAMEWORKUNIFIEDLOG_CONFIG_NV;
   fd_in = open(FRAMEWORKUNIFIEDLOG_CONFIG__CWORD84__FN, O_RDONLY);
   config_tempname.append(FRAMEWORKUNIFIEDLOG_CONFIG__CWORD84__TMP);
   config_filename.append(FRAMEWORKUNIFIEDLOG_CONFIG__CWORD84__NV);
+  // LCOV_EXCL_BR_STOP 11:Excluded due to gcov constraints (others)
 
   if (fd_in == -1) {
     return;
@@ -718,9 +751,10 @@ WriteSharedMemForFlagId(int realTimeLog, unsigned int flagIdNum, int flagId,
 static BOOL
 IsExistFrameworkunifiedLogCfgNv(void) {
   FILE *fp;
-  std::string config_filename = PF_SYS_BS;
-
+  // LCOV_EXCL_BR_START 11:Excluded due to gcov constraints (others)
+  std::string config_filename = FRAMEWORKUNIFIEDLOG_CONFIG_NV;
   config_filename.append(FRAMEWORKUNIFIEDLOG_CONFIG__CWORD84__NV);
+  // LCOV_EXCL_BR_STOP 11:Excluded due to gcov constraints (others)
 
   fp = fopen(config_filename.c_str(), "re");
   if (fp == NULL) {
@@ -736,6 +770,10 @@ get_readlink_path(char *path) {
   CHAR exe_path[EXE_STR_LEN];
   CHAR buf[EXE_STR_LEN];
   ssize_t len;
+
+  if (path == NULL) {
+    return -1;
+  }
 
   path[0] = 0;
   if (exe_link_path[0] == 0) {
@@ -767,12 +805,14 @@ readConfig(int *realTimeLog, int **logLevelArray) {
     std::string config_filename;
     std::string exe_str = buf;  // LCOV_EXCL_BR_LINE 11:expect branch
 
+    // LCOV_EXCL_BR_START 11:Excluded due to gcov constraints (others)
     if (IsExistFrameworkunifiedLogCfgNv()) {
-      config_filename = PF_SYS_BS;
+      config_filename = FRAMEWORKUNIFIEDLOG_CONFIG_NV;
       config_filename.append(FRAMEWORKUNIFIEDLOG_CONFIG__CWORD84__NV);
     } else {
       config_filename = FRAMEWORKUNIFIEDLOG_CONFIG__CWORD84__FN;
     }
+    // LCOV_EXCL_BR_STOP 11:Excluded due to gcov constraints (others)
     CNSConfigReader *config_reader = new CNSConfigReader();  // LCOV_EXCL_BR_LINE 11:expect branch
     if (config_reader != NULL) {  // LCOV_EXCL_BR_LINE 5: new's error case
       if (config_reader->Parse(config_filename)
@@ -874,6 +914,11 @@ NSLogGetFrameworkunifiedlogIndex(PCSTR filename) {
 UI_32
 ConvertEndian(UI_32 *pvar) {
   UI_32 retVal = (UI_32)0;
+
+  if (pvar == NULL) {
+    return retVal;
+  }
+
   UI_32 var = *pvar;
   retVal = (((var & 0xFF000000) >> 24) |
             ((var & 0x00FF0000) >> 8) |
@@ -1032,6 +1077,10 @@ _in_NsLog_part1(const UI_16 p_lLine_i, const UI_16 f_uiZoneIndex,
   int len;
   CHAR *p = format;
 
+  if (format == NULL) {
+    return NULL;
+  }
+
   // fixed format : "%s%ld/%d/%s/%05d/%s/%d/=%s\r\n"
   // time_string
   _GetTimeString2(p);
@@ -1095,9 +1144,17 @@ static void
 _in_NsLog_part2(const UI_16 f_uiZoneIndex, CHAR *p, CHAR *format) {
   UI_32 l_uiLength;
 
+  if (p == NULL) {
+    return;
+  }
+
   *p++ = '\r';
   *p++ = '\n';
   *p = '\0';
+
+  if (format == NULL) {
+    return;
+  }
 
   l_uiLength = static_cast<UI_32>(p - format);
 
@@ -1274,16 +1331,20 @@ NsLogSetFrameworkunifiedLogParams(FRAMEWORKUNIFIEDLOGPARAM *p_FrameworkunifiedLo
   int *l_logLevelArray = NULL;
   CHAR buf[EXE_STR_LEN];
 
+  if (p_FrameworkunifiedLogParams == NULL) {
+    return;
+  }
+
   get_readlink_path(buf);
   if (g_flag_name.empty()) {  // LCOV_EXCL_BR_LINE 200:get_readlink_path can not return false
     std::string config_filename;
     CHAR buf[EXE_STR_LEN];
 
-    if (IsExistFrameworkunifiedLogCfgNv()) {
-      config_filename = PF_SYS_BS;
-      config_filename.append(FRAMEWORKUNIFIEDLOG_CONFIG__CWORD84__NV);
+    if (IsExistFrameworkunifiedLogCfgNv()) {  // LCOV_EXCL_BR_LINE 11:Excluded due to gcov constraints (others)
+      config_filename = FRAMEWORKUNIFIEDLOG_CONFIG_NV;  // LCOV_EXCL_BR_LINE 11:Excluded due to gcov constraints (others)
+      config_filename.append(FRAMEWORKUNIFIEDLOG_CONFIG__CWORD84__NV);  // LCOV_EXCL_BR_LINE 11:Excluded due to gcov constraints (others)
     } else {
-      config_filename = FRAMEWORKUNIFIEDLOG_CONFIG__CWORD84__FN;
+      config_filename = FRAMEWORKUNIFIEDLOG_CONFIG__CWORD84__FN;  // LCOV_EXCL_BR_LINE 11:Excluded due to gcov constraints (others)
     }
     if (get_readlink_path(buf)) {
       std::string exe_str = buf;  // LCOV_EXCL_BR_LINE 11:expect branch
@@ -1382,13 +1443,11 @@ NsLogGetControlMask(TFrameworkunifiedZoneMask p_Zonemask_i) {
 BOOL
 NsLogIsZoneSet(UI_32 set_zone) {
   int realTimeLog;
-  int logLevel;
+  int logLevel = 0;
 
   GetShmInfo(g_FrameworkunifiedLogFlagId, &realTimeLog, &logLevel);
-#pragma GCC diagnostic push  // for warning remove (compiler Bug?)
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+
   if (logLevel == FRAMEWORKUNIFIEDLOG_FLAG_MODE_DEBUG)
-#pragma GCC diagnostic pop
   {
     return TRUE;
   }
@@ -1505,6 +1564,10 @@ NsLogSetZones(UI_32 f_uiZoneCount, ...) {
 void
 NsLogParseZones(FRAMEWORKUNIFIEDLOGPARAM *p_FrameworkunifiedLogParams, UI_32 f_uiZoneCount, ...) {
   va_list l_tArguments;
+
+  if (p_FrameworkunifiedLogParams == NULL) {
+    return;
+  }
 
   // Initialize the variable argument list
   va_start(l_tArguments, f_uiZoneCount);
@@ -1767,7 +1830,7 @@ NSLogSetPlogOutputOptions(UI_8 f_uiPlogOutputOption) {
 //////////////////////////////////////////
 VOID
 NsLogInitialize(void) {
-  std::string config_filename = PF_SYS_BS;
+  std::string config_filename = FRAMEWORKUNIFIEDLOG_CONFIG_NV;  // LCOV_EXCL_BR_LINE 11:Excluded due to gcov constraints (others)
   config_filename.append(FRAMEWORKUNIFIEDLOG_CONFIG__CWORD84__NV);  // LCOV_EXCL_BR_LINE 11:expect branch
 
   int l_realTimelog;
@@ -1793,9 +1856,8 @@ static void writeUpdateConfigForString(std::string &name,  // NOLINT  (readabili
   std::string flag_loglevel_key = name;
   flag_loglevel_key.append(set_key);
 
-  std::string config_filename = PF_SYS_BS;  // LCOV_EXCL_BR_LINE 11:expect branch
-
-  std::string config_tmpfilename = PF_SYS_BS;
+  std::string config_filename = FRAMEWORKUNIFIEDLOG_CONFIG_NV;  // LCOV_EXCL_BR_LINE 11:expect branch
+  std::string config_tmpfilename = FRAMEWORKUNIFIEDLOG_CONFIG_NV;  // LCOV_EXCL_BR_LINE 11:Excluded due to gcov constraints (others)
   config_filename.append(FRAMEWORKUNIFIEDLOG_CONFIG__CWORD84__NV);  // LCOV_EXCL_BR_LINE 11:expect branch
 
   config_tmpfilename.append(FRAMEWORKUNIFIEDLOG_CONFIG_TMP_NV);
@@ -1830,11 +1892,9 @@ static void writeUpdateConfigForString(std::string &name,  // NOLINT  (readabili
 
 static void
 writeUpdateConfig(std::string set_key, std::string value) {
-  std::string config_filename = PF_SYS_BS;
-
-  std::string config_tmpfilename = PF_SYS_BS;
-  config_filename.append(FRAMEWORKUNIFIEDLOG_CONFIG__CWORD84__NV);
-
+  std::string config_filename = FRAMEWORKUNIFIEDLOG_CONFIG_NV;  // LCOV_EXCL_BR_LINE 11:Excluded due to gcov constraints (others)
+  std::string config_tmpfilename = FRAMEWORKUNIFIEDLOG_CONFIG_NV;  // LCOV_EXCL_BR_LINE 11:Excluded due to gcov constraints (others)
+  config_filename.append(FRAMEWORKUNIFIEDLOG_CONFIG__CWORD84__NV);  // LCOV_EXCL_BR_LINE 11:Excluded due to gcov constraints (others)
   config_tmpfilename.append(FRAMEWORKUNIFIEDLOG_CONFIG_TMP_NV);
 
   unlink(config_tmpfilename.c_str());
@@ -1873,7 +1933,7 @@ NsLogSetFrameworkunifiedLogFlag(UI_8 flag_id, UI_8 mode) {
     return;
   }
 
-  if (!IsExistFrameworkunifiedLogCfgNv()) {
+  if (!IsExistFrameworkunifiedLogCfgNv()) {  // LCOV_EXCL_BR_LINE 11:Excluded due to gcov constraints (others)
     copyFrameworkunifiedLogCfgFileToNv();  // LCOV_EXCL_BR_LINE 11:expect branch
   }
 
@@ -1916,7 +1976,7 @@ NsLogSetFrameworkunifiedLogFlag(UI_8 flag_id, UI_8 mode) {
 EFrameworkunifiedStatus
 NsLogGetFrameworkunifiedLogFlag(UI_8 flag_id, UI_8 *mode) {
   int l_realTimeLog;
-  int l_logLevel;
+  int l_logLevel = 0;
   int *l_logLevelArray;
 
   if (mode == NULL) {
@@ -1946,10 +2006,8 @@ NsLogGetFrameworkunifiedLogFlag(UI_8 flag_id, UI_8 *mode) {
   }
 
   GetShmInfo(flag_id, &l_realTimeLog, &l_logLevel);
-#pragma GCC diagnostic push  // for warning remove (compiler Bug?)
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
   *mode = static_cast<UI_8>(l_logLevel);
-#pragma GCC diagnostic pop
+
   return eFrameworkunifiedStatusOK;
 }
 
@@ -1973,7 +2031,7 @@ NsLogSetRealtimeLog(UI_8 mode) {
     return;
   }
 
-  if (!IsExistFrameworkunifiedLogCfgNv()) {
+  if (!IsExistFrameworkunifiedLogCfgNv()) {  // LCOV_EXCL_BR_LINE 11:Excluded due to gcov constraints (others)
     copyFrameworkunifiedLogCfgFileToNv();  // LCOV_EXCL_BR_LINE 11:expect branch
   }
 

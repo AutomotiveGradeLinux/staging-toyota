@@ -1,5 +1,5 @@
 #
-# @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+# @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -246,7 +246,6 @@ LDFLAGS += -Wl,--no-as-needed
 LDLIBS += -Wl,-Bdynamic -lstdc++
 LDLIBS += -Wl,-Bdynamic -lrt
 LDLIBS += -Wl,-Bdynamic -lPosixBasedOS001legacy
-LDLIBS += -Wl,-Bdynamic -lvp
 LDLIBS += -Wl,-Bdynamic -lcommon
 LINK_SHLIB_CXX = Y
 
@@ -261,9 +260,10 @@ SUBDIRS := NS_XMLConfigeParser NS_Utility
 all:
 
 install-data:install_cfg
+	install -d -m 775 $(DESTDIR)/nv/BS/ns/framework_unified/rwdata
 
 install_cfg:
-	install -d -m 775 $(DESTDIR)/usr/agl/conf/ns_logger
-	install -m 644 -t $(DESTDIR)/usr/agl/conf/ns_logger NativeServices/scfg/ns_logger_frameworkunifiedlog__CWORD84_.cfg
+	install -d -m 775 $(DESTDIR)/usr/agl/conf/BS/ns/framework_unified/rodata
+	install -m 644 -t $(DESTDIR)/usr/agl/conf/BS/ns/framework_unified/rodata NativeServices/scfg/ns_logger_frameworkunifiedlog__CWORD84_.cfg
 
 include ../../native_service.mk

@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,6 +48,10 @@ static size_t uitoa(unsigned int value, char *buf) {
   static const char c[] = "0123456789abcdef";
   int i;
 
+  if (buf == NULL) {
+      FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "buf is NULL");
+      return 0;
+  }
   for (i = 0; i < 8; i++) {
     buf[i] = c[(value >> ((7 - i) * 4)) & 0xf];
   }
@@ -57,6 +61,10 @@ static size_t uitoa(unsigned int value, char *buf) {
 }
 
 static inline void create_shmname(char *buf, TMemID id) {
+  if (buf == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "buf is NULL");
+    return;
+  }
   strcpy(buf, "nsshm_");  // NOLINT  (readability/nolint)
   buf += sizeof("nsshm_") - 1;
   uitoa(id, buf);
@@ -75,6 +83,15 @@ TMemID SetDataToShared(const void *data, UI_32 dataBytes, const char *from, cons
     FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "data is NULL");
     return BAD_MEM_ID;
   }
+  if (from == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "from is NULL");
+    return BAD_MEM_ID;
+  }
+  if (to == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "to is NULL");
+    return BAD_MEM_ID;
+  }
+
   if (dataBytes == 0) {
     FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "DataSize is invalied(%d)", dataBytes);
     return BAD_MEM_ID;

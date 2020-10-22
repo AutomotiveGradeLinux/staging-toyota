@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -153,6 +153,10 @@ EFrameworkunifiedStatus setChildThreadSched(EFrameworkunifiedSchedPolicy policy,
 /// child_thread_proc
 ////////////////////////////////////////////////////////////////////////////////////////////
 void *child_thread_proc(void *args) {
+  if (args == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "args is NULL");
+    return NULL;
+  }
   PCData pcdata = *reinterpret_cast< PCData * >(args);   // Create a local copy of data
 
   try {

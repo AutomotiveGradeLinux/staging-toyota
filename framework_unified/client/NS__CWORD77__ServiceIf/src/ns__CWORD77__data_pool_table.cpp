@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,6 +58,11 @@ UI_32 NoOfElementsinData(std::string Input) {
 std::string ConvertArrayStringsToString(std::string *strArr, int Size) {
   int length = 0;
   std::string Result;
+  if (strArr == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "strArr is NULL");
+    Result.append("");
+    return Result;
+  }
   while (length < Size) {
     Result.append(strArr[length]);
     Result.append(",");
@@ -71,6 +76,10 @@ std::string ConvertArrayStringsToString(std::string *strArr, int Size) {
 /////////////////////////////////////////////////////////////////////////////////
 void ConvertStringToArrString(std::string Input, std::string *strArr,
                               UI_32 &ArraySize) {   // NOLINT  (readability/nolint)
+  if (strArr == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "strArr is NULL");
+    return;
+  }
   int i = 0;
   std::string first = "";
   std::istringstream ss(Input);

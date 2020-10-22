@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,10 +25,10 @@
 #define FRAMEWORK_UNIFIED_CLIENT_NS_NPSERVICEIF_INCLUDE_NS_NP_TYPES_H_
 
 // Path of immediate notification data in NS_NPS version 1
-#define IMMEDIATE_PERSISTENCE_STORAGE_V1        PF_NV_P3"/NPSNOR/"
+#define IMMEDIATE_PERSISTENCE_STORAGE_V1        "/nv/BS/ns/npp/rwdata/NPSNOR/"
 
 // Path of immediate notification data in NS_NPS version 2
-#define IMMEDIATE_PERSISTENCE_STORAGE_V2        PF_SYS_NPP
+#define IMMEDIATE_PERSISTENCE_STORAGE_V2        "/nv/BS/ns/npp/rwdata/"
 
 // name of persistence folder for persistent type categorization
 #define USERDATADIR     "UserData/"   // stores all the user data (all user common data as well as user specific data)

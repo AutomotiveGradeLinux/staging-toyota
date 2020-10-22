@@ -1,7 +1,7 @@
 #############################################################
 #
 # Common Makefile for native_service
-# Copyright (C) 2017-2019 TOYOTA MOTOR CORPORATION
+# Copyright (C) 2017-2020 TOYOTA MOTOR CORPORATION
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
