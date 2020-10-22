@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,8 +44,7 @@ const static UI_32 cMAX_EMMC_COUNTER_VALUE = 100000u;  // NOLINT (build/storage_
 ///////////////////////////////////////////////////////////////////////////////
 
 CLoggerCfg::CLoggerCfg()
-noexcept    :
-    m_logMaxFileSize(0),
+  : m_logMaxFileSize(0),
     m_performanceLogMaxFileSize(0),
     m_emmcOutputMax(0),
     m_emmcOutputErrMax(0),
@@ -65,10 +64,16 @@ noexcept    :
     m_eLoggerStatus(SS_LOGGER_DEFAULT_VALUE) {
       m_udpEnvFlag = FALSE;
       std::memset(m_logMask, 0, sizeof(m_logMask));
+      std::memset(&m_ExternalLogList, 0, sizeof(&m_ExternalLogList));
     }
 
 CLoggerCfg::~CLoggerCfg(void) {  // LCOV_EXCL_START 14:global instance
   AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+
+  if (m_ExternalLogList.p_info != NULL) {
+    delete[] m_ExternalLogList.p_info;
+    m_ExternalLogList.p_info = NULL;
+  }
 }
 // LCOV_EXCL_STOP
 
@@ -131,8 +136,7 @@ EFrameworkunifiedStatus CLoggerCfg::SetandPersistLoggingParams(HANDLE f_hApp,
 }
 
 EFrameworkunifiedStatus CLoggerCfg::SetLoggingParams(HANDLE f_hApp,
-                                        STLoggerSetParams f_stLoggerSetParams)
-                                            noexcept {
+                                        const STLoggerSetParams f_stLoggerSetParams) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
   STLoggerSetAllParams l_Params;
@@ -150,7 +154,7 @@ EFrameworkunifiedStatus CLoggerCfg::SetLoggingParams(HANDLE f_hApp,
 }
 
 EFrameworkunifiedStatus CLoggerCfg::SetUDPLogging(HANDLE f_hApp,
-                                     ELOGGER_STAT f_eUDPLoggingStatus) noexcept {
+                                     const ELOGGER_STAT f_eUDPLoggingStatus) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
   STLoggerSetAllParams l_Params;
@@ -309,6 +313,10 @@ EFrameworkunifiedStatus CLoggerCfg::Load(const std::string &f_filePathAndName) {
         AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
         LOG_STATUS(l_eStatus, "l_pReaderCfg->GetInt(STORAGE.TimeoutAfter)");
         // LCOV_EXCL_STOP
+      } else if (eFrameworkunifiedStatusOK != (l_eStatus = l_pReaderCfg->GetInt("LOGGING.ExternalLogNum", m_ExternalLogList.num))) {  // LCOV_EXCL_BR_LINE 200:To ensure success  // NOLINT[whitespace/line_length]
+        LOG_STATUS(l_eStatus, "l_pReaderCfg->GetString(LOGGING.ExternalLogNum)");  // LCOV_EXCL_LINE 200:To ensure success  // NOLINT[whitespace/line_length]
+      } else if (eFrameworkunifiedStatusOK != (l_eStatus = l_pReaderCfg->GetInt("LOGGING.ExternalLogMax", m_ExternalLogList.max))) {  // LCOV_EXCL_BR_LINE 200:To ensure success  // NOLINT[whitespace/line_length]
+        LOG_STATUS(l_eStatus, "l_pReaderCfg->GetString(LOGGING.ExternalLogMax)");  // LCOV_EXCL_LINE 200:To ensure success  // NOLINT[whitespace/line_length]
       } else {
         RemoveCarriageReturn(m_emmcOutputPath);
         RemoveCarriageReturn(m_emmcOutputNaviLogPath);
@@ -339,6 +347,41 @@ EFrameworkunifiedStatus CLoggerCfg::Load(const std::string &f_filePathAndName) {
         m_EELStorageRelPath = "/EEL_export";
         m_EELActivateRelPath = "/EEL_activate";
         m_LoggerserviceEmmcLogsRelPath = "/LOGGERSERVICE_EMMC_LOGS";
+
+        if (m_ExternalLogList.num > 0) {
+          std::string str = "EXTERNAL_";  // LCOV_EXCL_BR_LINE 11:Excluded due to gcov constraints (others)
+          UI_32 num = 0;
+
+          if (m_ExternalLogList.num <= m_ExternalLogList.max) {
+            num = m_ExternalLogList.num;
+          } else {
+            num = m_ExternalLogList.max;
+          }
+
+          // LCOV_EXCL_BR_START 11:Excluded due to gcov constraints (others)
+          m_ExternalLogList.p_info = new ExternalLogInfo[num];
+
+          // Load external log info
+          for (UI_32 i = 0; i < num; i++) {
+            std::string query = str + std::to_string(i+1);
+            if (eFrameworkunifiedStatusOK !=
+                (l_eStatus = l_pReaderCfg->GetString((query+".OutputPath"), m_ExternalLogList.p_info[i].dirname))) {
+              LOG_STATUS(l_eStatus, "l_pReaderCfg->GetString(EXTERNAL.OutputPath)");  // LCOV_EXCL_LINE 200:To ensure success  // NOLINT[whitespace/line_length]
+            } else if (eFrameworkunifiedStatusOK !=
+                (l_eStatus = l_pReaderCfg->GetString((query+".ExtLogPath"), m_ExternalLogList.p_info[i].path))) {
+              LOG_STATUS(l_eStatus, "l_pReaderCfg->GetString(EXTERNAL.ExtLogPath)");  // LCOV_EXCL_LINE 200:To ensure success  // NOLINT[whitespace/line_length]
+            } else if (eFrameworkunifiedStatusOK !=
+                (l_eStatus = l_pReaderCfg->GetBool((query+".Remove"), m_ExternalLogList.p_info[i].remove))) {
+              LOG_STATUS(l_eStatus, "l_pReaderCfg->GetBool(EXTERNAL.Remove)");  // LCOV_EXCL_LINE 200:To ensure success  // NOLINT[whitespace/line_length]
+            } else {
+              RemoveCarriageReturn(m_ExternalLogList.p_info[i].dirname);
+              RemoveCarriageReturn(m_ExternalLogList.p_info[i].path);
+            }
+          }
+          // LCOV_EXCL_BR_STOP 11:Excluded due to gcov constraints (others)
+        } else {
+          // None external log
+        }
 
         if (eFrameworkunifiedStatusOK == l_eStatus) {  // LCOV_EXCL_BR_LINE 200:To ensure success
           FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
@@ -510,7 +553,7 @@ EFrameworkunifiedStatus CLoggerCfg::GetIncrementAndPersistUserInvokedCounter(
   return (l_eStatus);
 }
 
-EFrameworkunifiedStatus CLoggerCfg::GetAndIncrementEmmcCounter(UI_32 &f_counter) noexcept {
+EFrameworkunifiedStatus CLoggerCfg::GetAndIncrementEmmcCounter(UI_32 &f_counter) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
   std::string l_checkFileName;
@@ -573,7 +616,7 @@ EFrameworkunifiedStatus CLoggerCfg::GetAndIncrementEmmcCounter(UI_32 &f_counter)
   return (l_eStatus);
 }
 
-EFrameworkunifiedStatus CLoggerCfg::RefreshEmmcCounter(UI_32& f_counter) noexcept {
+EFrameworkunifiedStatus CLoggerCfg::RefreshEmmcCounter(UI_32& f_counter) const {
   EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
   std::string l_checkFileName;
   std::vector<std::string> l_vector;
@@ -683,7 +726,7 @@ void CLoggerCfg::AddLoggingParamCB(CbFuncPtr f_fp) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
 }
 
-void CLoggerCfg::UpdateLoggingStatus(void) noexcept {
+void CLoggerCfg::UpdateLoggingStatus(void) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   std::vector<CbFuncPtr>::iterator l_iter;
   for (l_iter = m_LoggingCallBack.begin(); l_iter != m_LoggingCallBack.end(); l_iter++) {  // LCOV_EXCL_BR_LINE 11:Unexpected branch  // NOLINT[whitespace/line_length]
@@ -705,3 +748,7 @@ BOOL CLoggerCfg::IsLoggingEnabled(void) {
   return (this->m_eLoggerStatus == eActivate) ? TRUE : FALSE;
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
 }
+
+ExternalLogList CLoggerCfg::GetExternalLogList(void) {
+  return (m_ExternalLogList);
+}  // LCOV_EXCL_BR_LINE 10:the last line

@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,9 +33,9 @@
 #include <system_service/ss_logger_service.h>
 #include <system_service/ss_services.h>
 #include <system_service/ss_templates.h>
-//#include <stub/el_mem.h>
+#include <stub/el_mem.h>
 #include <native_service/cl_process.h>
-//#include <vehicle_service/Clock_API.h>
+#include <stub/Clock_API.h>
 #include <string>
 #include "loggerservicedebug_loggerservicelog.h"
 #include "loggerservicedebug_thread_if.h"
@@ -134,7 +134,7 @@ EFrameworkunifiedStatus CErrorEvent::Initialize(HANDLE f_hApp, CLoggerCfg *f_pLo
         ZONE_ERR, __FUNCTION__,
         " Error. Argument f_hApp passed NULL pointer. Initialization failed.");
     // LCOV_EXCL_STOP
-  } else if (eFrameworkunifiedStatusOK != (l_eStatus = m_errorEventCfg.Initialize())) {  // LCOV_EXCL_BR_LINE 200:To ensure success
+  } else if (eFrameworkunifiedStatusOK != (l_eStatus = m_errorEventCfg.Initialize(f_pLoggerCfg))) {  // LCOV_EXCL_BR_LINE 200:To ensure success
     // LCOV_EXCL_START 200:To ensure success
     AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
     FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
@@ -326,7 +326,7 @@ EFrameworkunifiedStatus CErrorEvent::OnStartLogging(HANDLE f_hApp) {
         }
 
         uint8_t status;
-//        Clock_getSystemTimeY2K38(&m_time, &status);
+        Clock_getSystemTimeY2K38(&m_time, &status);
         m_currentEventTriggerNumber = m_pLoggerCfg->GetUserInvokedCounter();
         l_eStatus = m_loggerUtil.checkDestinationAvailable(l_eventData);
         if (eFrameworkunifiedStatusOK == l_eStatus) {
@@ -517,7 +517,7 @@ EFrameworkunifiedStatus CErrorEvent::RequestNextArtifact(HANDLE f_hApp) {
       return (l_eStatus);
     }
     uint8_t status;
-//    Clock_getSystemTimeY2K38(&m_time, &status);
+    Clock_getSystemTimeY2K38(&m_time, &status);
     FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
            " Info. All logging error event artifacts have been collected.");
     l_eStatus = m_loggerUtil.checkDestinationAvailable(m_errorEventNtfData);
@@ -958,7 +958,7 @@ EFrameworkunifiedStatus CErrorEvent::SaveNaviLog(EPWR_SHUTDOWN_TRIGGER_TYPE errT
 
   uint32_t l_time;
   uint8_t status;
-//  Clock_getSystemTimeY2K38(&l_time, &status);
+  Clock_getSystemTimeY2K38(&l_time, &status);
   l_eStatus = m_loggerUtil.getEmmcNaviLogParams(l_time, errType, l_Filename,
                                                 l_logMaxNum);
 
@@ -975,28 +975,28 @@ EFrameworkunifiedStatus CErrorEvent::SaveNaviLog(EPWR_SHUTDOWN_TRIGGER_TYPE errT
     } else {
       FILE *fp;
       void *p;
-//      p = EL_mem_exram_mmap_simple(EL_MEM_ID_NAVI_LOG, PROT_READ | PROT_WRITE,
-//      MAP_SHARED,
-//                                   EL_MEM_CACHE_INVALID);
-//      if (p == MAP_FAILED) {
-//        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-//               "Error : EL_mem_exram_mmap_simple MAP_FAILD");
-//        l_eStatus = eFrameworkunifiedStatusFail;
-//      } else {
-//        fp = fopen(l_Filename.c_str(), "wb");
-//        if (fp == NULL) {
-//          FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Could not open file %s",
-//                 l_Filename.c_str());
-//          l_eStatus = eFrameworkunifiedStatusAccessError;
-//        } else {
-//          fwrite(p, sizeof(unsigned char), EL_mem_getLength(EL_MEM_ID_NAVI_LOG),
-//                 fp);
-//          fclose(fp);
-//        }
-//        if (0 != EL_mem_exram_munmap(p, EL_mem_getLength(EL_MEM_ID_NAVI_LOG))) {
-//          FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Error : EL_mem_exram_munmap");
-//        }
-//      }
+      p = EL_mem_exram_mmap_simple(EL_MEM_ID_NAVI_LOG, PROT_READ | PROT_WRITE,
+      MAP_SHARED,
+                                   EL_MEM_CACHE_INVALID);
+      if (p == MAP_FAILED) {
+        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
+               "Error : EL_mem_exram_mmap_simple MAP_FAILD");
+        l_eStatus = eFrameworkunifiedStatusFail;
+      } else {
+        fp = fopen(l_Filename.c_str(), "wb");
+        if (fp == NULL) {
+          FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Could not open file %s",
+                 l_Filename.c_str());
+          l_eStatus = eFrameworkunifiedStatusAccessError;
+        } else {
+          fwrite(p, sizeof(unsigned char), EL_mem_getLength(EL_MEM_ID_NAVI_LOG),
+                 fp);
+          fclose(fp);
+        }
+        if (0 != EL_mem_exram_munmap(p, EL_mem_getLength(EL_MEM_ID_NAVI_LOG))) {
+          FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Error : EL_mem_exram_munmap");
+        }
+      }
     }
   }
 

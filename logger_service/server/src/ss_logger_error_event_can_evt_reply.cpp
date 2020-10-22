@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include <stdio.h>
 #include <time.h>
-//#include <vehicle_service/Clock_API.h>
+#include <stub/Clock_API.h>
 #include "ss_logger_error_event_can_evt_reply.h"
 CLoggerErrorEventCANEvtReply::CLoggerErrorEventCANEvtReply() {
 }
@@ -68,31 +68,31 @@ EFrameworkunifiedStatus CLoggerErrorEventCANEvtReply::PublishEndEvent(
   if (TRUE == IsEventNeeded(f_event)) {
     STEventCANLoggerEventInfo l_info;
     struct tm l_tm;
-//    CLOCK_RETURN clock_ret = Clock_getLocalTimeY2K38(&f_time, &l_tm);
-//    if (CLOCK_OK == clock_ret) {
-//      l_info.valid = TRUE;
-//      l_info.success = TRUE;
-//      l_info.triggerNumber = f_triggerNumber;
-//      l_info.dateAndTime.DateTime_Stat = 0;
-//      l_info.dateAndTime.DateTimeDay = static_cast<UI_8>(l_tm.tm_mday);
-//      l_info.dateAndTime.DateTimeHour = static_cast<UI_8>(l_tm.tm_hour);
-//      l_info.dateAndTime.DateTimeMinute = static_cast<UI_8>(l_tm.tm_min);
-//      l_info.dateAndTime.DateTimeMonth = static_cast<UI_8>(l_tm.tm_mon + 1);
-//      l_info.dateAndTime.DateTimeSecond = static_cast<UI_8>(l_tm.tm_sec);
-//      l_info.dateAndTime.DateTimeYear = static_cast<UI_8>(l_tm.tm_year % 100);
-//      l_info.dateAndTime.TimeFormat = 0;
-//      FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
-//             " Info. Time sent to CAN is: 20%2d/%2d/%2d %2d:%2d:%2d",
-//             l_info.dateAndTime.DateTimeYear, l_info.dateAndTime.DateTimeMonth,
-//             l_info.dateAndTime.DateTimeDay, l_info.dateAndTime.DateTimeHour,
-//             l_info.dateAndTime.DateTimeMinute,
-//             l_info.dateAndTime.DateTimeSecond);
-//
-//    } else {
-//      l_info.success = TRUE;
-//      l_info.valid = FALSE;
-//      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error. Passed time is invalid.");
-//    }
+    CLOCK_RETURN clock_ret = Clock_getLocalTimeY2K38(&f_time, &l_tm);
+    if (CLOCK_OK == clock_ret) {
+      l_info.valid = TRUE;
+      l_info.success = TRUE;
+      l_info.triggerNumber = f_triggerNumber;
+      l_info.dateAndTime.DateTime_Stat = 0;
+      l_info.dateAndTime.DateTimeDay = static_cast<UI_8>(l_tm.tm_mday);
+      l_info.dateAndTime.DateTimeHour = static_cast<UI_8>(l_tm.tm_hour);
+      l_info.dateAndTime.DateTimeMinute = static_cast<UI_8>(l_tm.tm_min);
+      l_info.dateAndTime.DateTimeMonth = static_cast<UI_8>(l_tm.tm_mon + 1);
+      l_info.dateAndTime.DateTimeSecond = static_cast<UI_8>(l_tm.tm_sec);
+      l_info.dateAndTime.DateTimeYear = static_cast<UI_8>(l_tm.tm_year % 100);
+      l_info.dateAndTime.TimeFormat = 0;
+      FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
+             " Info. Time sent to CAN is: 20%2d/%2d/%2d %2d:%2d:%2d",
+             l_info.dateAndTime.DateTimeYear, l_info.dateAndTime.DateTimeMonth,
+             l_info.dateAndTime.DateTimeDay, l_info.dateAndTime.DateTimeHour,
+             l_info.dateAndTime.DateTimeMinute,
+             l_info.dateAndTime.DateTimeSecond);
+
+    } else {
+      l_info.success = TRUE;
+      l_info.valid = FALSE;
+      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error. Passed time is invalid.");
+    }
     l_eStatus = FrameworkunifiedPublishPublicEvent(f_hApp, eSSLoggerCANEventFinished,
                                       &l_info, sizeof(l_info));
 
@@ -112,30 +112,30 @@ EFrameworkunifiedStatus CLoggerErrorEventCANEvtReply::PublishErrorEvent(
   if (TRUE == IsEventNeeded(f_event)) {
     STEventCANLoggerEventInfo l_info;
     struct tm l_tm;
-//    CLOCK_RETURN clock_ret = Clock_getLocalTimeY2K38(&f_time, &l_tm);
+    CLOCK_RETURN clock_ret = Clock_getLocalTimeY2K38(&f_time, &l_tm);
     l_info.valid = f_isValid;
     l_info.success = FALSE;
-//    if (CLOCK_OK == clock_ret) {
-//      l_info.triggerNumber = f_triggerNumber;
-//      l_info.dateAndTime.DateTime_Stat = 0;
-//      l_info.dateAndTime.DateTimeDay = static_cast<UI_8>(l_tm.tm_mday);
-//      l_info.dateAndTime.DateTimeHour = static_cast<UI_8>(l_tm.tm_hour);
-//      l_info.dateAndTime.DateTimeMinute = static_cast<UI_8>(l_tm.tm_min);
-//      l_info.dateAndTime.DateTimeMonth = static_cast<UI_8>(l_tm.tm_mon + 1);
-//      l_info.dateAndTime.DateTimeSecond = static_cast<UI_8>(l_tm.tm_sec);
-//      l_info.dateAndTime.DateTimeYear = static_cast<UI_8>(l_tm.tm_year % 100);
-//      l_info.dateAndTime.TimeFormat = 0;
-//      FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
-//             " Info. Time sent to CAN is: 20%2d/%2d/%2d %2d:%2d:%2d",
-//             l_info.dateAndTime.DateTimeYear, l_info.dateAndTime.DateTimeMonth,
-//             l_info.dateAndTime.DateTimeDay, l_info.dateAndTime.DateTimeHour,
-//             l_info.dateAndTime.DateTimeMinute,
-//             l_info.dateAndTime.DateTimeSecond);
-//
-//    } else {
-//      l_info.valid = FALSE;
-//      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error. Passed time is invalid.");
-//    }
+    if (CLOCK_OK == clock_ret) {
+      l_info.triggerNumber = f_triggerNumber;
+      l_info.dateAndTime.DateTime_Stat = 0;
+      l_info.dateAndTime.DateTimeDay = static_cast<UI_8>(l_tm.tm_mday);
+      l_info.dateAndTime.DateTimeHour = static_cast<UI_8>(l_tm.tm_hour);
+      l_info.dateAndTime.DateTimeMinute = static_cast<UI_8>(l_tm.tm_min);
+      l_info.dateAndTime.DateTimeMonth = static_cast<UI_8>(l_tm.tm_mon + 1);
+      l_info.dateAndTime.DateTimeSecond = static_cast<UI_8>(l_tm.tm_sec);
+      l_info.dateAndTime.DateTimeYear = static_cast<UI_8>(l_tm.tm_year % 100);
+      l_info.dateAndTime.TimeFormat = 0;
+      FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
+             " Info. Time sent to CAN is: 20%2d/%2d/%2d %2d:%2d:%2d",
+             l_info.dateAndTime.DateTimeYear, l_info.dateAndTime.DateTimeMonth,
+             l_info.dateAndTime.DateTimeDay, l_info.dateAndTime.DateTimeHour,
+             l_info.dateAndTime.DateTimeMinute,
+             l_info.dateAndTime.DateTimeSecond);
+
+    } else {
+      l_info.valid = FALSE;
+      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error. Passed time is invalid.");
+    }
     l_eStatus = FrameworkunifiedPublishPublicEvent(f_hApp, eSSLoggerCANEventFinished,
                                       &l_info, sizeof(l_info));
     LOG_STATUS_IF_ERRORED(  // LCOV_EXCL_BR_LINE 15: macro

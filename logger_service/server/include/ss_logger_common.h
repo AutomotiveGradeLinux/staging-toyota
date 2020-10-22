@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,11 +45,11 @@ const CHAR PERFORMANCE_LOG_PATH_FN[] = "/tmp/frameworkunified_performance.log";
 const CHAR DRINITIAL_LOG_PATH_FN[] = "/tmp/loggerservice_drinitial.log";
 const CHAR DRLOCATION_LOG_PATH_FN[] = "/tmp/loggerservice_drlocation.log";
 const CHAR KERNEL_LOG_PATH_FN[] = "/tmp/kernel.log";
-const CHAR KERNEL_BOOT_LOG_PATH_FN[] = "/ramd/log/frameworkunifiedlog/kernelboot.log";
+const CHAR KERNEL_BOOT_LOG_PATH_FN[] = "/ramd/BS/ss/logger_service/rwdata/frameworkunifiedlog/kernelboot.log";
 
 const UI_32 PERFORMANCELOG_FILE_SZ = 256 * 1024;
 
-#define CLEAR_LOG_PATH_FN  "/nv/log/frameworkunifiedlog/"
+#define CLEAR_LOG_PATH_FN  "/nv/BS/ss/logger_service/rwdata/frameworkunifiedlog/"
 #define NULLCHAR  '\0'
 
 #define DEBUG_USB_PATH "/mnt/sda1"

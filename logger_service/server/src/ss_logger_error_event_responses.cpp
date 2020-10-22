@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -260,67 +260,6 @@ EFrameworkunifiedStatus CErrorEvent::OnObtainPerformanceLogRequest(HANDLE f_hApp
   return (l_eStatus);
 }
 
-#define SCREEN_SHOT_INTVAL 500000  // 500msec
-#define SCRREN_SHOT_CAPTURE_RETRY_CNT 2
-
-static EFrameworkunifiedStatus SaveScreenShot(char *chldexe, char **argv, int m_sfd,
-                                 CL_ProcessAttr_t *attr) {
-  int selection = -1;
-  fd_set fds;
-  struct timeval tv;
-  pid_t childpid;
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusFail;
-  int retry = 0;
-
-  while (1) {
-    childpid = CL_ProcessCreate(chldexe, argv, NULL, attr);
-    if (childpid == -1) {  // LCOV_EXCL_BR_LINE 5: c code case
-      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "create process failed returned: %d",
-             errno);
-    } else {
-      do {
-        tv.tv_sec = 5;
-        tv.tv_usec = 0;
-        FD_ZERO(&fds);
-        FD_SET(m_sfd, &fds);
-        selection = select(m_sfd + 1, &fds, NULL, NULL, &tv);
-      } while ((selection < 0) && (errno == EINTR));  // LCOV_EXCL_BR_LINE 5: c code case
-      if (selection < 0) {
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "select failed %d", errno);
-      } else {
-        if (FD_ISSET(m_sfd, &fds)) {  // LCOV_EXCL_BR_LINE 5: FD_ISSET's error case
-          CL_ProcessCleanupInfo_t cinfo;
-          int ret;
-
-          ret = CL_ProcessCleanup(m_sfd, &cinfo);
-          if ((ret != -1) && (cinfo.code == CLD_EXITED)) {
-            if (cinfo.status != 0) {
-              FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Save Error! cinfo.status:%d",
-                     cinfo.status);
-            } else {
-              l_eStatus = eFrameworkunifiedStatusOK;
-            }
-          }
-        } else {
-          // LCOV_EXCL_START 5: FD_ISSET's error case
-          AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-          // (FD_ISSET() failed Error
-          FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "fd Not Exist fd Error\n");
-          // LCOV_EXCL_STOP
-        }
-      }
-    }
-    if ((l_eStatus == eFrameworkunifiedStatusOK)
-        || (retry >= (SCRREN_SHOT_CAPTURE_RETRY_CNT - 1))) {
-      break;
-    }
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "retry!");
-    usleep(SCREEN_SHOT_INTVAL);  // interval
-    retry++;
-  }
-  return l_eStatus;
-}
-
 ///////////////////////////////////////////////////////////////////////////
 //  Function : OnObtainScreenShotRequest
 //  brief    : Collect screen shot artifact from PLM and return a response
@@ -329,87 +268,14 @@ static EFrameworkunifiedStatus SaveScreenShot(char *chldexe, char **argv, int m_
 EFrameworkunifiedStatus CErrorEvent::OnObtainScreenShotRequest(HANDLE f_hApp) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
 
-  std::string dir_path = SCREEN_SHOT_PATH;
   EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusFail;
-  EFrameworkunifiedStatus l_eStatusCh0 = eFrameworkunifiedStatusFail;
-  EFrameworkunifiedStatus l_eStatusCh1 = eFrameworkunifiedStatusFail;
 
-  char *c_argv0[4] = { NULL, const_cast<char*>(JPEG_PATH_CH0), const_cast<char*>("0"), NULL };
-  char *c_argv1[4] = { NULL, const_cast<char*>(JPEG_PATH_CH1), const_cast<char*>("1"), NULL };
-  char *chldexe;
-
-  /*check m_sfd vlue*/
-  if (m_sfd == -1) {
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "SS_Logger_SaveScreenShot m_sfd error -1");
-    return l_eStatus;
-  }
-
-  /*check chldexe value*/
-  chldexe = realpath(SCRSHOT_EXE_PATH, NULL);
-  if (chldexe == NULL) {
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-           "SS_Logger_SaveScreenShot realpath failed %d", errno);
-    return l_eStatus;
-  }
-
-  c_argv0[0] = chldexe;
-  c_argv1[0] = chldexe;
-  l_eStatus = CFSDirectory::CreateDirectory(dir_path);
-  if (l_eStatus != eFrameworkunifiedStatusOK) {
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-           "SS_Logger_SaveScreenShot tmp directory failed");
-    free(chldexe);
-    return l_eStatus;
-  } else {
-    CL_ProcessAttr_t attr;
-    CL_ProcessCreateAttrInit(&attr);
-
-    /* Save Picture Ch0(E2) */
-    l_eStatusCh0 = SaveScreenShot(chldexe, c_argv0, m_sfd, &attr);
-    if (l_eStatusCh0 == eFrameworkunifiedStatusOK) {  // LCOV_EXCL_BR_LINE 200:As there are no ScreenShot processes
-      // LCOV_EXCL_START 200:As there are no ScreenShot processes
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      /* Start Save Picture Ch1(M2) */
-      l_eStatusCh1 = SaveScreenShot(chldexe, c_argv1, m_sfd, &attr);
-      if (l_eStatusCh1 != eFrameworkunifiedStatusOK) {
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-               "SS_Logger_SaveScreenShot Ch1(M2) failed");
-      }
-      // LCOV_EXCL_STOP
-    } else {
-      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "SS_Logger_SaveScreenShot Ch0(E2) failed");
-    }
-  }
-
-  // Send Artifact Responce.
-  if ((l_eStatusCh0 == eFrameworkunifiedStatusOK) || (l_eStatusCh1 == eFrameworkunifiedStatusOK)) {  // LCOV_EXCL_BR_LINE 200:As there are no ScreenShot processes
-    // LCOV_EXCL_START 200:As there are no ScreenShot processes
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    // Set "SCREEN_SHOT_PATH" to save two pictures(ch0(E2) and ch1(M2))
-    l_eStatus = SendLogArtifactResponseToSelf(f_hApp, eArtifactIdScreenShot,
-    SCREEN_SHOT_PATH);
-    LOG_STATUS_IF_ERRORED(
-        l_eStatus, "SendLogArtifactResponseToSelf(eArtifactIdScreenShot)");
-    // LCOV_EXCL_STOP
-  } else {
-    // If both Ch0 and Ch1 is failed,
-    // update l_eStatus to eFrameworkunifiedStatusFail and delete directory.
-    l_eStatus = eFrameworkunifiedStatusFail;
-    if (CFSDirectory::DoesDirectoryExist(dir_path)) {
-      if (CFSDirectory::RemoveDirectory(dir_path)) {
-        FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
-               "SS_Logger_SaveScreenShot directory delete successful.");
-      } else {
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-               "SS_Logger_SaveScreenShot directory delete unsuccessful");
-      }
-    }
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-           "SS_Logger_SaveScreenShot Save Failed returned:%d", l_eStatus);
-  }
-  free(chldexe);
+  l_eStatus = SendLogArtifactResponseToSelf(f_hApp, eArtifactIdScreenShot,
+  SCREEN_SHOT_PATH);
+  LOG_STATUS_IF_ERRORED(
+      l_eStatus, "SendLogArtifactResponseToSelf(eArtifactIdScreenShot)");
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return (l_eStatus);
+  return l_eStatus;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -563,8 +429,7 @@ EFrameworkunifiedStatus CErrorEvent::OnClearAllLogRequest(HANDLE f_hApp) {
            clear_file_path.c_str());
   }
 
-  AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-  clear_file_path = "/nv/log2/awlog/";
+  clear_file_path = "/nv/BS/ss/logger_service/rwdata/log2/awlog/";
   if (CFSDirectory::RemoveSubDirectory(clear_file_path)) {
     FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
            "SS_Logger Clear %s directory delete successful.",
@@ -575,7 +440,7 @@ EFrameworkunifiedStatus CErrorEvent::OnClearAllLogRequest(HANDLE f_hApp) {
            clear_file_path.c_str());
   }
 
-  clear_file_path = "/nv/log2/core/";
+  clear_file_path = "/nv/BS/ss/logger_service/rwdata/log2/core/";
   if (CFSDirectory::RemoveSubDirectory(clear_file_path)) {
     FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
            "SS_Logger Clear %s directory delete successful.",
@@ -585,7 +450,6 @@ EFrameworkunifiedStatus CErrorEvent::OnClearAllLogRequest(HANDLE f_hApp) {
            "SS_Logger Clear %s directory delete failed.",
            clear_file_path.c_str());
   }
-  // LCOV_EXCL_STOP
 
   l_eStatus = SendLogArtifactResponseToSelf(f_hApp, eArtifactIdClearAllLog,
                                             clear_file_path.c_str());
@@ -604,8 +468,6 @@ EFrameworkunifiedStatus CErrorEvent::OnNaviLogRequest(HANDLE f_hApp) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
 
-  // LCOV_EXCL_START 13:
-  AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
   EFrameworkunifiedStatus naviLog_status;
   switch (m_errorEventNtfData.EventType) {
     case eErrorEventTypeProcessCrash:
@@ -625,7 +487,6 @@ EFrameworkunifiedStatus CErrorEvent::OnNaviLogRequest(HANDLE f_hApp) {
   }
   FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Error: Fail to save Navi Log %d",
          naviLog_status);
-  // LCOV_EXCL_STOP
 
   l_eStatus = SendLogArtifactResponseToSelf(f_hApp, eArtifactIdNaviLog, "");
   LOG_STATUS_IF_ERRORED(l_eStatus,

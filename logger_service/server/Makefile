@@ -1,5 +1,5 @@
 #
-# @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+# @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,14 +20,9 @@ SUBDIRS += realtimeUsbLog
 
 all:
 
-install-data:install_cfg
+install-data:install_data
 
-install_cfg:
-	install -d -m 775 $(DESTDIR)/usr/agl/conf/syslogd
-	install -m 644 -t $(DESTDIR)/usr/agl/conf/syslogd cfg/syslog.conf
-	install -d -m 775 $(DESTDIR)/usr/agl/share/logrotate
-	install -m 644 -t $(DESTDIR)/usr/agl/share/logrotate cfg/logrotate.conf
-
-
+install_data:
+	install -d -m 755 $(DESTDIR)/nv/BS/ss/logger_service/rwdata/frameworkunifiedlog
 
 include ../../system_service.mk

@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -198,7 +198,7 @@ void CLoggerErrorEventStorage::ThreadFunction(void) {
       TArtifactResponseVec l_responseVec;
       uint32_t l_logTime;
       uint8_t status;
-//      Clock_getSystemTimeY2K38(&l_logTime, &status);
+      Clock_getSystemTimeY2K38(&l_logTime, &status);
       (void) pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &l_oldState);
       if (EOK == pthread_mutex_lock(&this->m_mutex)) {  // LCOV_EXCL_BR_LINE 5: pthread_mutex_lock's error case.
         l_target = this->m_destination;
@@ -420,7 +420,7 @@ EFrameworkunifiedStatus CLoggerErrorEventStorage::PackageAndPlaceArtifacts(
             AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
             char buffer[20];
             struct tm local_time;
-//            Clock_getLocalTimeY2K38(&f_logTime, &local_time);
+            Clock_getLocalTimeY2K38(&f_logTime, &local_time);
             if (0
                 != strftime(buffer, sizeof(buffer), "%Y%m%d%H%M%S.bmp",
                             &local_time)) {

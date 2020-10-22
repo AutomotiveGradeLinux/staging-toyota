@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,29 +42,22 @@
 #include <native_service/ns_logger_if.h>
 #include <native_service/ns_config_parser_if.h>
 #include <native_service/cl_lockid.h>
-//#include <vehicle_service/Clock_API.h>
+#include <stub/Clock_API.h>
 #include <vector>
 #include <sstream>
 #include <iomanip>
 #include <string>
 #include <algorithm>
 #include "ss_logger_store_logs_loggerservicelog.h"
+#include "ss_logger_cfg.h"
 
-#define LOGGERSERVICELOG_CONFIG_PATH       "/usr/agl/share/systemmanager/scfg/ss_logger.cfg"
+#define LOGGERSERVICELOG_CONFIG_PATH       "/usr/agl/conf/BS/ss/logger_service/rodata/ss_logger.cfg"
 #define LOGGER_TMP_FN            "__LOGGER.tmp"
 #define LOGGERSERVICELOG_TMP_OUTPUT_PATH   "/tmp"
 #define PSTORE_DIR_PATH          "/dev/pstore"
 #define KERNEL_BOOT_LOG_FN       "kernelboot.log"
 #define KERNEL_LOG_FN            "kernel.log"
-#define CONNECTIVITY_DIR_NAME    "connectivity"
 #define COMMUNICATION_DIR_NAME   "communication"
-#define RADIO_DIR_NAME           "radio"
-#define GRAPHICS_FN_LOG_FN       "graphics.log"
-#define SYSLOG_DIR_NAME          "syslog"
-#define WINSYS_LOG_FN            "winsys.log"
-#define APPFW_DIR_NAME           "appfw"
-#define TOMOYO_DIR_PATH          "/nv/ptdata/sec"
-#define TOMOYO_DIR_NAME          "tomoyo"
 #define ACCOFFON_DIR_NAME        "accoffon"
 
 #define PATHNAME_SEPARATOR       '/'
@@ -97,6 +90,8 @@ typedef struct {
   std::string output_path;
   SI_32 output_max;
   SI_32 output_errmax;
+  SI_32 external_log_num;
+  SI_32 external_log_max;
 } CfgInfo;
 
 typedef struct {
@@ -154,21 +149,9 @@ static void getLastKernelLog(std::vector<LogInfo>& list);  // NOLINT (runtime/re
 static void getKernelLog(std::vector<LogInfo>& list);  // NOLINT (runtime/references)
 static void getKernelBootLog(SS_STORELOGS_OPE_TYPE type,
                              std::vector<LogInfo>& list);  // NOLINT (runtime/references)
-static void getConnectivitylogFile(SS_STORELOGS_OPE_TYPE type,
-                                   std::vector<LogInfo>& list);  // NOLINT (runtime/references)
-static void getRadiologFile(SS_STORELOGS_OPE_TYPE type,
-                            std::vector<LogInfo>& list);  // NOLINT (runtime/references)
 static void getCommunicationlogFile(SS_STORELOGS_OPE_TYPE type,
                                     std::vector<LogInfo>& list);  // NOLINT (runtime/references)
-static void getGraphicslogFile(SS_STORELOGS_OPE_TYPE type,
-                               std::vector<LogInfo>& list);  // NOLINT (runtime/references)
-static void getSyslogFile(SS_STORELOGS_OPE_TYPE type,
-                          std::vector<LogInfo>& list);  // NOLINT (runtime/references)
-static void getWinSyslogFile(SS_STORELOGS_OPE_TYPE type,
-                             std::vector<LogInfo>& list);  // NOLINT (runtime/references)
-static void getAppFwlogFile(SS_STORELOGS_OPE_TYPE type,
-                            std::vector<LogInfo>& list);  // NOLINT (runtime/references)
-static void getTomoyologFile(SS_STORELOGS_OPE_TYPE type,
+static void getExternallogFile(SS_STORELOGS_OPE_TYPE type,
                              std::vector<LogInfo>& list);  // NOLINT (runtime/references)
 
 //static std::string getFileName(std::string &path, uint32_t f_time,  // NOLINT (runtime/references)
@@ -216,9 +199,8 @@ static std::string m_pathAndName;  // NOLINT (runtime/string)
 static std::string m_tmpName;  // NOLINT (runtime/string)
 
 const GetLogFileFunc GetLogFuncTbl[] = { getKernellogFile,
-                                         getConnectivitylogFile, getRadiologFile, getCommunicationlogFile,
-                                         getGraphicslogFile, getSyslogFile, getWinSyslogFile, getAppFwlogFile,
-                                         getTomoyologFile
+                                         getCommunicationlogFile,
+                                         getExternallogFile
                                        };
 // GZF save variables
 static gzFile g_gztype;
@@ -1415,32 +1397,6 @@ static EFrameworkunifiedStatus storeLogs(SS_STORELOGS_OPE_TYPE type) {
   return (l_eFrameworkunifiedStatus);
 }
 
-static void getConnectivitylogFile(SS_STORELOGS_OPE_TYPE type,
-                                   std::vector<LogInfo>& list) {  // NOLINT (runtime/references)
-
-  LogInfo log_info;
-
-  log_info.file_path = FRAMEWORKUNIFIEDLOG_RAMDISC_PATH;
-  log_info.file_path.append("/");
-  log_info.file_path.append(CONNECTIVITY_DIR_NAME);
-  log_info.dest_name = CONNECTIVITY_DIR_NAME;
-  log_info.tmp_file_delete = FALSE;
-  list.push_back(log_info);
-}
-
-static void getRadiologFile(SS_STORELOGS_OPE_TYPE type,
-                            std::vector<LogInfo>& list) {  // NOLINT (runtime/references)
-
-  LogInfo log_info;
-
-  log_info.file_path = FRAMEWORKUNIFIEDLOG_RAMDISC_PATH;
-  log_info.file_path.append("/");
-  log_info.file_path.append(RADIO_DIR_NAME);
-  log_info.dest_name = RADIO_DIR_NAME;
-  log_info.tmp_file_delete = FALSE;
-  list.push_back(log_info);
-}
-
 static void getCommunicationlogFile(SS_STORELOGS_OPE_TYPE type,
                                     std::vector<LogInfo>& list) {  // NOLINT (runtime/references)
 
@@ -1454,68 +1410,75 @@ static void getCommunicationlogFile(SS_STORELOGS_OPE_TYPE type,
   list.push_back(log_info);
 }
 
-static void getGraphicslogFile(SS_STORELOGS_OPE_TYPE type,
-                               std::vector<LogInfo>& list) {  // NOLINT (runtime/references)
-  LogInfo log_info;
-
-  log_info.file_path = FRAMEWORKUNIFIEDLOG_RAMDISC_PATH;
-  log_info.file_path.append("/");
-  log_info.file_path.append(GRAPHICS_FN_LOG_FN);
-  log_info.dest_name = GRAPHICS_FN_LOG_FN;
-  log_info.tmp_file_delete = FALSE;
-  list.push_back(log_info);
-}
-
-static void getSyslogFile(SS_STORELOGS_OPE_TYPE type,
-                          std::vector<LogInfo>& list) {  // NOLINT (runtime/references)
-  LogInfo log_info;
-
-  log_info.file_path = FRAMEWORKUNIFIEDLOG_RAMDISC_PATH;
-  log_info.file_path.append("/");
-  log_info.file_path.append(SYSLOG_DIR_NAME);
-  log_info.dest_name = SYSLOG_DIR_NAME;
-  log_info.tmp_file_delete = FALSE;
-  list.push_back(log_info);
-}
-
-static void getWinSyslogFile(SS_STORELOGS_OPE_TYPE type,
+static void getExternallogFile(SS_STORELOGS_OPE_TYPE type,
                              std::vector<LogInfo>& list) {  // NOLINT (runtime/references)
+  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
+  ExternalLogList ext_log;
+  memset(&ext_log, 0, sizeof(&ext_log));
 
-  LogInfo log_info;
+  CNSConfigReader *l_pReaderCfg = new CNSConfigReader();
 
-  log_info.file_path = FRAMEWORKUNIFIEDLOG_RAMDISC_PATH;
-  log_info.file_path.append("/");
-  log_info.file_path.append(WINSYS_LOG_FN);
-  log_info.dest_name = WINSYS_LOG_FN;
-  log_info.tmp_file_delete = FALSE;
-  list.push_back(log_info);
+  if (NULL == l_pReaderCfg) {  // LCOV_EXCL_BR_LINE 5: new's error case
+    // LCOV_EXCL_START 5: new's error case
+    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error. Unable to allocate CNSConfigReader object.");
+    // LCOV_EXCL_STOP
+  } else {
+    if (eFrameworkunifiedStatusOK != (l_eStatus = l_pReaderCfg->Parse(LOGGERSERVICELOG_CONFIG_PATH))) {
+      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error. l_pReaderCfg->Parse(%s) returned: 0x%X", LOGGERSERVICELOG_CONFIG_PATH);
+    } else if (eFrameworkunifiedStatusOK !=
+        (l_eStatus = l_pReaderCfg->GetInt("LOGGING.ExternalLogNum", ext_log.num))) {
+      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error. l_pReaderCfg->GetInt(LOGGING.ExternalLogNum)");
+    } else if (eFrameworkunifiedStatusOK !=
+        (l_eStatus = l_pReaderCfg->GetInt("LOGGING.ExternalLogMax", ext_log.max))) {
+      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error. l_pReaderCfg->GetInt(LOGGING.EmmcOutputMax)");
+    } else {
+      if (ext_log.num > 0) {
+        std::string str = "EXTERNAL_";
+        UI_32 num = 0;
+
+        if (ext_log.num <= ext_log.max) {
+          num = ext_log.num;
+        } else {
+          num = ext_log.max;
+        }
+
+        ext_log.p_info = new ExternalLogInfo[num];
+
+        // Load external log info
+        for (UI_32 i = 0; i < num; i++) {
+          std::string query = str + std::to_string(i+1);
+          if (eFrameworkunifiedStatusOK !=
+              (l_eStatus = l_pReaderCfg->GetString((query+".OutputPath"), ext_log.p_info[i].dirname))) {
+            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error. l_pReaderCfg->GetString(EXTERNAL.OutputPath)");
+          } else if (eFrameworkunifiedStatusOK !=
+              (l_eStatus = l_pReaderCfg->GetString((query+".ExtLogPath"), ext_log.p_info[i].path))) {
+            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error. l_pReaderCfg->GetString(EXTERNAL.ExtLogPath)");
+          } else if (eFrameworkunifiedStatusOK !=
+              (l_eStatus = l_pReaderCfg->GetBool((query+".Remove"), ext_log.p_info[i].remove))) {
+            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error. l_pReaderCfg->GetBool(EXTERNAL.Remove)");
+          } else {
+            LogInfo log_info;
+            log_info.file_path = ext_log.p_info[i].path;
+            log_info.dest_name = ext_log.p_info[i].dirname;
+            log_info.tmp_file_delete = ext_log.p_info[i].remove;
+
+            list.push_back(log_info);
+          }
+        }
+
+        delete[] ext_log.p_info;
+
+      } else {
+        // None external log
+      }
+    }
+    delete l_pReaderCfg;
+  }
 }
 
-static void getAppFwlogFile(SS_STORELOGS_OPE_TYPE type,
-                            std::vector<LogInfo>& list) {  // NOLINT (runtime/references)
 
-  LogInfo log_info;
 
-  log_info.file_path = FRAMEWORKUNIFIEDLOG_RAMDISC_PATH;
-  log_info.file_path.append("/");
-  log_info.file_path.append(APPFW_DIR_NAME);
-  log_info.dest_name = APPFW_DIR_NAME;
-  log_info.tmp_file_delete = FALSE;
-  list.push_back(log_info);
-}
-
-static void getTomoyologFile(SS_STORELOGS_OPE_TYPE type,
-                             std::vector<LogInfo>& list) {  // NOLINT (runtime/references)
-
-  LogInfo log_info;
-
-  log_info.file_path = TOMOYO_DIR_PATH;
-  log_info.file_path.append("/");
-  log_info.file_path.append(TOMOYO_DIR_NAME);
-  log_info.dest_name = TOMOYO_DIR_NAME;
-  log_info.tmp_file_delete = TRUE;
-  list.push_back(log_info);
-}
 
 static void getLoggerservicelogFile(SS_STORELOGS_OPE_TYPE type,
                           std::vector<LogInfo>& list,  // NOLINT (runtime/references)

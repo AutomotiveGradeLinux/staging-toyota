@@ -1,5 +1,5 @@
 #
-# @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+# @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -73,7 +73,6 @@ CPPFLAGS += -DRELEASE_BUILD
 CPPFLAGS += -DLINUX
 CPPFLAGS += -DFRAMEWORKUNIFIEDLOGOPTIONS=0x08 -DFRAMEWORKUNIFIEDLOGAPPZONES=31,30,29,28,27,26,9,8,3
 CPPFLAGS += -DIMPL_AGL_APPLICATION_CALLBACKS_PRE_BACKGROUND
-CXXFLAGS += -std=c++11
 
 CPPFLAGS_mem_reader.o = -fno-exceptions
 CPPFLAGS_reader.o = -fno-exceptions
@@ -105,7 +104,7 @@ CPPFLAGS_udp_writer.o = -fno-exceptions
 ######### linked library #############
 LDFLAGS += -L../lib/
 LDLIBS += -Wl,-Bstatic -lSS_LoggerStoreLogs
-#LDLIBS += -Wl,-Bstatic -lPFDRECThread
+LDLIBS += -Wl,-Bstatic -lPFDRECThread
 
 ######### linked library (dynamic) #############
 LDLIBS += -Wl,-Bdynamic -lc #Substitute for libsocket
@@ -116,12 +115,11 @@ LDLIBS += -Wl,-Bdynamic -ltar
 LDLIBS += -Wl,-Bdynamic -lz
 LDLIBS += -Wl,-Bdynamic -lSS_SystemIfUnified
 LDLIBS += -Wl,-Bdynamic -lPosixBasedOS001legacy
-LDLIBS += -Wl,-Bdynamic -lvp
 LDLIBS += -Wl,-Bdynamic -lns_backup #for PFDRECTread
 LDLIBS += -Wl,-Bdynamic -lcommon
 LDLIBS += -Wl,-Bdynamic -lcrypto
-#LDLIBS += -Wl,-Bdynamic -lextension
-#LDLIBS += -Wl,-Bdynamic -lClock_API
+LDLIBS += -Wl,-Bdynamic -lextension
+LDLIBS += -Wl,-Bdynamic -lClock_API
 
 
 LINK_CXX=Y

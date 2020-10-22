@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,43 +54,27 @@ enum ARTIFACT_BIT {
   ARTIFACT_BIT_DEBUG_FOLDER2_CONTENT = 1
       << (UI_32) eArtifactIdDebugFolder2Content,
   ARTIFACT_BIT_COM_LOG = 1 << (UI_32) eArtifactIdComDebugLog,
-  ARTIFACT_BIT_RADIO_LOG = 1 << (UI_32) eArtifactIdRadioDebugLog,
-  ARTIFACT_BIT_CONNECTIVITY_LOG = 1 << (UI_32) eArtifactIdConnectivityDebugLog,
-  ARTIFACT_BIT_GRAPHICS_LOG = 1 << (UI_32) eArtifactIdGraphicsDebugLog,
-  ARTIFACT_BIT_SYS_LOG = 1 << (UI_32) eArtifactIdSysLog,
-  ARTIFACT_BIT_PSTORE_LOG = 1 << (UI_32) eArtifactIdPstoreLog,
-  ARTIFACT_BIT_WINSYS_LOG = 1 << (UI_32) eArtifactIdWinSysLog,
-  ARTIFACT_BIT_APPFW_LOG = 1 << (UI_32) eArtifactIdAppFwLog,
-  ARTIFACT_BIT_TOMOYO_LOG = 1 << (UI_32) eArtifactIdTomoyoLog
+  ARTIFACT_BIT_PSTORE_LOG = 1 << (UI_32) eArtifactIdPstoreLog
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /////  Definition for Logging Artifact Filepaths
 //////////////////////////////////////////////////////////////////////////////////////////
-const char LAF_DEBUG_FOLDER[] = "/nv/log";
-const char LAF_DEBUG_FOLDER2[] = "/nv/log2";
+const char LAF_DEBUG_FOLDER[] = "/nv/BS/ss/logger_service/rwdata";
+const char LAF_DEBUG_FOLDER2[] = "/nv/BS/ss/logger_service/rwdata/log2";
 const char LAF_MONTECARLO_FN[] = "/tmp/MonteCarlo";
 const char LAF_METACORE_FN[] = "/tmp/MetaCore";
 const char LAF_CMS_FN[] = "/tmp/cms";
 const char LAF_INT_DTC_FN[] = "/tmp/dtc_error.log";
-const char LAF_LOGGERSERVICELOG_COM[] = "/ramd/log/frameworkunifiedlog/communication";
-const char LAF_LOGGERSERVICELOG_RDO[] = "/ramd/log/frameworkunifiedlog/radio";
-const char LAF_LOGGERSERVICELOG_CONNECTIVITY[] = "/ramd/log/frameworkunifiedlog/connectivity";
-const char LAF_GRAPHICS_FN[] = "/ramd/log/frameworkunifiedlog/graphics.log";
-const char LAF_KERNEL_BOOT_FN[] = "/ramd/log/frameworkunifiedlog/kernelboot.log";
-const char LAF_SYSLOG[] = "/ramd/log/frameworkunifiedlog/syslog";
+const char LAF_LOGGERSERVICELOG_COM[] = "/ramd/BS/ss/logger_service/rwdata/frameworkunifiedlog/communication";
+const char LAF_KERNEL_BOOT_FN[] = "/ramd/BS/ss/logger_service/rwdata/frameworkunifiedlog/kernelboot.log";
 const char LAF_PSTORELOG[] = "/dev/pstore";
-const char LAF_WINSYS_FN[] = "/ramd/log/frameworkunifiedlog/winsys.log";
-const char LAF_APPFW[] = "/ramd/log/frameworkunifiedlog/appfw";
-const char LAF_TOMOYO[] = "/nv/ptdata/sec/tomoyo";
 
 #define ARTIFACT_BIT_ALL_OUTPUT_LOG  (ARTIFACT_BIT_LOGGERSERVICE_DEBUG_LOG |  \
               ARTIFACT_BIT_DEBUG_DUMP_LOG |  \
               ARTIFACT_BIT_SYSTEM_DATA_LOG |  \
               ARTIFACT_BIT_SHOW_MEM_TXT |  \
               ARTIFACT_BIT_COM_LOG |    \
-              ARTIFACT_BIT_RADIO_LOG |    \
-              ARTIFACT_BIT_CONNECTIVITY_LOG |  \
               ARTIFACT_BIT_KERNEL_LOG |    \
                 ARTIFACT_BIT_KERNEL_BOOT_LOG  | \
               ARTIFACT_BIT_SCREEN_SHOT |  \
@@ -100,13 +84,8 @@ const char LAF_TOMOYO[] = "/nv/ptdata/sec/tomoyo";
               ARTIFACT_BIT_DRLOCATION_LOG |  \
               ARTIFACT_BIT_CHLM_MC_LOGS |  \
               ARTIFACT_BIT_INTERNAL_DTC_LOG |  \
-              ARTIFACT_BIT_GRAPHICS_LOG |  \
-              ARTIFACT_BIT_SYS_LOG |    \
               ARTIFACT_BIT_METACORE_LOGS |      \
-              ARTIFACT_BIT_PSTORE_LOG    |      \
-              ARTIFACT_BIT_WINSYS_LOG    |      \
-                ARTIFACT_BIT_APPFW_LOG |    \
-              ARTIFACT_BIT_TOMOYO_LOG)
+              ARTIFACT_BIT_PSTORE_LOG)
 
 TLoggingArtifactCfg CErrorEventCfg::m_loggerErrorEventCfgTbl[eErrorEventTypeMaxValue] = {
     { eErrorEventTypeProcessCrash, { (ARTIFACT_BIT_ALL_OUTPUT_LOG
@@ -191,56 +170,30 @@ TLoggingArtifactCfg CErrorEventCfg::m_loggerErrorEventCfgTbl[eErrorEventTypeMaxV
 
 TLoggingArtifact CErrorEventCfg::m_loggerErrorArtifactCfgTbl[eArtifactIdMaxValue] = {  // LCOV_EXCL_BR_LINE 11:Unexpected branch
     /*Artifact ID    Owner    Timeout Callback Type    Path CallBack Function    Delete tmp artifact*/
-    { eArtifactIdInterfaceunifiedDebugLog, { SERVICE_LOGGER, 5000, { eCbTypeFunction, "",
-        SSLogger_SendtoSelf }, TRUE } }, { eArtifactIdTransmitLog,
-        { SERVICE_LOGGER, 5000, { eCbTypeFunction, "", SSLogger_SendtoSelf },
-            TRUE } }, { eArtifactIdPerformanceLog, { SERVICE_LOGGER, 5, {
-        eCbTypeFunction, "", SSLogger_SendtoSelf }, FALSE } }, {
-        eArtifactIdBootMicroLog, { SERVICE_SYSMANAGER, 1000, { eCbTypeFunction,
-            "", SSLogger_SendtoSM }, TRUE } }, { eArtifactIdSystemDataCsv, {
-        SERVICE_SYSMANAGER, 5000, { eCbTypeFunction, "", SSLogger_SendtoSM },
-        TRUE } }, { eArtifactIdShowMemTxt, { SERVICE_SYSMANAGER, 8000, {
-        eCbTypeFunction, "", SSLogger_SendtoSM }, TRUE } }, {
-        eArtifactIdProcessCore, { SERVICE_SYSMANAGER, 5000, { eCbTypeFunction,
-            "", SSLogger_SendtoSM }, TRUE } }, { eArtifactIdDebugDumpLog, {
-        SERVICE_SYSMANAGER, 4000, { eCbTypeFunction, "", SSLogger_SendtoSM },
-        TRUE } }, { eArtifactIdScreenShot, { SERVICE_LOGGER, 1100, {
-        eCbTypeFunction, "", SSLogger_SendtoSelf }, TRUE } }, {
-        eArtifactIdDebugFolderContent, { SERVICE_LOGGER, 50000, { eCbTypePath,
-            LAF_DEBUG_FOLDER, NULL }, FALSE } }, {
-        eArtifactIdDebugFolder2Content, { SERVICE_LOGGER, 50000, { eCbTypePath,
-            LAF_DEBUG_FOLDER2, NULL }, FALSE } }, { eArtifactIdKernelLog,
-        { SERVICE_LOGGER, 5000, { eCbTypeFunction, "", SSLogger_SendtoSelf },
-            TRUE } }, { eArtifactIdKernelBootLog, { SERVICE_LOGGER, 5000, {
-        eCbTypePath, LAF_KERNEL_BOOT_FN, NULL }, FALSE } }, {
-        eArtifactIdDRInitialLog, { SERVICE_LOGGER, 500, { eCbTypeFunction, "",
-            SSLogger_SendtoSelf }, TRUE } }, { eArtifactIdDRLocationLog,
-        { SERVICE_LOGGER, 500, { eCbTypeFunction, "", SSLogger_SendtoSelf },
-            TRUE } }, { eArtifactIdCpuHighLoadMonteCarloLogs, { SERVICE_LOGGER,
-        50, { eCbTypePath, LAF_MONTECARLO_FN, NULL }, TRUE } }, {
-        eArtifactIdMetaCoreLogs, { SERVICE_LOGGER, 50, { eCbTypePath,
-            LAF_METACORE_FN, NULL }, TRUE } }, { eArtifactIdCmsLogs, {
-        SERVICE_LOGGER, 500, { eCbTypePath, LAF_CMS_FN, NULL }, TRUE } }, {
-        eArtifactIDInternalDTC, { SERVICE_LOGGER, 500, { eCbTypePath,
-            LAF_INT_DTC_FN, NULL }, TRUE } }, { eArtifactIdComDebugLog, {
-        SERVICE_LOGGER, 500, { eCbTypePath, LAF_LOGGERSERVICELOG_COM, NULL }, FALSE } }, {
-        eArtifactIdRadioDebugLog, { SERVICE_LOGGER, 500, { eCbTypePath,
-            LAF_LOGGERSERVICELOG_RDO, NULL }, FALSE } }, {
-        eArtifactIdConnectivityDebugLog, { SERVICE_LOGGER, 500, { eCbTypePath,
-            LAF_LOGGERSERVICELOG_CONNECTIVITY, NULL }, FALSE } }, {
-        eArtifactIdGraphicsDebugLog, { SERVICE_LOGGER, 50, { eCbTypePath,
-            LAF_GRAPHICS_FN, NULL }, FALSE } }, { eArtifactIdSysLog, {
-        SERVICE_LOGGER, 50, { eCbTypePath, LAF_SYSLOG, NULL }, FALSE } }, {
-        eArtifactIdPstoreLog, { SERVICE_LOGGER, 50, { eCbTypePath,
-            LAF_PSTORELOG, NULL }, FALSE } }, { eArtifactIdClearAllLog,
-        { SERVICE_LOGGER, 500, { eCbTypeFunction, "", SSLogger_SendtoSelf },
-            FALSE } }, { eArtifactIdNaviLog, { SERVICE_LOGGER, 5000, {
-        eCbTypeFunction, "", SSLogger_SendtoSelf }, FALSE } }, {
-        eArtifactIdWinSysLog, { SERVICE_LOGGER, 50, { eCbTypePath,
-            LAF_WINSYS_FN, NULL }, FALSE } }, { eArtifactIdAppFwLog, {
-        SERVICE_LOGGER, 500, { eCbTypePath, LAF_APPFW, NULL }, FALSE } }, {
-        eArtifactIdTomoyoLog, { SERVICE_LOGGER, 50, { eCbTypePath, LAF_TOMOYO,
-            NULL }, TRUE } } };  // LCOV_EXCL_BR_LINE 11:Unexpected branch
+    { eArtifactIdInterfaceunifiedDebugLog, { SERVICE_LOGGER, 5000, { eCbTypeFunction, "", SSLogger_SendtoSelf }, TRUE } },
+    { eArtifactIdTransmitLog, { SERVICE_LOGGER, 5000, { eCbTypeFunction, "", SSLogger_SendtoSelf }, TRUE } },
+    { eArtifactIdPerformanceLog, { SERVICE_LOGGER, 5, { eCbTypeFunction, "", SSLogger_SendtoSelf }, FALSE } },
+    { eArtifactIdBootMicroLog, { SERVICE_SYSMANAGER, 1000, { eCbTypeFunction, "", SSLogger_SendtoSM }, TRUE } },
+    { eArtifactIdSystemDataCsv, { SERVICE_SYSMANAGER, 5000, { eCbTypeFunction, "", SSLogger_SendtoSM }, TRUE } },
+    { eArtifactIdShowMemTxt, { SERVICE_SYSMANAGER, 8000, { eCbTypeFunction, "", SSLogger_SendtoSM }, TRUE } },
+    { eArtifactIdProcessCore, { SERVICE_SYSMANAGER, 5000, { eCbTypeFunction, "", SSLogger_SendtoSM }, TRUE } },
+    { eArtifactIdDebugDumpLog, { SERVICE_SYSMANAGER, 4000, { eCbTypeFunction, "", SSLogger_SendtoSM }, TRUE } },
+    { eArtifactIdScreenShot, { SERVICE_LOGGER, 1100, { eCbTypeFunction, "", SSLogger_SendtoSelf }, TRUE } },
+    { eArtifactIdDebugFolderContent, { SERVICE_LOGGER, 50000, { eCbTypePath, LAF_DEBUG_FOLDER, NULL }, FALSE } },
+    { eArtifactIdDebugFolder2Content, { SERVICE_LOGGER, 50000, { eCbTypePath, LAF_DEBUG_FOLDER2, NULL }, FALSE } },
+    { eArtifactIdKernelLog, { SERVICE_LOGGER, 5000, { eCbTypeFunction, "", SSLogger_SendtoSelf }, TRUE } },
+    { eArtifactIdKernelBootLog, { SERVICE_LOGGER, 5000, { eCbTypePath, LAF_KERNEL_BOOT_FN, NULL }, FALSE } },
+    { eArtifactIdDRInitialLog, { SERVICE_LOGGER, 500, { eCbTypeFunction, "", SSLogger_SendtoSelf }, TRUE } },
+    { eArtifactIdDRLocationLog, { SERVICE_LOGGER, 500, { eCbTypeFunction, "", SSLogger_SendtoSelf }, TRUE } },
+    { eArtifactIdCpuHighLoadMonteCarloLogs, { SERVICE_LOGGER, 50, { eCbTypePath, LAF_MONTECARLO_FN, NULL }, TRUE } },
+    { eArtifactIdMetaCoreLogs, { SERVICE_LOGGER, 50, { eCbTypePath, LAF_METACORE_FN, NULL }, TRUE } },
+    { eArtifactIdCmsLogs, { SERVICE_LOGGER, 500, { eCbTypePath, LAF_CMS_FN, NULL }, TRUE } },
+    { eArtifactIDInternalDTC, { SERVICE_LOGGER, 500, { eCbTypePath, LAF_INT_DTC_FN, NULL }, TRUE } },
+    { eArtifactIdComDebugLog, { SERVICE_LOGGER, 500, { eCbTypePath, LAF_LOGGERSERVICELOG_COM, NULL }, FALSE } },
+    { eArtifactIdPstoreLog, { SERVICE_LOGGER, 50, { eCbTypePath, LAF_PSTORELOG, NULL }, FALSE } },
+    { eArtifactIdClearAllLog, { SERVICE_LOGGER, 500, { eCbTypeFunction, "", SSLogger_SendtoSelf }, FALSE } },
+    { eArtifactIdNaviLog, { SERVICE_LOGGER, 5000, { eCbTypeFunction, "", SSLogger_SendtoSelf }, FALSE } },
+};  // LCOV_EXCL_BR_LINE 11:Unexpected branch
 
 CErrorEventCfg::CErrorEventCfg() {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
@@ -254,10 +207,13 @@ CErrorEventCfg::~CErrorEventCfg() {  // LCOV_EXCL_START 14:globle instance
 }
 // LCOV_EXCL_STOP
 
-EFrameworkunifiedStatus CErrorEventCfg::Initialize(void) {
+EFrameworkunifiedStatus CErrorEventCfg::Initialize(CLoggerCfg* p_logger_cfg) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
   UI_32 l_cnt;
+
+  m_ext_log_num = 0;
+  ExternalLogList ext_log = p_logger_cfg->GetExternalLogList();
 
   for (l_cnt = 0; l_cnt < eArtifactIdMaxValue; l_cnt++) {
     EArtifactId l_artifactId = m_loggerErrorArtifactCfgTbl[l_cnt].ArtifactId;
@@ -272,6 +228,27 @@ EFrameworkunifiedStatus CErrorEventCfg::Initialize(void) {
     m_errorEventTypeToArtifactBitMaskMap[l_eventType] = l_errorEvtInformation;
   }
 
+  // Set external log info
+  if (ext_log.num > 0) {
+    if (ext_log.num <= ext_log.max) {
+      m_ext_log_num = ext_log.num;
+    } else {
+      m_ext_log_num = ext_log.max;
+    }
+
+    for (UI_32 i = 0; i < m_ext_log_num; i++) {
+      EArtifactId l_artifactId = (EArtifactId) (eArtifactIdMaxValue + i);
+      TLoggingArtifactInformation artifact_info;
+      artifact_info.Cb.Function = NULL;
+      artifact_info.Cb.Path = ext_log.p_info[i].path;
+      artifact_info.Cb.Type = eCbTypePath;
+      artifact_info.OwnerServiceName = SERVICE_LOGGER;
+      artifact_info.Remove = ext_log.p_info[i].remove;
+      artifact_info.RequestTimeoutMs = 5000;
+      m_errorArtifactMap[l_artifactId] = artifact_info;
+    }
+  }
+
   l_eStatus = (EFrameworkunifiedStatus) ValidateConfiguration();
   LOG_STATUS_IF_ERRORED(l_eStatus, "ValidateConfiguration()");  // LCOV_EXCL_BR_LINE 5:macro
 
@@ -283,12 +260,13 @@ UI_32 CErrorEventCfg::ValidateConfiguration(void) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
 
   UI_32 l_return = 0;
-  if (eArtifactIdMaxValue != m_errorArtifactMap.size()) {  // LCOV_EXCL_BR_LINE 6:Be sure not to exceed the eArtifactIdMaxValue
+
+  if ((eArtifactIdMaxValue + m_ext_log_num) != m_errorArtifactMap.size()) {  // LCOV_EXCL_BR_LINE 6:Be sure not to exceed the eArtifactIdMaxValue
     // LCOV_EXCL_START 6:Be sure not to exceed the eArtifactIdMaxValue
     AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
     FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
            "Artifact map size mismatch: Expected: %d, Found: %d",
-           eArtifactIdMaxValue, m_errorArtifactMap.size());
+           (eArtifactIdMaxValue + m_ext_log_num), m_errorArtifactMap.size());
     l_return |= 1;
     // LCOV_EXCL_STOP
   }
@@ -327,6 +305,15 @@ void CErrorEventCfg::GetArtifactRequestVec(
       l_artifactBit = (ARTIFACT_BIT) (1 << l_artifactId);
       if ((l_artifactRequestBits & l_artifactBit) > 0) {
         l_artifact.ArtifactId = (EArtifactId) l_artifactId;
+        l_artifact.Information = m_errorArtifactMap[l_artifact.ArtifactId];
+        f_refArtifactRequestVec.push_back(l_artifact);
+      }
+    }
+
+    // Set external log info
+    if (m_ext_log_num > 0) {
+      for (l_artifactId = 0; l_artifactId < m_ext_log_num; l_artifactId++) {
+        l_artifact.ArtifactId = (EArtifactId) (eArtifactIdMaxValue + l_artifactId);
         l_artifact.Information = m_errorArtifactMap[l_artifact.ArtifactId];
         f_refArtifactRequestVec.push_back(l_artifact);
       }

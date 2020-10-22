@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,8 @@
 #include <vector>
 #include <map>
 #include <string>
+
+#include "ss_logger_cfg.h"
 
 typedef UI_32 ARTIFACT_BIT_MASK;
 typedef UI_32 EVENT_BIT_MASK;
@@ -114,16 +116,17 @@ class CErrorEventCfg {
 
   ~CErrorEventCfg(void);
 
-  EFrameworkunifiedStatus Initialize(void);
+  EFrameworkunifiedStatus Initialize(CLoggerCfg* p_logger_cfg);
 
   void GetArtifactRequestVec(
       EErrorEventType f_eventType,
       std::vector<TLoggingArtifact> &f_refArtifactRequestVec);  // NOLINT (runtime/references)
   EVENT_BIT_MASK GetEventsForErrorEvent(EErrorEventType f_eventType);
  private:
-  UI_32 ValidateConfiguration(void);
+  UI_32 ValidateConfiguration();
   TArtifactBitMaskMap m_errorEventTypeToArtifactBitMaskMap;
   TArtifactMap m_errorArtifactMap;
+  UI_32 m_ext_log_num;
 
   static TLoggingArtifactCfg m_loggerErrorEventCfgTbl[eErrorEventTypeMaxValue];
   static TLoggingArtifact m_loggerErrorArtifactCfgTbl[eArtifactIdMaxValue];

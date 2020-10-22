@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +50,6 @@
 
 #include <system_service/ss_sm_client_if.h>
 
-#include <system_service/ss_sm_rom_access.h>
 #include <system_service/ss_system_manager_if.h>
 #include <system_service/ss_system_manager_protocol.h>
 #include <system_service/ss_system_manager_notifications.h>
@@ -61,7 +60,7 @@
 #include <ss_logger_error_event.h>
 #include <ss_logger_reader_writer_control.h>
 #include <ss_logger_common.h>
-//#include <stub/pfdrec_thread_ifc.h>
+#include <stub/pfdrec_thread_ifc.h>
 #include <system_service/ss_templates.h>
 #include <system_service/ss_logger_store_logs.h>
 #include <queue>
@@ -103,9 +102,7 @@ CErrorEvent g_errorEventHandler;
 CLoggerServiceCallbacks g_serviceCallbacks;
 CLoggerDeviceDetection g_deviceDetection;
 CReaderWriterControl g_ReaderWriterControl;
-//CPFDRECThread g_PFDRECThread;
-TimerCtrl* g_pLRotateTimer = NULL;
-uint32_t g_iLRotateCmd;
+CPFDRECThread g_PFDRECThread;
 
 /// Decide the function NormalStartupProcess execution
 static bool g_normal_startup_status = false;
@@ -181,7 +178,7 @@ EFrameworkunifiedStatus FrameworkunifiedOnInitialization(HANDLE hApp) {
   LOG_STATUS_IF_ERRORED(l_eStatus, "g_loggerCfg.Initialize()");  // LCOV_EXCL_BR_LINE 15: macro
 
   std::string l_cfgFilePathAndName =
-      "/usr/agl/share/systemmanager/scfg/ss_logger.cfg";
+      "/usr/agl/conf/BS/ss/logger_service/rodata/ss_logger.cfg";
   if (eFrameworkunifiedStatusOK != (l_eStatus = g_loggerCfg.Load(l_cfgFilePathAndName))) {  // LCOV_EXCL_BR_LINE 200:To ensure success
     // LCOV_EXCL_START 200:To ensure success
     AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
@@ -284,8 +281,8 @@ EFrameworkunifiedStatus FrameworkunifiedOnInitialization(HANDLE hApp) {
   l_eStatus = RegisterSMSessionAckCallback(SMSessionAckCb);  // LCOV_EXCL_BR_LINE 11:Unexpected branch
   LOG_STATUS_IF_ERRORED(l_eStatus, "RegisterSMSessionAckCallback()");  // LCOV_EXCL_BR_LINE 15: macro
 
-//  l_eStatus = g_PFDRECThread.Initialize(hApp);  // LCOV_EXCL_BR_LINE 11:Unexpected branch
-//  LOG_STATUS_IF_ERRORED(l_eStatus, "g_PFDRECThread.Initialize()");  // LCOV_EXCL_BR_LINE 15: macro
+  l_eStatus = g_PFDRECThread.Initialize(hApp);  // LCOV_EXCL_BR_LINE 11:Unexpected branch
+  LOG_STATUS_IF_ERRORED(l_eStatus, "g_PFDRECThread.Initialize()");  // LCOV_EXCL_BR_LINE 15: macro
 
   // Publish Service available this can also be published from FrameworkunifiedOnStart callback
   if (eFrameworkunifiedStatusOK != (l_eStatus = FrameworkunifiedPublishServiceAvailability(hApp, TRUE))) {  // LCOV_EXCL_BR_LINE 4:NSFW
@@ -306,205 +303,6 @@ l_eStatus = FrameworkunifiedSubscribeNotificationWithCallback(hApp, NTFY_SSServi
   return (l_eStatus);
 }
 
-// lotate interval
-#define LOGROTATE_INTERVAL_TIME      60
-// Get syslog file size
-static off_t syslog_fsize(void) {
-  struct stat stat_buf;
-
-  if (stat("/ramd/log/frameworkunifiedlog/syslog/syslog.log", &stat_buf) < 0)
-    return 0;
-
-  return stat_buf.st_size;
-}
-
-// Send SIGHUP to syslogd for restart syslogd.
-static EFrameworkunifiedStatus SendSigHupToSyslogd(void) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  int fd = open("/var/run/syslogd.pid", O_RDONLY);
-
-  if (fd != -1) {  // LCOV_EXCL_BR_LINE 200:Depends on the actual syslogd
-    // LCOV_EXCL_START 200:Depends on the actual syslogd
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    char buf[32];
-    ssize_t rsize;
-    long int pid;  // NOLINT (runtime/int)
-    char *endptr;
-    rsize = read(fd, buf, sizeof(buf) - 1);
-    if (rsize != -1) {
-      buf[rsize] = 0;
-      pid = strtol(buf, &endptr, 10);
-      if (kill(static_cast<pid_t>(pid), SIGHUP) == -1) {
-        l_eStatus = eFrameworkunifiedStatusFail;
-        FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
-               "Error SIGHUP syslogd(pid:%ld) %s: log rotation", pid,
-               strerror(errno));
-      }
-    } else {
-      l_eStatus = eFrameworkunifiedStatusFail;
-      FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "read:no:%d,msg:%s", errno,
-             strerror(errno));
-    }
-    close(fd);
-    // LCOV_EXCL_STOP
-  } else {
-    l_eStatus = eFrameworkunifiedStatusFail;
-    FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "open:no:%d,msg:%s", errno,
-           strerror(errno));
-  }
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}
-
-// Rotate LogFile
-static EFrameworkunifiedStatus OnRotationLog(HANDLE hApp) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  pid_t pid;
-  off_t old_logfsize, new_logfsize;
-  CL_ProcessAttr_t clAttr;
-  char *args[] = { const_cast<char*>("/usr/sbin/logrotate"),
-      const_cast<char*>("--state=/ramd/log/frameworkunifiedlog/syslog/logrotate.status"),
-      const_cast<char*>("/usr/agl/share/logrotate/logrotate.conf"), NULL };
-
-  old_logfsize = syslog_fsize();
-
-  if (CL_ProcessCreateAttrInit(&clAttr) != 0) {  // LCOV_EXCL_BR_LINE 200:Because the clAttr is never NULL, it will always succeed
-    // LCOV_EXCL_START 200:Because the clAttr is never NULL, it will always succeed
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "CL_ProcessCreateAttrInit");
-    return eFrameworkunifiedStatusFail;
-    // LCOV_EXCL_STOP
-  }
-  if (CL_ProcessCreateAttrSetGroup(&clAttr, 1) != 0) {  // LCOV_EXCL_BR_LINE 200:To ensure success
-    // LCOV_EXCL_START 200:To ensure success
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "CL_ProcessCreateAttrSetGroup");
-    return eFrameworkunifiedStatusFail;
-    // LCOV_EXCL_STOP
-  }
-
-  pid = CL_ProcessCreate(args[0], args, NULL, &clAttr);
-  if (pid == -1) {  // LCOV_EXCL_BR_LINE 200:To ensure success
-    // LCOV_EXCL_START 200:To ensure success
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "CL_ProcessCreate");
-    return eFrameworkunifiedStatusFail;
-    // LCOV_EXCL_STOP
-  }
-
-  fd_set fds;
-  struct timeval tv;
-  int selection;
-  do {
-    tv.tv_sec = 3;
-    tv.tv_usec = 0;
-    FD_ZERO(&fds);
-    FD_SET(g_errorEventHandler.m_sfd, &fds);
-    selection = select(g_errorEventHandler.m_sfd + 1, &fds, NULL, NULL, &tv);
-  } while ((selection < 0) && (errno == EINTR));  // LCOV_EXCL_BR_LINE 5:c function error
-
-  if (selection < 0) {  // LCOV_EXCL_BR_LINE 5:c function error
-    // LCOV_EXCL_START 5:c function error
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    l_eStatus = eFrameworkunifiedStatusFail;
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Select:selection:%d,no:%d,msg:%s",
-           selection, errno, strerror(errno));
-    // LCOV_EXCL_STOP
-  } else {
-    if (FD_ISSET(g_errorEventHandler.m_sfd, &fds)) {  // LCOV_EXCL_BR_LINE 5:c function error
-      int ret = 0;
-      do {
-        CL_ProcessCleanupInfo_t cinfo;
-
-        ret = CL_ProcessCleanup(g_errorEventHandler.m_sfd, &cinfo);
-
-        if ((ret != -1) && (cinfo.code == CLD_EXITED)) {
-          if (cinfo.status != 0) {  // LCOV_EXCL_BR_LINE 5:c function error(waitid in CL_ProcessCleanup)
-            l_eStatus = eFrameworkunifiedStatusFail;
-            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "CL_ProcessCleanup:status:%d",
-                   cinfo.status);
-          }
-        } else if (ret == -1) {  // LCOV_EXCL_BR_LINE 5:c function error
-          l_eStatus = eFrameworkunifiedStatusFail;
-          FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "CL_ProcessCleanup:no:%d,msg:%s",
-                 errno, strerror(errno));
-        }
-      } while (ret == 1);  // // LCOV_EXCL_BR_LINE 4: CL_ProcessCleanup will not return 1
-    } else {
-      // LCOV_EXCL_START 5:c function error
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      l_eStatus = eFrameworkunifiedStatusFail;
-      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "FD_ISSET");
-      // LCOV_EXCL_STOP
-    }
-  }
-
-  new_logfsize = syslog_fsize();
-  if (new_logfsize < old_logfsize) {
-    // in case of logfile rotated, send SIGHUP to syslogd for restart.
-    l_eStatus = SendSigHupToSyslogd();
-  }
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}
-
-// timer fd max
-#define LOGROTATE_TIMER_SET_MAX 1
-
-// Start logrotate
-static EFrameworkunifiedStatus StartLogrotate(HANDLE hApp) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  // cleanup
-  if (unlink("/ramd/log/frameworkunifiedlog/syslog/logrotate.status") == -1) {
-    // nop
-  }
-
-  if (g_pLRotateTimer == NULL) {  // LCOV_EXCL_BR_LINE 200: As it is always NULL at startup
-    g_pLRotateTimer = new TimerCtrl(LOGROTATE_TIMER_SET_MAX);
-    if (g_pLRotateTimer == NULL) {  // LCOV_EXCL_BR_LINE 5: new error
-      // LCOV_EXCL_START 5: new error
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 5: new error
-      l_eStatus = eFrameworkunifiedStatusNullPointer;
-      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "TimerCreate failed.");
-      // LCOV_EXCL_STOP
-    } else {
-      // Start Rotate Timer
-      g_pLRotateTimer->Initialize(hApp);
-      g_iLRotateCmd = g_pLRotateTimer->CreateTimer(OnRotationLog);
-      g_pLRotateTimer->StartTimer(g_iLRotateCmd, LOGROTATE_INTERVAL_TIME, 0,
-                                  LOGROTATE_INTERVAL_TIME, 0);
-    }
-  } else {
-    // LCOV_EXCL_START 200: As it is always NULL at startup
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    l_eStatus = eFrameworkunifiedStatusFail;
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Timer already exists.");
-    // LCOV_EXCL_STOP
-  }
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}
-
-// Stop logrotate
-static EFrameworkunifiedStatus StopLogrotate(HANDLE hApp) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-
-  if (g_pLRotateTimer != NULL) {  // LCOV_EXCL_BR_LINE 6: dead code
-    // Stop Rotate Timer
-    g_pLRotateTimer->DeleteTimer(g_iLRotateCmd);
-    delete g_pLRotateTimer;
-    g_pLRotateTimer = NULL;
-  }
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}
-
 static void *accOffOnCollect(void* param) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   SS_LoggerStoreLogs(SS_STORELOGS_ACCOFFON_PRESS);
@@ -519,15 +317,16 @@ static EFrameworkunifiedStatus NormalStartupProcess(HANDLE hApp) {
   EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
 
   if (false == g_normal_startup_status) {
-    LBM_RAM_t p_info;
-    l_eStatus  = GetBootLoaderInfoRequestToSystemManager(&p_info);
-    if (l_eStatus != eFrameworkunifiedStatusOK) {
-      AGL_ASSERT_NOT_TESTED();
-      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __PRETTY_FUNCTION__, " Error. GetBootLoaderInfo = %d", l_eStatus);
-    } else if (p_info.syscomSts == SUBCPU_STS_COMNG) {
-      AGL_ASSERT_NOT_TESTED();
-      HANDLE      timer;
-      timer  = FrameworkunifiedAttachTimerCallback(hApp, SYS_ILLEGAL_LOG_DELAY_TIME, 0, SysIllegalLogTimer_OnInterval);
+    T_SS_SM_START_DataStructType prm;
+
+    l_eStatus = FrameworkunifiedGetMsgDataOfSize(hApp, &prm, sizeof(T_SS_SM_START_DataStructType), eSMRRetain);
+    if (eFrameworkunifiedStatusOK != l_eStatus) {
+      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __PRETTY_FUNCTION__, "Failed PasGetMsgDataOfSize() [%d]", l_eStatus);
+    }
+
+    if (prm.resetStatus == e_SS_SM_RESET_STATUS_NG) {
+      HANDLE timer =
+          FrameworkunifiedAttachTimerCallback(hApp, SYS_ILLEGAL_LOG_DELAY_TIME, 0, SysIllegalLogTimer_OnInterval);
       if (timer == NULL) {
         FRAMEWORKUNIFIEDLOG(ZONE_ERR, __PRETTY_FUNCTION__, " Failed to register timer.");
       }
@@ -539,7 +338,6 @@ static EFrameworkunifiedStatus NormalStartupProcess(HANDLE hApp) {
     }
 
     if (g_eLoggerServiceStatus == eLSStop) {
-      AGL_ASSERT_NOT_TESTED();
       // Publish Service available this can also be published from FrameworkunifiedOnStart callback
       if (eFrameworkunifiedStatusOK
           != (l_eStatus = FrameworkunifiedPublishServiceAvailability(hApp, TRUE))) {
@@ -548,7 +346,7 @@ static EFrameworkunifiedStatus NormalStartupProcess(HANDLE hApp) {
                l_eStatus);
       }
 
-      /// Start the Writer threads
+      // Start the Writer threads
       if (eFrameworkunifiedStatusOK
           != (l_eStatus = FrameworkunifiedStartChildThread(hApp, g_thrdEvntLogWriter,
                                               sizeof(Evntlog_wi), &Evntlog_wi))) {
@@ -558,9 +356,6 @@ static EFrameworkunifiedStatus NormalStartupProcess(HANDLE hApp) {
     }
     // Set Service status to init
     g_eLoggerServiceStatus = eLSStart;
-
-    // Start logrotate
-    StartLogrotate(hApp);
 
     // Set normal_startup_status flag (true)
     g_normal_startup_status = true;
@@ -690,7 +485,6 @@ EFrameworkunifiedStatus FrameworkunifiedOnStop(HANDLE hApp) {
   } else {
     EFrameworkunifiedStatus loggerserviceRet = SS_LoggerStoreLogs(SS_STORELOGS_INTERFACEUNIFIEDLOG);
     LOG_STATUS_IF_ERRORED(loggerserviceRet, "Fail to save Loggerservice Log");
-
     EFrameworkunifiedStatus naviLog_status = g_errorEventHandler.SaveNaviLog(
         errorType.shutdownTrigger);
     LOG_STATUS_IF_ERRORED(naviLog_status, "Fail to save Navi Log");
@@ -1151,11 +945,8 @@ EFrameworkunifiedStatus cbServiceWakeupStatus(HANDLE hApp) {
 void StopLoggingFunction(HANDLE hApp) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   // PFDRECThread Stop
-//  EFrameworkunifiedStatus l_eStatus = g_PFDRECThread.Finalize(hApp);
-//  LOG_STATUS_IF_ERRORED(l_eStatus, "g_PFDRECThread.Finalize()");
-
-  // Stop logrotate
-  StopLogrotate(hApp);
+  EFrameworkunifiedStatus l_eStatus = g_PFDRECThread.Finalize(hApp);
+  LOG_STATUS_IF_ERRORED(l_eStatus, "g_PFDRECThread.Finalize()");
 
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
 }

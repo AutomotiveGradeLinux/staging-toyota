@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
-//#include <vehicle_service/Clock_API.h>
+#include <stub/Clock_API.h>
 #include <iomanip>
 #include <sstream>
 #include <string>
@@ -835,7 +835,7 @@ std::string CLoggerUtil::GetTimeString(uint32_t f_time) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   std::string l_ret = "00000000_000000";
   struct tm local_time;
-//  Clock_getLocalTimeY2K38(&f_time, &local_time);
+  Clock_getLocalTimeY2K38(&f_time, &local_time);
   char buffer[20];
   if (0
       != strftime(buffer, sizeof(buffer), "%Y%m%d_%H%M%S",  // LCOV_EXCL_BR_LINE 5: c code
@@ -1019,8 +1019,8 @@ EFrameworkunifiedStatus CLoggerUtil::CopyUntyped(std::string f_source,
   } else if (0 != S_ISDIR(l_stat.st_mode)) {
     l_eStatus = CopyDirectory(f_source, f_destination);
   } else if (0 != S_ISLNK(l_stat.st_mode)) {
-      // avoid duplicate copy for eErrorEventTypeInterfaceunifiedEmmcLogs: /nv/log/awlog -> /nv/log2/awlog
-      if (f_source.find("/nv/log/awlog") == std::string::npos) {
+      // avoid duplicate copy for eErrorEventTypeInterfaceunifiedEmmcLogs: /nv/log/awlog -> /nv/BS/ss/logger_service/rwdata/log2/awlog
+      if (f_source.find("/nv/BS/ss/logger_service/rwdata/awlog") == std::string::npos) {
         l_eStatus = CopyDirectory(f_source, f_destination);
       }
   } else if (0 != S_ISREG(l_stat.st_mode)) {

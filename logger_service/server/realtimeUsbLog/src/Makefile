@@ -1,5 +1,5 @@
 #
-# @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+# @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -44,7 +44,6 @@ CPPFLAGS += -I../../../../system_manager/server/include/processlauncher
 
 ######### add compile option #############
 CPPFLAGS += -DLINUX
-CXXFLAGS += -std=c++11
 CPPFLAGS += -DFRAMEWORKUNIFIEDLOGOPTIONS=0x08 -DFRAMEWORKUNIFIEDLOGAPPZONES=31,30
 ######### linked library #############
 
@@ -59,15 +58,13 @@ LDLIBS += -Wl,-Bdynamic -lstdc++
 LDLIBS += -Wl,-Bdynamic -lPosixBasedOS001legacy
 
 LDLIBS += -Wl,-Bdynamic -lsssmcfg
-#LDLIBS += -Wl,-Bdynamic -lMounter
 LDLIBS += -Wl,-Bdynamic -lresm
 LDLIBS += -Wl,-Bdynamic -lssver
 LDLIBS += -Wl,-Bdynamic -lSS_RomAccessIf
 #LDLIBS += -Wl,-Bdynamic -lDiagCodeAPI
-LDLIBS += -Wl,-Bdynamic -lvp
 LDLIBS += -Wl,-Bdynamic -ltar -lz
 LDLIBS += -Wl,-Bdynamic -lrt
-LDLIBS += -Wl,-Bdynamic -lvp
+
 
 ######### add library path #############
 

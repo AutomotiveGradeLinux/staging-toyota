@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,9 +22,9 @@
 #ifndef LOGGER_SERVICE_SERVER_INCLUDE_SS_LOGGER_SCRSHOT_H_
 #define LOGGER_SERVICE_SERVER_INCLUDE_SS_LOGGER_SCRSHOT_H_
 
-#define JPEG_PATH_CH0     "/nv/log/work/screenShot/screen_shot_Ch0.jpeg"
-#define JPEG_PATH_CH1     "/nv/log/work/screenShot/screen_shot_Ch1.jpeg"
+#define JPEG_PATH_CH0     "/nv/BS/ss/logger_service/rwdata/screenShot/screen_shot_Ch0.jpeg"
+#define JPEG_PATH_CH1     "/nv/BS/ss/logger_service/rwdata/screenShot/screen_shot_Ch1.jpeg"
 #define SCRSHOT_EXE_PATH  "/usr/agl/bin/SS_ScrShot"
-#define SCREEN_SHOT_PATH  "/nv/log/work/screenShot"
+#define SCREEN_SHOT_PATH  "/nv/BS/ss/logger_service/rwdata/screenShot"
 
 #endif  // LOGGER_SERVICE_SERVER_INCLUDE_SS_LOGGER_SCRSHOT_H_

@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@
 #include <system_service/ss_logger_service_protocol.h>
 #include <system_service/ss_logger_service.h>
 #include <system_service/ss_templates.h>
-//#include <vehicle_service/Clock_API.h>
+#include <stub/Clock_API.h>
 #include <new>
 #include <utility>
 #include <string>
@@ -934,8 +934,8 @@ PSTR _GetCurrentTimeString(PCHAR TempFileName, PSTR f_pstrVIN) { // LCOV_EXCL_ST
   std::string l_strVIN = f_pstrVIN;
 
   // Time string is based on current date and time. Time string format is <year-mon-dayThhmm>.
-//  Clock_getSystemTimeY2K38(&rawtime, &status);
-//  Clock_getLocalTimeY2K38(&rawtime, &local_time);
+  Clock_getSystemTimeY2K38(&rawtime, &status);
+  Clock_getLocalTimeY2K38(&rawtime, &local_time);
   if (0
       != (l_len = static_cast<UI_8>(strftime(tbuf, sizeof(tbuf), "%Y-%m-%dT%H%M",
                            &local_time)))) {

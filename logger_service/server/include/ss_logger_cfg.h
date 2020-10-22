@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,9 +73,21 @@ enum EInsertEventType {
   eInsertEventInvalid
 };
 
+struct ExternalLogInfo {
+  std::string dirname;
+  std::string path;
+  BOOL remove;
+};
+
+struct ExternalLogList {
+  SI_32 num;
+  SI_32 max;
+  ExternalLogInfo* p_info;
+};
+
 class CLoggerCfg {
  public:
-  CLoggerCfg(void) noexcept;
+  CLoggerCfg(void);
   ~CLoggerCfg(void);
 
   EFrameworkunifiedStatus Initialize(HANDLE f_hApp);
@@ -85,10 +97,9 @@ class CLoggerCfg {
   void Print(void);
 
   EFrameworkunifiedStatus SetLoggingParams(HANDLE f_hApp,
-                              STLoggerSetParams f_stLoggerSetParams) noexcept;
+                              STLoggerSetParams f_stLoggerSetParams);
 
-  EFrameworkunifiedStatus SetUDPLogging(HANDLE f_hApp, ELOGGER_STAT f_eUDPLoggingStatus)
-      noexcept;
+  EFrameworkunifiedStatus SetUDPLogging(HANDLE f_hApp, const ELOGGER_STAT f_eUDPLoggingStatus);
 
   EFrameworkunifiedStatus PersistLoggingParam(HANDLE f_hApp);
   std::string getEmmcOutputPath(void);
@@ -107,8 +118,8 @@ class CLoggerCfg {
   EFrameworkunifiedStatus GetIncrementAndPersistUserInvokedCounter(HANDLE f_hApp,
                                                       UI_32 &f_counter);  // NOLINT (runtime/references)
 
-  EFrameworkunifiedStatus GetAndIncrementEmmcCounter(UI_32 &f_counter) noexcept;  // NOLINT (runtime/references)
-  EFrameworkunifiedStatus RefreshEmmcCounter(UI_32 &f_counter) noexcept;  // NOLINT (runtime/references)
+  EFrameworkunifiedStatus GetAndIncrementEmmcCounter(UI_32 &f_counter);  // NOLINT (runtime/references)
+  EFrameworkunifiedStatus RefreshEmmcCounter(UI_32 &f_counter) const;  // NOLINT (runtime/references)
 
   void ResetEmmcCounter(void);
 
@@ -121,6 +132,7 @@ class CLoggerCfg {
   SI_32 m_emmcOutputNaviLogMax;
   SI_32 m_emmcOutputNaviLogNmlMax;
   SI_32 m_emmcOutputNaviLogErrMax;
+  ExternalLogList m_ExternalLogList;
 
   std::string m_emmcOutputPath;
   std::string m_emmcOutputNaviLogPath;
@@ -141,9 +153,10 @@ class CLoggerCfg {
   EFrameworkunifiedStatus GetLoggerStorageInfo(SLoggerStorageInfo &f_info);  // NOLINT (runtime/references)
   BOOL IsLoggingEnabled(void);
   EFrameworkunifiedStatus EelActivateLogging(HANDLE f_hApp);
+  ExternalLogList GetExternalLogList(void);
 
  private:
-  void UpdateLoggingStatus(void) noexcept;
+  void UpdateLoggingStatus(void);
   std::vector<CbFuncPtr> m_LoggingCallBack;
   void GetHighestEmmcCounterValue(UI_32 &f_counter);  // NOLINT (runtime/references)
 

@@ -1,5 +1,5 @@
 #
-# @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+# @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -43,7 +43,6 @@ CPPFLAGS += -fno-exceptions
 LDLIBS += -Wl,-Bdynamic -ldu
 LDLIBS += -Wl,-Bdynamic -ljpeg
 #LDLIBS += -Wl,-Bdynamic -lextension
-LDLIBS += -Wl,-Bdynamic -lvp
 LDLIBS += -Wl,-Bdynamic -ldrm
 
 ######### add library path #############

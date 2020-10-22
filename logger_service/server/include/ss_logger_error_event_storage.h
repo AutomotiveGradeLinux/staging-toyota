@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@
 #include <time.h>
 #include <native_service/frameworkunified_types.h>
 #include <ss_logger_error_event_cfg.h>
-//#include <vehicle_service/Clock_API.h>
+#include <stub/Clock_API.h>
 #include <string>
 #include "ss_logger_cfg.h"
 
