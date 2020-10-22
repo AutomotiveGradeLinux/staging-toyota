@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,24 +56,24 @@ void VehicleSensInitGpsCounterg(void) {
 * RETURN    : VEHICLESENS_EQ  : No data change
 *             VEHICLESENS_NEQ  : Data change
 ******************************************************************************/
-//u_int8 VehicleSensSetGpsCounterg(const SENSOR_MSG_GPSDATA_DAT *pst_data) {  // LCOV_EXCL_START 8: dead code
-//    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//    u_int8 uc_ret;
-//    VEHICLESENS_DATA_MASTER *pst_master;
-//
-//    pst_master = &gstGpsCounter_g;
-//
-//    /* Compare data master and received data */
-//    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->us_size);
-//
-//    /* Received data is set in the data master. */
-//    pst_master->ul_did    = pst_data->ul_did;
-//    pst_master->us_size    = (u_int8)pst_data->us_size;
-//    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
-//    memcpy(pst_master->uc_data, pst_data->uc_data, pst_data->us_size);
-//
-//    return(uc_ret);
-//}
+u_int8 VehicleSensSetGpsCounterg(const SENSOR_MSG_GPSDATA_DAT *pst_data) {  // LCOV_EXCL_START 8: dead code
+    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+    u_int8 uc_ret;
+    VEHICLESENS_DATA_MASTER *pst_master;
+
+    pst_master = &gstGpsCounter_g;
+
+    /* Compare data master and received data */
+    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->us_size);
+
+    /* Received data is set in the data master. */
+    pst_master->ul_did    = pst_data->ul_did;
+    pst_master->us_size    = (u_int8)pst_data->us_size;
+    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
+    memcpy(pst_master->uc_data, pst_data->uc_data, pst_data->us_size);
+
+    return(uc_ret);
+}
 
 /*******************************************************************************
 * MODULE    : VehicleSensGetGpsCounterg
@@ -83,16 +83,16 @@ void VehicleSensInitGpsCounterg(void) {
 * NOTE      :
 * RETURN    : void
 ******************************************************************************/
-//void VehicleSensGetGpsCounterg(SENSOR_MSG_GPSDATA_DAT *pst_data) {
-//    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//    const VEHICLESENS_DATA_MASTER *pst_master;
-//
-//    pst_master = &gstGpsCounter_g;
-//
-//    /* Store the data master in the specified destination. */
-//    pst_data->ul_did    = pst_master->ul_did;
-//    pst_data->us_size    = pst_master->us_size;
-//    pst_data->uc_rcv_flag  = pst_master->uc_rcvflag;
-//    memcpy(pst_data->uc_data, pst_master->uc_data, pst_master->us_size);
-//}
+void VehicleSensGetGpsCounterg(SENSOR_MSG_GPSDATA_DAT *pst_data) {
+    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+    const VEHICLESENS_DATA_MASTER *pst_master;
+
+    pst_master = &gstGpsCounter_g;
+
+    /* Store the data master in the specified destination. */
+    pst_data->ul_did    = pst_master->ul_did;
+    pst_data->us_size    = pst_master->us_size;
+    pst_data->uc_rcv_flag  = pst_master->uc_rcvflag;
+    memcpy(pst_data->uc_data, pst_master->uc_data, pst_master->us_size);
+}
 // LCOV_EXCL_STOP

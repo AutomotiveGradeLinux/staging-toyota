@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@
  * Incluce                                                                         *
  *---------------------------------------------------------------------------------*/
 #include <vehicle_service/POS_define.h>
-//#include <gps_hal.h>
+#include <gps_hal.h>
 
 /*---------------------------------------------------------------------------------*
  * Definition                                                                      *
@@ -61,11 +61,42 @@
 
 /* Command ID */
 /* Vehicle sensor information notification CID (Rate information) */
-#define CID_POSIF_REGISTER_LISTENER_SPEED     (0x0203)  //!< \~english Delivery speed
+
+/**
+ * \~english @brief  Delivery speed command ID
+ * \~english @brief  If you want to catch above envents, use NSFW like below.
+ * \~english @code
+ * l_eStatus = FrameworkUnifiedAttachCallbackToDispatcher(h_app, POS_NTFY_SEND_THREAD, CID_POSIF_REGISTER_LISTENER_SPEED, CBCallbackA);
+ * @endcode
+ */
+#define CID_POSIF_REGISTER_LISTENER_SPEED     (0x0203)
+
+/**
+ * \~english @brief  Delivery longitude and latitude command ID
+ * \~english @brief  If you want to catch above envents, use NSFW like below.
+ * \~english @code
+ * l_eStatus = FrameworkUnifiedAttachCallbackToDispatcher(h_app, POS_NTFY_SEND_THREAD, CID_POSIF_REGISTER_LISTENER_LONLAT, CBCallbackA);
+ * @endcode
+ */
 #define CID_POSIF_REGISTER_LISTENER_LONLAT    0x0781
-//!< \~english Delivery longitude and latitude
-#define CID_POSIF_REGISTER_LISTENER_ALTITUDE  0x0782  //!< \~english Delivery altitude
-#define CID_POSIF_REGISTER_LISTENER_HEADING   0x0783  //!< \~english Delivery heading
+
+/**
+ * \~english @brief  Delivery altitude command ID
+ * \~english @brief  If you want to catch above envents, use NSFW like below.
+ * \~english @code
+ * l_eStatus = FrameworkUnifiedAttachCallbackToDispatcher(h_app, POS_NTFY_SEND_THREAD, CID_POSIF_REGISTER_LISTENER_ALTITUDE, CBCallbackA);
+ * @endcode
+ */
+#define CID_POSIF_REGISTER_LISTENER_ALTITUDE  0x0782
+
+/**
+ * \~english @brief  Delivery heading command ID
+ * \~english @brief  If you want to catch above envents, use NSFW like below.
+ * \~english @code
+ * l_eStatus = FrameworkUnifiedAttachCallbackToDispatcher(h_app, POS_NTFY_SEND_THREAD, CID_POSIF_REGISTER_LISTENER_HEADING, CBCallbackA);
+ * @endcode
+ */
+#define CID_POSIF_REGISTER_LISTENER_HEADING   0x0783
 
 /*---------------------------------------------------------------------------------*
  * Typedef declaration                                                             *
@@ -94,7 +125,7 @@ typedef struct {
  * \~english longitude and latitude information data delivery message
  */
 typedef struct {
-//  SENSORLOCATION_LONLATINFO_DAT data;
+  SENSORLOCATION_LONLATINFO_DAT data;
   //!< \~english longitude and latitude information data
 } SENSORLOCATION_MSG_LONLATINFO;
 
@@ -103,7 +134,7 @@ typedef struct {
  * \~english altitude information data delivery message
  */
 typedef struct {
-//  SENSORLOCATION_ALTITUDEINFO_DAT data;  //!< \~english altitude information data
+  SENSORLOCATION_ALTITUDEINFO_DAT data;  //!< \~english altitude information data
 } SENSORLOCATION_MSG_ALTITUDEINFO;
 
 /**
@@ -111,7 +142,7 @@ typedef struct {
  * \~english heading information data delivery message
  */
 typedef struct {
-//  SENSORMOTION_HEADINGINFO_DAT data;  //!< \~english heading information data
+  SENSORMOTION_HEADINGINFO_DAT data;  //!< \~english heading information data
 } SENSORMOTION_MSG_HEADINGINFO;
 
 /**
@@ -119,7 +150,7 @@ typedef struct {
  * \~english speed information data delivery message
  */
 typedef struct {
-//  SENSORMOTION_SPEEDINFO_DAT data;  //!< \~english speed information data
+  SENSORMOTION_SPEEDINFO_DAT data;  //!< \~english speed information data
 } SENSORMOTION_MSG_SPEEDINFO;
 
 
@@ -264,7 +295,7 @@ extern "C" {
 ///          Notification of message
 ///        - After registered successfully, vehicle sensor information will been sent as system API \n
 ///          message with following format.\n
-///          Command ID : CID_POSIF_REGISTER_LISTENER_LONLAT \n
+///          Command ID : @ref CID_POSIF_REGISTER_LISTENER_LONLAT \n
 ///          message structure
 /// \~english @code
 ///   typedef struct {
@@ -278,8 +309,6 @@ extern "C" {
 ///   uint8_t   getMethod;  /* get method */
 ///   uint8_t   SyncCnt;    /* Synchrony count */
 ///   uint8_t   isEnable;   /* enable or not */
-///   uint8_t   isExistDR;  /* DR exist or not[not used] */
-///   uint8_t   DRStatus    /* DR status[not used] */
 ///   uint8_t   posSts;     /* position status */
 ///   uint16_t  posAcc;     /* Position accuracy */
 ///   int32_t   Longitude;  /* Longitude */
@@ -346,7 +375,7 @@ POS_RET_API POS_RegisterListenerLonLat(HANDLE hApp, PCSTR notifyName, uint8_t uc
 /// \~english @param [in] ucDeliveryTiming
 ///        - uint8_t - Delivery timing(change/update)
 /// \~english @param [in] ucGetMethod
-///        - uint8_t - Get method(GPS/Navi/Not specified)
+///        - uint8_t - Get method(GPS/Not specified)
 ///
 /// \~english @par
 ///        - Delivery control flag(ucCtrlFlg)
@@ -361,7 +390,6 @@ POS_RET_API POS_RegisterListenerLonLat(HANDLE hApp, PCSTR notifyName, uint8_t uc
 ///          vehicle sensor.
 ///        - Get method(ucGetMethod)
 ///        - SENSOR_GET_METHOD_GPS - GPS. The altitude from GPS will be deliveried.
-///        - SENSOR_GET_METHOD_NAVI - Navi. The altitude from Navigation will be deliveried.
 ///        - SENSOR_GET_METHOD_AUTO - Not specified. The altitude will be deliveried according to \n
 ///          the current environment
 ///        - Avaliable method is descriped as following in each environment. \n
@@ -454,7 +482,7 @@ POS_RET_API POS_RegisterListenerLonLat(HANDLE hApp, PCSTR notifyName, uint8_t uc
 /// \~english @par
 ///          Notification of message
 ///        - After registered successfully, vehicle sensor will send system API message with following format. \n
-///          Command ID : CID_POSIF_REGISTER_LISTENER_ALTITUDE \n
+///          Command ID : @ref CID_POSIF_REGISTER_LISTENER_ALTITUDE \n
 ///          message structure
 /// \~english @code
 ///   typedef struct {
@@ -467,21 +495,17 @@ POS_RET_API POS_RegisterListenerLonLat(HANDLE hApp, PCSTR notifyName, uint8_t uc
 ///   uint8_t   getMethod;  /* get method */
 ///   uint8_t   SyncCnt;    /* synchrony count */
 ///   uint8_t   isEnable;   /* enable or not */
-///   uint8_t   isExistDR;  /* DR exist or not[not used] */
-///   uint8_t   DRStatus    /* DR status[not used] */
 ///   uint8_t   Reserve[3]; /* Reserve */
 ///   int32_t   Altitude;   /* Altitude(unit:0.01m) */
 /// } SENSORLOCATION_ALTITUDEINFO_DAT;
 /// @endcode
 ///        - Get method(getMethod)
 ///        - SENSOR_GET_METHOD_GPS - altitude from GPS
-///        - SENSOR_GET_METHOD_NAVI - altitude from Navigation
 ///        - Synchrony count(SyncCnt)
 ///        - Count for position data synchronous \n
 ///          When delivery altitude and heading data, position data can be synchronized by SyncCnt. \n
 ///          But the data of different method can not be synchronized by SyncCnt.\n
-///          example 1: [longitude and latitude from GPS] and [heading from GPS] can be synchronized by SyncCnt.\n
-///          example 2: [longitude and latitude from GPS] and [longitude and latitude from Navi] can not be
+///          example: [longitude and latitude from GPS] and [heading from GPS] can be synchronized by SyncCnt.\n
 ///          synchronized by SyncCnt. \n
 ///          Caution: The sensor count in sensor data delivery is another data.
 ///        - Enable or not(isEnable) \n
@@ -491,7 +515,6 @@ POS_RET_API POS_RegisterListenerLonLat(HANDLE hApp, PCSTR notifyName, uint8_t uc
 ///        - when GPS data specified, Altitude is invalid at following condition(so [not avaliable] provieded):
 ///        - Immediately after system start, GPS unit has not received current location data and GPS unit status \n
 ///          is not positioning fix
-///        - If it is not initialization status, certainly provide [avaliable] when Navi data specified
 ///        - If the status is [not avaliable], data following can not be guaranteed.
 ///        - Altitude
 ///        - altitude data(unit 0.01m)
@@ -629,7 +652,7 @@ POS_RET_API POS_RegisterListenerAltitude(HANDLE hApp, PCSTR notifyName, uint8_t 
 /// \~english @par
 ///          Notification of message
 ///        - After registered successfully, vehicle sensor will send system API message with following format. \n
-///          Command ID : CID_POSIF_REGISTER_LISTENER_SPEED \n
+///          Command ID : @ref CID_POSIF_REGISTER_LISTENER_SPEED \n
 ///           message structure
 /// \~english @code
 ///   typedef struct {
@@ -642,9 +665,7 @@ POS_RET_API POS_RegisterListenerAltitude(HANDLE hApp, PCSTR notifyName, uint8_t 
 ///   uint8_t   getMethod;    /* get method */
 ///   uint8_t   SyncCnt;      /* synchrony count */
 ///   uint8_t   isEnable;     /* enable or not */
-///   uint8_t   isExistDR;    /* DR exist or not[not used] */
 ///   uint8_t   Reserve1[3];  /* Reserve */
-///   uint8_t   DRStatus      /* DR status[not used] */
 ///   uint16_t  Speed;        /* speed(unit:0.01m/sec) */
 ///   uint8_t   Reserve2[2];  /* Reserve */
 ///   } SENSORMOTION_SPEEDINFO_DAT;
@@ -707,7 +728,6 @@ POS_RET_API POS_RegisterListenerSpeed(HANDLE hApp, PCSTR notifyName, uint8_t ucC
 ///          vehicle sensor.
 ///        - Get method(ucGetMethod)
 ///        - SENSOR_GET_METHOD_GPS - GPS. The heading from GPS will be deliveried.
-///        - SENSOR_GET_METHOD_NAVI - Navi. The heading from Navi will be deliveried.
 ///        - SENSOR_GET_METHOD_AUTO - Not specified. The heading will be deliveried \n
 ///          according to the current environment
 ///        - Avaliable method is descriped as following in each environment. \n
@@ -798,7 +818,7 @@ POS_RET_API POS_RegisterListenerSpeed(HANDLE hApp, PCSTR notifyName, uint8_t ucC
 /// \~english @par
 ///           Notification of message
 ///        - After registered successfully, vehicle sensor will send system API message with following format. \n
-///          Command ID : CID_POSIF_REGISTER_LISTENER_HEADING \n
+///          Command ID : @ref CID_POSIF_REGISTER_LISTENER_HEADING \n
 ///           message structure
 /// \~english @code
 ///   typedef struct {
@@ -811,8 +831,6 @@ POS_RET_API POS_RegisterListenerSpeed(HANDLE hApp, PCSTR notifyName, uint8_t ucC
 ///   uint8_t   getMethod;    /* get method */
 ///   uint8_t   SyncCnt;      /* sync count */
 ///   uint8_t   isEnable;     /* enable or not */
-///   uint8_t   isExistDR;    /* DR exist or not[not used] */
-///   uint8_t   DRStatus      /* DR status[not used] */
 ///   uint8_t   posSts;       /* position status */
 ///   uint8_t   Reserve1[2];  /* Reserve */
 ///   uint16_t  Heading;      /* heading(unit:0.01degree) */
@@ -889,8 +907,6 @@ POS_RET_API POS_RegisterListenerHeading(HANDLE hApp, PCSTR notifyName, uint8_t u
 ///   uint8_t   getMethod;  /* get method */
 ///   uint8_t   SyncCnt;    /* sync count */
 ///   uint8_t   isEnable;   /* enable or not */
-///   uint8_t   isExistDR;  /* DR exist or not[not used] */
-///   uint8_t   DRStatus    /* DR status[not used] */
 ///   uint8_t   posSts;     /* position status */
 ///   uint16_t  posAcc;     /* Position accuracy */
 ///   int32_t   Longitude;  /* Longitude */
@@ -1025,7 +1041,7 @@ POS_RET_API POS_RegisterListenerHeading(HANDLE hApp, PCSTR notifyName, uint8_t u
 ///        - POS_RegisterListenerLonLat
 ///
 ////////////////////////////////////////////////////////////////////////////////////////////
-//POS_RET_API POS_GetLonLat(HANDLE hApp, SENSORLOCATION_LONLATINFO_DAT *dat, uint9_t ucGetMethod);
+POS_RET_API POS_GetLonLat(HANDLE hApp, SENSORLOCATION_LONLATINFO_DAT *dat, uint8_t ucGetMethod);
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 /// \ingroup tag_Positioning
@@ -1037,12 +1053,11 @@ POS_RET_API POS_RegisterListenerHeading(HANDLE hApp, PCSTR notifyName, uint8_t u
 /// \~english @param [out] dat
 ///        - SENSORLOCATION_ALTITUDEINFO_DAT* - output pointer to altitude data
 /// \~english @param [in] ucGetMethod
-///        - uint8_t - Get method(GPS/Navi/Not specified)
+///        - uint8_t - Get method(GPS/Not specified)
 ///
 /// \~english @par
 ///        - Get method(ucGetMethod)
 ///        - SENSOR_GET_METHOD_GPS - GPS  The altitude from GPS will be deliveried.
-///        - SENSOR_GET_METHOD_NAVI - Navi  The altitude from Navi will be deliveried.
 ///        - SENSOR_GET_METHOD_AUTO - Not specified  The altitude will be deliveried \n
 ///          according to the current environment
 ///        - Avaliable method is descriped as following in each environment. \n
@@ -1056,21 +1071,17 @@ POS_RET_API POS_RegisterListenerHeading(HANDLE hApp, PCSTR notifyName, uint8_t u
 ///   uint8_t   getMethod;  /* get method */
 ///   uint8_t   SyncCnt;    /* sync count */
 ///   uint8_t   isEnable;   /* enable or not */
-///   uint8_t   isExistDR;  /* DR exist or not[not used] */
-///   uint8_t   DRStatus    /* DR status[not used] */
 ///   uint8_t   Reserve[3]; /* Reserve */
 ///   int32_t   Altitude;   /* Altitude(unit:0.01m) */
 /// } SENSORLOCATION_ALTITUDEINFO_DAT;
 /// @endcode
 ///        - Get method(getMethod)
 ///        - SENSOR_GET_METHOD_GPS - altitude from GPS
-///        - SENSOR_GET_METHOD_NAVI - altitude from Navi
 ///        - Synchrony count(SyncCnt)
 ///        - Count for position data synchronous \n
 ///          When delivery altitude and heading data, position data can be synchronized by this count. \n
 ///          But the data of different method can not be synchronized by this count. \n
-///          example 1: [longitude and latitude from GPS] and [heading from GPS] can be synchronized by the count. \n
-///          example 2: [longitude and latitude from GPS] and [longitude and latitude from Navi] can not be \n
+///          example: [longitude and latitude from GPS] and [heading from GPS] can be synchronized by the count. \n
 ///          synchronized by the count. \n
 ///          Caution: The sensor count in sensor data delivery is another data.
 ///        - Enable or not(isEnable)\n
@@ -1080,7 +1091,6 @@ POS_RET_API POS_RegisterListenerHeading(HANDLE hApp, PCSTR notifyName, uint8_t u
 ///        - Altitude is invalid at following condition when GPS data specified, so [not avaliable] provieded
 ///        - Immediately after system start, GPS unit has not received current location data and GPS unit \n
 ///          status is not positioning fix
-///        - If it is not initialization status, certainly provide [avaliable] when Navi data specified
 ///        - If the status is [not avaliable], data following can not be guaranteed.
 ///        - Altitude
 ///        - altitude data(unit 0.01m)
@@ -1178,7 +1188,7 @@ POS_RET_API POS_RegisterListenerHeading(HANDLE hApp, PCSTR notifyName, uint8_t u
 /// \~english @see
 ///        - POS_RegisterListenerAltitude
 ////////////////////////////////////////////////////////////////////////////////////////////
-//POS_RET_API POS_GetAltitude(HANDLE hApp, SENSORLOCATION_ALTITUDEINFO_DAT *dat, uint8_t ucGetMethod);
+POS_RET_API POS_GetAltitude(HANDLE hApp, SENSORLOCATION_ALTITUDEINFO_DAT *dat, uint8_t ucGetMethod);
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 /// \ingroup tag_Positioning
@@ -1210,16 +1220,13 @@ POS_RET_API POS_RegisterListenerHeading(HANDLE hApp, PCSTR notifyName, uint8_t u
 ///   uint8_t   getMethod;    /* get method */
 ///   uint8_t   SyncCnt;      /* sync count */
 ///   uint8_t   isEnable;     /* enable or not */
-///   uint8_t   isExistDR;    /* DR exist or not[not used] */
 ///   uint8_t   Reserve1[3];  /* Reserve */
-///   uint8_t   DRStatus      /* DR status[not used] */
 ///   uint16_t  Speed;        /* speed(unit:0.01m/sec) */
 ///   uint8_t   Reserve2[2];  /* Reserve */
 ///   } SENSORMOTION_SPEEDINFO_DAT;
 /// @endcode
 ///        - Get method(getMethod)
 ///        - SENSOR_GET_METHOD_POS - The speed calculated in positioning based on speed pulse will be deliveried.
-///        - SENSOR_GET_METHOD_NAVI - speed from Navi
 ///        - Sync count(SyncCnt)
 ///        - 0.
 ///        - Enable or not(isEnable) \n
@@ -1327,7 +1334,7 @@ POS_RET_API POS_RegisterListenerHeading(HANDLE hApp, PCSTR notifyName, uint8_t u
 ///        - POS_RegisterListenerSpeed
 ///
 ////////////////////////////////////////////////////////////////////////////////////////////
-//POS_RET_API POS_GetSpeed(HANDLE hApp, SENSORMOTION_SPEEDINFO_DAT *dat, uint8_t ucGetMethod);
+POS_RET_API POS_GetSpeed(HANDLE hApp, SENSORMOTION_SPEEDINFO_DAT *dat, uint8_t ucGetMethod);
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 /// \ingroup tag_Positioning
@@ -1343,8 +1350,9 @@ POS_RET_API POS_RegisterListenerHeading(HANDLE hApp, PCSTR notifyName, uint8_t u
 ///
 /// \~english @par
 ///        - Get method(ucGetMethod)
-///        - SENSOR_GET_METHOD_GPS - GPS  The altitude from GPS will be deliveried.
-///        - SENSOR_GET_METHOD_NAVI - Navi  The altitude from Navi will be deliveried.
+///        - SENSOR_GET_METHOD_GPS - GPS  The heading from GPS will be deliveried.
+///        - SENSOR_GET_METHOD_NAVI - Navi  The heading from Navi will be deliveried.
+///        - SENSOR_GET_METHOD_AUTO - Not specified  The heading which most suitable in current environment \n
 ///        - Avaliable method is descriped as following in each environment. \n
 ///          In corresponding environment, the SENSOR_GET_METHOD_AUTO is set as default. \n
 ///          In corresponding environment, if the unsupported method has been specified, \n
@@ -1356,8 +1364,6 @@ POS_RET_API POS_RegisterListenerHeading(HANDLE hApp, PCSTR notifyName, uint8_t u
 ///   uint8_t   getMethod;    /* get method */
 ///   uint8_t   SyncCnt;      /* sync count */
 ///   uint8_t   isEnable;     /* enable or not */
-///   uint8_t   isExistDR;    /* DR exist or not[not used] */
-///   uint8_t   DRStatus      /* DR status[not used] */
 ///   uint8_t   posSts;       /* position status */
 ///   uint8_t   Reserve1[2];  /* Reserve */
 ///   uint16_t  Heading;      /* heading(unit:0.01degree) */
@@ -1485,7 +1491,7 @@ POS_RET_API POS_RegisterListenerHeading(HANDLE hApp, PCSTR notifyName, uint8_t u
 ///        - POS_RegisterListenerHeading
 ///
 ////////////////////////////////////////////////////////////////////////////////////////////
-//POS_RET_API POS_GetHeading(HANDLE hApp, SENSORMOTION_HEADINGINFO_DAT *dat, uint8_t ucGetMethod);
+POS_RET_API POS_GetHeading(HANDLE hApp, SENSORMOTION_HEADINGINFO_DAT *dat, uint8_t ucGetMethod);
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 /// \ingroup tag_Positioning
@@ -1647,64 +1653,6 @@ POS_RET_API POS_SetSpeedInfo(HANDLE hApp, uint16_t navispeed);
 ///
 ////////////////////////////////////////////////////////////////////////////////////////////
 POS_RET_API POS_SetLocationInfo(HANDLE hApp, POS_POSDATA* pstPosData);
-
-////////////////////////////////////////////////////////////////////////////////////////////
-/// \ingroup tag_Positioning
-/// \~english @par Brief
-///        - Set location NMEA information
-///
-/// \~english @param [in] hApp
-///        - HANDLE - App Handle
-/// \~english @param [in] locationInfo
-///        - POS_POSDATA * - pointer to location information NMEA
-///
-/// \~english @retval POS_RET_NORMAL normal finish
-/// \~english @retval POS_RET_ERROR_PARAM parameter error
-/// \~english @retval POS_RET_ERROR_INNER internal error
-/// \~english @retval POS_RET_ERROR_NOSUPPORT unsupported
-/// \~english @retval SENSOR_RET_ERROR_NOSUPPORT unsupported
-/// \~english @retval POS_RET_ERROR_RESOURCE lack of resource
-///
-/// \~english @par Precondition
-///        - The creation/initialization(FrameworkunifiedCreateDispatcherWithoutLoop and etc.) of \n
-///          the Dispatcher for App are completed.
-///        - Availability of positioning service is TRUE.
-///
-/// \~english @par changes of internal status
-///        - There is no changes of internal status
-///
-/// \~english @par Failure condition
-///        - The parameter hApp is NULL [POS_RET_ERROR_PARAM]
-///        - The length in parameter locationInfo is invalid value(0). [POS_RET_ERROR_PARAM]
-///        - The length in parameter locationInfo is abnormal value(> LOCATIONINFO_NMEA_MAX). [POS_RET_ERROR_PARAM]
-///        - The count of message in message queue is reach to  max [POS_RET_ERROR_RESOURCE]
-///        - The count of mutex is reach to max [POS_RET_ERROR_RESOURCE]
-///        - The count of item in ProcessName-ProcessNo convert table is reach to max [POS_RET_ERROR_RESOURCE]
-///        - The message queue name has not been registered in control table. [POS_RET_ERROR_INNER]
-///        - Message transfer HANDLE create failed. [POS_RET_ERROR_INNER]
-///        - Message transfer HANDLE get failed from internal table. [POS_RET_ERROR_INNER]
-///        - Location NMEA data setting message transfer failed. [POS_RET_ERROR_INNER]
-///
-/// \~english @par Detail
-///        - Call this API to set location nmea to vehicle sensor. \n
-///          This API will finish when get the return value. \n
-///          The location set by this API is saved in positioning as the location calculated by Navi. \n
-///
-/// \~english @par
-///        - Please note the following points when use this API.
-///        - This API is only called by Navi proxy.
-///
-/// \~english @par Classification
-///        - Public
-///
-/// \~english @par Type
-///        - Fire and Forget
-///
-/// \~english @see
-///        - None
-///
-////////////////////////////////////////////////////////////////////////////////////////////yy
-POS_RET_API POS_SetLocationInfoNmea(HANDLE hApp, POS_LOCATIONINFO_NMEA* locationInfo);
 
 #ifdef __cplusplus
 }

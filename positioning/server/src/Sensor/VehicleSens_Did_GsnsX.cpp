@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -98,22 +98,22 @@ void VehicleSensGetGsnsXExt(VEHICLESENS_DATA_MASTER_EXT *pst_data, u_int8 uc_get
  * @param[in]  *pst_data: Pointer to the data master acquisition destination
  * @param[in]  uc_get_method: Acquisition method(Direct Line or CAN)
  */
-//void VehicleSensGetGsnsXFst(VEHICLESENS_DATA_MASTER_FST *pst_data, u_int8 uc_get_method) {
-//    switch (uc_get_method) {    // LCOV_EXCL_BR_LINE 6:VEHICLESENS_GETMETHOD_CAN cannot to pass in
-//        case VEHICLESENS_GETMETHOD_CAN:
-//        {
-//            /* When acquiring from CAN data */
-//            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//            break;  // LCOV_EXCL_LINE 8: dead code
-//        }
-//        case VEHICLESENS_GETMETHOD_LINE:
-//        {
-//            /* To acquire from LineSensor */
-//            VehicleSensGetGsnsXFstl(pst_data);
-//            break;
-//        }
-//        default:
-//            break;
-//    }
-//}
+void VehicleSensGetGsnsXFst(VEHICLESENS_DATA_MASTER_FST *pst_data, u_int8 uc_get_method) {
+    switch (uc_get_method) {    // LCOV_EXCL_BR_LINE 6:VEHICLESENS_GETMETHOD_CAN cannot to pass in
+        case VEHICLESENS_GETMETHOD_CAN:
+        {
+            /* When acquiring from CAN data */
+            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+            break;  // LCOV_EXCL_LINE 8: dead code
+        }
+        case VEHICLESENS_GETMETHOD_LINE:
+        {
+            /* To acquire from LineSensor */
+            VehicleSensGetGsnsXFstl(pst_data);
+            break;
+        }
+        default:
+            break;
+    }
+}
 

@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,9 +67,9 @@ POS_RET_API POS_ReqGPSReset(HANDLE hApp, PCSTR ResName, uint8_t mode) {  // NOLI
     /* Arguments & Support Configuration Check */
     if ((hApp == NULL) || (ResName == NULL)) {
         ret = POS_RET_ERROR_PARAM;
-//    } else if (GPS_RST_COLDSTART != mode) {
-//        /* Parameter error except */
-//        ret = POS_RET_ERROR_PARAM;
+    } else if (GPS_RST_COLDSTART != mode) {
+        /* Parameter error except */
+        ret = POS_RET_ERROR_PARAM;
     } else {
         /* Positioning Base API initialization */
         _pb_Setup_CWORD64_API(hApp);
@@ -95,7 +95,7 @@ POS_RET_API POS_ReqGPSReset(HANDLE hApp, PCSTR ResName, uint8_t mode) {  // NOLI
             if (VehicleGetResource() == TRUE) {
                 /* Event Generation */
                 rs_pno = _pb_CnvName2Pno(ResName);
-                pid = (u_int32)getpid();
+                pid = (uint32_t)getpid();
                 tid = GetTid();
 
                 snprintf(name, sizeof(name), "PR_p%u_t%u", pid, tid);
@@ -149,53 +149,6 @@ POS_RET_API POS_ReqGPSReset(HANDLE hApp, PCSTR ResName, uint8_t mode) {  // NOLI
         }
     }
 
-    FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, "- [ret = %d]", ret);
-    return ret;
-}
-
-/**
- * @brief
- *  Get GPS version
- *
- *  Get GPS version information
- *
- * @param[in] hApp          HANDLE   - Application handle
- * @param[in] buf_size      uint8_t  - Storage size of version information(Byte)
- * @param[in] buf           int8_t*  - Pointer to store the version information
- * @param[in] size          uint8_t* - Size of the character string written to buf(Byte)
- *
- * @return  POS_RET_NORMAL           Normal completion(Include illegal)<br>
- *          POS_RET_ERROR_PARAM      Parameter error<br>
- *          POS_RET_ERROR_NOSUPPORT  Unsupported environment
- *
- */
-POS_RET_API POS_GetGPSVersion(HANDLE hApp,  // NOLINT(readability/nolint)
-                            uint8_t buf_size,
-                            int8_t* buf,  // NOLINT(readability/nolint)
-                            uint8_t* size) {
-    POS_RET_API  ret = POS_RET_NORMAL;     /* Return value */
-    UNIT_TYPE    type = UNIT_TYPE_NONE;    /* Supported HW Configuration Type */
-
-    FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, "+");
-
-    /* Positioning Base API initialization */
-    _pb_Setup_CWORD64_API(hApp);
-
-    /* Supported HW Configuration Check */
-    type = GetEnvSupportInfo();
-    if (UNIT_TYPE_GRADE1 == type) {
-        /* GRADE1 */
-        ret = POS_RET_ERROR_NOSUPPORT;
-    } else if (UNIT_TYPE_GRADE2 == type) {
-      /*
-       *  Note.
-       *  This feature branches processing depending on the unit type.
-       */
-        ret = POS_RET_ERROR_NOSUPPORT;
-    } else {
-        /* Environment error */
-        ret = POS_RET_ERROR_NOSUPPORT;
-    }
     FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, "- [ret = %d]", ret);
     return ret;
 }
@@ -295,67 +248,67 @@ POS_RET_API POS_RegisterListenerGPSTimeSetReq(HANDLE hApp,  // NOLINT(readabilit
  *         POS_RET_ERROR_NOSUPPORT      Unsupported environment
  *
  */
-//POS_RET_API POS_SetGPStime(HANDLE hApp, POS_DATETIME* pstDateTime) {  // NOLINT(readability/nolint)
-//    POS_RET_API    ret = POS_RET_NORMAL;     /* Return value of this function */
-//    UNIT_TYPE      type = UNIT_TYPE_NONE;    /* Supported HW Configuration Type */
-//
-//    FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, "+");
-//
-//    /* Arguments & Support Configuration Check */
-//    if ((pstDateTime == NULL) || (hApp == NULL)) {
-//        ret = POS_RET_ERROR_PARAM;
-//    } else {
-//        /* Positioning Base API initialization */
-//        _pb_Setup_CWORD64_API(hApp);
-//
-//        /* Supported HW Configuration Check */
-//        type = GetEnvSupportInfo();
-//        if (UNIT_TYPE_GRADE1 == type) {
-//            /* GRADE1 */
-//            ret = POS_RET_NORMAL;
-//        } else if (UNIT_TYPE_GRADE2 == type) {
-//          /*
-//           *  Note.
-//           *  This feature branches processing depending on the unit type.
-//           */
-//            ret = POS_RET_ERROR_NOSUPPORT;
-//        } else {
-//            /* Environment error */
-//            ret = POS_RET_ERROR_NOSUPPORT;
-//        }
-//    }
-//
-//    if (ret == POS_RET_NORMAL) {
-//        /* Parameter range check */
-//        /* Month */
-//        if (POS_RET_ERROR == POS_CHKPARAMU8(pstDateTime->month, 1, 12)) {
-//            return POS_RET_ERROR_PARAM;
-//        }
-//        /* Day */
-//        if (POS_RET_ERROR == POS_CHKPARAMU8(pstDateTime->date, 1, 31)) {
-//            return POS_RET_ERROR_PARAM;
-//        }
-//        /* Hour */
-//        if (POS_RET_ERROR == POS_CHKPARAMU8(pstDateTime->hour, 0, 23)) {
-//            return POS_RET_ERROR_PARAM;
-//        }
-//        /* Minutes */
-//        if (POS_RET_ERROR == POS_CHKPARAMU8(pstDateTime->minute, 0, 59)) {
-//            return POS_RET_ERROR_PARAM;
-//        }
-//        /* Second */
-//        if (POS_RET_ERROR == POS_CHKPARAMU8(pstDateTime->second, 0, 59)) {
-//            return POS_RET_ERROR_PARAM;
-//        }
-//
-//        /* Data setting(Immediate recovery)*/
-//        ret = PosSetProc(VEHICLE_DID_SETTINGTIME,
-//                         reinterpret_cast<void*>(pstDateTime), sizeof(POS_DATETIME), FALSE);
-//    }
-//
-//    FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, "- [ret = %d]", ret);
-//    return ret;
-//}
+POS_RET_API POS_SetGPStime(HANDLE hApp, POS_DATETIME* pstDateTime) {  // NOLINT(readability/nolint)
+    POS_RET_API    ret = POS_RET_NORMAL;     /* Return value of this function */
+    UNIT_TYPE      type = UNIT_TYPE_NONE;    /* Supported HW Configuration Type */
+
+    FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, "+");
+
+    /* Arguments & Support Configuration Check */
+    if ((pstDateTime == NULL) || (hApp == NULL)) {
+        ret = POS_RET_ERROR_PARAM;
+    } else {
+        /* Positioning Base API initialization */
+        _pb_Setup_CWORD64_API(hApp);
+
+        /* Supported HW Configuration Check */
+        type = GetEnvSupportInfo();
+        if (UNIT_TYPE_GRADE1 == type) {
+            /* GRADE1 */
+            ret = POS_RET_NORMAL;
+        } else if (UNIT_TYPE_GRADE2 == type) {
+          /*
+           *  Note.
+           *  This feature branches processing depending on the unit type.
+           */
+            ret = POS_RET_ERROR_NOSUPPORT;
+        } else {
+            /* Environment error */
+            ret = POS_RET_ERROR_NOSUPPORT;
+        }
+    }
+
+    if (ret == POS_RET_NORMAL) {
+        /* Parameter range check */
+        /* Month */
+        if (POS_RET_ERROR == POS_CHKPARAMU8(pstDateTime->month, 1, 12)) {
+            return POS_RET_ERROR_PARAM;
+        }
+        /* Day */
+        if (POS_RET_ERROR == POS_CHKPARAMU8(pstDateTime->date, 1, 31)) {
+            return POS_RET_ERROR_PARAM;
+        }
+        /* Hour */
+        if (POS_RET_ERROR == POS_CHKPARAMU8(pstDateTime->hour, 0, 23)) {
+            return POS_RET_ERROR_PARAM;
+        }
+        /* Minutes */
+        if (POS_RET_ERROR == POS_CHKPARAMU8(pstDateTime->minute, 0, 59)) {
+            return POS_RET_ERROR_PARAM;
+        }
+        /* Second */
+        if (POS_RET_ERROR == POS_CHKPARAMU8(pstDateTime->second, 0, 59)) {
+            return POS_RET_ERROR_PARAM;
+        }
+
+        /* Data setting(Immediate recovery)*/
+        ret = PosSetProc(VEHICLE_DID_SETTINGTIME,
+                         reinterpret_cast<void*>(pstDateTime), sizeof(POS_DATETIME), FALSE);
+    }
+
+    FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, "- [ret = %d]", ret);
+    return ret;
+}
 
 /**
  * @brief
@@ -448,56 +401,56 @@ SENSOR_RET_API POS_RegisterListenerGPStime(HANDLE hApp,  // NOLINT(readability/n
  *         POS_RET_ERROR_NOSUPPORT      Unsupported environment
  *
  */
-//POS_RET_API POS_GetGPStime(HANDLE hApp, SENSOR_GPSTIME* dat) {  // NOLINT(readability/nolint)
-//    POS_RET_API ret = POS_RET_NORMAL;          /* Return value */
-//    UNIT_TYPE   type = UNIT_TYPE_NONE;         /* Supported HW Configuration Type */
-//    DID         did = VEHICLE_DID_GPS_TIME;    /* DID */
-//    int32       ret_get_proc;                  /* POS_GetProc Return Values */
-//
-//    /* Internal debug log output */
-//    FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, "+");
-//
-//    /* Arguments & Support Configuration Check */
-//    if (hApp == NULL) {
-//        /* If the handler is NULL, the process terminates with an error. */
-//        ret = POS_RET_ERROR_PARAM;
-//    } else if (dat == NULL) {
-//        /* If the longitude/latitude data is NULL, it ends with an abnormal parameter. */
-//        ret = POS_RET_ERROR_PARAM;
-//    } else {
-//        /* Positioning Base API initialization */
-//        _pb_Setup_CWORD64_API(hApp);
-//
-//        /* Supported HW Configuration Check */
-//        type = GetEnvSupportInfo();
-//        if (UNIT_TYPE_GRADE1 == type) {
-//            ret = POS_RET_NORMAL;
-//        } else {
-//          /*
-//           *  Note.
-//           *  This feature branches processing depending on the unit type.
-//           */
-//            ret = POS_RET_ERROR_NOSUPPORT;
-//        }
-//    }
-//
-//    /* Sensor information acquisition */
-//    if (ret == POS_RET_NORMAL) {
-//        /* Data acquisition process */
-//        ret_get_proc = PosGetProc(did, reinterpret_cast<void*>(dat), sizeof(SENSOR_GPSTIME));
-//        if (static_cast<int32>(sizeof(SENSOR_GPSTIME)) > ret_get_proc) {
-//            /** Failed to acquire */
-//            if (ret_get_proc == POS_RET_ERROR_RESOURCE) {
-//                /** Insufficient resource */
-//                ret = POS_RET_ERROR_RESOURCE;
-//            } else {
-//                ret = POS_RET_ERROR_INNER;
-//            }
-//            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "PosGetProc ERROR [ret = %d]", ret);
-//        }
-//    }
-//
-//    FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, "- [ret = %d]", ret);
-//
-//    return ret;
-//}
+POS_RET_API POS_GetGPStime(HANDLE hApp, SENSOR_GPSTIME* dat) {  // NOLINT(readability/nolint)
+    POS_RET_API ret = POS_RET_NORMAL;          /* Return value */
+    UNIT_TYPE   type = UNIT_TYPE_NONE;         /* Supported HW Configuration Type */
+    DID         did = VEHICLE_DID_GPS_TIME;    /* DID */
+    int32_t       ret_get_proc;                  /* POS_GetProc Return Values */
+
+    /* Internal debug log output */
+    FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, "+");
+
+    /* Arguments & Support Configuration Check */
+    if (hApp == NULL) {
+        /* If the handler is NULL, the process terminates with an error. */
+        ret = POS_RET_ERROR_PARAM;
+    } else if (dat == NULL) {
+        /* If the longitude/latitude data is NULL, it ends with an abnormal parameter. */
+        ret = POS_RET_ERROR_PARAM;
+    } else {
+        /* Positioning Base API initialization */
+        _pb_Setup_CWORD64_API(hApp);
+
+        /* Supported HW Configuration Check */
+        type = GetEnvSupportInfo();
+        if (UNIT_TYPE_GRADE1 == type) {
+            ret = POS_RET_NORMAL;
+        } else {
+          /*
+           *  Note.
+           *  This feature branches processing depending on the unit type.
+           */
+          ret = POS_RET_ERROR_NOSUPPORT;
+        }
+    }
+
+    /* Sensor information acquisition */
+    if (ret == POS_RET_NORMAL) {
+        /* Data acquisition process */
+        ret_get_proc = PosGetProc(did, reinterpret_cast<void*>(dat), sizeof(SENSOR_GPSTIME));
+        if (static_cast<int32_t>(sizeof(SENSOR_GPSTIME)) > ret_get_proc) {
+            /* Failed to acquire */
+            if (ret_get_proc == POS_RET_ERROR_RESOURCE) {
+                /* Insufficient resource */
+                ret = POS_RET_ERROR_RESOURCE;
+            } else {
+                ret = POS_RET_ERROR_INNER;
+            }
+            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "PosGetProc ERROR [ret = %d]", ret);
+        }
+    }
+
+    FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, "- [ret = %d]", ret);
+
+    return ret;
+}

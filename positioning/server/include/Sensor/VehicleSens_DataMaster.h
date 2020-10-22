@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,9 +25,8 @@
 #include "Vehicle_API_Dummy.h"
 #include "Vehicle_API_private.h"
 
-//#include "positioning_hal.h"
+#include "positioning_hal.h"
 #include "VehicleSens_Common.h"
-#include "VehicleSens_FromMng.h"
 #include "VehicleSens_SelectionItemList.h"
 #include "CommonDefine.h"
 #include <vehicle_service/POS_common_API.h>
@@ -190,9 +189,13 @@
 #define  VEHICLE_DINIT_SYSTEMP         0x0000
 #define  VEHICLE_DINIT_SPEED_PULSE     0x0000
 #define  VEHICLE_DINIT_SPEED_KMPH      0x0000
-#define  VEHICLE_DINIT_GYRO            0x0000
+#define  VEHICLE_DINIT_GYRO_X          0x0000
+#define  VEHICLE_DINIT_GYRO_Y          0x0000
+#define  VEHICLE_DINIT_GYRO_Z          0x0000
+#define  VEHICLE_DINIT_GYRO            VEHICLE_DINIT_GYRO_X
 #define  VEHICLE_DINIT_GSNS_X          0x0000
 #define  VEHICLE_DINIT_GSNS_Y          0x0000
+#define  VEHICLE_DINIT_GSNS_Z          0x0000
 #define  VEHICLE_DINIT_REV             0x00
 #define  VEHICLE_DINIT_VSC1S03_4       0x00
 #define  VEHICLE_DINIT_VSC1S03_5       0x00
@@ -302,143 +305,152 @@
 /* -- PastModel002 support */
 
 /* Size of the data(byte) */
-#define  VEHICLE_DSIZE_DESTINATION     0x00
-#define  VEHICLE_DSIZE_HV              0x00
-#define  VEHICLE_DSIZE_2WD4WD          0x00
-#define  VEHICLE_DSIZE_STEERING_WHEEL  0x00
-#define  VEHICLE_DSIZE_VB              0x00
-#define  VEHICLE_DSIZE_IG              0x00
-#define  VEHICLE_DSIZE_MIC             0x00
-#define  VEHICLE_DSIZE_TEST            0x00
-#define  VEHICLE_DSIZE_VTRADAPTER      0x00
-#define  VEHICLE_DSIZE_AUXADAPTER      0x00
-#define  VEHICLE_DSIZE_BACKDOOR        0x00
-#define  VEHICLE_DSIZE_PKB             0x00
-#define  VEHICLE_DSIZE_ADIM            0x00
-#define  VEHICLE_DSIZE_ILL             0x00
-#define  VEHICLE_DSIZE_RHEOSTAT        0x00
-#define  VEHICLE_DSIZE_PANELTEMP       0x00
-#define  VEHICLE_DSIZE_SYSTEMP         0x00
-#define  VEHICLE_DSIZE_SPEED_PULSE     0x00
-#define  VEHICLE_DSIZE_SPEED_KMPH      0x00
-#define  VEHICLE_DSIZE_GYRO            0x00
-#define  VEHICLE_DSIZE_GYRO_TEMP       0x00
-#define  VEHICLE_DSIZE_PULSE_TIME      0x00
-#define  VEHICLE_DSIZE_GSNS_X          0x00
-#define  VEHICLE_DSIZE_GSNS_Y          0x00
-#define  VEHICLE_DSIZE_REV             0x00
-#define  VEHICLE_DSIZE_VSC1S03         0x00  /* Internal extensions */
-#define  VEHICLE_DSIZE_ECO1S01         0x00
-#define  VEHICLE_DSIZE_ENG1F07         0x00
-#define  VEHICLE_DSIZE_ENG1S03         0x00
-#define  VEHICLE_DSIZE_ACN1S04         0x00
-#define  VEHICLE_DSIZE_ACN1S05         0x00
-#define  VEHICLE_DSIZE_ACN1S06         0x00
-#define  VEHICLE_DSIZE_ACN1S08         0x00
-#define  VEHICLE_DSIZE_ACN1S07         0x00
-#define  VEHICLE_DSIZE_EHV1S90         0x00
-#define  VEHICLE_DSIZE_ECT1S92         0x00
-#define  VEHICLE_DSIZE_ENG1S28         0x00
-#define  VEHICLE_DSIZE_BGM1S01         0x00
-#define  VEHICLE_DSIZE_ENG1F03         0x00
-#define  VEHICLE_DSIZE_CAA1N01         0x00
-#define  VEHICLE_DSIZE_MET1S01         0x00
-#define  VEHICLE_DSIZE_MET1S03         0x00
-#define  VEHICLE_DSIZE_MET1S04         0x00
-#define  VEHICLE_DSIZE_MET1S05         0x00
-#define  VEHICLE_DSIZE_MET1S07         0x00
-#define  VEHICLE_DSIZE_BDB1S01         0x00
-#define  VEHICLE_DSIZE_BDB1S03         0x00
-#define  VEHICLE_DSIZE_BDB1S08         0x00
-#define  VEHICLE_DSIZE_BDB1F03         0x00
-#define  VEHICLE_DSIZE_TPM1S02         0x00
-#define  VEHICLE_DSIZE_TPM1S03         0x00
-#define  VEHICLE_DSIZE_ENG1S92         0x00
-#define  VEHICLE_DSIZE_MMT1S52         0x00
-#define  VEHICLE_DSIZE_EPB1S01         0x00
-#define  VEHICLE_DSIZE_MINIJACK        0x00
-#define  VEHICLE_DSIZE_GPS_ANTENNA     0x00
-#define  VEHICLE_DSIZE_SNS_COUNTER     0x00
-#define  VEHICLE_DSIZE_GPS_COUNTER     0x00
-#define  VEHICLE_DSIZE_SIRF_BINARY     0
-#define  VEHICLE_DSIZE_RTC             0x00
-#define  VEHICLE_DSIZE_GPS_VERSION     0x00
-#define  VEHICLE_DSIZE_SATELLITE_STATUS  0x00
-#define  VEHICLE_DSIZE_LOCATION        0x00
+#define  VEHICLE_DSIZE_DESTINATION     0x03
+#define  VEHICLE_DSIZE_HV              0x01
+#define  VEHICLE_DSIZE_2WD4WD          0x01
+#define  VEHICLE_DSIZE_STEERING_WHEEL  0x01
+#define  VEHICLE_DSIZE_VB              0x01
+#define  VEHICLE_DSIZE_IG              0x01
+#define  VEHICLE_DSIZE_MIC             0x01
+#define  VEHICLE_DSIZE_TEST            0x01
+#define  VEHICLE_DSIZE_VTRADAPTER      0x01
+#define  VEHICLE_DSIZE_AUXADAPTER      0x01
+#define  VEHICLE_DSIZE_BACKDOOR        0x01
+#define  VEHICLE_DSIZE_PKB             0x01
+#define  VEHICLE_DSIZE_ADIM            0x01
+#define  VEHICLE_DSIZE_ILL             0x01
+#define  VEHICLE_DSIZE_RHEOSTAT        0x01
+#define  VEHICLE_DSIZE_PANELTEMP       0x01
+#define  VEHICLE_DSIZE_SYSTEMP         0x02
+#define  VEHICLE_DSIZE_SPEED_PULSE     0x14
+#define  VEHICLE_DSIZE_SPEED_KMPH      0x02
+#define  VEHICLE_DSIZE_GYRO_X          0x14
+#define  VEHICLE_DSIZE_GYRO_Y          0x14
+#define  VEHICLE_DSIZE_GYRO_Z          0x14
+#define  VEHICLE_DSIZE_GYRO            VEHICLE_DSIZE_GYRO_X
+#define  VEHICLE_DSIZE_GYRO_TEMP       0x02
+#define  VEHICLE_DSIZE_PULSE_TIME      0x84
+#define  VEHICLE_DSIZE_GSNS_X          0x06
+#define  VEHICLE_DSIZE_GSNS_Y          0x06
+#define  VEHICLE_DSIZE_GSNS_Z          0x06
+#define  VEHICLE_DSIZE_REV             0x01
+#define  VEHICLE_DSIZE_VSC1S03         0x09  /* Internal extensions */
+#define  VEHICLE_DSIZE_ECO1S01         0x05
+#define  VEHICLE_DSIZE_ENG1F07         0x08
+#define  VEHICLE_DSIZE_ENG1S03         0x08
+#define  VEHICLE_DSIZE_ACN1S04         0x08
+#define  VEHICLE_DSIZE_ACN1S05         0x02
+#define  VEHICLE_DSIZE_ACN1S06         0x08
+#define  VEHICLE_DSIZE_ACN1S08         0x08
+#define  VEHICLE_DSIZE_ACN1S07         0x06
+#define  VEHICLE_DSIZE_EHV1S90         0x08
+#define  VEHICLE_DSIZE_ECT1S92         0x08
+#define  VEHICLE_DSIZE_ENG1S28         0x02
+#define  VEHICLE_DSIZE_BGM1S01         0x01
+#define  VEHICLE_DSIZE_ENG1F03         0x08
+#define  VEHICLE_DSIZE_CAA1N01         0x08
+#define  VEHICLE_DSIZE_MET1S01         0x08
+#define  VEHICLE_DSIZE_MET1S03         0x08
+#define  VEHICLE_DSIZE_MET1S04         0x08
+#define  VEHICLE_DSIZE_MET1S05         0x08
+#define  VEHICLE_DSIZE_MET1S07         0x08
+#define  VEHICLE_DSIZE_BDB1S01         0x08
+#define  VEHICLE_DSIZE_BDB1S03         0x08
+#define  VEHICLE_DSIZE_BDB1S08         0x08
+#define  VEHICLE_DSIZE_BDB1F03         0x08
+#define  VEHICLE_DSIZE_TPM1S02         0x08
+#define  VEHICLE_DSIZE_TPM1S03         0x08
+#define  VEHICLE_DSIZE_ENG1S92         0x08
+#define  VEHICLE_DSIZE_MMT1S52         0x08
+#define  VEHICLE_DSIZE_EPB1S01         0x03
+#define  VEHICLE_DSIZE_MINIJACK        0x01
+#define  VEHICLE_DSIZE_GPS_ANTENNA     0x01
+#define  VEHICLE_DSIZE_SNS_COUNTER     0x01
+#define  VEHICLE_DSIZE_GPS_COUNTER     0x01
+#define  VEHICLE_DSIZE_SIRF_BINARY     360
+#define  VEHICLE_DSIZE_RTC             VEHICLE_DSIZE_GPS_FORMAT
+#define  VEHICLE_DSIZE_GPS_VERSION     VEHICLE_DSIZE_GPS_FORMAT
+#define  VEHICLE_DSIZE_SATELLITE_STATUS  VEHICLE_DSIZE_GPS_FORMAT
+#define  VEHICLE_DSIZE_LOCATION        VEHICLE_DSIZE_GPS_FORMAT
 /* ++ GPS _CWORD82_ support */
-#define  VEHICLE_DSIZE_GPS__CWORD82___CWORD44_GP4  0x00
-#define  VEHICLE_DSIZE_GPS__CWORD82__NMEA          0x00
-#define  VEHICLE_DSIZE_GPS__CWORD82__FULLBINARY    0x00
+#define  VEHICLE_DSIZE_GPS__CWORD82___CWORD44_GP4  VEHICLE_DSIZE_GPS_FORMAT
+#define  VEHICLE_DSIZE_GPS__CWORD82__NMEA          424
+#define  VEHICLE_DSIZE_GPS__CWORD82__FULLBINARY    VEHICLE_DSIZE_GPS_FORMAT
 /* -- GPS _CWORD82_ support */
 #if CONFIG_SENSOR_EXT_VALID        /* Initial Sensor Support */
-#define VEHICLE_DSIZE_DATA_MASTER_FST      0x00
+#define VEHICLE_DSIZE_DATA_MASTER_FST      0x1200
 
-//#define  VEHICLE_DSIZE_GYRO_FST         0x00
-//#define  VEHICLE_DSIZE_SPEED_PULSE_FST  0x00
-#define  VEHICLE_DSIZE_GSNSX_FST          0x00
-#define  VEHICLE_DSIZE_GSNSY_FST          0x00
-#define  VEHICLE_DSIZE_GYROTEMP_FST       0x00
-#define  VEHICLE_DSIZE_SPEED_PULSE_FLAG_FST  0x00
-#define  VEHICLE_DSIZE_REV_FST            0x00
+#define  VEHICLE_DSIZE_GYRO_X_FST         LSDRV_FSTSNS_DSIZE_GYRO_X
+#define  VEHICLE_DSIZE_GYRO_Y_FST         LSDRV_FSTSNS_DSIZE_GYRO_Y
+#define  VEHICLE_DSIZE_GYRO_Z_FST         LSDRV_FSTSNS_DSIZE_GYRO_Z
+#define  VEHICLE_DSIZE_SPEED_PULSE_FST    LSDRV_FSTSNS_DSIZE_SPEED
+#define  VEHICLE_DSIZE_GSNSX_FST          LSDRV_FSTSNS_DSIZE_GSENSOR_X
+#define  VEHICLE_DSIZE_GSNSY_FST          LSDRV_FSTSNS_DSIZE_GSENSOR_Y
+#define  VEHICLE_DSIZE_GSNSZ_FST          LSDRV_FSTSNS_DSIZE_GSENSOR_Z
+#define  VEHICLE_DSIZE_GYROTEMP_FST       LSDRV_FSTSNS_DSIZE_GYRO_TEMP
+#define  VEHICLE_DSIZE_SPEED_PULSE_FLAG_FST  LSDRV_FSTSNS_DSIZE_SPEED_FLG
+#define  VEHICLE_DSIZE_REV_FST            LSDRV_FSTSNS_DSIZE_REV
 
-#define  VEHICLE_DSIZE_GYRO_EXT          0x00
-#define  VEHICLE_DSIZE_SPEED_PULSE_EXT   0x00
-#define  VEHICLE_DSIZE_GSNS_X_EXT        0x00
-#define  VEHICLE_DSIZE_GSNS_Y_EXT        0x00
-#define  VEHICLE_DSIZE_SNS_COUNTER_EXT   0x00
-#define  VEHICLE_DSIZE_GYRO_TEMP_EXT     0x00
-#define  VEHICLE_DSIZE_REV_EXT           0x00
-#define  VEHICLE_DSIZE_PULSE_TIME_EXT    0x00
+#define  VEHICLE_DSIZE_GYRO_EXT          0x500
+#define  VEHICLE_DSIZE_SPEED_PULSE_EXT   0x500
+#define  VEHICLE_DSIZE_GSNS_X_EXT        0x500
+#define  VEHICLE_DSIZE_GSNS_Y_EXT        0x500
+#define  VEHICLE_DSIZE_GSNS_Z_EXT        0x500
+#define  VEHICLE_DSIZE_SNS_COUNTER_EXT   0x40
+#define  VEHICLE_DSIZE_GYRO_TEMP_EXT     0x80
+#define  VEHICLE_DSIZE_REV_EXT           0x40
+#define  VEHICLE_DSIZE_PULSE_TIME_EXT    0x2100
 
 #define  VEHICLE_DSIZE_GYRO_EXT_INIT         0x00  /* Gyro output extended data master registration number initial value    */
 #define  VEHICLE_DSIZE_SPEED_PULSE_EXT_INIT  0x00  /* Vehicle speed expansion data master registration number initial value    */
 #define  VEHICLE_DSIZE_GSNS_X_EXT_INIT       0x00  /* Initial value of G sensor (X-axis) extended data master registration number    */
 #define  VEHICLE_DSIZE_GSNS_Y_EXT_INIT       0x00  /* Initial value of G sensor (Y-axis) expansion data master registration number    */
+#define  VEHICLE_DSIZE_GSNS_Z_EXT_INIT       0x00  /* Initial value of G sensor (Z-axis) expansion data master registration number    */
 #define  VEHICLE_DSIZE_SNS_COUNTER_EXT_INIT  0x00  /* Initial value of register number of sensor counter extended data master  */
 #define  VEHICLE_DSIZE_REV_EXT_INIT          0x00  /* REV extended data master registration number initial value        */
 #define  VEHICLE_DSIZE_GYRO_TEMP_EXT_INIT    0x00  /* Gyro Temperature Extended Data Master Registration Number Initial Value    */
 #define  VEHICLE_DSIZE_PULSE_TIME_EXT_INIT   0x00  /* Extended data master registration number initial value between pulse time    */
 
-#define  VEHICLE_DSIZE_GYRO_TROUBLE              0x00
-#define VEHICLE_DSIZE_MAIN_GPS_INTERRUPT_SIGNAL  0x00
-#define  VEHICLE_DSIZE_SYS_GPS_INTERRUPT_SIGNAL  0x00
-#define  VEHICLE_DSIZE_GYRO_CONNECT_STATUS       0x00
+#define  VEHICLE_DSIZE_GYRO_TROUBLE              0x01
+#define VEHICLE_DSIZE_MAIN_GPS_INTERRUPT_SIGNAL  0x01
+#define  VEHICLE_DSIZE_SYS_GPS_INTERRUPT_SIGNAL  0x01
+#define  VEHICLE_DSIZE_GYRO_CONNECT_STATUS       0x01
 
-#define  VEHICLE_DKEEP_MAX            0    /* Internal data retention count      */
+#define  VEHICLE_DKEEP_MAX            64    /* Internal data retention count      */
 
 /* Data storage location */
 #define  VEHICLE_DATA_POS_00            0x00  /* Data storage position 0 */
-#define  VEHICLE_DATA_POS_01            0x00  /* Data storage position 1 */
+#define  VEHICLE_DATA_POS_01            0x01  /* Data storage position 1 */
 #endif
 
-#define  VEHICLE_DSIZE_GPS_FORMAT        0
+#define  VEHICLE_DSIZE_GPS_FORMAT        1904
 
 /* ++ PastModel002 support */
 /* GPS_u-blox data size(Up to 208 bytes + 1 byte of sensor counter) */
-#define  VEHICLE_DSIZE_GPS_UBLOX_FORMAT      0
+#define  VEHICLE_DSIZE_GPS_UBLOX_FORMAT      212
 /* ++ PastModel002 support */
 
 /* NMEA data size */
-#define VEHICLE_DSIZE_GPS_NMEA_GGA        0    /* Positioning information(Fixed-length sentence 71 Byte) */
-#define VEHICLE_DSIZE_GPS_NMEA_DGGA       0    /* Double precision GGA - Positioning information(Fixed-length sentence 75 Byte) */
-#define VEHICLE_DSIZE_GPS_NMEA_VTG        0    /* Progress Direction,Velocity information(Fixed-length sentence 37 Byte) */
-#define VEHICLE_DSIZE_GPS_NMEA_RMC        0    /* RMC - Minimal information(Fixed-length sentence 61 Byte) */
-#define VEHICLE_DSIZE_GPS_NMEA_DRMC       0    /* Double RMC - Minimal information(Fixed-length sentence 67 Byte) */
-#define VEHICLE_DSIZE_GPS_NMEA_GLL        0    /* GLL - Geographical locality information(Fixed-length sentence 44 Byte) */
-#define VEHICLE_DSIZE_GPS_NMEA_DGLL       0    /* Double-precision GLL - Geographical locality information(Fixed-length sentence 50 Byte) */
+#define VEHICLE_DSIZE_GPS_NMEA_GGA        71    /* Positioning information(Fixed-length sentence 71 Byte) */
+#define VEHICLE_DSIZE_GPS_NMEA_DGGA       75    /* Double precision GGA - Positioning information(Fixed-length sentence 75 Byte) */
+#define VEHICLE_DSIZE_GPS_NMEA_VTG        37    /* Progress Direction,Velocity information(Fixed-length sentence 37 Byte) */
+#define VEHICLE_DSIZE_GPS_NMEA_RMC        61    /* RMC - Minimal information(Fixed-length sentence 61 Byte) */
+#define VEHICLE_DSIZE_GPS_NMEA_DRMC       67    /* Double RMC - Minimal information(Fixed-length sentence 67 Byte) */
+#define VEHICLE_DSIZE_GPS_NMEA_GLL        44    /* GLL - Geographical locality information(Fixed-length sentence 44 Byte) */
+#define VEHICLE_DSIZE_GPS_NMEA_DGLL       50    /* Double-precision GLL - Geographical locality information(Fixed-length sentence 50 Byte) */
 /* GSA - DOP information and positioning satellite information(Fixed-length sentence 66 Byte) */
-#define VEHICLE_DSIZE_GPS_NMEA_GSA        0
-#define VEHICLE_DSIZE_GPS_NMEA_GSV_1      0    /* GSV - Visual satellite information(Fixed-length sentence 70 Byte) */
-#define VEHICLE_DSIZE_GPS_NMEA_GSV_2      0    /* GSV - Visual satellite information(Fixed-length sentence 70 Byte) */
-#define VEHICLE_DSIZE_GPS_NMEA_GSV_3      0    /* GSV - Visual satellite information(Fixed-length sentence 70 Byte) */
+#define VEHICLE_DSIZE_GPS_NMEA_GSA        66
+#define VEHICLE_DSIZE_GPS_NMEA_GSV_1      70    /* GSV - Visual satellite information(Fixed-length sentence 70 Byte) */
+#define VEHICLE_DSIZE_GPS_NMEA_GSV_2      70    /* GSV - Visual satellite information(Fixed-length sentence 70 Byte) */
+#define VEHICLE_DSIZE_GPS_NMEA_GSV_3      70    /* GSV - Visual satellite information(Fixed-length sentence 70 Byte) */
 /* _CWORD44_,GP,3 - Visual satellite reception information */
-#define VEHICLE_DSIZE_GPS_NMEA_PJRDC_GP_3    0
+#define VEHICLE_DSIZE_GPS_NMEA_PJRDC_GP_3    78
 /* _CWORD44_,GP,4 - Receiver-specific information */
-#define VEHICLE_DSIZE_GPS_NMEA_PJRDC_GP_4    0
+#define VEHICLE_DSIZE_GPS_NMEA_PJRDC_GP_4    25
 
 /* FULLBINARY data size */
 /* Fully customized output */
-#define VEHICLE_DSIZE_GPS_FULLBINARY  0
+#define VEHICLE_DSIZE_GPS_FULLBINARY  GPS_CMD_FULLBIN_SZ
 
 #if CONFIG_HW_PORTSET_TYPE_C
 #define  VEHICLE_DSIZE_NMEA           0
@@ -611,11 +623,26 @@ typedef struct {
     u_int8  uc_reserve[3];    /* reserve          */
 } VEHICLESENS_PKG_DELIVERY_TEMP_TBL;
 
+// for VEHICLESENS_PKG_DELIVERY_TEMP_EXT.start_point index
+enum VEHICLESENS_PKG_INDEX {
+  SNSCounter = 0,
+  SpeedPulse,
+  GyroExt,
+  GsnsX,
+  GsnsY,
+  Rev,
+  GyroTemp,
+  PulseTime,
+  GyroY,
+  GyroZ,
+  GsnsZ,
+  MAX
+};
 
 typedef struct {
-    u_int16  start_point[8];                /* Sequence reference start position      */
-    u_int16  end_point;                    /* Array registration completion position      */
-    u_int16  data_break;                  /* All data undelivered flag    */
+    uint16_t  start_point[8];                /* Sequence reference start position      */
+    uint16_t  end_point;                    /* Array registration completion position      */
+    uint16_t  data_break;                  /* All data undelivered flag    */
 } VEHICLESENS_PKG_DELIVERY_TEMP_EXT;
 
 /************************************************************************
@@ -628,31 +655,31 @@ extern  VEHICLESENS_PKG_DELIVERY_TEMP_EXT  gstPkgTempExt;  // NOLINT(readability
 *      Function prototype                        *
 ************************************************************************/
 void  VehicleSensInitDataMaster(void);
-//void  VehicleSensSetDataMasterLineSens(const LSDRV_LSDATA *, PFUNC_DMASTER_SET_N func, BOOL);
-//void  VehicleSensSetDataMasterLineSensG(const LSDRV_LSDATA_G *, PFUNC_DMASTER_SET_N func, BOOL);
-//void  VehicleSensSetDataMasterGps(SENSOR_MSG_GPSDATA_DAT *, PFUNC_DMASTER_SET_N func);
+void  VehicleSensSetDataMasterLineSens(const LSDRV_LSDATA *, PFUNC_DMASTER_SET_N func, BOOL);
+void  VehicleSensSetDataMasterLineSensG(const LSDRV_LSDATA_G *, PFUNC_DMASTER_SET_N func, BOOL);
+void  VehicleSensSetDataMasterGps(SENSOR_MSG_GPSDATA_DAT *, PFUNC_DMASTER_SET_N func);
 void  VehicleSensGetDataMaster(DID ul_did, u_int8, VEHICLESENS_DATA_MASTER *);
-//void  VehicleSensGetGpsDataMaster(DID ul_did, u_int8, SENSOR_MSG_GPSDATA_DAT *);
-//void  VehicleSensSetDataMasterData(const POS_MSGINFO *, PFUNC_DMASTER_SET_N func);
+void  VehicleSensGetGpsDataMaster(DID ul_did, u_int8, SENSOR_MSG_GPSDATA_DAT *);
+void  VehicleSensSetDataMasterData(const POS_MSGINFO *, PFUNC_DMASTER_SET_N func);
 
 #if CONFIG_SENSOR_EXT_VALID        /* Initial Sensor Support */
-//void  VehicleSensSetDataMasterLineSensFst(const LSDRV_LSDATA_FST *pst_data, PFUNC_DMASTER_SET_N p_data_master_set_n);
-//void  VehicleSensSetDataMasterLineSensFstG(const LSDRV_MSG_LSDATA_DAT_FST *pst_data,
-//        PFUNC_DMASTER_SET_N p_data_master_set_n);
+void  VehicleSensSetDataMasterLineSensFst(const LSDRV_LSDATA_FST *pst_data, PFUNC_DMASTER_SET_N p_data_master_set_n);
+void  VehicleSensSetDataMasterLineSensFstG(const LSDRV_MSG_LSDATA_DAT_FST *pst_data,
+        PFUNC_DMASTER_SET_N p_data_master_set_n);
 void  VehicleSensGetDataMasterFst(DID ul_did, u_int8, VEHICLESENS_DATA_MASTER_FST *);
 void  VehicleSensGetDataMasterExt(DID ul_did, u_int8, VEHICLESENS_DATA_MASTER_EXT *);
 #endif
 
-//void  VehicleSensSetDataMasterGyroTrouble(const LSDRV_MSG_LSDATA_DAT_GYRO_TROUBLE *pst_data,
-//        PFUNC_DMASTER_SET_N p_data_master_set_n);
-//void  VehicleSensSetDataMasterSysGpsInterruptSignal(const LSDRV_MSG_LSDATA_DAT_GPS_INTERRUPT_SIGNAL *pst_data,
-//        PFUNC_DMASTER_SET_SHARED_MEMORY p_data_master_set_shared_memory);
-//void  VehicleSensSetDataMasterMainGpsInterruptSignal(const SENSOR_MSG_GPSDATA_DAT *pst_data,
-//        PFUNC_DMASTER_SET_SHARED_MEMORY p_data_master_set_shared_memory);
-//void  VehicleSensSetDataMasterGyroConnectStatus(const LSDRV_MSG_LSDATA_DAT_GYRO_CONNECT_STATUS *pst_data,
-//        PFUNC_DMASTER_SET_SHARED_MEMORY p_data_master_set_shared_memory);
-//void  VehicleSensSetDataMasterGpsAntennaStatus(const LSDRV_MSG_LSDATA_DAT_GPS_ANTENNA_STATUS *pst_data,
-//        PFUNC_DMASTER_SET_N p_data_master_set_n);
+void  VehicleSensSetDataMasterGyroTrouble(const LSDRV_MSG_LSDATA_DAT_GYRO_TROUBLE *pst_data,
+        PFUNC_DMASTER_SET_N p_data_master_set_n);
+void  VehicleSensSetDataMasterSysGpsInterruptSignal(const LSDRV_MSG_LSDATA_DAT_GPS_INTERRUPT_SIGNAL *pst_data,
+        PFUNC_DMASTER_SET_SHARED_MEMORY p_data_master_set_shared_memory);
+void  VehicleSensSetDataMasterMainGpsInterruptSignal(const SENSOR_MSG_GPSDATA_DAT *pst_data,
+        PFUNC_DMASTER_SET_SHARED_MEMORY p_data_master_set_shared_memory);
+void  VehicleSensSetDataMasterGyroConnectStatus(const LSDRV_MSG_LSDATA_DAT_GYRO_CONNECT_STATUS *pst_data,
+        PFUNC_DMASTER_SET_SHARED_MEMORY p_data_master_set_shared_memory);
+void  VehicleSensSetDataMasterGpsAntennaStatus(const LSDRV_MSG_LSDATA_DAT_GPS_ANTENNA_STATUS *pst_data,
+        PFUNC_DMASTER_SET_N p_data_master_set_n);
 
 void  VehicleSensGetDataMasterGyroTrouble(DID ul_did, u_int8 uc_get_method,
         VEHICLESENS_DATA_MASTER_GYRO_TROUBLE *pst_data);
@@ -667,342 +694,392 @@ void  VehicleSensGetDataMasterGpsAntennaStatus(DID ul_did, u_int8 uc_get_method,
 
 void VehicleSensGetGsnsX(VEHICLESENS_DATA_MASTER *, u_int8);
 void VehicleSensInitGsnsXl(void);
-//u_int8 VehicleSensSetGsnsXl(const LSDRV_LSDATA *);
+u_int8 VehicleSensSetGsnsXl(const LSDRV_LSDATA *);
 void VehicleSensGetGsnsXl(VEHICLESENS_DATA_MASTER *);
-//u_int8 VehicleSensSetGsnsXlG(const LSDRV_LSDATA_G *);
-//void VehicleSensGetGsnsXFst(VEHICLESENS_DATA_MASTER_FST *, u_int8);
+u_int8 VehicleSensSetGsnsXlG(const LSDRV_LSDATA_G *);
+void VehicleSensGetGsnsXFst(VEHICLESENS_DATA_MASTER_FST *, u_int8);
 void VehicleSensInitGsnsXFstl(void);
-//u_int8 VehicleSensSetGsnsXFstG(const LSDRV_LSDATA_FST_GSENSOR_X *pst_data);
-//void VehicleSensGetGsnsXFstl(VEHICLESENS_DATA_MASTER_FST *pst_data);
+u_int8 VehicleSensSetGsnsXFstG(const LSDRV_LSDATA_FST_GSENSOR_X *pst_data);
+void VehicleSensGetGsnsXFstl(VEHICLESENS_DATA_MASTER_FST *pst_data);
 
 void VehicleSensGetGsnsY(VEHICLESENS_DATA_MASTER *, u_int8);
 void VehicleSensInitGsnsYl(void);
-//u_int8 VehicleSensSetGsnsYl(const LSDRV_LSDATA *);
+u_int8 VehicleSensSetGsnsYl(const LSDRV_LSDATA *);
 void VehicleSensGetGsnsYl(VEHICLESENS_DATA_MASTER *);
-//u_int8 VehicleSensSetGsnsYlG(const LSDRV_LSDATA_G *);
-//void VehicleSensGetGsnsYFst(VEHICLESENS_DATA_MASTER_FST *, u_int8);
+u_int8 VehicleSensSetGsnsYlG(const LSDRV_LSDATA_G *);
+void VehicleSensGetGsnsYFst(VEHICLESENS_DATA_MASTER_FST *, u_int8);
 void VehicleSensInitGsnsYFstl(void);
-//u_int8 VehicleSensSetGsnsYFstG(const LSDRV_LSDATA_FST_GSENSOR_Y *pst_data);
-//void VehicleSensGetGsnsYFstl(VEHICLESENS_DATA_MASTER_FST *pst_data);
+u_int8 VehicleSensSetGsnsYFstG(const LSDRV_LSDATA_FST_GSENSOR_Y *pst_data);
+void VehicleSensGetGsnsYFstl(VEHICLESENS_DATA_MASTER_FST *pst_data);
 
-void VehicleSensGetGyro(VEHICLESENS_DATA_MASTER *, u_int8);
-void VehicleSensInitGyrol(void);
-//u_int8 VehicleSensSetGyrol(const LSDRV_LSDATA *);
-//u_int8 VehicleSensSetGyrolG(const LSDRV_LSDATA_G *);
-void VehicleSensGetGyrol(VEHICLESENS_DATA_MASTER *);
+void VehicleSensGetGsnsZ(VEHICLESENS_DATA_MASTER *, u_int8);
+void VehicleSensInitGsnsZl(void);
+u_int8 VehicleSensSetGsnsZl(const LSDRV_LSDATA *);
+void VehicleSensGetGsnsZl(VEHICLESENS_DATA_MASTER *);
+u_int8 VehicleSensSetGsnsZlG(const LSDRV_LSDATA_G *);
+void VehicleSensGetGsnsZFst(VEHICLESENS_DATA_MASTER_FST *, u_int8);
+void VehicleSensInitGsnsZFstl(void);
+u_int8 VehicleSensSetGsnsZFstG(const LSDRV_LSDATA_FST_GSENSOR_Z *pst_data);
+void VehicleSensGetGsnsZFstl(VEHICLESENS_DATA_MASTER_FST *pst_data);
+
+void VehicleSensGetGyroX(VEHICLESENS_DATA_MASTER *, u_int8);
+void VehicleSensInitGyroXl(void);
+u_int8 VehicleSensSetGyroXl(const LSDRV_LSDATA *);
+u_int8 VehicleSensSetGyroXlG(const LSDRV_LSDATA_G *);
+void VehicleSensGetGyroXl(VEHICLESENS_DATA_MASTER *);
+
+void VehicleSensGetGyroY(VEHICLESENS_DATA_MASTER *, u_int8);
+void VehicleSensInitGyroYl(void);
+u_int8 VehicleSensSetGyroYl(const LSDRV_LSDATA *);
+u_int8 VehicleSensSetGyroYlG(const LSDRV_LSDATA_G *);
+void VehicleSensGetGyroYl(VEHICLESENS_DATA_MASTER *);
+
+void VehicleSensGetGyroZ(VEHICLESENS_DATA_MASTER *, u_int8);
+void VehicleSensInitGyroZl(void);
+u_int8 VehicleSensSetGyroZl(const LSDRV_LSDATA *);
+u_int8 VehicleSensSetGyroZlG(const LSDRV_LSDATA_G *);
+void VehicleSensGetGyroZl(VEHICLESENS_DATA_MASTER *);
 
 #if CONFIG_SENSOR_EXT_VALID        /* Initial Sensor Support */
 void VehicleSensGetSpeedPulseFst(VEHICLESENS_DATA_MASTER_FST *, u_int8);
 void VehicleSensInitSpeedPulseFstl(void);
-//u_int8 VehicleSensSetSpeedPulseFstl(const LSDRV_LSDATA_FST *);
-//u_int8 VehicleSensSetSpeedPulseFstG(const LSDRV_LSDATA_FST_SPEED *);
+u_int8 VehicleSensSetSpeedPulseFstl(const LSDRV_LSDATA_FST *);
+u_int8 VehicleSensSetSpeedPulseFstG(const LSDRV_LSDATA_FST_SPEED *);
 void VehicleSensGetSpeedPulseFstl(VEHICLESENS_DATA_MASTER_FST *);
 
-void VehicleSensGetGyroFst(VEHICLESENS_DATA_MASTER_FST *, u_int8);
-void VehicleSensInitGyroFstl(void);
-//u_int8 VehicleSensSetGyroFstl(const LSDRV_LSDATA_FST *);
-//u_int8 VehicleSensSetGyroFstG(const LSDRV_LSDATA_FST_GYRO *);
-void VehicleSensGetGyroFstl(VEHICLESENS_DATA_MASTER_FST *);
+void VehicleSensGetGyroXFst(VEHICLESENS_DATA_MASTER_FST *, u_int8);
+void VehicleSensInitGyroXFstl(void);
+u_int8 VehicleSensSetGyroXFstl(const LSDRV_LSDATA_FST *);
+u_int8 VehicleSensSetGyroXFstG(const LSDRV_LSDATA_FST_GYRO_X *);
+void VehicleSensGetGyroXFstl(VEHICLESENS_DATA_MASTER_FST *);
+
+void VehicleSensGetGyroYFst(VEHICLESENS_DATA_MASTER_FST *, u_int8);
+void VehicleSensInitGyroYFstl(void);
+u_int8 VehicleSensSetGyroYFstl(const LSDRV_LSDATA_FST *);
+u_int8 VehicleSensSetGyroYFstG(const LSDRV_LSDATA_FST_GYRO_Y *);
+void VehicleSensGetGyroYFstl(VEHICLESENS_DATA_MASTER_FST *);
+
+void VehicleSensGetGyroYExt(VEHICLESENS_DATA_MASTER_EXT *, u_int8);
+void VehicleSensInitGyroYExtl(void);
+void VehicleSensSetGyroYExtlG(const LSDRV_LSDATA_G *);
+void VehicleSensGetGyroYExtl(VEHICLESENS_DATA_MASTER_EXT *);
+
+void VehicleSensGetGyroZFst(VEHICLESENS_DATA_MASTER_FST *, u_int8);
+void VehicleSensInitGyroZFstl(void);
+u_int8 VehicleSensSetGyroZFstl(const LSDRV_LSDATA_FST *);
+u_int8 VehicleSensSetGyroZFstG(const LSDRV_LSDATA_FST_GYRO_Z *);
+void VehicleSensGetGyroZFstl(VEHICLESENS_DATA_MASTER_FST *);
+
+void VehicleSensGetGyroZExt(VEHICLESENS_DATA_MASTER_EXT *, u_int8);
+void VehicleSensInitGyroZExtl(void);
+void VehicleSensSetGyroZExtlG(const LSDRV_LSDATA_G *);
+void VehicleSensGetGyroZExtl(VEHICLESENS_DATA_MASTER_EXT *);
 
 void VehicleSensGetSpeedPulseFlagFst(VEHICLESENS_DATA_MASTER_FST *, u_int8);
 void VehicleSensInitSpeedPulseFlagFstl(void);
-//u_int8 VehicleSensSetSpeedPulseFlagFstl(const LSDRV_LSDATA_FST *);
-//u_int8 VehicleSensSetSpeedPulseFlagFstG(const LSDRV_LSDATA_FST_SPEED_PULSE_FLAG *);
+u_int8 VehicleSensSetSpeedPulseFlagFstl(const LSDRV_LSDATA_FST *);
+u_int8 VehicleSensSetSpeedPulseFlagFstG(const LSDRV_LSDATA_FST_SPEED_PULSE_FLAG *);
 void VehicleSensGetSpeedPulseFlagFstl(VEHICLESENS_DATA_MASTER_FST *);
 
 void VehicleSensGetRevFst(VEHICLESENS_DATA_MASTER_FST *, u_int8);
 void VehicleSensInitRevFstl(void);
-//u_int8 VehicleSensSetRevFstl(const LSDRV_LSDATA_FST *);
-//u_int8 VehicleSensSetRevFstG(const LSDRV_LSDATA_FST_REV *);
+u_int8 VehicleSensSetRevFstl(const LSDRV_LSDATA_FST *);
+u_int8 VehicleSensSetRevFstG(const LSDRV_LSDATA_FST_REV *);
 void VehicleSensGetRevFstl(VEHICLESENS_DATA_MASTER_FST *);
 
 void VehicleSensGetGsnsXExt(VEHICLESENS_DATA_MASTER_EXT *, u_int8);
 void VehicleSensInitGsnsXExtl(void);
-//void VehicleSensSetGsnsXExtl(const LSDRV_LSDATA *);
-//void VehicleSensSetGsnsXExtlG(const LSDRV_LSDATA_G *);
+void VehicleSensSetGsnsXExtl(const LSDRV_LSDATA *);
+void VehicleSensSetGsnsXExtlG(const LSDRV_LSDATA_G *);
 void VehicleSensGetGsnsXExtl(VEHICLESENS_DATA_MASTER_EXT *);
 
 void VehicleSensGetGsnsYExt(VEHICLESENS_DATA_MASTER_EXT *, u_int8);
 void VehicleSensInitGsnsYExtl(void);
-//void VehicleSensSetGsnsYExtl(const LSDRV_LSDATA *);
-//void VehicleSensSetGsnsYExtlG(const LSDRV_LSDATA_G *);
+void VehicleSensSetGsnsYExtl(const LSDRV_LSDATA *);
+void VehicleSensSetGsnsYExtlG(const LSDRV_LSDATA_G *);
 void VehicleSensGetGsnsYExtl(VEHICLESENS_DATA_MASTER_EXT *);
+
+void VehicleSensGetGsnsZExt(VEHICLESENS_DATA_MASTER_EXT *, u_int8);
+void VehicleSensInitGsnsZExtl(void);
+void VehicleSensSetGsnsZExtl(const LSDRV_LSDATA *);
+void VehicleSensSetGsnsZExtlG(const LSDRV_LSDATA_G *);
+void VehicleSensGetGsnsZExtl(VEHICLESENS_DATA_MASTER_EXT *);
 
 void VehicleSensGetGyroExt(VEHICLESENS_DATA_MASTER_EXT *, u_int8);
 void VehicleSensInitGyroExtl(void);
-//void VehicleSensSetGyroExtl(const LSDRV_LSDATA *);
-//void VehicleSensSetGyroExtlG(const LSDRV_LSDATA_G *);
+void VehicleSensSetGyroExtl(const LSDRV_LSDATA *);
+void VehicleSensSetGyroExtlG(const LSDRV_LSDATA_G *);
 void VehicleSensGetGyroExtl(VEHICLESENS_DATA_MASTER_EXT *);
 
 void VehicleSensGetGyroRev(VEHICLESENS_DATA_MASTER *, u_int8);
 void VehicleSensInitGyroRevl(void);
-//u_int8 VehicleSensSetGyroRevl(const LSDRV_LSDATA *);
-//u_int8 VehicleSensSetGyroRevlG(const LSDRV_LSDATA_G *);
+u_int8 VehicleSensSetGyroRevl(const LSDRV_LSDATA *);
+u_int8 VehicleSensSetGyroRevlG(const LSDRV_LSDATA_G *);
 void VehicleSensGetGyroRevl(VEHICLESENS_DATA_MASTER *);
 
 void VehicleSensGetSpeedPulseExt(VEHICLESENS_DATA_MASTER_EXT *, u_int8);
 void VehicleSensInitSpeedPulseExtl(void);
-//void VehicleSensSetSpeedPulseExtl(const LSDRV_LSDATA *);
-//void VehicleSensSetSpeedPulseExtlG(const LSDRV_LSDATA_G *);
+void VehicleSensSetSpeedPulseExtl(const LSDRV_LSDATA *);
+void VehicleSensSetSpeedPulseExtlG(const LSDRV_LSDATA_G *);
 void VehicleSensGetSpeedPulseExtl(VEHICLESENS_DATA_MASTER_EXT *);
 
 void VehicleSensGetSnsCounterExt(VEHICLESENS_DATA_MASTER_EXT *, u_int8);
 void VehicleSensInitSnsCounterExtl(void);
-//void VehicleSensSetSnsCounterExtl(const LSDRV_LSDATA *);
-//void VehicleSensSetSnsCounterExtlG(const LSDRV_LSDATA_G *);
+void VehicleSensSetSnsCounterExtl(const LSDRV_LSDATA *);
+void VehicleSensSetSnsCounterExtlG(const LSDRV_LSDATA_G *);
 void VehicleSensGetSnsCounterExtl(VEHICLESENS_DATA_MASTER_EXT *);
 
 void VehicleSensGetRevExt(VEHICLESENS_DATA_MASTER_EXT *pst_data, u_int8 uc_get_method);
 void VehicleSensGetRevExtl(VEHICLESENS_DATA_MASTER_EXT *pst_data);
 void VehicleSensInitRevExtl(void);
-//void VehicleSensSetRevExtlG(const LSDRV_LSDATA_G *pst_data);
+void VehicleSensSetRevExtlG(const LSDRV_LSDATA_G *pst_data);
 
 #endif
 
 void VehicleSensGetSpeedKmph(VEHICLESENS_DATA_MASTER *, u_int8);
 void VehicleSensInitSpeedKmphl(void);
-//u_int8 VehicleSensSetSpeedKmphl(const LSDRV_LSDATA *);
-//u_int8 VehicleSensSetSpeedKmphlG(const LSDRV_LSDATA_G *);
+u_int8 VehicleSensSetSpeedKmphl(const LSDRV_LSDATA *);
+u_int8 VehicleSensSetSpeedKmphlG(const LSDRV_LSDATA_G *);
 void VehicleSensGetSpeedKmphl(VEHICLESENS_DATA_MASTER *);
 
 void VehicleSensGetGyroTemp(VEHICLESENS_DATA_MASTER *pst_data, u_int8 uc_get_method);
 void VehicleSensInitGyroTempl(void);
-//u_int8 VehicleSensSetGyroTemplG(const LSDRV_LSDATA_G *pst_data);
+u_int8 VehicleSensSetGyroTemplG(const LSDRV_LSDATA_G *pst_data);
 void VehicleSensGetGyroTempl(VEHICLESENS_DATA_MASTER *pst_data);
 
-//void VehicleSensGetGyroTempFst(VEHICLESENS_DATA_MASTER_FST *pst_data, u_int8 uc_get_method);
+void VehicleSensGetGyroTempFst(VEHICLESENS_DATA_MASTER_FST *pst_data, u_int8 uc_get_method);
 void VehicleSensInitGyroTempFstl(void);
-//u_int8 VehicleSensSetGyroTempFstG(const LSDRV_LSDATA_FST_GYRO_TEMP *pst_data);
-//void VehicleSensGetGyroTempFstl(VEHICLESENS_DATA_MASTER_FST *pst_data);
+u_int8 VehicleSensSetGyroTempFstG(const LSDRV_LSDATA_FST_GYRO_TEMP *pst_data);
+void VehicleSensGetGyroTempFstl(VEHICLESENS_DATA_MASTER_FST *pst_data);
 
-//void VehicleSensGetGyroTempExt(VEHICLESENS_DATA_MASTER_EXT *pst_data, u_int8 uc_get_method);
+void VehicleSensGetGyroTempExt(VEHICLESENS_DATA_MASTER_EXT *pst_data, u_int8 uc_get_method);
 void VehicleSensInitGyroTempExtl(void);
-//void VehicleSensSetGyroTempExtlG(const LSDRV_LSDATA_G *pst_data);
-//void VehicleSensGetGyroTempExtl(VEHICLESENS_DATA_MASTER_EXT *pst_data);
+void VehicleSensSetGyroTempExtlG(const LSDRV_LSDATA_G *pst_data);
+void VehicleSensGetGyroTempExtl(VEHICLESENS_DATA_MASTER_EXT *pst_data);
 
 void VehicleSensGetPulseTime(VEHICLESENS_DATA_MASTER *pst_data, u_int8 uc_get_method);
 void VehicleSensInitPulseTimel(void);
-//u_int8 VehicleSensSetPulseTimelG(const LSDRV_LSDATA_G *pst_data);
+u_int8 VehicleSensSetPulseTimelG(const LSDRV_LSDATA_G *pst_data);
 void VehicleSensGetPulseTimel(VEHICLESENS_DATA_MASTER *pst_data);
 
-//void VehicleSensGetPulseTimeExt(VEHICLESENS_DATA_MASTER_EXT *pst_data, u_int8 uc_get_method);
+void VehicleSensGetPulseTimeExt(VEHICLESENS_DATA_MASTER_EXT *pst_data, u_int8 uc_get_method);
 void VehicleSensInitPulseTimeExtl(void);
-//void VehicleSensSetPulseTimeExtlG(const LSDRV_LSDATA_G *pst_data);
-//void VehicleSensGetPulseTimeExtl(VEHICLESENS_DATA_MASTER_EXT *pst_data);
+void VehicleSensSetPulseTimeExtlG(const LSDRV_LSDATA_G *pst_data);
+void VehicleSensGetPulseTimeExtl(VEHICLESENS_DATA_MASTER_EXT *pst_data);
 
 void VehicleSensGetRev(VEHICLESENS_DATA_MASTER *, u_int8);
 
 void VehicleSensInitRevl(void);
-//u_int8 VehicleSensSetRevl(const LSDRV_LSDATA *);
+u_int8 VehicleSensSetRevl(const LSDRV_LSDATA *);
 void VehicleSensGetRevl(VEHICLESENS_DATA_MASTER *);
-//u_int8 VehicleSensSetRevlG(const LSDRV_LSDATA_G *pst_data);
+u_int8 VehicleSensSetRevlG(const LSDRV_LSDATA_G *pst_data);
 void VehicleSensGetRevline(VEHICLESENS_DATA_MASTER *);
 
 void VehicleSensGetSpeedPulse(VEHICLESENS_DATA_MASTER *, u_int8);
 void VehicleSensInitSpeedPulsel(void);
-//u_int8 VehicleSensSetSpeedPulsel(const LSDRV_LSDATA *);
-//u_int8 VehicleSensSetSpeedPulselG(const LSDRV_LSDATA_G *);
+u_int8 VehicleSensSetSpeedPulsel(const LSDRV_LSDATA *);
+u_int8 VehicleSensSetSpeedPulselG(const LSDRV_LSDATA_G *);
 void VehicleSensGetSpeedPulsel(VEHICLESENS_DATA_MASTER *);
 
 void VehicleSensGetGpsAntenna(VEHICLESENS_DATA_MASTER *, u_int8);
 void VehicleSensInitGpsAntennal(void);
-//u_int8 VehicleSensSetGpsAntennal(const LSDRV_LSDATA *);
+u_int8 VehicleSensSetGpsAntennal(const LSDRV_LSDATA *);
 void VehicleSensGetGpsAntennal(VEHICLESENS_DATA_MASTER *);
 
 void VehicleSensGetSnsCounter(VEHICLESENS_DATA_MASTER *, u_int8);
 void VehicleSensInitSnsCounterl(void);
-//u_int8 VehicleSensSetSnsCounterl(const LSDRV_LSDATA *);
-//u_int8 VehicleSensSetSnsCounterlG(const LSDRV_LSDATA_G *);
+u_int8 VehicleSensSetSnsCounterl(const LSDRV_LSDATA *);
+u_int8 VehicleSensSetSnsCounterlG(const LSDRV_LSDATA_G *);
 void VehicleSensGetSnsCounterl(VEHICLESENS_DATA_MASTER *);
 
 void VehicleSensInitGpsCounterg(void);
-//u_int8 VehicleSensSetGpsCounterg(const SENSOR_MSG_GPSDATA_DAT *);
-//void VehicleSensGetGpsCounterg(SENSOR_MSG_GPSDATA_DAT *);
+u_int8 VehicleSensSetGpsCounterg(const SENSOR_MSG_GPSDATA_DAT *);
+void VehicleSensGetGpsCounterg(SENSOR_MSG_GPSDATA_DAT *);
 
 /* ++ PastModel002 support */
 /* U-BLOX_GPS MON-HW */
 void VehicleSensInitMonHwG(void);
-//u_int8 VehicleSensSetMonHwG(const SENSOR_MSG_GPSDATA_DAT *pst_data);
-//void VehicleSensGetMonHwG(SENSOR_MSG_GPSDATA_DAT *pst_data);
+u_int8 VehicleSensSetMonHwG(const SENSOR_MSG_GPSDATA_DAT *pst_data);
+void VehicleSensGetMonHwG(SENSOR_MSG_GPSDATA_DAT *pst_data);
 
 /* U-BLOX_GPS NAV-CLOCK */
 void VehicleSensInitNavClockG(void);
-//u_int8 VehicleSensSetNavClockG(const SENSOR_MSG_GPSDATA_DAT *pst_data);
-//void VehicleSensGetNavClockG(SENSOR_MSG_GPSDATA_DAT *pst_data);
+u_int8 VehicleSensSetNavClockG(const SENSOR_MSG_GPSDATA_DAT *pst_data);
+void VehicleSensGetNavClockG(SENSOR_MSG_GPSDATA_DAT *pst_data);
 
 /* U-BLOX_GPS NAV-DOP */
 void VehicleSensInitNavDopG(void);
-//u_int8 VehicleSensSetNavDopG(const SENSOR_MSG_GPSDATA_DAT *pst_data);
-//void VehicleSensGetNavDopG(SENSOR_MSG_GPSDATA_DAT *pst_data);
+u_int8 VehicleSensSetNavDopG(const SENSOR_MSG_GPSDATA_DAT *pst_data);
+void VehicleSensGetNavDopG(SENSOR_MSG_GPSDATA_DAT *pst_data);
 
 /* U-BLOX_GPS NAV-POSLLH */
 void VehicleSensInitNavPosllhG(void);
-//u_int8 VehicleSensSetNavPosllhG(const SENSOR_MSG_GPSDATA_DAT *pst_data);
-//void VehicleSensGetNavPosllhG(SENSOR_MSG_GPSDATA_DAT *pst_data);
+u_int8 VehicleSensSetNavPosllhG(const SENSOR_MSG_GPSDATA_DAT *pst_data);
+void VehicleSensGetNavPosllhG(SENSOR_MSG_GPSDATA_DAT *pst_data);
 
 /* U-BLOX_GPS NAV-STATUS */
 void VehicleSensInitNavStatusG(void);
-//u_int8 VehicleSensSetNavStatusG(const SENSOR_MSG_GPSDATA_DAT *pst_data);
-//void VehicleSensGetNavStatusG(SENSOR_MSG_GPSDATA_DAT *pst_data);
+u_int8 VehicleSensSetNavStatusG(const SENSOR_MSG_GPSDATA_DAT *pst_data);
+void VehicleSensGetNavStatusG(SENSOR_MSG_GPSDATA_DAT *pst_data);
 
 /* U-BLOX_GPS NAV-SVINFO */
 void VehicleSensInitNavSvInfoG(void);
-//u_int8 VehicleSensSetNavSvInfoG(const SENSOR_MSG_GPSDATA_DAT *pst_data);
-//void VehicleSensGetNavSvInfoG(SENSOR_MSG_GPSDATA_DAT *pst_data);
+u_int8 VehicleSensSetNavSvInfoG(const SENSOR_MSG_GPSDATA_DAT *pst_data);
+void VehicleSensGetNavSvInfoG(SENSOR_MSG_GPSDATA_DAT *pst_data);
 
 /* U-BLOX_GPS NAV-TIMEGPS */
 void VehicleSensInitNavTimeGpsG(void);
-//u_int8 VehicleSensSetNavTimeGpsG(const SENSOR_MSG_GPSDATA_DAT *pst_data);
-//void VehicleSensGetNavTimeGpsG(SENSOR_MSG_GPSDATA_DAT *pst_data);
+u_int8 VehicleSensSetNavTimeGpsG(const SENSOR_MSG_GPSDATA_DAT *pst_data);
+void VehicleSensGetNavTimeGpsG(SENSOR_MSG_GPSDATA_DAT *pst_data);
 
 /* U-BLOX_GPS NAV-TIMEUTC */
 void VehicleSensInitNavTimeUtcG(void);
-//u_int8 VehicleSensSetNavTimeUtcG(const SENSOR_MSG_GPSDATA_DAT *pst_data);
-//void VehicleSensGetNavTimeUtcG(SENSOR_MSG_GPSDATA_DAT *pst_data);
+u_int8 VehicleSensSetNavTimeUtcG(const SENSOR_MSG_GPSDATA_DAT *pst_data);
+void VehicleSensGetNavTimeUtcG(SENSOR_MSG_GPSDATA_DAT *pst_data);
 
 /* U-BLOX_GPS NAV-VELNED */
 void VehicleSensInitNavVelnedG(void);
-//u_int8 VehicleSensSetNavVelnedG(const SENSOR_MSG_GPSDATA_DAT *pst_data);
-//void VehicleSensGetNavVelnedG(SENSOR_MSG_GPSDATA_DAT *pst_data);
+u_int8 VehicleSensSetNavVelnedG(const SENSOR_MSG_GPSDATA_DAT *pst_data);
+void VehicleSensGetNavVelnedG(SENSOR_MSG_GPSDATA_DAT *pst_data);
 
 /* DR SPEED_PULSE_FLAG */
 void VehicleSensInitSpeedPulseFlag(void);
-//u_int8 VehicleSensSetSpeedPulseFlag(const LSDRV_LSDATA_G *pst_data);
+u_int8 VehicleSensSetSpeedPulseFlag(const LSDRV_LSDATA_G *pst_data);
 void VehicleSensGetSpeedPulseFlag(VEHICLESENS_DATA_MASTER *);
 
 /* DR GPS_INTERRUPT_FLAG */
 void VehicleSensInitGpsInterruptFlag(void);
-//u_int8 VehicleSensSetGpsInterruptFlag(const LSDRV_LSDATA_G *pst_data);
+u_int8 VehicleSensSetGpsInterruptFlag(const LSDRV_LSDATA_G *pst_data);
 void VehicleSensGetGpsInterruptFlag(VEHICLESENS_DATA_MASTER *);
 
 /* GYRO_TROUBLE */
 void VehicleSensInitGyroTrouble(void);
-//u_int8 VehicleSensSetGyroTrouble(const LSDRV_MSG_LSDATA_DAT_GYRO_TROUBLE *pst_data);
+u_int8 VehicleSensSetGyroTrouble(const LSDRV_MSG_LSDATA_DAT_GYRO_TROUBLE *pst_data);
 void VehicleSensGetGyroTrouble(VEHICLESENS_DATA_MASTER_GYRO_TROUBLE *pst_data);
 
 /* MAIN_GPS_INTERRUPT_SIGNAL */
 void VehicleSensInitMainGpsInterruptSignal(void);
-//u_int8 VehicleSensSetMainGpsInterruptSignal(const SENSOR_MSG_GPSDATA_DAT *pst_data);
+u_int8 VehicleSensSetMainGpsInterruptSignal(const SENSOR_MSG_GPSDATA_DAT *pst_data);
 void VehicleSensGetMainGpsInterruptSignal(VEHICLESENS_DATA_MASTER_GPS_INTERRUPT_SIGNAL *pst_data);
 
 /* SYS_GPS_INTERRUPT_SIGNAL */
 void VehicleSensInitSysGpsInterruptSignal(void);
-//u_int8 VehicleSensSetSysGpsInterruptSignal(const LSDRV_MSG_LSDATA_DAT_GPS_INTERRUPT_SIGNAL *pst_data);
+u_int8 VehicleSensSetSysGpsInterruptSignal(const LSDRV_MSG_LSDATA_DAT_GPS_INTERRUPT_SIGNAL *pst_data);
 void VehicleSensGetSysGpsInterruptSignal(VEHICLESENS_DATA_MASTER_GPS_INTERRUPT_SIGNAL *pst_data);
 
 /* GYRO_CONNECT_STATUS */
 void VehicleSensInitGyroConnectStatus(void);
-//u_int8 VehicleSensSetGyroConnectStatus(const LSDRV_MSG_LSDATA_DAT_GYRO_CONNECT_STATUS *pst_data);
+u_int8 VehicleSensSetGyroConnectStatus(const LSDRV_MSG_LSDATA_DAT_GYRO_CONNECT_STATUS *pst_data);
 void VehicleSensGetGyroConnectStatus(VEHICLESENS_DATA_MASTER_GYRO_CONNECT_STATUS *pst_data);
 
 /* GPS_ANTENNA_STATUS */
 void VehicleSensInitGpsAntennaStatus(void);
-//u_int8 VehicleSensSetGpsAntennaStatus(const LSDRV_MSG_LSDATA_DAT_GPS_ANTENNA_STATUS *pst_data);
+u_int8 VehicleSensSetGpsAntennaStatus(const LSDRV_MSG_LSDATA_DAT_GPS_ANTENNA_STATUS *pst_data);
 void VehicleSensGetGpsAntennaStatus(VEHICLESENS_DATA_MASTER_GPS_ANTENNA_STATUS *pst_data);
 
 /* -- PastModel002 support */
 
 /* GPS__CWORD82__FULLBINARY */
 void VehicleSensInitGps_CWORD82_FullBinaryG(void);
-//u_int8 VehicleSensSetGps_CWORD82_FullBinaryG(const SENSOR_MSG_GPSDATA_DAT *pst_data);
-//void VehicleSensGetGps_CWORD82_FullBinaryG(SENSOR_MSG_GPSDATA_DAT *pst_data);
+u_int8 VehicleSensSetGps_CWORD82_FullBinaryG(const SENSOR_MSG_GPSDATA_DAT *pst_data);
+void VehicleSensGetGps_CWORD82_FullBinaryG(SENSOR_MSG_GPSDATA_DAT *pst_data);
 
 /* GPS__CWORD82__FULLBINARY */
 void VehicleSensInitGps_CWORD82__CWORD44_Gp4G(void);
-//u_int8 VehicleSensSetGps_CWORD82__CWORD44_Gp4G(const SENSOR_MSG_GPSDATA_DAT *pst_data);
-//void VehicleSensGetGps_CWORD82__CWORD44_Gp4G(SENSOR_MSG_GPSDATA_DAT *pst_data);
+u_int8 VehicleSensSetGps_CWORD82__CWORD44_Gp4G(const SENSOR_MSG_GPSDATA_DAT *pst_data);
+void VehicleSensGetGps_CWORD82__CWORD44_Gp4G(SENSOR_MSG_GPSDATA_DAT *pst_data);
 
 /* GPS__CWORD82__NMEA */
 void VehicleSensInitGps_CWORD82_NmeaG(void);
-//u_int8 VehicleSensSetGps_CWORD82_NmeaG(const SENSOR_MSG_GPSDATA_DAT *pst_data);
-//void VehicleSensGetGps_CWORD82_NmeaG(SENSOR_MSG_GPSDATA_DAT *pst_data);
+u_int8 VehicleSensSetGps_CWORD82_NmeaG(const SENSOR_MSG_GPSDATA_DAT *pst_data);
+void VehicleSensGetGps_CWORD82_NmeaG(SENSOR_MSG_GPSDATA_DAT *pst_data);
 
 /* GPS_NMEA */
 void VehicleSensInitGpsNmeaG(void);
-//u_int8 VehicleSensSetGpsNmeaG(const SENSOR_MSG_GPSDATA_DAT *pst_data);
-//void VehicleSensGetGpsNmeaG(SENSOR_MSG_GPSDATA_DAT *pst_data);
+u_int8 VehicleSensSetGpsNmeaG(const SENSOR_MSG_GPSDATA_DAT *pst_data);
+void VehicleSensGetGpsNmeaG(SENSOR_MSG_GPSDATA_DAT *pst_data);
 
 /* LOCATION_LONLAT */
 void VehicleSensGetLocationLonLat(VEHICLESENS_DATA_MASTER *pst_data, u_int8);
 void VehicleSensInitLocationLonLatG(void);
-//u_int8 VehicleSensSetLocationLonLatG(const SENSORLOCATION_LONLATINFO_DAT*);
+u_int8 VehicleSensSetLocationLonLatG(const SENSORLOCATION_LONLATINFO_DAT*);
 void VehicleSensGetLocationLonLatG(VEHICLESENS_DATA_MASTER*);
 void VehicleSensInitLocationLonLatN(void);
-//u_int8 VehicleSensSetLocationLonLatN(const SENSORLOCATION_LONLATINFO_DAT*);
+u_int8 VehicleSensSetLocationLonLatN(const SENSORLOCATION_LONLATINFO_DAT*);
 void VehicleSensGetLocationLonLatN(VEHICLESENS_DATA_MASTER*);
 void VehicleSensGetLocationLonLatnUnitCnv(VEHICLESENS_DATA_MASTER*);
 
 /* LOCATION_ALTITUDE */
 void VehicleSensGetLocationAltitude(VEHICLESENS_DATA_MASTER *pst_data, u_int8);
 void VehicleSensInitLocationAltitudeG(void);
-//u_int8 VehicleSensSetLocationAltitudeG(const SENSORLOCATION_ALTITUDEINFO_DAT*);
+u_int8 VehicleSensSetLocationAltitudeG(const SENSORLOCATION_ALTITUDEINFO_DAT*);
 void VehicleSensGetLocationAltitudeG(VEHICLESENS_DATA_MASTER*);
 void VehicleSensInitLocationAltitudeN(void);
-//u_int8 VehicleSensSetLocationAltitudeN(const SENSORLOCATION_ALTITUDEINFO_DAT*);
+u_int8 VehicleSensSetLocationAltitudeN(const SENSORLOCATION_ALTITUDEINFO_DAT*);
 void VehicleSensGetLocationAltitudeN(VEHICLESENS_DATA_MASTER*);
 
 /* MOTION_SPEED */
 void VehicleSensGetMotionSpeed(VEHICLESENS_DATA_MASTER *pst_data, u_int8);
 void VehicleSensInitMotionSpeedG(void);
-//u_int8 VehicleSensSetMotionSpeedG(const SENSORMOTION_SPEEDINFO_DAT*);
+u_int8 VehicleSensSetMotionSpeedG(const SENSORMOTION_SPEEDINFO_DAT*);
 void VehicleSensGetMotionSpeedG(VEHICLESENS_DATA_MASTER*);
 void VehicleSensInitMotionSpeedN(void);
-//u_int8 VehicleSensSetMotionSpeedN(const SENSORMOTION_SPEEDINFO_DAT*);
+u_int8 VehicleSensSetMotionSpeedN(const SENSORMOTION_SPEEDINFO_DAT*);
 void VehicleSensGetMotionSpeedN(VEHICLESENS_DATA_MASTER*);
 void VehicleSensInitMotionSpeedI(void);
-//u_int8 VehicleSensSetMotionSpeedI(const SENSORMOTION_SPEEDINFO_DAT*);
+u_int8 VehicleSensSetMotionSpeedI(const SENSORMOTION_SPEEDINFO_DAT*);
 void VehicleSensGetMotionSpeedI(VEHICLESENS_DATA_MASTER*);
 
 /* MOTION_HEADING */
 void VehicleSensGetMotionHeading(VEHICLESENS_DATA_MASTER *pst_data, u_int8);
 void VehicleSensInitMotionHeadingG(void);
-//u_int8 VehicleSensSetMotionHeadingG(const SENSORMOTION_HEADINGINFO_DAT*);
+u_int8 VehicleSensSetMotionHeadingG(const SENSORMOTION_HEADINGINFO_DAT*);
 void VehicleSensGetMotionHeadingG(VEHICLESENS_DATA_MASTER*);
 void VehicleSensInitMotionHeadingN(void);
-//u_int8 VehicleSensSetMotionHeadingN(const SENSORMOTION_HEADINGINFO_DAT*);
+u_int8 VehicleSensSetMotionHeadingN(const SENSORMOTION_HEADINGINFO_DAT*);
 void VehicleSensGetMotionHeadingN(VEHICLESENS_DATA_MASTER*);
 void VehicleSensGetMotionHeadingnCnvData(VEHICLESENS_DATA_MASTER*);
 
 /* GPS_TIME */
-//void VehicleSensGetGpsTime(SENSOR_MSG_GPSDATA_DAT*, u_int8);
+void VehicleSensGetGpsTime(SENSOR_MSG_GPSDATA_DAT*, u_int8);
 void VehicleSensInitGpsTimeG(void);
-//u_int8 VehicleSensSetGpsTimeG(const SENSOR_MSG_GPSTIME*);
-//void VehicleSensGetGpsTimeG(SENSOR_MSG_GPSDATA_DAT*);
+u_int8 VehicleSensSetGpsTimeG(const SENSOR_MSG_GPSTIME*);
+void VehicleSensGetGpsTimeG(SENSOR_MSG_GPSDATA_DAT*);
 
 /* GPS_TIME_RAW */
-//void VehicleSensGetGpsTimeRaw(SENSOR_MSG_GPSDATA_DAT*, u_int8);
+void VehicleSensGetGpsTimeRaw(SENSOR_MSG_GPSDATA_DAT*, u_int8);
 void VehicleSensInitGpsTimeRawG(void);
-//u_int8 VehicleSensSetGpsTimeRawG(const SENSOR_GPSTIME_RAW*);
-//void VehicleSensGetGpsTimeRawG(SENSOR_MSG_GPSDATA_DAT*);
+u_int8 VehicleSensSetGpsTimeRawG(const SENSOR_GPSTIME_RAW*);
+void VehicleSensGetGpsTimeRawG(SENSOR_MSG_GPSDATA_DAT*);
 
 /* GPS_WKNROLLOVER */
 void VehicleSensGetWknRollover(VEHICLESENS_DATA_MASTER*, u_int8);
 void VehicleSensInitWknRolloverG(void);
 u_int8 VehicleSensSetWknRolloverG(const SENSOR_WKNROLLOVER*);
-//void VehicleSensGetWknRolloverG(SENSOR_MSG_GPSDATA_DAT*);
+void VehicleSensGetWknRolloverG(SENSOR_MSG_GPSDATA_DAT*);
 
 /* DIAG_GPS */
 void VehicleSensInitNaviinfoDiagGPSg(void);
-//u_int8 VehicleSensSetNaviinfoDiagGPSg(const NAVIINFO_DIAG_GPS*);
-//void VehicleSensGetNaviinfoDiagGPSg(SENSOR_MSG_GPSDATA_DAT*);
+u_int8 VehicleSensSetNaviinfoDiagGPSg(const NAVIINFO_DIAG_GPS*);
+void VehicleSensGetNaviinfoDiagGPSg(SENSOR_MSG_GPSDATA_DAT*);
 
 /* SETTINGTIME */
 void VehicleSensGetSettingTime(VEHICLESENS_DATA_MASTER *, u_int8);
 void VehicleSensInitSettingTimeclock(void);
-//u_int8 VehicleSensSetSettingTimeclock(const POS_DATETIME*);
+u_int8 VehicleSensSetSettingTimeclock(const POS_DATETIME*);
 void VehicleSensGetSettingTimeclock(VEHICLESENS_DATA_MASTER*);
 
 /* GPS_CLOCK_DRIFT */
-//void VehicleSensGetGpsClockDrift(SENSOR_MSG_GPSDATA_DAT *, u_int8);
+void VehicleSensGetGpsClockDrift(SENSOR_MSG_GPSDATA_DAT *, u_int8);
 void VehicleSensInitGpsClockDriftG(void);
 u_int8 VehicleSensSetGpsClockDriftG(const int32_t*);
-//void VehicleSensGetGpsClockDriftG(SENSOR_MSG_GPSDATA_DAT*);
+void VehicleSensGetGpsClockDriftG(SENSOR_MSG_GPSDATA_DAT*);
 
 /* GPS_CLOCK_FREQ */
-//void VehicleSensGetGpsClockFreq(SENSOR_MSG_GPSDATA_DAT *, u_int8);
+void VehicleSensGetGpsClockFreq(SENSOR_MSG_GPSDATA_DAT *, u_int8);
 void VehicleSensInitGpsClockFreqG(void);
 u_int8 VehicleSensSetGpsClockFreqG(const uint32_t*);
-//void VehicleSensGetGpsClockFreqG(SENSOR_MSG_GPSDATA_DAT*);
+void VehicleSensGetGpsClockFreqG(SENSOR_MSG_GPSDATA_DAT*);
 
 /* LOCATION INFORMATION (NMEA) */
 void VehicleSens_GetLocationInfoNmea(VEHICLESENS_DATA_MASTER_GPS_FORMAT *, u_int8 );

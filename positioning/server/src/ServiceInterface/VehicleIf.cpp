@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2018-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2018-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,9 +25,9 @@
  * Include Files                                                                   *
  *---------------------------------------------------------------------------------*/
 #include <vehicle_service/positioning_base_library.h>
-//#include "stub/Vehicle_Sensor_Common_API.h"
-//#include <stub/Vehicle_API.h>
-//#include "stub/vehicle_notifications.h"
+#include <stub/Vehicle_Sensor_Common_API.h>
+#include <stub/Vehicle_API.h>
+#include <stub/vehicle_notifications.h>
 
 #include "VehicleIf.h"
 
@@ -144,108 +144,108 @@ EFrameworkunifiedStatus VehicleIfDetachCallbacksFromDispatcher(const PUI_32 pui_
 EFrameworkunifiedStatus VehicleIf_GetTypeOfTransmission(uint8_t* pType, uint8_t* pPkb, BOOL* pbIsAvailable)
 {
     EFrameworkunifiedStatus eStatus = eFrameworkunifiedStatusFail;
-//    VEHICLE_RET_API ret;
-//    HANDLE hApp;
-//    uint8_t ucVartrm;
-//
-//#if 1 /* Plus _CWORD27_ Gear Data Support 180115 */
-//    uint8_t ucPkb;
-//#endif /* Plus _CWORD27_ Gear Data Support 180115 */
-//
-//
-//    if (gb_vehicleAvailability == TRUE)
-//    {
-//        hApp = _pb_GetAppHandle();
-//        if (hApp != NULL)
-//        {
-//            ret = Vehicle_GetVehicleData(hApp, VEHICLE_DID_VARTRM1, &ucVartrm, sizeof(ucVartrm));
-//            if (ret < VEHICLE_RET_NORMAL)
-//            {
-//                FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "ERROR: Vehicle_GetVehicleData:%d", ret);
-//            }
-//            else
-//            {
-//                eStatus = eFrameworkunifiedStatusOK;
-//
-//                switch (ucVartrm)
-//                {
-//                    case VEHICLE_SNS_VARTRM1_AT:
-//                    case VEHICLE_SNS_VARTRM1_CVT:
-//                    case VEHICLE_SNS_VARTRM1_HV_AT:
-//                    {
-//                        *pType = VEHICLEIF_TRANSMISSION_TYPE_AT;
-//                        break;
-//                    }
-//                    case VEHICLE_SNS_VARTRM1_MT:
-//                    case VEHICLE_SNS_VARTRM1_MMT:
-//                    case VEHICLE_SNS_VARTRM1_SMT:
-//                    {
-//                        *pType = VEHICLEIF_TRANSMISSION_TYPE_MT;
-//                        break;
-//                    }
-//                    case VEHICLE_SNS_VARTRM1_UNCERTAINTY:
-//                    {
-//                        *pType = VEHICLEIF_TRANSMISSION_TYPE_UNKNOWN;
-//                        break;
-//                    }
-//                    default:
-//                    {
-//                        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, 
-//                        "ERROR: Type of transmission is unknown. (%d)", ucVartrm);
-//
-//                        *pType = VEHICLEIF_TRANSMISSION_TYPE_UNKNOWN;
-//                        break;
-//                    }
-//                }
-//            }
-//
-//#if 1 /* Plus _CWORD27_ Gear Data Support 180115 */
-//            ret = Vehicle_GetVehicleData(hApp, VEHICLE_DID_PKB, &ucPkb, sizeof(ucPkb));
-//            if (ret < VEHICLE_RET_NORMAL)
-//            {
-//                FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "ERROR: Vehicle_GetVehicleData:%d", ret);
-//            }
-//            else
-//            {
-//                eStatus = eFrameworkunifiedStatusOK;
-//
-//                switch (ucPkb)
-//                {
-//                    case VEHICLE_SNS_OFF:       // R-state
-//                    //case VEHICLE_SNS_ANTI:      // Antilock(Vehicle undefined)
-//                    {
-//                        *pPkb = VEHICLEIF_PKB_OFF;
-//                        break;
-//                    }
-//                    case VEHICLE_SNS_ON:        // Lock state
-//                    {
-//                        *pPkb = VEHICLEIF_PKB_ON;
-//                        break;
-//                    }
-//                    default:
-//                    {
-//                        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, 
-//                        "ERROR: State of parking brake is unknown. (%d)", ucPkb);
-//
-//                        *pPkb = VEHICLEIF_PKB_OFF;
-//                        break;
-//                    }
-//                }
-//            }
-//#endif /* Plus _CWORD27_ Gear Data Support 180115 */
-//
-//        }
-//        else
-//        {
-//            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "ERROR: _pb_GetAppHandle hApp:%p", hApp);
-//        }
-//    }
-//    else
-//    {
-//        /* nop */
-//    }
-//
-//    *pbIsAvailable = gb_vehicleAvailability;
+    VEHICLE_RET_API ret;
+    HANDLE hApp;
+    uint8_t ucVartrm;
+
+#if 1 /* Plus _CWORD27_ Gear Data Support 180115 */
+    uint8_t ucPkb;
+#endif /* Plus _CWORD27_ Gear Data Support 180115 */
+
+
+    if (gb_vehicleAvailability == TRUE)
+    {
+        hApp = _pb_GetAppHandle();
+        if (hApp != NULL)
+        {
+            ret = Vehicle_GetVehicleData(hApp, VEHICLE_DID_VARTRM1, &ucVartrm, sizeof(ucVartrm));
+            if (ret < VEHICLE_RET_NORMAL)
+            {
+                FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "ERROR: Vehicle_GetVehicleData:%d", ret);
+            }
+            else
+            {
+                eStatus = eFrameworkunifiedStatusOK;
+
+                switch (ucVartrm)
+                {
+                    case VEHICLE_SNS_VARTRM1_AT:
+                    case VEHICLE_SNS_VARTRM1_CVT:
+                    case VEHICLE_SNS_VARTRM1_HV_AT:
+                    {
+                        *pType = VEHICLEIF_TRANSMISSION_TYPE_AT;
+                        break;
+                    }
+                    case VEHICLE_SNS_VARTRM1_MT:
+                    case VEHICLE_SNS_VARTRM1_MMT:
+                    case VEHICLE_SNS_VARTRM1_SMT:
+                    {
+                        *pType = VEHICLEIF_TRANSMISSION_TYPE_MT;
+                        break;
+                    }
+                    case VEHICLE_SNS_VARTRM1_UNCERTAINTY:
+                    {
+                        *pType = VEHICLEIF_TRANSMISSION_TYPE_UNKNOWN;
+                        break;
+                    }
+                    default:
+                    {
+                        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, 
+                        "ERROR: Type of transmission is unknown. (%d)", ucVartrm);
+
+                        *pType = VEHICLEIF_TRANSMISSION_TYPE_UNKNOWN;
+                        break;
+                    }
+                }
+            }
+
+#if 1 /* Plus _CWORD27_ Gear Data Support 180115 */
+            ret = Vehicle_GetVehicleData(hApp, VEHICLE_DID_PKB, &ucPkb, sizeof(ucPkb));
+            if (ret < VEHICLE_RET_NORMAL)
+            {
+                FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "ERROR: Vehicle_GetVehicleData:%d", ret);
+            }
+            else
+            {
+                eStatus = eFrameworkunifiedStatusOK;
+
+                switch (ucPkb)
+                {
+                    case VEHICLE_SNS_OFF:       // R-state
+                    //case VEHICLE_SNS_ANTI:      // Antilock(Vehicle undefined)
+                    {
+                        *pPkb = VEHICLEIF_PKB_OFF;
+                        break;
+                    }
+                    case VEHICLE_SNS_ON:        // Lock state
+                    {
+                        *pPkb = VEHICLEIF_PKB_ON;
+                        break;
+                    }
+                    default:
+                    {
+                        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, 
+                        "ERROR: State of parking brake is unknown. (%d)", ucPkb);
+
+                        *pPkb = VEHICLEIF_PKB_OFF;
+                        break;
+                    }
+                }
+            }
+#endif /* Plus _CWORD27_ Gear Data Support 180115 */
+
+        }
+        else
+        {
+            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "ERROR: _pb_GetAppHandle hApp:%p", hApp);
+        }
+    }
+    else
+    {
+        /* nop */
+    }
+
+    *pbIsAvailable = gb_vehicleAvailability;
 
     return eStatus;
 }
@@ -265,11 +265,11 @@ EFrameworkunifiedStatus VehicleIfNotifyOnVehicleAvailability(CbFuncPtr fp_on_cmd
   happ = _pb_GetAppHandle();
   if (NULL != happ) {
     /* Vehicle/Availability Changing notification registration */
-//    estatus = FrameworkunifiedSubscribeNotificationWithCallback(happ, NTFY_Vehicle_Availability, fp_on_cmd);  // LCOV_EXCL_BR_LINE 6:unexpected branch  //NOLINT (whitespace/line_length)
-//    if (eFrameworkunifiedStatusOK != estatus) {  // LCOV_EXCL_BR_LINE 4: nsfw error
-//      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, 
-//                    "PositioningSubscriveNotificationswithCallback ERROR!! [estatus=%d]", estatus);
-//    }
+    estatus = FrameworkunifiedSubscribeNotificationWithCallback(happ, NTFY_Vehicle_Availability, fp_on_cmd);  // LCOV_EXCL_BR_LINE 6:unexpected branch  //NOLINT (whitespace/line_length)
+    if (eFrameworkunifiedStatusOK != estatus) {  // LCOV_EXCL_BR_LINE 4: nsfw error
+      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, 
+                    "PositioningSubscriveNotificationswithCallback ERROR!! [estatus=%d]", estatus);
+    }
   } else {
       FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "_pb_GetAppHandle ERROR!! [happ=%p]", happ);
   }
@@ -293,35 +293,35 @@ EFrameworkunifiedStatus VehicleIfNotifyOnVehicleAvailability(CbFuncPtr fp_on_cmd
 EFrameworkunifiedStatus VehicleIf_GetShiftPosition(uint8_t* pShift, BOOL* pbIsAvailable)
 {
     EFrameworkunifiedStatus eStatus = eFrameworkunifiedStatusFail;
-//    VEHICLE_RET_API ret;
-//    HANDLE hApp;
-//
-//    if (gb_vehicleAvailability == TRUE)
-//    {
-//        hApp = _pb_GetAppHandle();
-//        if (hApp != NULL)
-//        {
-//            ret = Vehicle_GetVehicleData(hApp, VEHICLE_DID_SHIFT, pShift, sizeof(*pShift));
-//            if (ret < VEHICLE_RET_NORMAL)
-//            {
-//                FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "ERROR: Vehicle_GetVehicleData:%d", ret);
-//            }
-//            else
-//            {
-//                eStatus = eFrameworkunifiedStatusOK;
-//            }
-//        }
-//        else
-//        {
-//            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "ERROR: _pb_GetAppHandle hApp:%p", hApp);
-//        }
-//    }
-//    else
-//    {
-//        /* nop */
-//    }
-//
-//    *pbIsAvailable = gb_vehicleAvailability;
+    VEHICLE_RET_API ret;
+    HANDLE hApp;
+
+    if (gb_vehicleAvailability == TRUE)
+    {
+        hApp = _pb_GetAppHandle();
+        if (hApp != NULL)
+        {
+            ret = Vehicle_GetVehicleData(hApp, VEHICLE_DID_SHIFT, pShift, sizeof(*pShift));
+            if (ret < VEHICLE_RET_NORMAL)
+            {
+                FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "ERROR: Vehicle_GetVehicleData:%d", ret);
+            }
+            else
+            {
+                eStatus = eFrameworkunifiedStatusOK;
+            }
+        }
+        else
+        {
+            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "ERROR: _pb_GetAppHandle hApp:%p", hApp);
+        }
+    }
+    else
+    {
+        /* nop */
+    }
+
+    *pbIsAvailable = gb_vehicleAvailability;
 
     return eStatus;
 }
@@ -338,27 +338,27 @@ EFrameworkunifiedStatus VehicleIf_GetShiftPosition(uint8_t* pShift, BOOL* pbIsAv
 
 EFrameworkunifiedStatus VehicleIfDeliveryEntry(uint32_t ul_did) {
   EFrameworkunifiedStatus estatus = eFrameworkunifiedStatusFail;
-//  HANDLE happ;
-//  VEHICLE_RET_API iret;
-//
-//  if (TRUE == gb_vehicleAvailability) {
-//    happ = _pb_GetAppHandle();
-//    if (NULL != happ) {
-//      /* Sensor data delivery registration */
-//      iret = Vehicle_DeliveryEntry(happ, (PCSTR)POS_THREAD_NAME, ul_did,
-//                                          VEHICLE_DELIVERY_REGIST, VEHICLE_DELIVERY_TIMING_UPDATE);
-//      if (VEHICLE_RET_NORMAL != iret) {
-//        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, 
-//                                            "Vehicle_DeliveryEntry ERROR!! [iret=%d]", iret);
-//      } else {
-//        estatus = eFrameworkunifiedStatusOK;
-//      }
-//    } else {
-//        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "_pb_GetAppHandle ERROR!! [happ=%p]", happ);
-//    }
-//  } else {
-//      /* nop */
-//  }
+  HANDLE happ;
+  VEHICLE_RET_API iret;
+
+  if (TRUE == gb_vehicleAvailability) {
+    happ = _pb_GetAppHandle();
+    if (NULL != happ) {
+      /* Sensor data delivery registration */
+      iret = Vehicle_DeliveryEntry(happ, (PCSTR)POS_THREAD_NAME, ul_did,
+                                          VEHICLE_DELIVERY_REGIST, VEHICLE_DELIVERY_TIMING_UPDATE);
+      if (VEHICLE_RET_NORMAL != iret) {
+        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, 
+                                            "Vehicle_DeliveryEntry ERROR!! [iret=%d]", iret);
+      } else {
+        estatus = eFrameworkunifiedStatusOK;
+      }
+    } else {
+        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "_pb_GetAppHandle ERROR!! [happ=%p]", happ);
+    }
+  } else {
+      /* nop */
+  }
   return estatus;
 }
 

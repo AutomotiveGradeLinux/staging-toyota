@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@
  *                  :VehicleSensCommWatchTblRun()                Disruption monitoring data management table execution function
  ******************************************************************************/
 
-//#include <positioning_hal.h>
+#include <positioning_hal.h>
 #include <vehicle_service/positioning_base_library.h>
 
 #include "VehicleSens_SelectionItemList.h"
@@ -48,7 +48,7 @@ static    VEHICLE_COMM_WATCH_TBL g_st_comm_watchtbl[VEHICLE_COMM_WATCHTBL_DID_NU
 * RETURN    : void
 ******************************************************************************/
 void VehicleSensInitSelectionItemList(void) {
-//    u_int8    uc_get_method;
+    u_int8    uc_get_method;
 
     VehicleSensCommWatchTblInit();
 
@@ -57,272 +57,215 @@ void VehicleSensInitSelectionItemList(void) {
     */
     memset(&g_st_selection_itemlist, 0x00, sizeof(g_st_selection_itemlist));
 
-//    g_st_selection_itemlist[0].ul_did         = VEHICLE_DID_DESTINATION;
-//    g_st_selection_itemlist[0].ul_canid         = VEHICLE_DID_BDB1S08;
-//    g_st_selection_itemlist[0].uc_get_method     = VEHICLESENS_GETMETHOD_CAN;
-//    g_st_selection_itemlist[1].ul_did         = VEHICLE_DID_HV;
-//    g_st_selection_itemlist[1].ul_canid = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[1].uc_get_method  = VEHICLESENS_GETMETHOD_CAN;
-//    g_st_selection_itemlist[2].ul_did         = VEHICLE_DID_2WD4WD;
-//    g_st_selection_itemlist[2].ul_canid         = VEHICLE_DID_ENG1F03;
-//    g_st_selection_itemlist[2].uc_get_method  = VEHICLESENS_GETMETHOD_CAN;
-//    g_st_selection_itemlist[2].ul_did         = VEHICLE_DID_STEERING_WHEEL;
-//    g_st_selection_itemlist[2].ul_canid         = VEHICLE_DID_BDB1S08;
-//    g_st_selection_itemlist[2].uc_get_method  = VEHICLESENS_GETMETHOD_CAN;
-//    g_st_selection_itemlist[3].ul_did         = VEHICLE_DID_VB;
-//    g_st_selection_itemlist[3].uc_get_method  = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[4].ul_did         = VEHICLE_DID_IG;
-//    g_st_selection_itemlist[4].uc_get_method  = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[5].ul_did         = VEHICLE_DID_MIC;
-//    g_st_selection_itemlist[5].uc_get_method  = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[6].ul_did         = VEHICLE_DID_TEST;
-//    g_st_selection_itemlist[6].uc_get_method  = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[7].ul_did         = VEHICLE_DID_VTRADAPTER;
-//    g_st_selection_itemlist[7].uc_get_method  = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[8].ul_did         = VEHICLE_DID_AUXADAPTER;
-//    g_st_selection_itemlist[8].uc_get_method  = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[9].ul_did         = VEHICLE_DID_BACKDOOR;
-//    g_st_selection_itemlist[9].ul_canid         = VEHICLE_DID_BDB1S01;
-//    uc_get_method = VEHICLESENS_GETMETHOD_NO_DETECTION;
-//    g_st_selection_itemlist[9].uc_get_method = uc_get_method;
-//    g_st_selection_itemlist[10].ul_did        = VEHICLE_DID_PKB;
-//    g_st_selection_itemlist[10].ul_canid    = VEHICLE_DID_EPB1S01;
-//    uc_get_method = VEHICLESENS_GETMETHOD_NO_DETECTION;
-//    g_st_selection_itemlist[10].uc_get_method = uc_get_method;
-//    g_st_selection_itemlist[11].ul_did         = VEHICLE_DID_ADIM;
-//    g_st_selection_itemlist[11].ul_canid     = VEHICLE_DID_BDB1S01;
-//    uc_get_method = VEHICLESENS_GETMETHOD_NO_DETECTION;
-//    g_st_selection_itemlist[11].uc_get_method = uc_get_method;
-//    g_st_selection_itemlist[12].ul_did         = VEHICLE_DID_ILL;
-//    g_st_selection_itemlist[12].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[13].ul_did         = VEHICLE_DID_RHEOSTAT;
-//    g_st_selection_itemlist[13].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[14].ul_did         = VEHICLE_DID_PANELTEMP;
-//    g_st_selection_itemlist[14].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[15].ul_did         = VEHICLE_DID_SYSTEMP;
-//    g_st_selection_itemlist[15].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[16].ul_did         = POSHAL_DID_SPEED_PULSE;
-//    g_st_selection_itemlist[16].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[17].ul_did         = POSHAL_DID_SPEED_KMPH;
-//    g_st_selection_itemlist[17].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[18].ul_did         = POSHAL_DID_GYRO;
-//    g_st_selection_itemlist[18].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[19].ul_did         = POSHAL_DID_GSNS_X;
-//    g_st_selection_itemlist[19].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[20].ul_did         = POSHAL_DID_GSNS_Y;
-//    g_st_selection_itemlist[20].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[21].ul_did         = VEHICLE_DID_REV;
-//    g_st_selection_itemlist[21].ul_canid     = VEHICLESENS_INVALID;
-//    uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[21].uc_get_method = uc_get_method;
-//    g_st_selection_itemlist[22].ul_did         = VEHICLE_DID_MINIJACK;
-//    g_st_selection_itemlist[22].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[23].ul_did         = POSHAL_DID_GPS_ANTENNA;
-//    g_st_selection_itemlist[23].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[24].ul_did         = POSHAL_DID_SNS_COUNTER;
-//    g_st_selection_itemlist[24].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[25].ul_did         = VEHICLE_DID_GPS_COUNTER;
-//    g_st_selection_itemlist[25].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[26].ul_did         = VEHICLE_DID_SIRF_BINARY;
-//    g_st_selection_itemlist[26].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[27].ul_did         = VEHICLE_DID_RTC;
-//    g_st_selection_itemlist[27].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[28].ul_did         = POSHAL_DID_GPS_VERSION;
-//    g_st_selection_itemlist[28].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[29].ul_did         = VEHICLE_DID_SATELLITE_STATUS;
-//    g_st_selection_itemlist[29].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[30].ul_did         = VEHICLE_DID_LOCATION;
-//    g_st_selection_itemlist[30].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[31].ul_did         = VEHICLE_DID_BACKDOOR_LINE;
-//    g_st_selection_itemlist[31].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[32].ul_did         = VEHICLE_DID_ADIM_LINE;
-//    g_st_selection_itemlist[32].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[33].ul_did         = VEHICLE_DID_REV_LINE;
-//    g_st_selection_itemlist[33].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[34].ul_did         = VEHICLE_DID_BACKDOOR_CAN;
-//    g_st_selection_itemlist[34].ul_canid     = VEHICLE_DID_BDB1S01;
-//    g_st_selection_itemlist[34].uc_get_method = VEHICLESENS_GETMETHOD_CAN;
-//    g_st_selection_itemlist[35].ul_did         = VEHICLE_DID_ADIM_CAN;
-//    g_st_selection_itemlist[35].ul_canid     = VEHICLE_DID_BDB1S01;
-//    g_st_selection_itemlist[35].uc_get_method = VEHICLESENS_GETMETHOD_CAN;
-//    g_st_selection_itemlist[36].ul_did         = VEHICLE_DID_REV_CAN;
-//    g_st_selection_itemlist[36].ul_canid     = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[36].uc_get_method = VEHICLESENS_GETMETHOD_CAN;
-//    /* ++ GPS _CWORD82_ support */
-//    g_st_selection_itemlist[37].ul_did         = POSHAL_DID_GPS__CWORD82___CWORD44_GP4;
-//    g_st_selection_itemlist[37].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[38].ul_did         = VEHICLE_DID_GPS__CWORD82__NMEA;
-//    g_st_selection_itemlist[38].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[39].ul_did         = POSHAL_DID_GPS__CWORD82__FULLBINARY;
-//    g_st_selection_itemlist[39].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    /* -- GPS _CWORD82_ support */
-//
-//#if CONFIG_SENSOR_EXT_VALID                /* Initial Sensor Response */
-//    g_st_selection_itemlist[40].ul_did         = POSHAL_DID_GYRO_EXT;
-//    g_st_selection_itemlist[40].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[41].ul_did         = POSHAL_DID_SPEED_PULSE_FST;
-//    g_st_selection_itemlist[41].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[42].ul_did         = POSHAL_DID_GYRO_FST;
-//    g_st_selection_itemlist[42].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    /* ++ PastModel002 support */
-//    g_st_selection_itemlist[43].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_POSLLH;
-//    g_st_selection_itemlist[43].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[44].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_STATUS;
-//    g_st_selection_itemlist[44].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[45].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_TIMEUTC;
-//    g_st_selection_itemlist[45].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[46].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_VELNED;
-//    g_st_selection_itemlist[46].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[47].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_DOP;
-//    g_st_selection_itemlist[47].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[48].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_TIMEGPS;
-//    g_st_selection_itemlist[48].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[49].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_SVINFO;
-//    g_st_selection_itemlist[49].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[50].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_CLOCK;
-//    g_st_selection_itemlist[50].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[51].ul_did         = VEHICLE_DID_GPS_UBLOX_MON_HW;
-//    g_st_selection_itemlist[51].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[52].ul_did         = POSHAL_DID_SPEED_PULSE_FLAG;
-//    g_st_selection_itemlist[52].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//
-//    g_st_selection_itemlist[53].ul_did         = VEHICLE_DID_GYRO_TROUBLE;
-//    g_st_selection_itemlist[53].ul_canid     = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[53].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[54].ul_did         = VEHICLE_DID_SYS_GPS_INTERRUPT_SIGNAL;
-//    g_st_selection_itemlist[54].ul_canid     = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[54].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[55].ul_did         = VEHICLE_DID_MAIN_GPS_INTERRUPT_SIGNAL;
-//    g_st_selection_itemlist[55].ul_canid     = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[55].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[56].ul_did         = VEHICLE_DID_GYRO_CONNECT_STATUS;
-//    g_st_selection_itemlist[56].ul_canid     = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[56].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    /* -- PastModel002 support */
-//    g_st_selection_itemlist[57].ul_did         = POSHAL_DID_SPEED_PULSE_FLAG_FST;
-//    g_st_selection_itemlist[57].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[58].ul_did         = POSHAL_DID_REV_FST;
-//    g_st_selection_itemlist[58].ul_canid     = VEHICLESENS_INVALID;
-//    uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[58].uc_get_method = uc_get_method;
-//
-//    g_st_selection_itemlist[59].ul_did         = POSHAL_DID_GPS_NMEA;
-//    g_st_selection_itemlist[59].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[60].ul_did        = POSHAL_DID_GPS_TIME;
-//    g_st_selection_itemlist[60].ul_canid    = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[60].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[61].ul_did        = VEHICLE_DID_NAVIINFO_DIAG_GPS;
-//    g_st_selection_itemlist[61].ul_canid    = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[61].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[62].ul_did        = POSHAL_DID_GYRO_TEMP;
-//    g_st_selection_itemlist[62].ul_canid    = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[62].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[63].ul_did        = POSHAL_DID_GYRO_TEMP_FST;
-//    g_st_selection_itemlist[63].ul_canid    = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[63].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[64].ul_did        = POSHAL_DID_GSNS_X_FST;
-//    g_st_selection_itemlist[64].ul_canid    = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[64].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[65].ul_did        = POSHAL_DID_GSNS_Y_FST;
-//    g_st_selection_itemlist[65].ul_canid    = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[65].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//
-//    g_st_selection_itemlist[66].ul_did        = VEHICLE_DID_LOCATION_LONLAT;
-//    g_st_selection_itemlist[66].ul_canid    = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[66].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[67].ul_did        = VEHICLE_DID_LOCATION_ALTITUDE;
-//    g_st_selection_itemlist[67].ul_canid    = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[67].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[68].ul_did        = VEHICLE_DID_MOTION_HEADING;
-//    g_st_selection_itemlist[68].ul_canid    = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[68].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[69].ul_did        = VEHICLE_DID_LOCATION_LONLAT_NAVI;
-//    g_st_selection_itemlist[69].ul_canid    = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[69].uc_get_method = VEHICLESENS_GETMETHOD_NAVI;
-//    g_st_selection_itemlist[70].ul_did        = VEHICLE_DID_LOCATION_ALTITUDE_NAVI;
-//    g_st_selection_itemlist[70].ul_canid    = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[70].uc_get_method = VEHICLESENS_GETMETHOD_NAVI;
-//    g_st_selection_itemlist[71].ul_did        = VEHICLE_DID_MOTION_HEADING_NAVI;
-//    g_st_selection_itemlist[71].ul_canid    = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[71].uc_get_method = VEHICLESENS_GETMETHOD_NAVI;
-//    g_st_selection_itemlist[72].ul_did        = VEHICLE_DID_SETTINGTIME;
-//    g_st_selection_itemlist[72].ul_canid    = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[72].uc_get_method = VEHICLESENS_GETMETHOD_OTHER;
-//    g_st_selection_itemlist[73].ul_did        = VEHICLE_DID_MOTION_SPEED;
-//    g_st_selection_itemlist[73].ul_canid    = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[73].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[74].ul_did        = VEHICLE_DID_MOTION_SPEED_NAVI;
-//    g_st_selection_itemlist[74].ul_canid    = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[74].uc_get_method = VEHICLESENS_GETMETHOD_NAVI;
-//    g_st_selection_itemlist[75].ul_did        = VEHICLE_DID_MOTION_SPEED_INTERNAL;
-//    g_st_selection_itemlist[75].ul_canid    = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[75].uc_get_method = VEHICLESENS_GETMETHOD_INTERNAL;
-//    g_st_selection_itemlist[76].ul_did        = POSHAL_DID_PULSE_TIME;
-//    g_st_selection_itemlist[76].ul_canid    = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[76].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[77].ul_did        = POSHAL_DID_GPS_TIME_RAW;
-//    g_st_selection_itemlist[77].ul_canid    = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[77].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[78].ul_did        = POSHAL_DID_GPS_WKNROLLOVER;
-//    g_st_selection_itemlist[78].ul_canid    = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[78].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[79].ul_did        = POSHAL_DID_GPS_CLOCK_DRIFT;
-//    g_st_selection_itemlist[79].ul_canid    = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[79].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[80].ul_did        = POSHAL_DID_GPS_CLOCK_FREQ;
-//    g_st_selection_itemlist[80].ul_canid    = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[80].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//
-//#else
-//    g_st_selection_itemlist[40].ul_did         = VEHICLE_DID_GGA;
-//    g_st_selection_itemlist[40].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[41].ul_did         = VEHICLE_DID_GLL;
-//    g_st_selection_itemlist[41].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[42].ul_did         = VEHICLE_DID_GSA;
-//    g_st_selection_itemlist[42].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[43].ul_did         = VEHICLE_DID_GSV;
-//    g_st_selection_itemlist[43].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[44].ul_did         = VEHICLE_DID_RMC;
-//    g_st_selection_itemlist[44].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[45].ul_did         = VEHICLE_DID_VTG;
-//    g_st_selection_itemlist[45].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    /* ++ PastModel002 support */
-//    g_st_selection_itemlist[46].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_POSLLH;
-//    g_st_selection_itemlist[46].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[47].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_STATUS;
-//    g_st_selection_itemlist[47].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[48].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_TIMEUTC;
-//    g_st_selection_itemlist[48].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[49].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_VELNED;
-//    g_st_selection_itemlist[49].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[50].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_DOP;
-//    g_st_selection_itemlist[50].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[51].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_TIMEGPS;
-//    g_st_selection_itemlist[51].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[52].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_SVINFO;
-//    g_st_selection_itemlist[52].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[53].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_CLOCK;
-//    g_st_selection_itemlist[53].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[54].ul_did         = VEHICLE_DID_GPS_UBLOX_MON_HW;
-//    g_st_selection_itemlist[54].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
-//    g_st_selection_itemlist[55].ul_did         = POSHAL_DID_SPEED_PULSE_FLAG;
-//    g_st_selection_itemlist[55].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//
-//    g_st_selection_itemlist[56].ul_did         = VEHICLE_DID_GYRO_TROUBLE;
-//    g_st_selection_itemlist[56].ul_canid     = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[56].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[57].ul_did         = VEHICLE_DID__CWORD56__GPS_INTERRUPT_SIGNAL;
-//    g_st_selection_itemlist[57].ul_canid     = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[57].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[58].ul_did         = VEHICLE_DID__CWORD102__GPS_INTERRUPT_SIGNAL;
-//    g_st_selection_itemlist[58].ul_canid     = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[58].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//    g_st_selection_itemlist[59].ul_did         = VEHICLE_DID_GYRO_CONNECT_STATUS;
-//    g_st_selection_itemlist[59].ul_canid     = VEHICLESENS_INVALID;
-//    g_st_selection_itemlist[59].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
-//
-//    /* -- PastModel002 support */
-//#endif
+    g_st_selection_itemlist[0].ul_did         = VEHICLE_DID_HV;
+    g_st_selection_itemlist[0].ul_canid = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[0].uc_get_method  = VEHICLESENS_GETMETHOD_CAN;
+    g_st_selection_itemlist[1].ul_did         = VEHICLE_DID_VB;
+    g_st_selection_itemlist[1].uc_get_method  = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[2].ul_did         = VEHICLE_DID_IG;
+    g_st_selection_itemlist[2].uc_get_method  = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[3].ul_did         = VEHICLE_DID_MIC;
+    g_st_selection_itemlist[3].uc_get_method  = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[4].ul_did         = VEHICLE_DID_ILL;
+    g_st_selection_itemlist[4].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[5].ul_did         = VEHICLE_DID_RHEOSTAT;
+    g_st_selection_itemlist[5].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[6].ul_did         = VEHICLE_DID_SYSTEMP;
+    g_st_selection_itemlist[6].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[7].ul_did         = POSHAL_DID_SPEED_PULSE;
+    g_st_selection_itemlist[7].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[8].ul_did         = POSHAL_DID_SPEED_KMPH;
+    g_st_selection_itemlist[8].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[9].ul_did         = POSHAL_DID_GYRO_X;
+    g_st_selection_itemlist[9].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[10].ul_did         = POSHAL_DID_GYRO_Y;
+    g_st_selection_itemlist[10].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[11].ul_did         = POSHAL_DID_GYRO_Z;
+    g_st_selection_itemlist[11].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[12].ul_did         = POSHAL_DID_GSNS_X;
+    g_st_selection_itemlist[12].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[13].ul_did         = POSHAL_DID_GSNS_Y;
+    g_st_selection_itemlist[13].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[14].ul_did         = POSHAL_DID_GSNS_Z;
+    g_st_selection_itemlist[14].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[15].ul_did         = VEHICLE_DID_REV;
+    g_st_selection_itemlist[15].ul_canid     = VEHICLESENS_INVALID;
+    uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[15].uc_get_method = uc_get_method;
+    g_st_selection_itemlist[16].ul_did         = POSHAL_DID_GPS_ANTENNA;
+    g_st_selection_itemlist[16].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[17].ul_did         = POSHAL_DID_SNS_COUNTER;
+    g_st_selection_itemlist[17].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[18].ul_did         = VEHICLE_DID_GPS_COUNTER;
+    g_st_selection_itemlist[18].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[19].ul_did         = POSHAL_DID_GPS_VERSION;
+    g_st_selection_itemlist[19].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[20].ul_did         = VEHICLE_DID_LOCATION;
+    g_st_selection_itemlist[20].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[21].ul_did         = VEHICLE_DID_REV_LINE;
+    g_st_selection_itemlist[21].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[22].ul_did         = VEHICLE_DID_REV_CAN;
+    g_st_selection_itemlist[22].ul_canid     = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[22].uc_get_method = VEHICLESENS_GETMETHOD_CAN;
+    /* ++ GPS _CWORD82_ support */
+    g_st_selection_itemlist[23].ul_did         = POSHAL_DID_GPS__CWORD82___CWORD44_GP4;
+    g_st_selection_itemlist[23].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[24].ul_did         = VEHICLE_DID_GPS__CWORD82__NMEA;
+    g_st_selection_itemlist[24].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[25].ul_did         = POSHAL_DID_GPS__CWORD82__FULLBINARY;
+    g_st_selection_itemlist[25].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    /* -- GPS _CWORD82_ support */
+#if CONFIG_SENSOR_EXT_VALID                /* Initial Sensor Response */
+    g_st_selection_itemlist[26].ul_did         = POSHAL_DID_GYRO_EXT;
+    g_st_selection_itemlist[26].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[27].ul_did         = POSHAL_DID_SPEED_PULSE_FST;
+    g_st_selection_itemlist[27].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[28].ul_did         = POSHAL_DID_GYRO_X_FST;
+    g_st_selection_itemlist[28].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[29].ul_did         = POSHAL_DID_GYRO_Y_FST;
+    g_st_selection_itemlist[29].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[30].ul_did         = POSHAL_DID_GYRO_Z_FST;
+    g_st_selection_itemlist[30].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[31].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_POSLLH;
+    g_st_selection_itemlist[31].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[32].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_STATUS;
+    g_st_selection_itemlist[32].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[33].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_TIMEUTC;
+    g_st_selection_itemlist[33].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[34].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_VELNED;
+    g_st_selection_itemlist[34].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[35].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_DOP;
+    g_st_selection_itemlist[35].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[36].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_TIMEGPS;
+    g_st_selection_itemlist[36].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[37].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_SVINFO;
+    g_st_selection_itemlist[37].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[38].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_CLOCK;
+    g_st_selection_itemlist[38].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[39].ul_did         = VEHICLE_DID_GPS_UBLOX_MON_HW;
+    g_st_selection_itemlist[39].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[40].ul_did         = POSHAL_DID_SPEED_PULSE_FLAG;
+    g_st_selection_itemlist[40].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[41].ul_did         = VEHICLE_DID_GYRO_TROUBLE;
+    g_st_selection_itemlist[41].ul_canid     = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[41].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[42].ul_did         = VEHICLE_DID_SYS_GPS_INTERRUPT_SIGNAL;
+    g_st_selection_itemlist[42].ul_canid     = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[42].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[43].ul_did         = VEHICLE_DID_MAIN_GPS_INTERRUPT_SIGNAL;
+    g_st_selection_itemlist[43].ul_canid     = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[43].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[44].ul_did         = VEHICLE_DID_GYRO_CONNECT_STATUS;
+    g_st_selection_itemlist[44].ul_canid     = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[44].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[45].ul_did         = POSHAL_DID_SPEED_PULSE_FLAG_FST;
+    g_st_selection_itemlist[45].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[46].ul_did         = POSHAL_DID_REV_FST;
+    g_st_selection_itemlist[46].ul_canid     = VEHICLESENS_INVALID;
+    uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[46].uc_get_method = uc_get_method;
+    g_st_selection_itemlist[47].ul_did         = POSHAL_DID_GPS_NMEA;
+    g_st_selection_itemlist[47].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[48].ul_did        = POSHAL_DID_GPS_TIME;
+    g_st_selection_itemlist[48].ul_canid    = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[48].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[49].ul_did        = VEHICLE_DID_NAVIINFO_DIAG_GPS;
+    g_st_selection_itemlist[49].ul_canid    = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[49].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[50].ul_did        = POSHAL_DID_GYRO_TEMP;
+    g_st_selection_itemlist[50].ul_canid    = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[50].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[51].ul_did        = POSHAL_DID_GYRO_TEMP_FST;
+    g_st_selection_itemlist[51].ul_canid    = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[51].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[52].ul_did        = POSHAL_DID_GSNS_X_FST;
+    g_st_selection_itemlist[52].ul_canid    = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[52].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[53].ul_did        = POSHAL_DID_GSNS_Y_FST;
+    g_st_selection_itemlist[53].ul_canid    = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[53].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[54].ul_did        = POSHAL_DID_GSNS_Z_FST;
+    g_st_selection_itemlist[54].ul_canid    = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[54].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[55].ul_did        = VEHICLE_DID_LOCATION_LONLAT;
+    g_st_selection_itemlist[55].ul_canid    = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[55].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[56].ul_did        = VEHICLE_DID_LOCATION_ALTITUDE;
+    g_st_selection_itemlist[56].ul_canid    = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[56].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[57].ul_did        = VEHICLE_DID_MOTION_HEADING;
+    g_st_selection_itemlist[57].ul_canid    = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[57].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[58].ul_did        = VEHICLE_DID_LOCATION_LONLAT_NAVI;
+    g_st_selection_itemlist[58].ul_canid    = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[58].uc_get_method = VEHICLESENS_GETMETHOD_NAVI;
+    g_st_selection_itemlist[59].ul_did        = VEHICLE_DID_LOCATION_ALTITUDE_NAVI;
+    g_st_selection_itemlist[59].ul_canid    = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[59].uc_get_method = VEHICLESENS_GETMETHOD_NAVI;
+    g_st_selection_itemlist[60].ul_did        = VEHICLE_DID_MOTION_HEADING_NAVI;
+    g_st_selection_itemlist[60].ul_canid    = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[60].uc_get_method = VEHICLESENS_GETMETHOD_NAVI;
+    g_st_selection_itemlist[61].ul_did        = VEHICLE_DID_SETTINGTIME;
+    g_st_selection_itemlist[61].ul_canid    = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[61].uc_get_method = VEHICLESENS_GETMETHOD_OTHER;
+    g_st_selection_itemlist[62].ul_did        = VEHICLE_DID_MOTION_SPEED;
+    g_st_selection_itemlist[62].ul_canid    = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[62].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[63].ul_did        = VEHICLE_DID_MOTION_SPEED_NAVI;
+    g_st_selection_itemlist[63].ul_canid    = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[63].uc_get_method = VEHICLESENS_GETMETHOD_NAVI;
+    g_st_selection_itemlist[64].ul_did        = VEHICLE_DID_MOTION_SPEED_INTERNAL;
+    g_st_selection_itemlist[64].ul_canid    = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[64].uc_get_method = VEHICLESENS_GETMETHOD_INTERNAL;
+    g_st_selection_itemlist[65].ul_did        = POSHAL_DID_PULSE_TIME;
+    g_st_selection_itemlist[65].ul_canid    = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[65].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[66].ul_did        = POSHAL_DID_GPS_TIME_RAW;
+    g_st_selection_itemlist[66].ul_canid    = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[66].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[67].ul_did        = POSHAL_DID_GPS_WKNROLLOVER;
+    g_st_selection_itemlist[67].ul_canid    = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[67].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[68].ul_did        = POSHAL_DID_GPS_CLOCK_DRIFT;
+    g_st_selection_itemlist[68].ul_canid    = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[68].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[69].ul_did        = POSHAL_DID_GPS_CLOCK_FREQ;
+    g_st_selection_itemlist[69].ul_canid    = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[69].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+#else
+    g_st_selection_itemlist[26].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_POSLLH;
+    g_st_selection_itemlist[26].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[27].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_STATUS;
+    g_st_selection_itemlist[27].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[28].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_TIMEUTC;
+    g_st_selection_itemlist[28].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[29].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_VELNED;
+    g_st_selection_itemlist[29].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[30].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_DOP;
+    g_st_selection_itemlist[30].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[31].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_TIMEGPS;
+    g_st_selection_itemlist[31].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[32].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_SVINFO;
+    g_st_selection_itemlist[32].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[33].ul_did         = VEHICLE_DID_GPS_UBLOX_NAV_CLOCK;
+    g_st_selection_itemlist[33].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[34].ul_did         = VEHICLE_DID_GPS_UBLOX_MON_HW;
+    g_st_selection_itemlist[34].uc_get_method = VEHICLESENS_GETMETHOD_GPS;
+    g_st_selection_itemlist[35].ul_did         = POSHAL_DID_SPEED_PULSE_FLAG;
+    g_st_selection_itemlist[35].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[36].ul_did         = VEHICLE_DID_GYRO_TROUBLE;
+    g_st_selection_itemlist[36].ul_canid     = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[36].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[37].ul_did         = VEHICLE_DID__CWORD56__GPS_INTERRUPT_SIGNAL;
+    g_st_selection_itemlist[37].ul_canid     = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[37].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[38].ul_did         = VEHICLE_DID__CWORD102__GPS_INTERRUPT_SIGNAL;
+    g_st_selection_itemlist[38].ul_canid     = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[38].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+    g_st_selection_itemlist[39].ul_did         = VEHICLE_DID_GYRO_CONNECT_STATUS;
+    g_st_selection_itemlist[39].ul_canid     = VEHICLESENS_INVALID;
+    g_st_selection_itemlist[39].uc_get_method = VEHICLESENS_GETMETHOD_LINE;
+#endif
 }
 
 /*******************************************************************************
@@ -449,8 +392,8 @@ void VehicleSensCommWatchTblInit(void) {
     memset(&g_st_comm_watchtbl, 0x00, sizeof(g_st_comm_watchtbl));
 
     /* DID initialization */
-//    g_st_comm_watchtbl[0].ul_did    = VEHICLE_DID_REV;
-//    g_st_comm_watchtbl[1].ul_did    = VEHICLE_DID_REV_CAN;
+    g_st_comm_watchtbl[0].ul_did    = VEHICLE_DID_REV;
+    g_st_comm_watchtbl[1].ul_did    = VEHICLE_DID_REV_CAN;
 }
 
 /*******************************************************************************

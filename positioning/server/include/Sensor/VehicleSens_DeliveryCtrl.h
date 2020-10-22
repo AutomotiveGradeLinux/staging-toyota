@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -214,9 +214,9 @@ u_int8 VehicleSensDeliveryOther(DID ul_did, u_int8 uc_current_get_method, int32 
                             VEHICLESENS_DATA_MASTER* stmaster,
                             const VEHICLESENS_DELIVERY_PNO_TBL *pst_pno_tbl);
 void VehicleSensDeliveryProc(DID ul_did, u_int8 uc_chg_type, u_int8 uc_get_method);
-//u_int8 VehicleSensFirstDeliverySens(PNO us_pno, DID ul_did, u_int8 uc_get_method,
-//                                     VEHICLESENS_DATA_MASTER_FST* stmaster_fst,
-//                                     VEHICLESENS_DATA_MASTER_FST* stmaster_fst_temp);
+u_int8 VehicleSensFirstDeliverySens(PNO us_pno, DID ul_did, u_int8 uc_get_method,
+                                    VEHICLESENS_DATA_MASTER_FST* stmaster_fst,
+                                    VEHICLESENS_DATA_MASTER_FST* stmaster_fst_temp);
 u_int8 VehicleSensFirstDeliveryOther(PNO us_pno, DID ul_did, u_int8 uc_get_method,
                                     u_int32* cid,
                                     VEHICLESENS_DATA_MASTER* stmaster);

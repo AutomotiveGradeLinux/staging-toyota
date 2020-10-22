@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@
 #include "Vehicle_API_private.h"
 #include "Sensor_API_private.h"
 #include "VehicleSens_Common.h"
-#include "VehicleSens_FromMng.h"
 #include "VehicleSens_SelectionItemList.h"
 #include "VehicleSens_DataMaster.h"
 #include "VehicleSens_DeliveryCtrl.h"
@@ -37,8 +36,8 @@
 #include "VehicleDebug_API.h"
 #include "VehicleSens_FromAccess.h"
 #include "ClockDataMng.h"
-//#include "gps_hal.h"
-//#include "positioning_hal.h"
+#include "gps_hal.h"
+#include "positioning_hal.h"
 #include "CommonDefine.h"
 
 /* ++ DR support */
@@ -143,27 +142,27 @@ void VehicleSensGetVehicleData(const VEHICLE_MSG_GET_VEHICLE_DATA *);
 void VehicleSensWatchStopPage(const VEHICLE_MSG_WATCH_STOPPAGE *);
 void VehicleSensPkgDeliveryEntry(const SENSOR_MSG_DELIVERY_ENTRY *);
 void VehicleSensGetVehiclePkgData(const SENSOR_MSG_GET_SENSOR_DATA *);
-//void VehicleSensLineSensDataDelivery(const LSDRV_MSG_LSDATA *, PFUNC_DMASTER_SET_N);
-//void VehicleSensLineSensDataDeliveryG(const LSDRV_MSG_LSDATA_G *, PFUNC_DMASTER_SET_N);
-//void VehicleSensLineSensDataDeliveryGyroTrouble(const LSDRV_MSG_LSDATA_GYRO_TROUBLE *msg,
-//                                                PFUNC_DMASTER_SET_N p_datamaster_set_n);
-//void VehicleSensLineSensDataDeliverySysGpsInterruptSignal(const LSDRV_MSG_LSDATA_GPS_INTERRUPT_SIGNAL *msg,
-//                                                PFUNC_DMASTER_SET_SHARED_MEMORY p_datamaster_set_sharedmemory);
-//void VehicleSensLineSensDataDeliveryGyroConnectStatus(const LSDRV_MSG_LSDATA_GYRO_CONNECT_STATUS *msg,
-//                                                      PFUNC_DMASTER_SET_SHARED_MEMORY p_datamaster_set_sharedmemory);
-//void VehicleSensLineSensDataDeliveryGpsAntennaStatus(const LSDRV_MSG_LSDATA_GPS_ANTENNA_STATUS *msg,
-//                                                     PFUNC_DMASTER_SET_N p_datamaster_set_n);
+void VehicleSensLineSensDataDelivery(const LSDRV_MSG_LSDATA *, PFUNC_DMASTER_SET_N);
+void VehicleSensLineSensDataDeliveryG(const LSDRV_MSG_LSDATA_G *, PFUNC_DMASTER_SET_N);
+void VehicleSensLineSensDataDeliveryGyroTrouble(const LSDRV_MSG_LSDATA_GYRO_TROUBLE *msg,
+                                                PFUNC_DMASTER_SET_N p_datamaster_set_n);
+void VehicleSensLineSensDataDeliverySysGpsInterruptSignal(const LSDRV_MSG_LSDATA_GPS_INTERRUPT_SIGNAL *msg,
+                                                PFUNC_DMASTER_SET_SHARED_MEMORY p_datamaster_set_sharedmemory);
+void VehicleSensLineSensDataDeliveryGyroConnectStatus(const LSDRV_MSG_LSDATA_GYRO_CONNECT_STATUS *msg,
+                                                      PFUNC_DMASTER_SET_SHARED_MEMORY p_datamaster_set_sharedmemory);
+void VehicleSensLineSensDataDeliveryGpsAntennaStatus(const LSDRV_MSG_LSDATA_GPS_ANTENNA_STATUS *msg,
+                                                     PFUNC_DMASTER_SET_N p_datamaster_set_n);
 
 #if CONFIG_SENSOR_EXT_VALID                /* Initial Sensor Support */
 void VehicleSensPkgDeliveryEntryExt(const SENSOR_MSG_DELIVERY_ENTRY *msg);
-//void VehicleSensLineSensDataDeliveryFst(const LSDRV_MSG_LSDATA_FST *, PFUNC_DMASTER_SET_N);
-//void VehicleSensLineSensDataDeliveryFstG(const LSDRV_MSG_LSDATA_FST *msg, PFUNC_DMASTER_SET_N p_datamaster_set_n);
+void VehicleSensLineSensDataDeliveryFst(const LSDRV_MSG_LSDATA_FST *, PFUNC_DMASTER_SET_N);
+void VehicleSensLineSensDataDeliveryFstG(const LSDRV_MSG_LSDATA_FST *msg, PFUNC_DMASTER_SET_N p_datamaster_set_n);
 #else
 void VehicleSensPkgDeliveryEntryError(const SENSOR_MSG_DELIVERY_ENTRY *msg);
 #endif
-//void VehicleSensGpsDataDelivery(SENSOR_MSG_GPSDATA *msg,
-//                                PFUNC_DMASTER_SET_N p_datamaster_set_n,
-//                                PFUNC_DMASTER_SET_SHARED_MEMORY p_datamaster_set_sharedmemory);
+void VehicleSensGpsDataDelivery(SENSOR_MSG_GPSDATA *msg,
+                                PFUNC_DMASTER_SET_N p_datamaster_set_n,
+                                PFUNC_DMASTER_SET_SHARED_MEMORY p_datamaster_set_sharedmemory);
 
 void VehicleSensDataMasterSetN(DID did, u_int8 chg_type, u_int8 get_method);
 void VehicleSensDataMasterSetSharedMemory(DID did, u_int8 chg_type);
@@ -175,11 +174,11 @@ void VehicleSensDrDeliveryEntry(const VEHICLE_MSG_DELIVERY_ENTRY *);
 void VehicleSensGetLog(const VEHICLEDEBUG_MSG_BUF* msg);
 void VehicleSensSetLog(const VEHICLEDEBUG_MSG_BUF* msg);
 void VehicleSensWriteLocalTime(const CANINPUT_MSG_INFO *msg);
-//void VehicleSensSetEphNumSharedMemory(const SENSOR_MSG_GPSDATA *msg);
+void VehicleSensSetEphNumSharedMemory(const SENSOR_MSG_GPSDATA *msg);
 void VehicleSensDrRcvMsg(const DEAD_RECKONING_RCVDATA *msg);
 
 void VehicleSensCommonDataDelivery(const VEHICLE_MSG_BUF *msg, PFUNC_DMASTER_SET_N p_datamaster_set_n);
-//void VehicleSensGpsTimeSndMsg(const POS_MSGINFO *pos_msg);
+void VehicleSensGpsTimeSndMsg(const POS_MSGINFO *pos_msg);
 void VehicleSensGpsTimeDelivery(const VEHICLE_MSG_BUF *msg);
 RET_API VehicleSensSendEvent(uint16_t snd_pno, int32_t event_val);
 void VehicleSensThreadStopProcess(void);

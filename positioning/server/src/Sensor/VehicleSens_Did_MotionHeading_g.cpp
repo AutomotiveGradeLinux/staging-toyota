@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,20 +37,20 @@ static  VEHICLESENS_DATA_MASTER  gstMotionHeading_g;  // NOLINT(readability/noli
 @retval     none
 *******************************************************************************/
 void VehicleSensInitMotionHeadingG(void) {
-//    SENSORMOTION_HEADINGINFO_DAT  st_heading;
+    SENSORMOTION_HEADINGINFO_DAT  st_heading;
 
     memset(&gstMotionHeading_g, 0x00, sizeof(VEHICLESENS_DATA_MASTER));
 
     /** Data ID setting */
     gstMotionHeading_g.ul_did    = VEHICLE_DID_MOTION_HEADING;
     /** Data size setting */
-//    gstMotionHeading_g.us_size    = sizeof(SENSORMOTION_HEADINGINFO_DAT);
+    gstMotionHeading_g.us_size    = sizeof(SENSORMOTION_HEADINGINFO_DAT);
     /** Data content setting */
-//    memset(&st_heading, 0x00, sizeof(st_heading));
-//    st_heading.getMethod = SENSOR_GET_METHOD_GPS;
-//    st_heading.SyncCnt   = 0x00;
-//    st_heading.isEnable  = SENSORMOTION_STATUS_DISABLE;
-//    memcpy(&gstMotionHeading_g.uc_data[0], &st_heading, sizeof(st_heading));
+    memset(&st_heading, 0x00, sizeof(st_heading));
+    st_heading.getMethod = SENSOR_GET_METHOD_GPS;
+    st_heading.SyncCnt   = 0x00;
+    st_heading.isEnable  = SENSORMOTION_STATUS_DISABLE;
+    memcpy(&gstMotionHeading_g.uc_data[0], &st_heading, sizeof(st_heading));
 }
 
 /****************************************************************************
@@ -63,25 +63,25 @@ void VehicleSensInitMotionHeadingG(void) {
 @retval     VEHICLESENS_EQ  : No data change
 @retval     VEHICLESENS_NEQ : Data change
 *******************************************************************************/
-//u_int8 VehicleSensSetMotionHeadingG(const SENSORMOTION_HEADINGINFO_DAT *pst_heading) {
-//    u_int8  uc_ret;
-//    VEHICLESENS_DATA_MASTER      *pst_master;
-//
-//    pst_master = &gstMotionHeading_g;
-//
-//    /** With the contents of the current data master,Compare received data */
-//    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_heading,
-//                    sizeof(SENSORMOTION_HEADINGINFO_DAT));
-//
-//    /** Received data is set in the data master. */
-//    pst_master->ul_did    = VEHICLE_DID_MOTION_HEADING;
-//    pst_master->us_size    = sizeof(SENSORMOTION_HEADINGINFO_DAT);
-//    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
-//    memset(pst_master->uc_data, 0x00, sizeof(pst_master->uc_data));
-//    memcpy(pst_master->uc_data, pst_heading, sizeof(SENSORMOTION_HEADINGINFO_DAT));
-//
-//    return(uc_ret);
-//}
+u_int8 VehicleSensSetMotionHeadingG(const SENSORMOTION_HEADINGINFO_DAT *pst_heading) {
+    u_int8  uc_ret;
+    VEHICLESENS_DATA_MASTER      *pst_master;
+
+    pst_master = &gstMotionHeading_g;
+
+    /** With the contents of the current data master,Compare received data */
+    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_heading,
+                    sizeof(SENSORMOTION_HEADINGINFO_DAT));
+
+    /** Received data is set in the data master. */
+    pst_master->ul_did    = VEHICLE_DID_MOTION_HEADING;
+    pst_master->us_size    = sizeof(SENSORMOTION_HEADINGINFO_DAT);
+    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
+    memset(pst_master->uc_data, 0x00, sizeof(pst_master->uc_data));
+    memcpy(pst_master->uc_data, pst_heading, sizeof(SENSORMOTION_HEADINGINFO_DAT));
+
+    return(uc_ret);
+}
 
 /****************************************************************************
 @brief      VehicleSensGetMotionHeadingG<BR>

@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,24 +19,21 @@
  *    System name        :GPF
  *    Subsystem name    :Sensor I/F library
  *    Program name    :SensorI/F API
- *    Module configuration    :SensorPkgDeliveryEntry()        Vehicle sensor information package delivery registration
- *                  :SensorGetSensorPkgData()        Vehicle sensor information package acquisition
  ******************************************************************************/
 
 #include <stdio.h>
-#include "Sensor_API.h"
-#include "Sensor_API_private.h"
-/* ++ GPS _CWORD82_ support */
-#include "Vehicle_API_Dummy.h"
-/* -- GPS _CWORD82_ support */
-
-#include "Sensor_Common_API.h"
-#include "Vehicle_API_private.h"
-#include "Naviinfo_API.h"
+#include <vehicle_service/POS_sensor_API.h>
 #include <vehicle_service/POS_define.h>
 #include <vehicle_service/POS_sensor_API.h>
-#include "POS_private.h"
 #include <vehicle_service/positioning_base_library.h>
+#include "POS_sensor_private.h"
+#include "Sensor_Common_API.h"
+#include "Sensor_API_private.h"
+#include "Sensor_Common_API.h"
+#include "Vehicle_API_Dummy.h"
+#include "Vehicle_API_private.h"
+#include "Naviinfo_API.h"
+#include "POS_private.h"
 
 /*************************************************/
 /*           Global variable                      */
@@ -51,31 +48,37 @@
  */
 static const SENSOR_RET_PKG g_ret_list_reg_lis_pkg_sens_data[SENSOR_PUBLIC_DID_NUM] = {
     /* GRADE2   GRADE1     DID (Key)     */
-    {TRUE,      FALSE,     POS_DID_SPEED_PULSE        },
-    {FALSE,     FALSE,     POS_DID_SPEED_KMPH         },
-    {TRUE,      FALSE,     POS_DID_GYRO               },
-    {TRUE,      FALSE,     POS_DID_GSNS_X             },
-    {TRUE,      FALSE,     POS_DID_GSNS_Y             },
-    {FALSE,     FALSE,     POS_DID_GPS_ANTENNA        },
-    {TRUE,      FALSE,     POS_DID_SNS_COUNTER        },
-    {FALSE,     FALSE,     POS_DID_SPEED_PULSE_FST    },
-    {FALSE,     FALSE,     POS_DID_GYRO_FST           },
-    {FALSE,     FALSE,     POS_DID_GPS__CWORD82__NMEA       },
-    {FALSE,     FALSE,     POS_DID_GPS__CWORD82___CWORD44_GP4   },
-    {FALSE,     FALSE,     POS_DID_GPS__CWORD82__FULLBINARY },
-    {FALSE,     FALSE,     POS_DID_GPS_NMEA           },
-    {TRUE,      FALSE,     POS_DID_REV                },
-    {FALSE,     FALSE,     POS_DID_REV_FST            },
-    {TRUE,      FALSE,     POS_DID_GYRO_TEMP          },
-    {FALSE,     FALSE,     POS_DID_GYRO_TEMP_FST      },
-    {FALSE,     FALSE,     POS_DID_GSNS_X_FST         },
-    {FALSE,     FALSE,     POS_DID_GSNS_Y_FST         },
-    {TRUE,      FALSE,     POS_DID_PULSE_TIME         },
-    {FALSE,     FALSE,     POS_DID_GPS_CLOCK_DRIFT    },
-    {FALSE,     FALSE,     POS_DID_GPS_CLOCK_FREQ     },
-    {FALSE,     FALSE,     VEHICLE_DID_GPS_TIME           }, /* For local use */
-    {FALSE,     FALSE,     VEHICLE_DID_GPS_TIME_RAW       }, /* For local use */
-    {FALSE,     FALSE,     VEHICLE_DID_GPS_WKNROLLOVER    }  /* For local use */
+    {TRUE,      TRUE,     POS_DID_SPEED_PULSE        },
+    {FALSE,     TRUE,     POS_DID_SPEED_KMPH         },
+    {TRUE,      TRUE,     POS_DID_GYRO_X             },
+    {TRUE,      TRUE,     POS_DID_GYRO_Y             },
+    {TRUE,      TRUE,     POS_DID_GYRO_Z             },
+    {TRUE,      TRUE,     POS_DID_GSNS_X             },
+    {TRUE,      TRUE,     POS_DID_GSNS_Y             },
+    {TRUE,      TRUE,     POS_DID_GSNS_Z             },
+    {FALSE,     TRUE,     POS_DID_GPS_ANTENNA        },
+    {TRUE,      TRUE,     POS_DID_SNS_COUNTER        },
+    {FALSE,     TRUE,     POS_DID_SPEED_PULSE_FST    },
+    {FALSE,     TRUE,     POS_DID_GYRO_X_FST         },
+    {FALSE,     TRUE,     POS_DID_GYRO_Y_FST         },
+    {FALSE,     TRUE,     POS_DID_GYRO_Z_FST         },
+    {FALSE,     TRUE,     POS_DID_GPS__CWORD82__NMEA },
+    {FALSE,     TRUE,     POS_DID_GPS__CWORD82___CWORD44_GP4   },
+    {FALSE,     TRUE,     POS_DID_GPS__CWORD82__FULLBINARY },
+    {FALSE,     TRUE,     POS_DID_GPS_NMEA           },
+    {TRUE,      TRUE,     POS_DID_REV                },
+    {FALSE,     TRUE,     POS_DID_REV_FST            },
+    {TRUE,      TRUE,     POS_DID_GYRO_TEMP          },
+    {FALSE,     TRUE,     POS_DID_GYRO_TEMP_FST      },
+    {FALSE,     TRUE,     POS_DID_GSNS_X_FST         },
+    {FALSE,     TRUE,     POS_DID_GSNS_Y_FST         },
+    {FALSE,     TRUE,     POS_DID_GSNS_Z_FST         },
+    {TRUE,      TRUE,     POS_DID_PULSE_TIME         },
+    {FALSE,     TRUE,     POS_DID_GPS_CLOCK_DRIFT    },
+    {FALSE,     TRUE,     POS_DID_GPS_CLOCK_FREQ     },
+    {FALSE,     TRUE,     VEHICLE_DID_GPS_TIME       }, /* For local use */
+    {FALSE,     TRUE,     VEHICLE_DID_GPS_TIME_RAW   }, /* For local use */
+    {FALSE,     TRUE,     VEHICLE_DID_GPS_WKNROLLOVER}  /* For local use */
 };
 
 /**
@@ -84,30 +87,36 @@ static const SENSOR_RET_PKG g_ret_list_reg_lis_pkg_sens_data[SENSOR_PUBLIC_DID_N
 static const SENSOR_RET_PKG g_ret_list_reg_lis_sens_data[SENSOR_PUBLIC_DID_NUM] = {
     /* GRADE2   GRADE1     DID (Key)     */
     {TRUE,      TRUE,      POS_DID_SPEED_PULSE        },
-    {FALSE,     FALSE,     POS_DID_SPEED_KMPH         },
-    {TRUE,      FALSE,     POS_DID_GYRO               },
-    {TRUE,      FALSE,     POS_DID_GSNS_X             },
-    {TRUE,      FALSE,     POS_DID_GSNS_Y             },
+    {FALSE,     TRUE,      POS_DID_SPEED_KMPH         },
+    {TRUE,      TRUE,      POS_DID_GYRO_X             },
+    {TRUE,      TRUE,      POS_DID_GYRO_Y             },
+    {TRUE,      TRUE,      POS_DID_GYRO_Z             },
+    {TRUE,      TRUE,      POS_DID_GSNS_X             },
+    {TRUE,      TRUE,      POS_DID_GSNS_Y             },
+    {TRUE,      TRUE,      POS_DID_GSNS_Z             },
     {TRUE,      TRUE,      POS_DID_GPS_ANTENNA        },
-    {FALSE,     FALSE,     POS_DID_SNS_COUNTER        },
-    {TRUE,      FALSE,     POS_DID_SPEED_PULSE_FST    },
-    {TRUE,      FALSE,     POS_DID_GYRO_FST           },
-    {TRUE,      FALSE,     POS_DID_GPS__CWORD82__NMEA       },
-    {FALSE,     FALSE,     POS_DID_GPS__CWORD82___CWORD44_GP4   },
-    {TRUE,      FALSE,     POS_DID_GPS__CWORD82__FULLBINARY },
+    {FALSE,     TRUE,      POS_DID_SNS_COUNTER        },
+    {TRUE,      TRUE,      POS_DID_SPEED_PULSE_FST    },
+    {TRUE,      TRUE,      POS_DID_GYRO_X_FST         },
+    {TRUE,      TRUE,      POS_DID_GYRO_Y_FST         },
+    {TRUE,      TRUE,      POS_DID_GYRO_Z_FST         },
+    {TRUE,      TRUE,      POS_DID_GPS__CWORD82__NMEA },
+    {FALSE,     TRUE,      POS_DID_GPS__CWORD82___CWORD44_GP4   },
+    {TRUE,      TRUE,      POS_DID_GPS__CWORD82__FULLBINARY },
     {FALSE,     TRUE,      POS_DID_GPS_NMEA           },
-    {FALSE,     FALSE,     POS_DID_REV                },
-    {TRUE,      FALSE,     POS_DID_REV_FST            },
-    {TRUE,      FALSE,     POS_DID_GYRO_TEMP          },
-    {TRUE,      FALSE,     POS_DID_GYRO_TEMP_FST      },
-    {TRUE,      FALSE,     POS_DID_GSNS_X_FST         },
-    {TRUE,      FALSE,     POS_DID_GSNS_Y_FST         },
-    {FALSE,     FALSE,     POS_DID_PULSE_TIME         },
+    {FALSE,     TRUE,      POS_DID_REV                },
+    {TRUE,      TRUE,      POS_DID_REV_FST            },
+    {TRUE,      TRUE,      POS_DID_GYRO_TEMP          },
+    {TRUE,      TRUE,      POS_DID_GYRO_TEMP_FST      },
+    {TRUE,      TRUE,      POS_DID_GSNS_X_FST         },
+    {TRUE,      TRUE,      POS_DID_GSNS_Y_FST         },
+    {TRUE,      TRUE,      POS_DID_GSNS_Z_FST         },
+    {FALSE,     TRUE,      POS_DID_PULSE_TIME         },
     {FALSE,     TRUE,      POS_DID_GPS_CLOCK_DRIFT    },
     {FALSE,     TRUE,      POS_DID_GPS_CLOCK_FREQ     },
-    {FALSE,     FALSE,     VEHICLE_DID_GPS_TIME           }, /* For local use */
-    {FALSE,     FALSE,     VEHICLE_DID_GPS_TIME_RAW       }, /* For local use */
-    {FALSE,     FALSE,     VEHICLE_DID_GPS_WKNROLLOVER    }  /* For local use */
+    {FALSE,     TRUE,      VEHICLE_DID_GPS_TIME           }, /* For local use */
+    {FALSE,     TRUE,      VEHICLE_DID_GPS_TIME_RAW       }, /* For local use */
+    {FALSE,     TRUE,      VEHICLE_DID_GPS_WKNROLLOVER    }  /* For local use */
 };
 
 /**
@@ -116,25 +125,31 @@ static const SENSOR_RET_PKG g_ret_list_reg_lis_sens_data[SENSOR_PUBLIC_DID_NUM] 
 static const SENSOR_RET_PKG g_ret_list_get_sens_data[SENSOR_PUBLIC_DID_NUM] = {
     /* GRADE2   GRADE1     DID (Key)     */
     {TRUE,      TRUE,      POS_DID_SPEED_PULSE        },
-    {FALSE,     FALSE,     POS_DID_SPEED_KMPH         },
-    {TRUE,      FALSE,     POS_DID_GYRO               },
-    {TRUE,      FALSE,     POS_DID_GSNS_X             },
-    {TRUE,      FALSE,     POS_DID_GSNS_Y             },
+    {FALSE,     TRUE,      POS_DID_SPEED_KMPH         },
+    {TRUE,      TRUE,      POS_DID_GYRO_X             },
+    {TRUE,      TRUE,      POS_DID_GYRO_Y             },
+    {TRUE,      TRUE,      POS_DID_GYRO_Z             },
+    {TRUE,      TRUE,      POS_DID_GSNS_X             },
+    {TRUE,      TRUE,      POS_DID_GSNS_Y             },
+    {TRUE,      TRUE,      POS_DID_GSNS_Z             },
     {TRUE,      TRUE,      POS_DID_GPS_ANTENNA        },
-    {FALSE,     FALSE,     POS_DID_SNS_COUNTER        },
-    {FALSE,     FALSE,     POS_DID_SPEED_PULSE_FST    },
-    {FALSE,     FALSE,     POS_DID_GYRO_FST           },
-    {TRUE,      FALSE,     POS_DID_GPS__CWORD82__NMEA       },
-    {FALSE,     FALSE,     POS_DID_GPS__CWORD82___CWORD44_GP4   },
-    {TRUE,      FALSE,     POS_DID_GPS__CWORD82__FULLBINARY },
+    {FALSE,     TRUE,      POS_DID_SNS_COUNTER        },
+    {FALSE,     TRUE,      POS_DID_SPEED_PULSE_FST    },
+    {FALSE,     TRUE,      POS_DID_GYRO_X_FST         },
+    {FALSE,     TRUE,      POS_DID_GYRO_Y_FST         },
+    {FALSE,     TRUE,      POS_DID_GYRO_Z_FST         },
+    {TRUE,      TRUE,      POS_DID_GPS__CWORD82__NMEA       },
+    {FALSE,     TRUE,      POS_DID_GPS__CWORD82___CWORD44_GP4   },
+    {TRUE,      TRUE,      POS_DID_GPS__CWORD82__FULLBINARY },
     {FALSE,     TRUE,      POS_DID_GPS_NMEA           },
-    {FALSE,     FALSE,     POS_DID_REV                },
-    {FALSE,     FALSE,     POS_DID_REV_FST            },
-    {TRUE,      FALSE,     POS_DID_GYRO_TEMP          },
-    {FALSE,     FALSE,     POS_DID_GYRO_TEMP_FST      },
-    {FALSE,     FALSE,     POS_DID_GSNS_X_FST         },
-    {FALSE,     FALSE,     POS_DID_GSNS_Y_FST         },
-    {FALSE,     FALSE,     POS_DID_PULSE_TIME         },
+    {FALSE,     TRUE,      POS_DID_REV                },
+    {FALSE,     TRUE,      POS_DID_REV_FST            },
+    {TRUE,      TRUE,      POS_DID_GYRO_TEMP          },
+    {FALSE,     TRUE,      POS_DID_GYRO_TEMP_FST      },
+    {FALSE,     TRUE,      POS_DID_GSNS_X_FST         },
+    {FALSE,     TRUE,      POS_DID_GSNS_Y_FST         },
+    {FALSE,     TRUE,      POS_DID_GSNS_Z_FST         },
+    {FALSE,     TRUE,      POS_DID_PULSE_TIME         },
     {FALSE,     TRUE,      POS_DID_GPS_CLOCK_DRIFT    },
     {FALSE,     TRUE,      POS_DID_GPS_CLOCK_FREQ     },
     {FALSE,     TRUE,      VEHICLE_DID_GPS_TIME           }, /* For local use */
@@ -260,9 +275,9 @@ SENSOR_RET_API POS_RegisterListenerPkgSensData(HANDLE hApp,
     BOOL                             ret_b;
     RET_API                          ret_api;      /* System API return value */
     EventID                          event_id;     /* Event ID */
-    int32                            event_val;    /* Event value */
+    int32_t                          event_val;    /* Event value */
     SENSOR_MSG_DELIVERY_ENTRY_DAT    data;         /* Message data */
-    int32                            i;            /* Generic counters */
+    int32_t                          i;            /* Generic counters */
     PNO                              ch_pno;       /* Converted internal PNO    */
     UNIT_TYPE                        type;         /* Supported HW Configuration Type    */
 
@@ -363,19 +378,14 @@ SENSOR_RET_API POS_RegisterListenerPkgSensData(HANDLE hApp,
             data.ctrl_flg        = ucCtrlFlg;
             data.event_id        = event_id;
             for (i = 0; i < ucPkgNum; i++) {
-                if (pulDid[i] == POS_DID_GYRO) {
-                    /* Replaced because POS_DID_GYRO is treated internally as VEHICLE_DID_GYRO_EXT. */
-                    data.did[i] = VEHICLE_DID_GYRO_EXT;
-                } else {
-                    data.did[i] = pulDid[i];
-                }
+                data.did[i] = pulDid[i];
             }
 
             /* Messaging */
             ret_api = PosSndMsg(ch_pno,
                                 PNO_VEHICLE_SENSOR,
                                 CID_SENSORIF_PKG_DELIVERY_ENTRY_EXT,
-                                (u_int16)sizeof(SENSOR_MSG_DELIVERY_ENTRY_DAT),
+                                (uint16_t)sizeof(SENSOR_MSG_DELIVERY_ENTRY_DAT),
                                 (const void *)&data);
 
             if (RET_NORMAL == ret_api) {
@@ -485,12 +495,12 @@ RET_API PosDeleteEvent(EventID event_id) {
  * RETURN    : RET_NORMAL    : Normal completion
  *           : RET_ERROR    : There is no shared memory area.
  ******************************************************************************/
-RET_API SensorLinkShareData(void **share_top, u_int32 *share_size, u_int16 *offset) {  // LCOV_EXCL_START 8:dead code
+RET_API SensorLinkShareData(void **share_top, uint32_t *share_size, uint16_t *offset) {  // LCOV_EXCL_START 8:dead code
     AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
     RET_API         ret_api;    /* System API return value */
     SemID           sem_id;     /* Semaphore ID */
     SENSOR_SHARE    *share_top_tmp;
-    int32           i;
+    int32_t         i;
 
     /* Initialization */
     ret_api = RET_ERROR;
@@ -519,7 +529,7 @@ RET_API SensorLinkShareData(void **share_top, u_int32 *share_size, u_int16 *offs
                     share_top_tmp->mng.lock_info[i] = SENSOR_SHARE_LOCK;
 
                     /* Calculate the offset to the block */
-                    *offset = static_cast<u_int16>(i * SENSOR_SHARE_BLOCK_SIZE);
+                    *offset = static_cast<uint16_t>(i * SENSOR_SHARE_BLOCK_SIZE);
 
                     /* Normal completion */
                     ret_api = RET_NORMAL;
@@ -556,11 +566,11 @@ RET_API SensorLinkShareData(void **share_top, u_int32 *share_size, u_int16 *offs
  * RETURN    : RET_NORMAL    : Normal completion
  *           : RET_ERROR    : There is no shared memory area./semaphore error
  ******************************************************************************/
-RET_API SensorUnLinkShareData(SENSOR_SHARE *share_top, u_int16 offset) {  // LCOV_EXCL_START 8:dead code
+RET_API SensorUnLinkShareData(SENSOR_SHARE *share_top, uint16_t offset) {  // LCOV_EXCL_START 8:dead code
     AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
     RET_API    ret_api;    /* System API return value */
     SemID      sem_id;     /* Semaphore ID */
-    int32      i;
+    int32_t    i;
 
     /* Initialization */
     ret_api = RET_ERROR;
@@ -604,12 +614,12 @@ RET_API SensorUnLinkShareData(SENSOR_SHARE *share_top, u_int16 offset) {  // LCO
  * NOTE      :
  * RETURN    : void
  ******************************************************************************/
-void SensorSetShareData(void *share_top, u_int16 offset, const void *data_src, u_int16 size_src) {  // LCOV_EXCL_START 8:dead code  // NOLINT(whitespace/line_length)
+void SensorSetShareData(void *share_top, uint16_t offset, const void *data_src, uint16_t size_src) {  // LCOV_EXCL_START 8:dead code  // NOLINT(whitespace/line_length)
     AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
     SENSOR_SHARE_BLOCK_DAT *share_dat;
 
     /* Calculate Shared Memory Write Address */
-    share_dat = reinterpret_cast<SENSOR_SHARE_BLOCK_DAT *>(reinterpret_cast<u_int8 *>(share_top) + offset);
+    share_dat = reinterpret_cast<SENSOR_SHARE_BLOCK_DAT *>(reinterpret_cast<uint8_t *>(share_top) + offset);
     /* #QAC confirmation Rule11.4 Use structure for member reference(Cast according to shared memory link IF) */
 
     /* Clear Shared Memory */
@@ -638,7 +648,7 @@ void SensorSetShareData(void *share_top, u_int16 offset, const void *data_src, u
  *           : RET_ERRMSGFULL    : Message queue overflows
  *           : RET_ERRPARAM        : Buffer size error
  ******************************************************************************/
-RET_API PosSndMsg(PNO pno_src, PNO pno_dest, CID cid, u_int16 msg_len, const void *msg_data) {
+RET_API PosSndMsg(PNO pno_src, PNO pno_dest, CID cid, uint16_t msg_len, const void *msg_data) {
     SENSOR_INTERNAL_MSG_BUF   msg_buf;        /* message buffer */
     T_APIMSG_MSGBUF_HEADER    *msg_hdr;       /* Pointer to the message header */
     RET_API                   ret_api;        /* Return value */
@@ -684,7 +694,7 @@ RET_API PosSndMsg(PNO pno_src, PNO pno_dest, CID cid, u_int16 msg_len, const voi
 
         /* Internal Process Transmission and Reception Messages */
         ret_api = _pb_SndMsg(pno_dest,
-                             (u_int16)(sizeof(T_APIMSG_MSGBUF_HEADER) + msg_len),/* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                             (uint16_t)(sizeof(T_APIMSG_MSGBUF_HEADER) + msg_len),/* Ignore->MISRA-C++:2008 Rule 5-0-5 */
                              reinterpret_cast<void *>(&msg_buf), 0);
     } else {
         /* Internal debug log output */
@@ -694,7 +704,7 @@ RET_API PosSndMsg(PNO pno_src, PNO pno_dest, CID cid, u_int16 msg_len, const voi
         /* External Process Transmission and Reception Messages */
         ret_api = _pb_SndMsg_Ext(thread_name,
                                  cid,
-                                 (u_int16)(msg_len),    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                                 (uint16_t)(msg_len),    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
                                  reinterpret_cast<void *>(&(msg_buf.data)), 0);
     }
     /* If RET_ERROR,Register a dialog if called from a Vehicle related thread */ /* Task_30332 */
@@ -758,18 +768,17 @@ POS_RET_API POS_GetSensData(HANDLE hApp, DID did, void *dest_data, uint16_t dest
         }
     }
 
-//    if (ret == NAVIINFO_RET_NORMAL) {
-//        /* Judge DID*/
-//        ret_b = SENSOR_DID_JUDGE_GET(did);
-//        if (ret_b == FALSE) {
-//            /* An unacceptable ID is regarded as a parameter error. */
-//            ret = POS_RET_ERROR_PARAM;
-//        } else {
-//            /* Data acquisition process */
-//            ret = PosGetProc(did, dest_data, dest_size);
-//        }
-//    }
+    if (ret == NAVIINFO_RET_NORMAL) {
+        /* Judge DID*/
+        ret_b = SENSOR_DID_JUDGE_GET(did);
+        if (ret_b == FALSE) {
+            /* An unacceptable ID is regarded as a parameter error. */
+            ret = POS_RET_ERROR_PARAM;
+        } else {
+            /* Data acquisition process */
+            ret = PosGetProc(did, dest_data, dest_size);
+        }
+    }
 
     return ret;
 }
-

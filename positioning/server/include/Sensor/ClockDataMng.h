@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@
 #include <vehicle_service/positioning_base_library.h>
 
 
-//#include "positioning_hal.h"
+#include "positioning_hal.h"
 #include "CanInput_API.h"
 #include "Sensor_API.h"
 
@@ -81,7 +81,7 @@ extern "C"    {
     BOOL ClockDataMngInitialize(void);
     void ClockDataMngSetLastTimeDiff(int32 time_diff);
 
-//    void ClockDataMngSetGpsTime(const SENSOR_MSG_GPSDATA_DAT *gps_time_data);
+    void ClockDataMngSetGpsTime(const SENSOR_MSG_GPSDATA_DAT *gps_time_data);
     void ClockDataMngGetGpsTime(CLOCKDATAMNG_GPS_TIME *gps_time_data);
 
     BOOL ClockDataMngGetLocalTime(const CANINPUT_MSG_LOCALTIMEINFO_DAT *can_local_time, LOCALTIME *vehicle_local_time);

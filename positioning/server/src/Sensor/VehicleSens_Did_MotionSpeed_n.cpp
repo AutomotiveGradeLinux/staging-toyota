@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,20 +41,20 @@ static  VEHICLESENS_DATA_MASTER  gstMotionSpeed_n;    // NOLINT(readability/noli
  *   Speed information data master initialization process(Navi information)
  */
 void VehicleSensInitMotionSpeedN(void) {
-//    SENSORMOTION_SPEEDINFO_DAT  st_speed;
+    SENSORMOTION_SPEEDINFO_DAT  st_speed;
 
     memset(&gstMotionSpeed_n, 0x00, sizeof(VEHICLESENS_DATA_MASTER));
 
     /** Data ID setting */
     gstMotionSpeed_n.ul_did    = VEHICLE_DID_MOTION_SPEED_NAVI;
     /** Data size setting */
-//    gstMotionSpeed_n.us_size    = sizeof(SENSORMOTION_SPEEDINFO_DAT);
+    gstMotionSpeed_n.us_size    = sizeof(SENSORMOTION_SPEEDINFO_DAT);
     /** Data content setting */
-//    memset(&st_speed, 0x00, sizeof(st_speed));
-//    st_speed.getMethod = SENSOR_GET_METHOD_NAVI;
-//    st_speed.SyncCnt = 0x00;
-//    st_speed.isEnable  = SENSORMOTION_STATUS_DISABLE;
-//    memcpy(&gstMotionSpeed_n.uc_data[0], &st_speed, sizeof(st_speed));
+    memset(&st_speed, 0x00, sizeof(st_speed));
+    st_speed.getMethod = SENSOR_GET_METHOD_NAVI;
+    st_speed.SyncCnt = 0x00;
+    st_speed.isEnable  = SENSORMOTION_STATUS_DISABLE;
+    memcpy(&gstMotionSpeed_n.uc_data[0], &st_speed, sizeof(st_speed));
 }
 
 /**
@@ -66,23 +66,23 @@ void VehicleSensInitMotionSpeedN(void) {
  * @return VEHICLESENS_EQ  : No data change<br>
  *       VEHICLESENS_NEQ : Data change
  */
-//u_int8 VehicleSensSetMotionSpeedN(const SENSORMOTION_SPEEDINFO_DAT *pst_speed) {
-//    u_int8 uc_ret;
-//    VEHICLESENS_DATA_MASTER *pst_master;
-//
-//    pst_master = &gstMotionSpeed_n;
-//
-//    /** With the contents of the current data master,Compare received data */
-//    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_speed, sizeof(SENSORMOTION_SPEEDINFO_DAT));
-//
-//    /** Received data is set in the data master. */
-//    pst_master->ul_did    = VEHICLE_DID_MOTION_SPEED_NAVI;
-//    pst_master->us_size    = sizeof(SENSORMOTION_SPEEDINFO_DAT);
-//    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
-//    memcpy(pst_master->uc_data, pst_speed, sizeof(SENSORMOTION_SPEEDINFO_DAT));
-//
-//    return(uc_ret);
-//}
+u_int8 VehicleSensSetMotionSpeedN(const SENSORMOTION_SPEEDINFO_DAT *pst_speed) {
+    u_int8 uc_ret;
+    VEHICLESENS_DATA_MASTER *pst_master;
+
+    pst_master = &gstMotionSpeed_n;
+
+    /** With the contents of the current data master,Compare received data */
+    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_speed, sizeof(SENSORMOTION_SPEEDINFO_DAT));
+
+    /** Received data is set in the data master. */
+    pst_master->ul_did    = VEHICLE_DID_MOTION_SPEED_NAVI;
+    pst_master->us_size    = sizeof(SENSORMOTION_SPEEDINFO_DAT);
+    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
+    memcpy(pst_master->uc_data, pst_speed, sizeof(SENSORMOTION_SPEEDINFO_DAT));
+
+    return(uc_ret);
+}
 
 /**
  * @brief

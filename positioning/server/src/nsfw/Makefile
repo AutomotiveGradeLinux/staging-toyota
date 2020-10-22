@@ -1,5 +1,5 @@
 #
-# @copyright Copyright (c) 2017-2019 TOYOTA MOTOR CORPORATION.
+# @copyright Copyright (c) 2017-2020 TOYOTA MOTOR CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,14 +21,13 @@ INST_PROGS = Positioning
 Positioning_SRCS += ps_main.cpp
 Positioning_SRCS += positioning_application.cpp
 
-#ifeq ($(ARCH),arm64)
-#LDLIBS += -Wl,-Bdynamic -lpositioning_hal
-#else
-#LDLIBS += -Wl,-Bdynamic -lpositioning_hal
-#endif  #($(ARCH),arm64)
+ifeq ($(ARCH),arm64)
+LDLIBS += -Wl,-Bdynamic -lpositioning_hal
+else
+LDLIBS += -Wl,-Bdynamic -lpositioning_hal
+endif  #($(ARCH),arm64)
 
 ######### add include path #############
-CPPFLAGS += -I../../../../
 CPPFLAGS += -I../../../client/include
 CPPFLAGS += -I../../include/common/
 CPPFLAGS += -I../../include/Sensor/
@@ -55,11 +54,11 @@ LDLIBS += -Wl,-Bstatic -lPOS_ServiceInterface
 # LDLIBS += -Wl,-Bstatic -lVehicle_API
 
 ######### linked library (dynamic) #############
-#ifeq (arm64, $(ARCH))
-#LDLIBS += -Wl,-Bdynamic -lpositioning_hal
-#LDLIBS += -Wl,-Bdynamic -lVehicle_API
-#endif
-#LDLIBS += -Wl,-Bdynamic -lClock_API
+ifeq (arm64, $(ARCH))
+LDLIBS += -Wl,-Bdynamic -lpositioning_hal
+LDLIBS += -Wl,-Bdynamic -lVehicle_API
+endif
+LDLIBS += -Wl,-Bdynamic -lClock_API
 #LDLIBS += -Wl,-Bdynamic -lMM_DREC_API
 #LDLIBS += -Wl,-Bdynamic -lextension
 LDLIBS += -Wl,-Bdynamic -lPOS_base_API
@@ -73,14 +72,14 @@ LDLIBS += -Wl,-Bdynamic -lns_backup
 LDLIBS += -Wl,-Bdynamic -lssver
 LDLIBS += -Wl,-Bdynamic -lstdc++
 #LDLIBS += -Wl,-Bdynamic -lDiagCodeAPI
-#LDLIBS += -Wl,-Bdynamic -lDTime_Api
-#LDLIBS += -Wl,-Bdynamic -lVehicle_API
+LDLIBS += -Wl,-Bdynamic -lDTime_Api
+LDLIBS += -Wl,-Bdynamic -lVehicle_API
 LDLIBS += -Wl,-Bdynamic -lvp
 LDLIBS += -Wl,-Bdynamic -lev
-#LDLIBS += -Wl,-Bdynamic -lCommUSB
+LDLIBS += -Wl,-Bdynamic -lCommUSB
 
 ######### add library path #############
-#LDFLAGS += -L../../positioning_hal
+LDFLAGS += -L../../positioning_hal
 LDFLAGS += -L../Sensor
 LDFLAGS += -L../ServiceInterface
 LDFLAGS += -L../../../client/src/POS_common_API

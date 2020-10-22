@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,10 +55,10 @@ void VehicleSensInitSpeedPulseFlagFstl(void) {
 * RETURN    : VEHICLESENS_EQ  : No data change
 *             VEHICLESENS_NEQ  : Data change
 ******************************************************************************/
-//u_int8 VehicleSensSetSpeedPulseFlagFstl(const LSDRV_LSDATA_FST *pst_data) {  // LCOV_EXCL_START 8: dead code
-//    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//    return(VEHICLESENS_EQ);
-//}
+u_int8 VehicleSensSetSpeedPulseFlagFstl(const LSDRV_LSDATA_FST *pst_data) {  // LCOV_EXCL_START 8: dead code
+    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+    return(VEHICLESENS_EQ);
+}
 // LCOV_EXCL_STOP
 
 /*******************************************************************************
@@ -70,9 +70,9 @@ void VehicleSensInitSpeedPulseFlagFstl(void) {
 * RETURN    : VEHICLESENS_EQ  : No data change
 *             VEHICLESENS_NEQ  : Data change
 ******************************************************************************/
-//u_int8 VehicleSensSetSpeedPulseFlagFstG(const LSDRV_LSDATA_FST_SPEED_PULSE_FLAG *pst_data) {
-//    return VEHICLESENS_EQ;
-//}
+u_int8 VehicleSensSetSpeedPulseFlagFstG(const LSDRV_LSDATA_FST_SPEED_PULSE_FLAG *pst_data) {
+    return VEHICLESENS_EQ;
+}
 
 /*******************************************************************************
 * MODULE    : VehicleSensGetSpeedPulseFlagFstl

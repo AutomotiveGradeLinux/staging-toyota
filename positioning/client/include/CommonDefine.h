@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,40 +59,7 @@
 #define POS_SNS__CWORD82__PJRDC_GP_3  (0x20U)    //!< \~english PJRDC_GP_3 sentence
 
 /* NMEA Receive Flag */
-#define POS_SNS_GPS_NMEA_GGA    (0x00000001U)    //!< \~english GGA sentence
-#define POS_SNS_GPS_NMEA_GLL    (0x00000002U)    //!< \~english GLL sentence
-#define POS_SNS_GPS_NMEA_GSA    (0x00000004U)    //!< \~english GSA sentence
-#define POS_SNS_GPS_NMEA_GST    (0x00000008U)    //!< \~english GST sentence
-#define POS_SNS_GPS_NMEA_RMC    (0x00000010U)    //!< \~english RMC sentence
-#define POS_SNS_GPS_NMEA_VTG    (0x00000020U)    //!< \~english VTG sentence
-#define POS_SNS_GPS_NMEA_GSV1   (0x00000040U)    //!< \~english GSV1 sentence
-#define POS_SNS_GPS_NMEA_GSV2   (0x00000080U)    //!< \~english GSV2 sentence
-#define POS_SNS_GPS_NMEA_GSV3   (0x00000100U)    //!< \~english GSV3 sentence
-#define POS_SNS_GPS_NMEA_GSV4   (0x00000200U)    //!< \~english GSV4 sentence
-#define POS_SNS_GPS_NMEA_GSV5   (0x00000400U)    //!< \~english GSV5 sentence
-
-#define POS_SNS_GPS_NMEA_PASCD  (0x00000800U)    //!< \~english pascd sentence
-
-/**
- * @enum POS_SNS_GPS_NMEA_SNO
- * \~english type of NMEA
- */
-typedef enum {
-  POS_SNS_GPS_NMEA_SNO_GGA = 0,    //!< \~english GGA sentence
-  POS_SNS_GPS_NMEA_SNO_GLL,    //!< \~english GLL sentence
-  POS_SNS_GPS_NMEA_SNO_GSA,    //!< \~english GSA sentence
-  POS_SNS_GPS_NMEA_SNO_GST,    //!< \~english GST sentence
-  POS_SNS_GPS_NMEA_SNO_RMC,    //!< \~english RMC sentence
-  POS_SNS_GPS_NMEA_SNO_VTG,    //!< \~english VTG sentence
-  POS_SNS_GPS_NMEA_SNO_GSV1,    //!< \~english GSV1 sentence
-  POS_SNS_GPS_NMEA_SNO_GSV2,    //!< \~english GSV2 sentence
-  POS_SNS_GPS_NMEA_SNO_GSV3,    //!< \~english GSV3 sentence
-  POS_SNS_GPS_NMEA_SNO_GSV4,    //!< \~english GSV4 sentence
-  POS_SNS_GPS_NMEA_SNO_GSV5,    //!< \~english GSV5 sentence
-
-  POS_SNS_GPS_NMEA_SNO_PASCD,   //!< \~english pascd sentence
-  POS_SNS_GPS_NMEA_SNO_MAX      //!< \~english MAX sentence(invalid)
-} POS_SNS_GPS_NMEA_SNO;
+#define POS_SNS_GPS_NMEA_PASCD  (0x01000000U)    //!< \~english pascd sentence
 
 typedef    u_int16    PNO;      //!< \~english PNo.
 

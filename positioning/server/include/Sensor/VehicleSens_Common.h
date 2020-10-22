@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@
 #include "Vehicle_API_Dummy.h"
 #include "Vehicle_API_private.h"
 
-//#include "positioning_hal.h"
+#include "positioning_hal.h"
 
 /************************************************************************
 *      Macro definitions                          *
@@ -126,6 +126,6 @@ u_int16  VehicleSensGetDataMasterOffset(DID);
 #if CONFIG_SENSOR_EXT_VALID        /* Initial Sensor Support */
 u_int16  VehicleSensGetDataMasterExtOffset(DID);
 #endif
-//void VehicleSensSetGpsVersion(const SENSOR_MSG_GPSDATA_DAT *pstData);
+void VehicleSensSetGpsVersion(const SENSOR_MSG_GPSDATA_DAT *pstData);
 void VehicleSensGetDebugPosDate(void* pBuf, u_int8 uc_get_method);
 #endif  // POSITIONING_SERVER_INCLUDE_SENSOR_VEHICLESENS_COMMON_H_

@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ static  VEHICLESENS_DATA_MASTER  gstLocationAltitude_n;    // NOLINT(readability
  * @retval      none
  */
 void VehicleSensInitLocationAltitudeN(void) {
-//    SENSORLOCATION_ALTITUDEINFO_DAT  st_altitude;
+    SENSORLOCATION_ALTITUDEINFO_DAT  st_altitude;
 
     memset(&gstLocationAltitude_n, 0x00, sizeof(VEHICLESENS_DATA_MASTER));
 
@@ -52,17 +52,15 @@ void VehicleSensInitLocationAltitudeN(void) {
     gstLocationAltitude_n.ul_did   = VEHICLE_DID_LOCATION_ALTITUDE_NAVI;
 
     /** Data size setting */
-//    gstLocationAltitude_n.us_size  = sizeof(SENSORLOCATION_ALTITUDEINFO_DAT);
+    gstLocationAltitude_n.us_size  = sizeof(SENSORLOCATION_ALTITUDEINFO_DAT);
 
     /** Data content setting */
-//    memset(&st_altitude, 0x00, sizeof(st_altitude));
-//    st_altitude.getMethod = SENSOR_GET_METHOD_NAVI;
-//    st_altitude.SyncCnt   = 0x00;
-//    st_altitude.isEnable  = SENSORLOCATION_STATUS_DISABLE;
-//    st_altitude.isExistDR = 0x00;
-//    st_altitude.DRStatus  = SENSORLOCATION_DRSTATUS_INVALID;
-//    st_altitude.Altitude  = 0x00;
-//    memcpy(&gstLocationAltitude_n.uc_data[0], &st_altitude, sizeof(st_altitude));
+    memset(&st_altitude, 0x00, sizeof(st_altitude));
+    st_altitude.getMethod = SENSOR_GET_METHOD_NAVI;
+    st_altitude.SyncCnt   = 0x00;
+    st_altitude.isEnable  = SENSORLOCATION_STATUS_DISABLE;
+    st_altitude.Altitude  = 0x00;
+    memcpy(&gstLocationAltitude_n.uc_data[0], &st_altitude, sizeof(st_altitude));
 
     return;
 }
@@ -79,23 +77,23 @@ void VehicleSensInitLocationAltitudeN(void) {
  * @retval     VEHICLESENS_EQ  : No data change
  * @retval     VEHICLESENS_NEQ : Data change
  */
-//u_int8 VehicleSensSetLocationAltitudeN(const SENSORLOCATION_ALTITUDEINFO_DAT *pst_altitude) {
-//    u_int8            uc_ret;
-//    VEHICLESENS_DATA_MASTER    *pst_master;
-//
-//    pst_master = &gstLocationAltitude_n;
-//
-//    /** With the contents of the current data master,Compare received data */
-//    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_altitude, sizeof(SENSORLOCATION_ALTITUDEINFO_DAT));
-//
-//    /** Received data is set in the data master. */
-//    pst_master->ul_did    = VEHICLE_DID_LOCATION_ALTITUDE_NAVI;
-//    pst_master->us_size    = sizeof(SENSORLOCATION_ALTITUDEINFO_DAT);
-//    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
-//    memcpy(pst_master->uc_data, pst_altitude, sizeof(SENSORLOCATION_ALTITUDEINFO_DAT));
-//
-//    return(uc_ret);
-//}
+u_int8 VehicleSensSetLocationAltitudeN(const SENSORLOCATION_ALTITUDEINFO_DAT *pst_altitude) {
+    u_int8            uc_ret;
+    VEHICLESENS_DATA_MASTER    *pst_master;
+
+    pst_master = &gstLocationAltitude_n;
+
+    /** With the contents of the current data master,Compare received data */
+    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_altitude, sizeof(SENSORLOCATION_ALTITUDEINFO_DAT));
+
+    /** Received data is set in the data master. */
+    pst_master->ul_did    = VEHICLE_DID_LOCATION_ALTITUDE_NAVI;
+    pst_master->us_size    = sizeof(SENSORLOCATION_ALTITUDEINFO_DAT);
+    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
+    memcpy(pst_master->uc_data, pst_altitude, sizeof(SENSORLOCATION_ALTITUDEINFO_DAT));
+
+    return(uc_ret);
+}
 
 /**
  * @brief

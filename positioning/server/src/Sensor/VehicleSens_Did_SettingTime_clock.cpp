@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ static  VEHICLESENS_DATA_MASTER  gstSettingTime_clock;    // NOLINT(readability/
  * @retval      none
  */
 void VehicleSensInitSettingTimeclock(void) {
-//    POS_DATETIME  st_time;
+    POS_DATETIME  st_time;
 
     memset(&gstSettingTime_clock, 0x00, sizeof(VEHICLESENS_DATA_MASTER));
 
@@ -50,11 +50,11 @@ void VehicleSensInitSettingTimeclock(void) {
     gstSettingTime_clock.ul_did    = VEHICLE_DID_SETTINGTIME;
 
     /** Data size setting */
-//    gstSettingTime_clock.us_size    = sizeof(POS_DATETIME);
+    gstSettingTime_clock.us_size    = sizeof(POS_DATETIME);
 
     /** Data content setting */
-//    memset(&st_time, 0x00, sizeof(st_time));
-//    memcpy(&gstSettingTime_clock.uc_data[0], &st_time, sizeof(st_time));
+    memset(&st_time, 0x00, sizeof(st_time));
+    memcpy(&gstSettingTime_clock.uc_data[0], &st_time, sizeof(st_time));
 
     return;
 }
@@ -71,23 +71,23 @@ void VehicleSensInitSettingTimeclock(void) {
  * @retval     VEHICLESENS_EQ  : No data change
  * @retval     VEHICLESENS_NEQ : Data change
  */
-//u_int8 VehicleSensSetSettingTimeclock(const POS_DATETIME *pst_rcv_time) {
-//    u_int8            uc_ret;
-//    VEHICLESENS_DATA_MASTER    *pst_master;
-//
-//    pst_master = &gstSettingTime_clock;
-//
-//    /** Compare the data master and generated data */
-//    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_rcv_time, sizeof(POS_DATETIME));
-//
-//    /** Received data is set in the data master. */
-//    pst_master->ul_did    = VEHICLE_DID_SETTINGTIME;
-//    pst_master->us_size    = sizeof(POS_DATETIME);
-//    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
-//    memcpy(pst_master->uc_data, pst_rcv_time, sizeof(POS_DATETIME));
-//
-//    return(uc_ret);
-//}
+u_int8 VehicleSensSetSettingTimeclock(const POS_DATETIME *pst_rcv_time) {
+    u_int8            uc_ret;
+    VEHICLESENS_DATA_MASTER    *pst_master;
+
+    pst_master = &gstSettingTime_clock;
+
+    /** Compare the data master and generated data */
+    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_rcv_time, sizeof(POS_DATETIME));
+
+    /** Received data is set in the data master. */
+    pst_master->ul_did    = VEHICLE_DID_SETTINGTIME;
+    pst_master->us_size    = sizeof(POS_DATETIME);
+    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
+    memcpy(pst_master->uc_data, pst_rcv_time, sizeof(POS_DATETIME));
+
+    return(uc_ret);
+}
 
 /**
  * @brief

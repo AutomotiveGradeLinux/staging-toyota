@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,25 +32,5 @@
 typedef struct {
     uint16_t                          wkn;              /**< GPS rollover base week number  */
 } SENSOR_WKNROLLOVER;
-
-/************************************************************************
-*                            prototype declalation                      *
-************************************************************************/
-/*[SENSOR_API public API]*/
-#ifdef __cplusplus
-extern "C" {
-#endif
-SENSOR_RET_API SensorPkgDeliveryEntry(PNO pno, u_int8 pkg_num, DID *did, u_int8 ctrl_flg, u_int8 delivery_timing);
-SENSOR_RET_API SensorPkgDeliveryEntryExt(PNO pno, u_int8 pkg_num, DID *did, u_int8 ctrl_flg, u_int8 delivery_timing);
-int32 SensorGetSensorPkgData(PNO pno, u_int8 pkg_num, DID *did, void *dest_data, u_int16 dest_size);
-RET_API SensorReqGpsReset(PNO proc_no, u_int8 mode, RID req_id);
-SENSOR_RET_API GpsGetGpsInterruptSignal(GPS_INTERRUPT *gps_interrupt);
-SENSOR_RET_API SensorGetGyroConnectStatus(u_int8 *gyro_connect_status);
-SENSOR_RET_API GpsGetValidEphemerisNumberOnShutdown(u_int8 *valid_ephemeris_num);
-SENSOR_RET_API ClockGetLocalTimeOnShutdown(LOCALTIME *local_time);
-int32 VehicleGetVehicleData(PNO pno, DID did, void *dest_data, u_int16 dest_size);
-#ifdef __cplusplus
-}
-#endif
 
 #endif  // POSITIONING_CLIENT_INCLUDE_SENSOR_API_H_

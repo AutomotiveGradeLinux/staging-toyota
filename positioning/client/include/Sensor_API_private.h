@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@
 /************************************************************************
 *            Macro definitions                                          *
 ************************************************************************/
-#define SENSOR_PUBLIC_DID_NUM                25
+#define SENSOR_PUBLIC_DID_NUM                31
 
 /*----------------------------------------------------------------------*
  *    Shared Memory Related Extensions                                                     *
@@ -105,8 +105,8 @@
 * ABSTRACT  : Shared memory management area
 ************************************************************************/
 typedef struct {
-    u_int8                        lock_info[SENSOR_SHARE_BLOCK_NUM];    /* Usages    */
-    u_int8                        reserve[501];                         /* 512-11    */
+    uint8_t                        lock_info[SENSOR_SHARE_BLOCK_NUM];    /* Usages    */
+    uint8_t                        reserve[501];                         /* 512-11    */
 } SENSOR_SHARE_MNG;
 
 /************************************************************************
@@ -114,10 +114,10 @@ typedef struct {
 * ABSTRACT  : Shared memory data area(Data section details)
 ************************************************************************/
 typedef struct {
-    u_int8                        pkg_num;                              /* Number of packages    */
-    u_int8                        reserve[3];
-    u_int16                       offset[SENSOR_PKG_DELIVERY_MAX];      /* Offset value */
-    u_int8                        data[SENSOR_SHARE_BLOCK_DSIZE];       /* Data portion        */
+    uint8_t                        pkg_num;                              /* Number of packages    */
+    uint8_t                        reserve[3];
+    uint16_t                       offset[SENSOR_PKG_DELIVERY_MAX];      /* Offset value */
+    uint8_t                        data[SENSOR_SHARE_BLOCK_DSIZE];       /* Data portion        */
 } SENSOR_SHARE_BLOCK_DAT_DAT;
 
 /************************************************************************
@@ -125,8 +125,8 @@ typedef struct {
 * ABSTRACT  : Shared memory data area(One block)
 ************************************************************************/
 typedef struct {
-    u_int16                       size;                                 /* Size of the data    */
-    u_int8                        reserve[2];
+    uint16_t                       size;                                 /* Size of the data    */
+    uint8_t                        reserve[2];
     SENSOR_SHARE_BLOCK_DAT_DAT    data;                                 /* Data portion        */
 } SENSOR_SHARE_BLOCK_DAT;
 
@@ -157,12 +157,12 @@ typedef struct {
 *            Function prototype                                            *
 ************************************************************************/
 RET_API PosDeleteEvent(EventID event_id);
-RET_API SensorLinkShareData(void **share_top, u_int32 *share_size, u_int16 *offset);
-RET_API SensorUnLinkShareData(SENSOR_SHARE *share_top, u_int16 offset);
+RET_API SensorLinkShareData(void **share_top, uint32_t *share_size, uint16_t *offset);
+RET_API SensorUnLinkShareData(SENSOR_SHARE *share_top, uint16_t offset);
 
 EventID PosCreateEvent(PNO pno);
-void SensorSetShareData(void *share_top, u_int16 offset, const void *data_src, u_int16 size_src);
-RET_API PosSndMsg(PNO pno_src, PNO pno_dest, CID cid, u_int16 msg_len, const void *msg_data);
+void SensorSetShareData(void *share_top, uint16_t offset, const void *data_src, uint16_t size_src);
+RET_API PosSndMsg(PNO pno_src, PNO pno_dest, CID cid, uint16_t msg_len, const void *msg_data);
 
 BOOL SensorJudgeDid(DID did, uint8_t mode);
 

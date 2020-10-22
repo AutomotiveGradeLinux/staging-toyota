@@ -1,5 +1,5 @@
 #
-# @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+# @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,20 +26,12 @@ libPOS_ServiceInterface_SRCS += DiagSrvIf.cpp
 libPOS_ServiceInterface_SRCS += PSMShadowIf.cpp
 libPOS_ServiceInterface_SRCS += VehicleIf.cpp
 
-libPOS_ServiceInterface_SRCS += VehicleIf.cpp
-
 ######### add include path #############
 CPPFLAGS += -I../../include/common/
 CPPFLAGS += -I../../include/nsfw/
 CPPFLAGS += -I../../include/ServiceInterface
 
 CPPFLAGS += -I../../../client/include
-CPPFLAGS += -I../../../client/src/Vehicle_API/common
-CPPFLAGS += -I../../../client/src/POS_sensor_API/common
-CPPFLAGS += -I../../../client/src/POS_gps_API
-CPPFLAGS += -I../../../client/src/POS_naviinfo_API/common
-CPPFLAGS += -I../../../client/src/CanInput_API/common
-CPPFLAGS += -I../../../client/src/SensorLocation_API/common
 
 #CPPFLAGS += -I../../../../diag_code/library/include
 

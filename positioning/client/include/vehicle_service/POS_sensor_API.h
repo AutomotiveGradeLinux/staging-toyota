@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,24 +44,35 @@
 #define POS_DID_SPEED_KMPH      0x80000013  //!< \~english Data ID of KMPH speed
 #define POS_DID_SNS_COUNTER     0x8000001A
 //!< \~english Data ID of sensor counter
-#define POS_DID_GYRO            0x80000014  //!< \~english Data ID of gyro
+#define POS_DID_GYRO_X          0x80000014  //!< \~english Data ID of X axis gyro
+#define POS_DID_GYRO_Y          0x80000085  //!< \~english Data ID of Y axis gyro
+#define POS_DID_GYRO_Z          0x80000086  //!< \~english Data ID of Z axis gyro
+#define POS_DID_GYRO            POS_DID_GYRO_X
+//!< \~english Data ID of POS_DID_GYRO is same as POS_DID_GYRO_X
 #define POS_DID_GSNS_X          0x80000015  //!< \~english Data ID of x axis gsensor
 #define POS_DID_GSNS_Y          0x80000016  //!< \~english Data ID of Y axis gsensor
+#define POS_DID_GSNS_Z          0x80000026  //!< \~english Data ID of Z axis gsensor
 #define POS_DID_REV             0x80000017  //!< \~english Data ID of reverse signal
 #define POS_DID_GPS_ANTENNA     0x80000019
 //!< \~english Data ID of GPS antenna status
 #define POS_DID_SPEED_PULSE_FST 0x80000028
 //!< \~english Data ID of first time speed pulse
-#define POS_DID_GYRO_FST        0x80000029  //!< \~english Data ID of first time gyro
+#define POS_DID_GYRO_X_FST      0x80000029  //!< \~english Data ID of first time X axis gyro
+#define POS_DID_GYRO_Y_FST      0x80000043  //!< \~english Data ID of first time Y axis gyro
+#define POS_DID_GYRO_Z_FST      0x80000023  //!< \~english Data ID of first time Z axis gyro
+#define POS_DID_GYRO_FST        POS_DID_GYRO_X_FST
+//!< \~~english Data ID of POS_DID_GYRO_FST is same as POS_DID_GYRO_X_FST
 #define POS_DID_REV_FST         0x8000007E
 //!< \~english Data ID of first time reverse signal
 #define POS_DID_GYRO_TEMP       0x80000090  //!< \~english Data ID of gyro temperature
 #define POS_DID_GYRO_TEMP_FST   0x80000091
 //!< \~english Data ID of first time gyro temperature
-#define POS_DID_GSNS_X_FST      0x80000092
+#define POS_DID_GSNS_X_FST      0x80000087
 //!< \~english Data ID of first time x axis gsensor
-#define POS_DID_GSNS_Y_FST      0x80000093
+#define POS_DID_GSNS_Y_FST      0x80000088
 //!< \~english Data ID of first time Y axis gsensor
+#define POS_DID_GSNS_Z_FST      0x80000089
+//!< \~english Data ID of first time Z axis gsensor
 #define POS_DID_PULSE_TIME      0x8000003A  //!< \~english Data ID of pulse time
 
 #define POS_DID_GPS__CWORD82__NMEA    0x80000030U
@@ -77,13 +88,25 @@
 #define POS_DID_GPS_CLOCK_FREQ  0x800000B4U
 //!< \~english Data ID of GPS time frequency data
 
+/**
+ * \~english @brief  Delivery sensor extra package command ID
+ * \~english @brief  If you want to catch above envents, use NSFW like below.
+ * \~english @code
+ * l_eStatus = FrameworkUnifiedAttachCallbackToDispatcher(h_app, POS_NTFY_SEND_THREAD, CID_POSIF_REGISTER_LISTENER_PKG_SENSOR_DATA, CBCallbackA);
+ * @endcode
+ */
 #define CID_POSIF_REGISTER_LISTENER_PKG_SENSOR_DATA  0x0700
-//!< \~english sensor extra package register command ID
 
+/**
+ * \~english @brief  Delivery sensor information command ID
+ * \~english @brief  If you want to catch above envents, use NSFW like below.
+ * \~english @code
+ * l_eStatus = FrameworkUnifiedAttachCallbackToDispatcher(h_app, POS_NTFY_SEND_THREAD, CID_POSIF_REGISTER_LISTENER_SENSOR_DATA, CBCallbackA);
+ * @endcode
+ */
 #define CID_POSIF_REGISTER_LISTENER_SENSOR_DATA      0x0200
-//!< \~english sensor information register command ID
 
-#define  SENSOR_MSGBUF_DSIZE    2264
+#define  SENSOR_MSGBUF_DSIZE    4096
 //!< \~english message body maximum size
 
 #define  SENSOR_VSHEAD_DSIZE    36
@@ -92,8 +115,12 @@
 #define  SENSOR_VSINFO_DSIZE    (SENSOR_MSGBUF_DSIZE - SENSOR_VSHEAD_DSIZE)
 //!< \~english vehicle sensor data size
 
-#define  SENSOR_MSG_VSINFO_DSIZE  1272
+// Same name/value is defined, but client doesn't include HAL header.
+// It defines SENSOR_MSG_VSINFO_DSIZE if not included HAL.
+#ifndef HAL_API_POSITIONING_HAL_H_
+#define  SENSOR_MSG_VSINFO_DSIZE  1904u
 //!< \~english vehicle sensor message body maximum size
+#endif
 
 #define  SENSOR_PKG_DELIVERY_MAX  16
 //!< \~english number of data ID per a package
@@ -161,15 +188,19 @@ extern "C" {
 ///        - buffer pointer of the data ID array in package(pulDid) \n
 ///          The data ID set to the first in pulDid is the delivery key. \n
 ///          If the data ID not one of the following be set, return SENSOR_RET_ERROR_PARAM.
-///        - POS_DID_SNS_COUNTER - sensor counter(get from sys)
-///        - POS_DID_GYRO - gyro output
-///        - POS_DID_SPEED_PULSE - speed pulse(count of pulse)
+///        - POS_DID_SNS_COUNTER - sensor counter
+///        - POS_DID_GYRO_X - gyro output (X axis)
+///        - POS_DID_GYRO_Y - gyro output (Y axis)
+///        - POS_DID_GYRO_Z - gyro output (Z axis)
+///        - POS_DID_SPEED_PULSE - speed pulse
 ///        - POS_DID_REV - REV signal(0:forward 1:backward)
-///        - POS_DID_GSNS_X - Gsensor output X axis(15 to 4bit A/D value)
-///        - POS_DID_GSNS_Y - Gsensor output Y axis(15 to 4bit A/D value)
+///        - POS_DID_GSNS_X - Gsensor output X axis
+///        - POS_DID_GSNS_Y - Gsensor output Y axis
+///        - POS_DID_GSNS_Z - Gsensor output Z axis
 ///        - POS_DID_GYRO_TEMP - gyro temperature
-///        - POS_DID_PULSE_TIME - pulse time(32bit pulse time store count(0-32), \n
-///          32bitx max32 time between pulse[ micro s](1-4294967295 micro s)) \n
+///        - POS_DID_PULSE_TIME - pulse time\n
+/// \~english @par
+///        - Because positioning is G/W between Navi and HAL, value depends on the design of HAL.
 /// \~english @par
 ///        - Note:The Gsensor output is 0 in the environment without Gsensor hardware.\n
 /// \~english @par
@@ -266,43 +297,43 @@ extern "C" {
 ///          This API return the result of registering. \n
 ///          The data from sensor data received to registering will be deliveried. \n
 ///          The first delivery data is the sensor data(max 64 number of sensor counter, \n
-///          reverse signal,gyro temperature, max 640 number of gyro output,speed pulse,Gsensor output(X axis), \n
-///          Gsensor output(Y axis), max 2048 number of pulse time) in 6.4 second. \n
+///          reverse signal,gyro temperature, max 640 number of gyro output(X axis), gyro output(X axis), gyro output(Z axis), \n
+///          speed pulse,Gsensor output(X axis), Gsensor output(Y axis), Gsensor output(Z axis), max 2048 number of pulse time) in 6.4 second. \n
 ///          If the data number is more than max number, delivery the data in newest 6.4 second. \n
-///          If the sensor data accumulated more than max number, set VEHICLE_SNS_BREAK to data missing information.\n
+///          If the sensor data accumulated more than max number, set VEHICLE_SNS_BREAK to data missing information. \n
 ///          If sensor data number is more than the data number send in one time(10 number of \n
-///          sensor counter,reverse signal,gyro temperature, 100 number of gyro output,speed pulse, \n
-///          Gsensor output(X axis),Gsensor output(Y axis), 320 number of pulse time), \n
-///          the new data is divided into partitions(every partition with 10 number of sensor counter, \n
-///          reverse signal,gyro temperature, 100 number of gyro output,speed pulse,Gsensor output(X axis), \n
-///          Gsensor output(Y axis), 320 number of pulse time) to delivery. \n
+///          sensor counter,reverse signal,gyro temperature, 100 number of gyro output(X axis), gyro output(X axis), gyro output(Z axis), \n
+///          speed pulse, Gsensor output(X axis),Gsensor output(Y axis), Gsensor output(Z axis), 320 number of pulse time), \n
+///          the old data is divided into partitions(every partition with 10 number of sensor counter, \n
+///          reverse signal,gyro temperature, 100 number of gyro output(X axis), gyro output(X axis), gyro output(Z axis), \n
+///          speed pulse,Gsensor output(X axis), Gsensor output(Y axis), Gsensor output(Z axis), 320 number of pulse time) to delivery. \n
 ///          The last message for first delivery is the message that the partition count equal to partition No. \n
 ///          After first delivery, the message data(1 number of sensor counter,reverse signal, \n
-///          gyro temperature, 10 number of gyro output,speed pulse,Gsensor output(X axis), \n
-///          Gsensor output(Y axis), 32 number of pulse time) deliveried. \n
+///          gyro temperature, 10 number of gyro output(X axis), gyro output(X axis), gyro output(Z axis),speed pulse, \n
+///          Gsensor output(X axis), Gsensor output(Y axis), Gsensor output(Z axis), 32 number of pulse time) deliveried. \n
 ///          And because the data missing information, divided partition count, \n
 ///          diveided partition No is not used, they will be set to 0 in message.\n
 ///         (sample)The sensor data in 6.4 second divided to delivery
-///        - 1st message(sensor counter,reverse signal,gyro temperature=10 number, gyro output,speed pulse, \n
-///           Gsensor output(X axis),Gsensor output(Y axis)=100 number,pulse time=320 number), divided  \n
-///           partition count=7,divided partition No=1)
-///        - 2nd message(sensor counter,reverse signal,gyro temperature=10 number, gyro output,speed pulse, \n
-///           Gsensor output(X axis),Gsensor output(Y axis)=100 number,pulse time=320 number), divided  \n
-///          partition count=7,divided partition No=2)
-///        - 3rd message(sensor counter,reverse signal,gyro temperature=10 number, gyro output,speed pulse, \n
-///          Gsensor output(X axis),Gsensor output(Y axis)=100 number,pulse time=320 number), divided \n
+///        - 1st message(sensor counter, reverse signal, gyro temperature=10 number, gyro output(X axis), gyro output(Y axis), gyro output(Z axis), speed pulse, \n
+///          Gsensor output(X axis), Gsensor output(Y axis), Gsensor output(Z axis)=100 number, pulse time=320 number), divided  \n
+///          partition count=7, divided partition No=1)
+///        - 2nd message(sensor counter, reverse signal, gyro temperature=10 number, gyro output(X axis), gyro output(Y axis), gyro output(Z axis), speed pulse, \n
+///          Gsensor output(X axis), Gsensor output(Y axis), Gsensor output(Z axis)=100 number, pulse time=320 number), divided  \n
+///          partition count=7, divided partition No=2)
+///        - 3rd message(sensor counter, reverse signal, gyro temperature=10 number, gyro output(X axis), gyro output(Y axis), gyro output(Z axis), speed pulse, \n
+///          Gsensor output(X axis), Gsensor output(Y axis), Gsensor output(Z axis)=100 number, pulse time=320 number), divided  \n
 ///          partition count=7,divided partition No=3)
-///        - 4th message(sensor counter,reverse signal,gyro temperature=10 number, gyro output,speed pulse, \n
-///          Gsensor output(X axis),Gsensor output(Y axis)=100 number,pulse time=320 number), divided  \n
+///        - 4th message(sensor counter, reverse signal, gyro temperature=10 number, gyro output(X axis), gyro output(Y axis), gyro output(Z axis), speed pulse, \n
+///          Gsensor output(X axis), Gsensor output(Y axis), Gsensor output(Z axis)=100 number, pulse time=320 number), divided  \n
 ///          partition count=7,divided partition No=4)
-///        - 5th message(sensor counter,reverse signal,gyro temperature=10 number, gyro output,speed pulse, \n
-///          Gsensor output(X axis),Gsensor output(Y axis)=100 number,pulse time=320 number), divided  \n
+///        - 5th message(sensor counter, reverse signal, gyro temperature=10 number, gyro output(X axis), gyro output(Y axis), gyro output(Z axis), speed pulse, \n
+///          Gsensor output(X axis), Gsensor output(Y axis), Gsensor output(Z axis)=100 number, pulse time=320 number), divided  \n
 ///          partition count=7,divided partition No=5)
-///        - 6th message(sensor counter,reverse signal,gyro temperature=10 number, gyro output,speed pulse, \n
-///          Gsensor output(X axis),Gsensor output(Y axis)=100 number,pulse time=320 number), divided  \n
+///        - 6th message(sensor counter, reverse signal, gyro temperature=10 number, gyro output(X axis), gyro output(Y axis), gyro output(Z axis), speed pulse, \n
+///          Gsensor output(X axis), Gsensor output(Y axis), Gsensor output(Z axis)=100 number, pulse time=320 number), divided  \n
 ///          partition count=7,divided partition No=6)
-///        - 7th message(sensor counter,reverse signal,gyro temperature=10 number, gyro output,speed pulse, \n
-///          Gsensor output(X axis),Gsensor output(Y axis)=100 number,pulse time=320 number), divided  \n
+///        - 7th message(sensor counter, reverse signal, gyro temperature=4 number, gyro output(X axis), gyro output(Y axis), gyro output(Z axis), speed pulse, \n
+///          Gsensor output(X axis), Gsensor output(Y axis), Gsensor output(Z axis)=40 number, pulse time=128 number), divided  \n
 ///          partition count=7,divided partition No=7)
 ///
 /// \~english @par
@@ -320,10 +351,10 @@ extern "C" {
 /// \~english @par
 ///          message structure
 ///        - After success to register, vehicle sensor will send message as system API message with following format.
-///          Command ID : CID_POSIF_REGISTER_LISTENER_PKG_SENSOR_DATA \n
+///          Command ID : @ref CID_POSIF_REGISTER_LISTENER_PKG_SENSOR_DATA \n
 ///          Definition of structure
 /// \~english @code
-///  #define  SENSOR_MSGBUF_DSIZE        2264  /* max size of message body */
+///  #define  SENSOR_MSGBUF_DSIZE        4096  /* max size of message body */
 ///  #define  SENSOR_VSHEAD_DSIZE        36  /* vehicle sensor header size(1+3+16*2) */
 ///  #define  SENSOR_PKG_DELIVERY_MAX        16  /* max number of Data ID in package */
 ///  #define  SENSOR_VSINFO_DSIZE    (SENSOR_MSGBUF_DSIZE - SENSOR_VSHEAD_DSIZE)
@@ -496,10 +527,10 @@ SENSOR_RET_API  POS_RegisterListenerPkgSensData(HANDLE hApp, PCSTR  notifyName, 
 ///        - After success to register, vehicle sensor will send message as system API message with following format.
 ///        - If the register successed, certainly delivery first data. And then delivery data according to
 ///          the delivery timing. \n
-///          Command ID : CID_POSIF_REGISTER_LISTENER_SENSOR_DATA \n
+///          Command ID : @ref CID_POSIF_REGISTER_LISTENER_SENSOR_DATA \n
 ///
 /// \~english @code
-///     #define  SENSOR_MSG_VSINFO_DSIZE  1272      /* max size of message body */
+///     #define  SENSOR_MSG_VSINFO_DSIZE  1904      /* max size of message body */
 ///     typedef struct
 ///     {
 ///       DID       did;         /* data ID */
@@ -543,17 +574,22 @@ SENSOR_RET_API  POS_RegisterListenerSensData(HANDLE  hApp, PCSTR  notifyName, DI
 /// \~english @par
 ///        - Data ID of vehicle info(ulDid)
 ///        - POS_DID_SPEED_PULSE - speed pulse(count of pulse)
-///        - POS_DID_GYRO - gyro output(16bit A/D value)
-///        - POS_DID_GSNS_X - Gsensor output (X axis)(12bit A/D value(left justified:15 to 4bit))
-///        - POS_DID_GSNS_Y - Gsensor output (Y axis)(12bit A/D value(left justified:15 to 4bit))
+///        - POS_DID_GYRO_X - gyro output (X axis)
+///        - POS_DID_GYRO_Y - gyro output (Y axis)
+///        - POS_DID_GYRO_Z - gyro output (Z axis)
+///        - POS_DID_GSNS_X - Gsensor output (X axis)
+///        - POS_DID_GSNS_Y - Gsensor output (Y axis)
+///        - POS_DID_GSNS_Z - Gsensor output (Z axis)
 ///        - POS_DID_GPS_ANTENNA - GPS antenna connection status
 ///        - POS_DID_GPS__CWORD82__NMEA - GPS NMEA(_CWORD82_)
 ///        - POS_DID_GPS__CWORD82__FULLBINARY - GPS _CWORD82_ full binary(_CWORD82_)
 ///        - POS_DID_GPS_NMEA - GPS NMEA
 ///        - POS_DID_GYRO_TEMP - gyro temperature
-///        - POS_DID_GPS_CLOCK_DRIFT - GPS clock drift([ns/s])
-///        - POS_DID_GPS_CLOCK_FREQ - GPS clock frequency([Hz])
+///        - POS_DID_GPS_CLOCK_DRIFT - GPS clock drift
+///        - POS_DID_GPS_CLOCK_FREQ - GPS clock frequency
 ///        - The avaliable data ID of each hardware type is as following.
+/// \~english @par
+///        - Because positioning is G/W between Navi and HAL, value depends on the design of HAL.
 /// \~english @par
 ///        - Note:The Gsensor output is 0 in the environment without Gsensor hardware.
 ///        - vehicle sensor data buffer size(usDestSize) \n

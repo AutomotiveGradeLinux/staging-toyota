@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@
 #include <native_service/frameworkunified_types.h>
 #include <native_service/frameworkunified_framework_if.h>
 
-//#include <vehicle_service/DTime_Api.h>
+#include <stub/DTime_Api.h>
 #include <vehicle_service/positioning_base_library.h>
 #include <vehicle_service/POS_gps_API.h>
 
@@ -53,7 +53,7 @@ extern "C" {
 #endif
 EFrameworkunifiedStatus ClockIfNotifyOnClockAvailability(CbFuncPtr fp_on_cmd);
 void ClockIfSetAvailability(BOOL b_is_available);
-//EFrameworkunifiedStatus ClockIfDtimeSetGpsTime(const SENSOR_MSG_GPSTIME *pst_gps_time, BOOL* pb_is_available);
+EFrameworkunifiedStatus ClockIfDtimeSetGpsTime(const SENSOR_MSG_GPSTIME *pst_gps_time, BOOL* pb_is_available);
 #ifdef __cplusplus
 }
 #endif

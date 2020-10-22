@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -118,7 +118,7 @@ typedef struct {
 *            Function prototype                                              *
 ************************************************************************/
 RET_API VehicleDeleteEvent(EventID event_id);
-RET_API VehicleLinkShareData(void **share_top, u_int32 *share_size, u_int16 *offset);
+RET_API VehicleLinkShareData(void **share_top, uint32_t *share_size, uint16_t *offset);
 RET_API VehicleUnLinkShareData(VEHICLE_SHARE *share_top, u_int16 offset);
 EventID VehicleCreateEvent(PNO pno);
 void PosSetShareData(void *share_top, u_int16 offset, const void *data_src, u_int16 size_src);

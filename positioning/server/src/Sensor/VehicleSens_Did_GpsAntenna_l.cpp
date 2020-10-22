@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ static  VEHICLESENS_DATA_MASTER  gstGpsAntenna_l;    // NOLINT(readability/nolin
 ******************************************************************************/
 void VehicleSensInitGpsAntennal(void) {
     memset(&gstGpsAntenna_l, 0x00, sizeof(VEHICLESENS_DATA_MASTER));
-//    gstGpsAntenna_l.ul_did    = POSHAL_DID_GPS_ANTENNA;
+    gstGpsAntenna_l.ul_did    = POSHAL_DID_GPS_ANTENNA;
     gstGpsAntenna_l.us_size    = VEHICLE_DSIZE_GPS_ANTENNA;
     gstGpsAntenna_l.uc_data[0]  = VEHICLE_DINIT_GPS_ANTENNA;
 }
@@ -56,25 +56,25 @@ void VehicleSensInitGpsAntennal(void) {
 * RETURN    : VEHICLESENS_EQ  : No data change
 *             VEHICLESENS_NEQ  : Data change
 ******************************************************************************/
-//u_int8 VehicleSensSetGpsAntennal(const LSDRV_LSDATA *pst_data) {
-//    u_int8 uc_ret;
-//    VEHICLESENS_DATA_MASTER *pst_master;
-//
-//    pst_master = &gstGpsAntenna_l;
-//
-//    /* Compare data master and received data */
-//    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
-//
-//    /* Received data is set in the data master. */
-//    pst_master->ul_did    = pst_data->ul_did;
-//    pst_master->us_size    = pst_data->uc_size;  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
-//    memset(pst_master->uc_data, 0x00, sizeof(pst_master->uc_data));
-//    memcpy(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//
-//    return(uc_ret);
-//}
+u_int8 VehicleSensSetGpsAntennal(const LSDRV_LSDATA *pst_data) {
+    u_int8 uc_ret;
+    VEHICLESENS_DATA_MASTER *pst_master;
+
+    pst_master = &gstGpsAntenna_l;
+
+    /* Compare data master and received data */
+    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
+
+    /* Received data is set in the data master. */
+    pst_master->ul_did    = pst_data->ul_did;
+    pst_master->us_size    = pst_data->uc_size;  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
+    memset(pst_master->uc_data, 0x00, sizeof(pst_master->uc_data));
+    memcpy(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+
+    return(uc_ret);
+}
 
 /*******************************************************************************
 * MODULE    : VehicleSensGetGpsAntennal

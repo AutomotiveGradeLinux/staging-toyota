@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@
  * Incluce                                                                         *
  *---------------------------------------------------------------------------------*/
 #include <native_service/frameworkunified_types.h>
-//#include <stub/DIAGCODE.h>
 #include <vehicle_service/positioning_base_library.h>
 
 /*---------------------------------------------------------------------------------*
@@ -49,8 +48,6 @@
 extern "C" {
 #endif
 void DiagSrvIfSetRegistrationPermission(BOOL b_is_true);
-EFrameworkunifiedStatus DiagSrvIfDiagPutDiagCode(uint64_t err_id, uint16_t positioning_code);
-EFrameworkunifiedStatus DiagSrvIfDiagDeleteDiagCode(uint64_t err_id, uint16_t positioning_code);
 #ifdef __cplusplus
 }
 #endif

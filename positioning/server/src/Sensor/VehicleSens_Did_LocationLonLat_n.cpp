@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ static  VEHICLESENS_DATA_MASTER  gstLocationLonLat_n;    // NOLINT(readability/n
  * @retval      none
  */
 void VehicleSensInitLocationLonLatN(void) {
-//    SENSORLOCATION_LONLATINFO_DAT  st_lonlat;
+    SENSORLOCATION_LONLATINFO_DAT  st_lonlat;
 
     memset(&gstLocationLonLat_n, 0x00, sizeof(VEHICLESENS_DATA_MASTER));
 
@@ -52,20 +52,18 @@ void VehicleSensInitLocationLonLatN(void) {
     gstLocationLonLat_n.ul_did  = VEHICLE_DID_LOCATION_LONLAT_NAVI;
 
     /** Data size setting */
-//    gstLocationLonLat_n.us_size  = sizeof(SENSORLOCATION_LONLATINFO_DAT);
+    gstLocationLonLat_n.us_size  = sizeof(SENSORLOCATION_LONLATINFO_DAT);
 
     /** Data content setting */
-//    memset(&st_lonlat, 0x00, sizeof(st_lonlat));
-//    st_lonlat.getMethod = SENSOR_GET_METHOD_NAVI;
-//    st_lonlat.SyncCnt   = 0x00;
-//    st_lonlat.isEnable  = SENSORLOCATION_STATUS_DISABLE;
-//    st_lonlat.isExistDR = 0x00;
-//    st_lonlat.DRStatus  = SENSORLOCATION_DRSTATUS_INVALID;
-//    st_lonlat.posSts    = 0x00;
-//    st_lonlat.posAcc    = 0x00;
-//    st_lonlat.Longitude = 0x00;
-//    st_lonlat.Latitude  = 0x00;
-//    memcpy(&gstLocationLonLat_n.uc_data[0], &st_lonlat, sizeof(st_lonlat));
+    memset(&st_lonlat, 0x00, sizeof(st_lonlat));
+    st_lonlat.getMethod = SENSOR_GET_METHOD_NAVI;
+    st_lonlat.SyncCnt   = 0x00;
+    st_lonlat.isEnable  = SENSORLOCATION_STATUS_DISABLE;
+    st_lonlat.posSts    = 0x00;
+    st_lonlat.posAcc    = 0x00;
+    st_lonlat.Longitude = 0x00;
+    st_lonlat.Latitude  = 0x00;
+    memcpy(&gstLocationLonLat_n.uc_data[0], &st_lonlat, sizeof(st_lonlat));
 
     return;
 }
@@ -82,23 +80,23 @@ void VehicleSensInitLocationLonLatN(void) {
  * @retval     VEHICLESENS_EQ  : No data change
  * @retval     VEHICLESENS_NEQ : Data change
  */
-//u_int8 VehicleSensSetLocationLonLatN(const SENSORLOCATION_LONLATINFO_DAT *pst_lonlat) {
-//    u_int8            uc_ret;
-//    VEHICLESENS_DATA_MASTER    *pst_master;
-//
-//    pst_master = &gstLocationLonLat_n;
-//
-//    /** With the contents of the current data master,Compare received data */
-//    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_lonlat, sizeof(SENSORLOCATION_LONLATINFO_DAT));
-//
-//    /** Received data is set in the data master. */
-//    pst_master->ul_did    = VEHICLE_DID_LOCATION_LONLAT_NAVI;
-//    pst_master->us_size    = sizeof(SENSORLOCATION_LONLATINFO_DAT);
-//    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
-//    memcpy(pst_master->uc_data, pst_lonlat, sizeof(SENSORLOCATION_LONLATINFO_DAT));
-//
-//    return(uc_ret);
-//}
+u_int8 VehicleSensSetLocationLonLatN(const SENSORLOCATION_LONLATINFO_DAT *pst_lonlat) {
+    u_int8            uc_ret;
+    VEHICLESENS_DATA_MASTER    *pst_master;
+
+    pst_master = &gstLocationLonLat_n;
+
+    /** With the contents of the current data master,Compare received data */
+    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_lonlat, sizeof(SENSORLOCATION_LONLATINFO_DAT));
+
+    /** Received data is set in the data master. */
+    pst_master->ul_did    = VEHICLE_DID_LOCATION_LONLAT_NAVI;
+    pst_master->us_size    = sizeof(SENSORLOCATION_LONLATINFO_DAT);
+    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
+    memcpy(pst_master->uc_data, pst_lonlat, sizeof(SENSORLOCATION_LONLATINFO_DAT));
+
+    return(uc_ret);
+}
 
 /**
  * @brief
@@ -135,7 +133,7 @@ void VehicleSensGetLocationLonLatN(VEHICLESENS_DATA_MASTER *pst_data) {
  */
 void VehicleSensGetLocationLonLatnUnitCnv(VEHICLESENS_DATA_MASTER *pst_data) {
     const VEHICLESENS_DATA_MASTER *pst_master;
-//    SENSORLOCATION_LONLATINFO_DAT  st_lonlat;
+    SENSORLOCATION_LONLATINFO_DAT  st_lonlat;
     int32_t l_lon;
     int32_t l_lat;
     int64_t ll_tmp;
@@ -143,23 +141,23 @@ void VehicleSensGetLocationLonLatnUnitCnv(VEHICLESENS_DATA_MASTER *pst_data) {
     pst_master = &gstLocationLonLat_n;
 
     /* Perform unit conversion[1/128Second] -> [10^-7 degree] */
-//    memcpy(&st_lonlat, pst_master->uc_data, sizeof(st_lonlat));
+    memcpy(&st_lonlat, pst_master->uc_data, sizeof(st_lonlat));
 
     /* Longitude */
-//    l_lon = st_lonlat.Longitude;
-//    ll_tmp = (int64_t)l_lon * 10000000;
-//    st_lonlat.Longitude = (int32_t)(ll_tmp / (128 * 60 * 60));
+    l_lon = st_lonlat.Longitude;
+    ll_tmp = (int64_t)l_lon * 10000000;
+    st_lonlat.Longitude = (int32_t)(ll_tmp / (128 * 60 * 60));
 
     /* Latitude */
-//    l_lat = st_lonlat.Latitude;
-//    ll_tmp = (int64_t)l_lat * 10000000;
-//    st_lonlat.Latitude = (int32_t)(ll_tmp / (128 * 60 * 60));
+    l_lat = st_lonlat.Latitude;
+    ll_tmp = (int64_t)l_lat * 10000000;
+    st_lonlat.Latitude = (int32_t)(ll_tmp / (128 * 60 * 60));
 
     /** Store the data master in the specified destination. */
     pst_data->ul_did    = pst_master->ul_did;
     pst_data->us_size    = pst_master->us_size;
     pst_data->uc_rcvflag  = pst_master->uc_rcvflag;
-//    memcpy(pst_data->uc_data, &st_lonlat, sizeof(st_lonlat));
+    memcpy(pst_data->uc_data, &st_lonlat, sizeof(st_lonlat));
 
     return;
 }

@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@
 #include <vehicle_service/POS_gps_API.h>
 #include <system_service/ss_sm_client_if.h>
 #include <vehicle_service/positioning_base_library.h>
-//#include <stub/vehicle_notifications.h>
+#include <stub/vehicle_notifications.h>
 #include <peripheral_service/communication_notifications.h>
 #include <other_service/VP_GetEnv.h>
 #include <cstdlib>
@@ -64,8 +64,8 @@
 #include "DiagSrvIf.h"
 #include "PSMShadowIf.h"
 #include "VehicleIf.h"
-//#include "positioning_hal.h"
-//#include "gps_hal.h"
+#include "positioning_hal.h"
+#include "gps_hal.h"
 #include "CommonDefine.h"
 
 #include "VehicleIf.h"
@@ -94,12 +94,6 @@
 #define THREAD_STS_NOEXIST                  (0x00)
 #define THREAD_STS_CREATING                 (0x01)
 #define THREAD_STS_CREATED                  (0x02)
-
-/*
-  Maximum message size
-  Note : Set a value that is larger than the local thread's message reception buffer size.
-*/
-#define MAX_MSG_BUF_SIZE                    (2048)
 
 #define POS_SNDMSG_DTSIZE_1     1       /* SndMSG data size 1Byte  */
 #define POS_SNDMSG_DTSIZE_2     2       /* SndMSG data size 2Byte  */
@@ -133,22 +127,6 @@
 #define POSITIONINGLOG_SYS_NORMAL_DATA 0xC1
 #define POSITIONINGLOG_SYS_FST_DATA 0xF4
 #define _pb_strcat(pdest, psrc, size)   (strncat(pdest, psrc, size) , (0))
-
-enum LsDrvKind {
-  LSDRV_GYRO,               /* Gyro output     */
-  LSDRV_SPEED_PULSE,        /* Vehicle speed pulse       */
-  LSDRV_SPEED_PULSE_FLAG,   /* Vehicle speed pulse flag  */
-  LSDRV_SPEED_KMPH,         /* Vehicle speed(km/h)      */
-  LSDRV_GYRO_EXT,           /* Gyro Extended Output  */
-  LSDRV_REV,                /* REV information         */
-  LSDRV_GYRO_TEMP,          /* Gyro Temperature      */
-  LSDRV_GSENSOR_X,          /* G-sensor X-axis      */
-  LSDRV_GSENSOR_Y,          /* G-sensor Y-axis      */
-  LSDRV_PULSE_TIME,         /* Inter-Pulse Time      */
-  LSDRV_SNS_COUNTER,        /* Sensor Counter    */
-  LSDRV_GPS_INTERRUPT_FLAG, /* GPS interrupt flag */
-  LSDRV_KINDS_MAX
-};
 
 // Vehicle sensor information notification message
 typedef struct {
@@ -213,13 +191,6 @@ typedef struct {
     u_int8 flag;  /* Whether or not the time is set */
 } ST_GPS_SET_TIME;
 
-/*!
-    @brief Structure for managing whether time setting is enabled or disabled(For GRADE2)
-*/
-typedef struct {
-    u_int8 flag;        /* Whether or not the time is set */
-    u_int8 reserve[3];
-} ST_GPS_SET_TIME_FLAG;
 /*---------------------------------------------------------------------------------*
  * Local Function Prototype                                                        *
  *---------------------------------------------------------------------------------*/
@@ -299,69 +270,69 @@ static ST_SHAREDATA g_sharedata_tbl[] = {
   (10) Boot Sequence(Performance) (0,1,2, ... Note : 0 = Initial value(Not started)) Time of termination,Be destroyed in the reverse order of startup
  */
 static ST_THREAD_CREATE_INFO g_pos_thread_create_info_Grade1[] = {  // LCOV_EXCL_BR_LINE 11: unexpected branch
-//    {    /* Pos_main */
-//        ETID_POS_MAIN, /* (1) */
-//        kThreadNamePosMain, /* (2) */
-//        PNO_VEHICLE_SENSOR, /* (3) */
-//        &VehicleSensThread, /* (4) */
-//        (NTFY_MSK_NONE), /* (5) */
-//        (NTFY_MSK_NONE), /* (6) */
-//        0, /* (7) */
-//        TRUE, /* (8) */
-//        THREAD_STS_NOEXIST, /* (9) */
-//        0 /* (10) */
-//    },
-//    {    /* Pos_sens */
-//        ETID_POS_SENS, /* (1) */
-//        kThreadNamePosSens, /* (2) */
-//        PNO_LINE_SENS_DRV, /* (3) */
-//        &StartLineSensorThreadPositioning, /* (4) */
-//        (NTFY_MSK_PS_PSMSHADOW_AVAILABILITY), /* (5) */
-//        (NTFY_MSK_NONE), /* (6) */
-//        THREAD_STS_MSK_POS_MAIN, /* (7) */
-//        FALSE, /* (8) */
-//        THREAD_STS_NOEXIST, /* (9) */
-//        0 /* (10) */
-//    },
-//    {    /* Pos_gps */
-//        ETID_POS_GPS, /* (1) */
-//        kThreadNamePosGps, /* (2) */
-//        PNO_NAVI_GPS_MAIN, /* (3) */
-//        &StartGpsMainThreadPositioning, /* (4) */
-//        (NTFY_MSK_NONE), /* (5) */
-//        (NTFY_MSK_NONE), /* (6) */
-//        THREAD_STS_MSK_POS_MAIN, /* (7) */
-//        TRUE, /* (8) */
-//        THREAD_STS_NOEXIST, /* (9) */
-//        0 /* (10) */
-//    },
-//    {    /* Pos_gps_recv */
-//        ETID_POS_GPS_RECV, /* (1) */
-//        kThreadNamePosGpsRecv, /* (2) */
-//        PNO_NAVI_GPS_RCV, /* (3) */
-//        &StartGpsRecvThreadPositioning, /* (4) */
-//        (NTFY_MSK_NONE), /* (5) */
-//        (NTFY_MSK_NONE), /* (6) */
-//        THREAD_STS_MSK_POS_GPS, /* (7) */
-//        FALSE, /* (8) */
-//        THREAD_STS_NOEXIST, /* (9) */
-//        0 /* (10) */
-//    },
-//    {    /* Pos_gps_rollover */
-//        ETID_POS_GPS_ROLLOVER, /* (1) */
-//        kThreadNamePosGpsRollover, /* (2) */
-//        PNO_CLK_GPS, /* (3) */
-//        &StartGpsRolloverThreadPositioning, /* (4) */
-//        (NTFY_MSK_NS_BACKUPMGR_AVAILABILITY), /* (5) */
-//        (NTFY_MSK_NONE), /* (6) */
-//        THREAD_STS_MSK_POS_GPS, /* (7) */
-//        FALSE, /* (8) */
-//        THREAD_STS_NOEXIST, /* (9) */
-//        0 /* (10) */
-//    },
-//    {   /* Termination */
-//        ETID_POS_MAX, NULL, 0, NULL, NTFY_MSK_NONE, NTFY_MSK_NONE, 0, FALSE, THREAD_STS_NOEXIST, 0
-//    },
+    {    /* Pos_main */
+        ETID_POS_MAIN, /* (1) */
+        kThreadNamePosMain, /* (2) */
+        PNO_VEHICLE_SENSOR, /* (3) */
+        &VehicleSensThread, /* (4) */
+        (NTFY_MSK_NONE), /* (5) */
+        (NTFY_MSK_NONE), /* (6) */
+        0, /* (7) */
+        TRUE, /* (8) */
+        THREAD_STS_NOEXIST, /* (9) */
+        0 /* (10) */
+    },
+    {    /* Pos_sens */
+        ETID_POS_SENS, /* (1) */
+        kThreadNamePosSens, /* (2) */
+        PNO_LINE_SENS_DRV, /* (3) */
+        &StartLineSensorThreadPositioning, /* (4) */
+        (NTFY_MSK_PS_PSMSHADOW_AVAILABILITY), /* (5) */
+        (NTFY_MSK_NONE), /* (6) */
+        THREAD_STS_MSK_POS_MAIN, /* (7) */
+        FALSE, /* (8) */
+        THREAD_STS_NOEXIST, /* (9) */
+        0 /* (10) */
+    },
+    {    /* Pos_gps */
+        ETID_POS_GPS, /* (1) */
+        kThreadNamePosGps, /* (2) */
+        PNO_NAVI_GPS_MAIN, /* (3) */
+        &StartGpsMainThreadPositioning, /* (4) */
+        (NTFY_MSK_NONE), /* (5) */
+        (NTFY_MSK_NONE), /* (6) */
+        THREAD_STS_MSK_POS_MAIN, /* (7) */
+        TRUE, /* (8) */
+        THREAD_STS_NOEXIST, /* (9) */
+        0 /* (10) */
+    },
+    {    /* Pos_gps_recv */
+        ETID_POS_GPS_RECV, /* (1) */
+        kThreadNamePosGpsRecv, /* (2) */
+        PNO_NAVI_GPS_RCV, /* (3) */
+        &StartGpsRecvThreadPositioning, /* (4) */
+        (NTFY_MSK_NONE), /* (5) */
+        (NTFY_MSK_NONE), /* (6) */
+        THREAD_STS_MSK_POS_GPS, /* (7) */
+        FALSE, /* (8) */
+        THREAD_STS_NOEXIST, /* (9) */
+        0 /* (10) */
+    },
+    {    /* Pos_gps_rollover */
+        ETID_POS_GPS_ROLLOVER, /* (1) */
+        kThreadNamePosGpsRollover, /* (2) */
+        PNO_CLK_GPS, /* (3) */
+        &StartGpsRolloverThreadPositioning, /* (4) */
+        (NTFY_MSK_NS_BACKUPMGR_AVAILABILITY), /* (5) */
+        (NTFY_MSK_NONE), /* (6) */
+        THREAD_STS_MSK_POS_GPS, /* (7) */
+        FALSE, /* (8) */
+        THREAD_STS_NOEXIST, /* (9) */
+        0 /* (10) */
+    },
+    {   /* Termination */
+        ETID_POS_MAX, NULL, 0, NULL, NTFY_MSK_NONE, NTFY_MSK_NONE, 0, FALSE, THREAD_STS_NOEXIST, 0
+    },
 };
 
 /* State Management Variables */
@@ -542,21 +513,17 @@ EFrameworkunifiedStatus FrameworkunifiedOnInitialization(HANDLE h_app) {
             /* Clock/Availability Changing notification registration */
             (void)ClockIfNotifyOnClockAvailability(&PosNotifyClockAvailability);  // LCOV_EXCL_BR_LINE 6: not a branch  // NOLINT(whitespace/line_length)
 
+            /* NS_BackupMgr/Availability Changing notification registration */
+            (void)BackupMgrIfNotifyOnBackupMgrAvailability(&PosNotifyNSBackupMgrAvailability);  // LCOV_EXCL_BR_LINE 6: not a branch  // NOLINT(whitespace/line_length)
 
             /* Regist Vehilce Availability Notification */
             (void)VehicleIfNotifyOnVehicleAvailability(&PosNotifyVehicleAvailability);  // LCOV_EXCL_BR_LINE 6: not a branch  // NOLINT(whitespace/line_length)
-
-
-            /* NS_BackupMgr/Availability Changing notification registration */
-            (void)BackupMgrIfNotifyOnBackupMgrAvailability(&PosNotifyNSBackupMgrAvailability);  // LCOV_EXCL_BR_LINE 6: not a branch  // NOLINT(whitespace/line_length)
 
             /* DeviceDetectionServiceIf initialization */
             if (DevDetectSrvIfInitialize() == eFrameworkunifiedStatusOK) {
                 /* SS_DevDetectSrv/Availability Changing notification registration */
                 (void)DevDetectSrvIfNotifyOnDeviceDetectionAvailability(&PosNotifyDevDetectSrvAvailability);  // LCOV_EXCL_BR_LINE 6: not a branch  // NOLINT(whitespace/line_length)
             }
-
-            (void)VehicleIfNotifyOnVehicleAvailability(&PosNotifyVehicleAvailability);  // LCOV_EXCL_BR_LINE 6: not a branch  // NOLINT(whitespace/line_length)
         }
     }
 
@@ -794,7 +761,6 @@ EFrameworkunifiedStatus FrameworkunifiedOnDebugDump(HANDLE h_app) {  // LCOV_EXC
     ST_THREAD_CREATE_INFO*       p_thr_cre_info = g_pos_thread_create_info;
     ST_GPS_FIX_CNT               st_gps_fix_cnt;
     ST_GPS_SET_TIME              st_gps_set_time;
-    ST_GPS_SET_TIME_FLAG         st_gps_set_time_flag;
     uint8_t                      len_msg = 4;
     uint8_t                      len_mtx = 3;
     uint8_t                      len_evt = 9;
@@ -915,23 +881,6 @@ EFrameworkunifiedStatus FrameworkunifiedOnDebugDump(HANDLE h_app) {  // LCOV_EXC
             st_gps_set_time.minute,
             st_gps_set_time.second,
             st_gps_set_time.flag);
-    _pb_strcat(reinterpret_cast<char *>(&buf_ram[0]), reinterpret_cast<char *>(&buf_tmp[0]), sizeof(buf_tmp));
-
-    /*   Set GPS date and time(Flagging) */
-    memset(&buf_tmp[0], 0x00, sizeof(buf_tmp));
-    (void)memset( reinterpret_cast<void *>(&st_gps_set_time_flag), 0, (size_t)sizeof(st_gps_set_time_flag) );
-
-    e_status = BackupMgrIfBackupDataRd(D_BK_ID_POS_GPS_TIME_SET_FLAG,
-                                        0,
-                                        &st_gps_set_time_flag,
-                                        sizeof(st_gps_set_time_flag),
-                                        &b_is_available);
-    snprintf(reinterpret_cast<char *>(&buf_tmp[0]), sizeof(buf_tmp),
-            "\n %20s rd:0x%08x av:%d, flag:0x%02x",
-            "GPS_TIME_SET_FLAG",
-            e_status,
-            b_is_available,
-            st_gps_set_time_flag.flag);
     _pb_strcat(reinterpret_cast<char *>(&buf_ram[0]), reinterpret_cast<char *>(&buf_tmp[0]), sizeof(buf_tmp));
 
     if (e_type == UNIT_TYPE_GRADE1) {
@@ -1319,6 +1268,22 @@ static EFrameworkunifiedStatus PosNotifyNSBackupMgrAvailability(HANDLE h_app) {
 
         /* When the GPS management thread is started */
         if (((pThrCreInfo + ETID_POS_GPS)->status) == THREAD_STS_CREATED) {
+            if ((*pExeSts == EPOS_EXE_STS_RUNNING_COLDSTART) ||
+                (*peMode == EPOS_SETUP_MODE_DATA_RESET)) {
+              // GPS reset request.
+              SENSOR_INTERNAL_MSG_BUF  msg_buf = {};
+              T_APIMSG_MSGBUF_HEADER  *msg_hdr = &msg_buf.hdr;
+              msg_hdr->hdr.cid         = CID_GPS_REQRESET;
+              msg_hdr->hdr.msgbodysize = sizeof(POS_RESETINFO);
+              POS_RESETINFO           *msg_data    = reinterpret_cast<POS_RESETINFO *>(&msg_buf.data);
+              msg_data->mode           = GPS_RST_COLDSTART;
+
+              RET_API ret = _pb_SndMsg(PNO_NAVI_GPS_MAIN, sizeof(msg_buf), &msg_buf, 0);
+              if (ret != RET_NORMAL) {
+                  FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "_pb_SndMsg ERROR!! [ret=%d]", ret);
+              }
+            }
+
             /* Backup data read request to GSP management thread */
             (void)DEVGpsSndBackupDataLoadReq();
         }
@@ -1411,13 +1376,13 @@ static EFrameworkunifiedStatus PosNotifyVehicleAvailability(HANDLE h_app) {
 
     *pLastSrvSts |= NTFY_MSK_VS_VEHICLE_AVAILABILITY;
 
-//    if (eFrameworkunifiedStatusFail == VehicleIfDeliveryEntry(VEHICLE_DID_SPEED)) {
-//      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "VehicleIfDeliveryEntry SPEED ERROR");
-//    }
-//
-//    if (eFrameworkunifiedStatusFail == VehicleIfDeliveryEntry(VEHICLE_DID_REV)) {
-//      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "VehicleIfDeliveryEntry REV ERROR");
-//    }
+    if (eFrameworkunifiedStatusFail == VehicleIfDeliveryEntry(VEHICLE_DID_SPEED)) {
+      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "VehicleIfDeliveryEntry SPEED ERROR");
+    }
+
+    if (eFrameworkunifiedStatusFail == VehicleIfDeliveryEntry(VEHICLE_DID_REV)) {
+      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "VehicleIfDeliveryEntry REV ERROR");
+    }
 
     if (eFrameworkunifiedStatusFail == VehicleIfDeliveryEntry(VEHICLE_DID_SPEED_PULSE_VEHICLE)) {
       FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "VehicleIfDeliveryEntry SPEED PULSE ERROR");
@@ -1525,7 +1490,8 @@ static void PosCreateThread(HANDLE h_app) {
                     || (pThrCreInfo->msk_ntfy == NTFY_MSK_NONE))) {
                 if (pThrCreInfo->pno == PNO_LINE_SENS_DRV || \
                     pThrCreInfo->pno == PNO_NAVI_GPS_MAIN || \
-                    pThrCreInfo->pno == PNO_NAVI_GPS_RCV) {
+                    pThrCreInfo->pno == PNO_NAVI_GPS_RCV  ||
+                    pThrCreInfo->pno == PNO_CLK_GPS) {
                         (pThrCreInfo->routine)(h_app);
                 } else {
                     /* Thread creation */
@@ -1620,9 +1586,7 @@ static void PosBackupDataInit(void) {
     EFrameworkunifiedStatus e_status;
     BOOL b_is_available;
     ST_GPS_SET_TIME st_gps_set_time;
-    ST_GPS_SET_TIME_FLAG st_gps_set_time_flag;
 
-    (void)memset( reinterpret_cast<void *>(&st_gps_set_time_flag), 0, (size_t)sizeof(st_gps_set_time_flag) );
     (void)memset( reinterpret_cast<void *>(&st_gps_set_time), 0, (size_t)sizeof(st_gps_set_time) );
 
     FRAMEWORKUNIFIEDLOG(ZONE_INIT, __FUNCTION__, "+");
@@ -2132,53 +2096,53 @@ static EFrameworkunifiedStatus PosPosifSetData(HANDLE h_app) {
     pRcvMsg = g_rcv_msg_buf;
 
     size = PosGetMsg(h_app, reinterpret_cast<void**>(&pRcvMsg), MAX_MSG_BUF_SIZE);
-//    if (size != 0) {  // LCOV_EXCL_BR_LINE 4: nsfw error
-//        ucResult = SENSLOG_RES_SUCCESS;
-//
-//        pName = _pb_CnvPno2Name((reinterpret_cast<POS_MSGINFO*>(pRcvMsg))->pno);
-//        if (pName == NULL) {
-//            pName = pNone;
-//        }
-//        FRAMEWORKUNIFIEDLOG(ZONE_17, __FUNCTION__, 
-//                      "Get message = [Sender:%s][CID:0x%X][DID:0x%X]",
-//                      pName,
-//                      CID_POSIF_SET_DATA,
-//                      (reinterpret_cast<POS_MSGINFO*>(pRcvMsg))->did);
-//
-//        /* Send Messages to Internal Thread */
-//        ret = PosSndMsg(PNO_VEHICLE_SENSOR, CID_POSIF_SET_DATA, pRcvMsg, size);
-//        if (ret != RET_NORMAL) {
-//            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "PosSndMsg ERROR!! [ret = %d]", ret);
-//            if ((reinterpret_cast<POS_MSGINFO*>(pRcvMsg))->did == VEHICLE_DID_SETTINGTIME) {
-//                /* GPS time setting(When waiting for completion of an event, an event is issued. */
-//                /* Event Generation */
-//                ulEventId = VehicleCreateEvent((reinterpret_cast<POS_MSGINFO*>(pRcvMsg))->pno);
-//                if (ulEventId != 0) {
-//                    /* Event publishing */
-//                    ret = _pb_SetEvent(ulEventId, SAPI_EVSET_ABSOLUTE, POS_RET_ERROR_INNER);
-//                    if (ret != RET_NORMAL) {
-//                        /* Event issuance failure */
-//                        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, 
-//                                      "_pb_SetEvent ERROR!! [ret = %d]",
-//                                      ret);
-//                    }
-//                    /* Event deletion */
-//                    (void)VehicleDeleteEvent(ulEventId);
-//                } else {
-//                    /* Event generation failure */
-//                    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "VehicleCreateEvent ERROR!!");
-//                }
-//            }
-//        }
-//    }
-//    SensLogWriteInputData(SENSLOG_DATA_I_UNSPECIFIED,
-//                          (reinterpret_cast<POS_MSGINFO*>(pRcvMsg))->did,
-//                          0,
-//                          pRcvMsg,
-//                          static_cast<uint16_t>(size),
-//                          ucResult,
-//                          SENSLOG_ON,
-//                          SENSLOG_ON);
+    if (size != 0) {  // LCOV_EXCL_BR_LINE 4: nsfw error
+        ucResult = SENSLOG_RES_SUCCESS;
+
+        pName = _pb_CnvPno2Name((reinterpret_cast<POS_MSGINFO*>(pRcvMsg))->pno);
+        if (pName == NULL) {
+            pName = pNone;
+        }
+        FRAMEWORKUNIFIEDLOG(ZONE_17, __FUNCTION__, 
+                      "Get message = [Sender:%s][CID:0x%X][DID:0x%X]",
+                      pName,
+                      CID_POSIF_SET_DATA,
+                      (reinterpret_cast<POS_MSGINFO*>(pRcvMsg))->did);
+
+        /* Send Messages to Internal Thread */
+        ret = PosSndMsg(PNO_VEHICLE_SENSOR, CID_POSIF_SET_DATA, pRcvMsg, size);
+        if (ret != RET_NORMAL) {
+            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "PosSndMsg ERROR!! [ret = %d]", ret);
+            if ((reinterpret_cast<POS_MSGINFO*>(pRcvMsg))->did == VEHICLE_DID_SETTINGTIME) {
+                /* GPS time setting(When waiting for completion of an event, an event is issued. */
+                /* Event Generation */
+                ulEventId = VehicleCreateEvent((reinterpret_cast<POS_MSGINFO*>(pRcvMsg))->pno);
+                if (ulEventId != 0) {
+                    /* Event publishing */
+                    ret = _pb_SetEvent(ulEventId, SAPI_EVSET_ABSOLUTE, POS_RET_ERROR_INNER);
+                    if (ret != RET_NORMAL) {
+                        /* Event issuance failure */
+                        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, 
+                                      "_pb_SetEvent ERROR!! [ret = %d]",
+                                      ret);
+                    }
+                    /* Event deletion */
+                    (void)VehicleDeleteEvent(ulEventId);
+                } else {
+                    /* Event generation failure */
+                    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "VehicleCreateEvent ERROR!!");
+                }
+            }
+        }
+    }
+    SensLogWriteInputData(SENSLOG_DATA_I_UNSPECIFIED,
+                          (reinterpret_cast<POS_MSGINFO*>(pRcvMsg))->did,
+                          0,
+                          pRcvMsg,
+                          static_cast<uint16_t>(size),
+                          ucResult,
+                          SENSLOG_ON,
+                          SENSLOG_ON);
     FRAMEWORKUNIFIEDLOG(ZONE_28, __FUNCTION__, "-");
 
     return eFrameworkunifiedStatusOK;
@@ -2263,11 +2227,11 @@ static EFrameworkunifiedStatus PosPosifReqGpsReset(HANDLE h_app) {
  * @return    eFrameworkunifiedStatusOK    Normal completion
  */
 static EFrameworkunifiedStatus PosVehicleInfoRcv(HANDLE h_app) {
-//  LSDRV_MSG_LSDATA_DAT_G line_sns_data;
+  LSDRV_MSG_LSDATA_DAT_G line_sns_data;
   RET_API ret = RET_NORMAL;
 
-//  memset(&line_sns_data, 0, sizeof(line_sns_data));
-//  LSDRV_MSG_LSDATA_DAT_G *p_line_sns_data = &line_sns_data;
+  memset(&line_sns_data, 0, sizeof(line_sns_data));
+  LSDRV_MSG_LSDATA_DAT_G *p_line_sns_data = &line_sns_data;
   VEHICLE_UNIT_MSG_VSINFO *p_vehicle_msg = NULL;
   uint32_t size = 0;
   uint16_t us_speed = 0;
@@ -2275,96 +2239,96 @@ static EFrameworkunifiedStatus PosVehicleInfoRcv(HANDLE h_app) {
   uint8_t* pRcvMsg = g_rcv_msg_buf;
 
   size = PosGetMsg(h_app, reinterpret_cast<void**>(&pRcvMsg), MAX_MSG_BUF_SIZE);
-//  if (size != 0) {  // LCOV_EXCL_BR_LINE 4: nsfw error
-//    memset(p_line_sns_data, 0x00, sizeof(line_sns_data));
-//    p_vehicle_msg = (reinterpret_cast<VEHICLE_UNIT_MSG_VSINFO*>(pRcvMsg));
-//    switch (p_vehicle_msg->data.did) {
-//      // SPEED info
-//      case VEHICLE_DID_SPEED:
-//      {
-//        p_line_sns_data->uc_data_num = LSDRV_KINDS_MAX;
-//        p_line_sns_data->st_data[LSDRV_SPEED_KMPH].ul_did = POSHAL_DID_SPEED_KMPH;
-//        p_line_sns_data->st_data[LSDRV_SPEED_KMPH].uc_size = POS_SNDMSG_DTSIZE_2;
-//        p_line_sns_data->st_data[LSDRV_SPEED_KMPH].uc_sns_cnt = 0;
-//
-//        char p_env_variable[VP_MAX_LENGTH];
-//
-//        VP_GetEnv("VP__CWORD31__SPEED", p_env_variable);
-//        if (0 == strcmp(p_env_variable, "direct")) {
-//          int16_t speed = 0;
-//          // To obtain the vehicle speed from Direct lanes,1 to 2 bytes of received data
-//          memcpy(&speed, &p_vehicle_msg->data.data[0], sizeof(speed));
-//          us_speed = static_cast<uint16_t>(abs(speed));
-//          // Unit conversion [km/h] -> [0.01km/h]
-//          us_speed = static_cast<uint16_t>(us_speed * 100);
-//        } else if (0 == strcmp(p_env_variable, "CAN")) {
-//          UINT16 speed = 0;
-//          // To obtain the vehicle speed from CAN,2 to 3 bytes of received data
-//          memcpy(&speed, &p_vehicle_msg->data.data[1], sizeof(speed));
-//          us_speed = static_cast<uint16_t>(abs(speed));
-//          // Unit conversion [km/h] -> [0.01km/h]
-//          us_speed = static_cast<uint16_t>(us_speed * 100);
-//        } else {
-//          // In case of invalid value, the vehicle speed is acquired by CAN.
-//          UINT16 speed = 0;
-//          memcpy(&speed, &p_vehicle_msg->data.data[1], sizeof(speed));
-//          us_speed = static_cast<uint16_t>(abs(speed));
-//          // Unit conversion [km/h] -> [0.01km/h]
-//          us_speed = static_cast<uint16_t>(us_speed * 100);
-//        }
-//
-//        memcpy(&p_line_sns_data->st_data[LSDRV_SPEED_KMPH].uc_data[0], &us_speed, sizeof(us_speed));
-//
-//        ret = PosSndMsg(PNO_VEHICLE_SENSOR, CID_LINESENS_VEHICLE_DATA_G,
-//                        reinterpret_cast<void*>(p_line_sns_data), sizeof(line_sns_data));
-//
-//        break;
-//      }
-//      // REV information
-//      case VEHICLE_DID_REV:
-//      {
-//        p_line_sns_data->uc_data_num = LSDRV_KINDS_MAX;
-//        p_line_sns_data->st_data[LSDRV_REV].ul_did = VEHICLE_DID_REV;
-//        p_line_sns_data->st_data[LSDRV_REV].uc_size = POS_SNDMSG_DTSIZE_1;
-//        p_line_sns_data->st_data[LSDRV_REV].uc_sns_cnt = 0;
-//        p_line_sns_data->st_data[LSDRV_REV].uc_data[0] = p_vehicle_msg->data.data[0];
-//
-//        ret = PosSndMsg(PNO_VEHICLE_SENSOR, CID_LINESENS_VEHICLE_DATA_G,
-//                            reinterpret_cast<void*>(p_line_sns_data), sizeof(line_sns_data));
-//        break;
-//      }
-//
-//      // Speed Pulse information
-//      case VEHICLE_DID_SPEED_PULSE_VEHICLE:
-//      {
-//        p_line_sns_data->uc_data_num = LSDRV_KINDS_MAX;
-//        p_line_sns_data->st_data[LSDRV_SPEED_PULSE].ul_did = POSHAL_DID_SPEED_PULSE;
-//        p_line_sns_data->st_data[LSDRV_SPEED_PULSE].uc_size = sizeof(float);
-//        p_line_sns_data->st_data[LSDRV_SPEED_PULSE].uc_sns_cnt = 0;
-//
-//        memcpy(&p_line_sns_data->st_data[LSDRV_SPEED_PULSE].uc_data[0],
-//                                            &p_vehicle_msg->data.data[0], sizeof(float));
-//
-//        p_line_sns_data->st_data[LSDRV_PULSE_TIME].ul_did = POSHAL_DID_PULSE_TIME;
-//        p_line_sns_data->st_data[LSDRV_PULSE_TIME].uc_size = sizeof(float);
-//        p_line_sns_data->st_data[LSDRV_PULSE_TIME].uc_sns_cnt = 0;
-//
-//        memcpy(&p_line_sns_data->st_data[LSDRV_PULSE_TIME].uc_data[0],
-//                       &p_vehicle_msg->data.data[sizeof(float)], sizeof(float));
-//
-//        ret = PosSndMsg(PNO_VEHICLE_SENSOR, CID_LINESENS_VEHICLE_DATA_G,
-//                            reinterpret_cast<void*>(p_line_sns_data), sizeof(line_sns_data));
-//
-//        break;
-//      }
-//      default:
-//        break;
-//    }
-//
-//    if (ret != RET_NORMAL) {
-//      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "PosSndMsg ERROR!! [ret = %d]", ret);
-//    }
-//  }
+  if (size != 0) {  // LCOV_EXCL_BR_LINE 4: nsfw error
+    memset(p_line_sns_data, 0x00, sizeof(line_sns_data));
+    p_vehicle_msg = (reinterpret_cast<VEHICLE_UNIT_MSG_VSINFO*>(pRcvMsg));
+    switch (p_vehicle_msg->data.did) {
+      // SPEED info
+      case VEHICLE_DID_SPEED:
+      {
+        p_line_sns_data->uc_data_num = LSDRV_KINDS_MAX;
+        p_line_sns_data->st_data[LSDRV_SPEED_KMPH].ul_did = POSHAL_DID_SPEED_KMPH;
+        p_line_sns_data->st_data[LSDRV_SPEED_KMPH].uc_size = POS_SNDMSG_DTSIZE_2;
+        p_line_sns_data->st_data[LSDRV_SPEED_KMPH].uc_sns_cnt = 0;
+
+        char p_env_variable[VP_MAX_LENGTH];
+
+        VP_GetEnv("VP__CWORD31__SPEED", p_env_variable);
+        if (0 == strcmp(p_env_variable, "direct")) {
+          int16_t speed = 0;
+          // To obtain the vehicle speed from Direct lanes,1 to 2 bytes of received data
+          memcpy(&speed, &p_vehicle_msg->data.data[0], sizeof(speed));
+          us_speed = static_cast<uint16_t>(abs(speed));
+          // Unit conversion [km/h] -> [0.01km/h]
+          us_speed = static_cast<uint16_t>(us_speed * 100);
+        } else if (0 == strcmp(p_env_variable, "CAN")) {
+          UINT16 speed = 0;
+          // To obtain the vehicle speed from CAN,2 to 3 bytes of received data
+          memcpy(&speed, &p_vehicle_msg->data.data[1], sizeof(speed));
+          us_speed = static_cast<uint16_t>(abs(speed));
+          // Unit conversion [km/h] -> [0.01km/h]
+          us_speed = static_cast<uint16_t>(us_speed * 100);
+        } else {
+          // In case of invalid value, the vehicle speed is acquired by CAN.
+          UINT16 speed = 0;
+          memcpy(&speed, &p_vehicle_msg->data.data[1], sizeof(speed));
+          us_speed = static_cast<uint16_t>(abs(speed));
+          // Unit conversion [km/h] -> [0.01km/h]
+          us_speed = static_cast<uint16_t>(us_speed * 100);
+        }
+
+        memcpy(&p_line_sns_data->st_data[LSDRV_SPEED_KMPH].uc_data[0], &us_speed, sizeof(us_speed));
+
+        ret = PosSndMsg(PNO_VEHICLE_SENSOR, CID_LINESENS_VEHICLE_DATA_G,
+                        reinterpret_cast<void*>(p_line_sns_data), sizeof(line_sns_data));
+
+        break;
+      }
+      // REV information
+      case VEHICLE_DID_REV:
+      {
+        p_line_sns_data->uc_data_num = LSDRV_KINDS_MAX;
+        p_line_sns_data->st_data[LSDRV_REV].ul_did = VEHICLE_DID_REV;
+        p_line_sns_data->st_data[LSDRV_REV].uc_size = POS_SNDMSG_DTSIZE_1;
+        p_line_sns_data->st_data[LSDRV_REV].uc_sns_cnt = 0;
+        p_line_sns_data->st_data[LSDRV_REV].uc_data[0] = p_vehicle_msg->data.data[0];
+
+        ret = PosSndMsg(PNO_VEHICLE_SENSOR, CID_LINESENS_VEHICLE_DATA_G,
+                            reinterpret_cast<void*>(p_line_sns_data), sizeof(line_sns_data));
+        break;
+      }
+
+      // Speed Pulse information
+      case VEHICLE_DID_SPEED_PULSE_VEHICLE:
+      {
+        p_line_sns_data->uc_data_num = LSDRV_KINDS_MAX;
+        p_line_sns_data->st_data[LSDRV_SPEED_PULSE].ul_did = POSHAL_DID_SPEED_PULSE;
+        p_line_sns_data->st_data[LSDRV_SPEED_PULSE].uc_size = sizeof(float);
+        p_line_sns_data->st_data[LSDRV_SPEED_PULSE].uc_sns_cnt = 0;
+
+        memcpy(&p_line_sns_data->st_data[LSDRV_SPEED_PULSE].uc_data[0],
+                                            &p_vehicle_msg->data.data[0], sizeof(float));
+
+        p_line_sns_data->st_data[LSDRV_PULSE_TIME].ul_did = POSHAL_DID_PULSE_TIME;
+        p_line_sns_data->st_data[LSDRV_PULSE_TIME].uc_size = sizeof(float);
+        p_line_sns_data->st_data[LSDRV_PULSE_TIME].uc_sns_cnt = 0;
+
+        memcpy(&p_line_sns_data->st_data[LSDRV_PULSE_TIME].uc_data[0],
+                       &p_vehicle_msg->data.data[sizeof(float)], sizeof(float));
+
+        ret = PosSndMsg(PNO_VEHICLE_SENSOR, CID_LINESENS_VEHICLE_DATA_G,
+                            reinterpret_cast<void*>(p_line_sns_data), sizeof(line_sns_data));
+
+        break;
+      }
+      default:
+        break;
+    }
+
+    if (ret != RET_NORMAL) {
+      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "PosSndMsg ERROR!! [ret = %d]", ret);
+    }
+  }
   return eFrameworkunifiedStatusOK;
 }
 
@@ -2449,12 +2413,9 @@ static RET_API PosSndMsg(PNO pno, CID cid, void* p_msg_body, uint32_t size) {
     T_APIMSG_MSGBUF_HEADER* p;
     static u_int8 sndMsgBuf[MAX_MSG_BUF_SIZE + sizeof(T_APIMSG_MSGBUF_HEADER)];
 
-    if (p_msg_body == NULL) {  // LCOV_EXCL_BR_LINE 200: can not NULL
-        // LCOV_EXCL_START 8: invalid
-        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Argument ERROR!! [p_msg_body = %p]", p_msg_body);
+    if ((p_msg_body == NULL) || (size > MAX_MSG_BUF_SIZE)) {
+        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Argument ERROR!! [p_msg_body = %p, size = %d]", p_msg_body, size);
         ret = RET_ERROR;
-        // LCOV_EXCL_STOP
     } else {
         p = reinterpret_cast<T_APIMSG_MSGBUF_HEADER*>(sndMsgBuf);
 

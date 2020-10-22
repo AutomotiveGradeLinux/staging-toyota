@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@
  *                  :DeadReckoningRcvMsg()  DR Component MSG Receive Processing
  ******************************************************************************/
 
-//#include <positioning_hal.h>
+#include <positioning_hal.h>
 
 #include "DeadReckoning_main.h"
 
@@ -47,7 +47,7 @@ static void DeadReckoningLinkSharedMemory(char *shared_memory_name, void **share
 /*                      Constant                     */
 /*************************************************/
 
-#define DEAD_RECKONING_BUF_SIZE 5
+#define DEAD_RECKONING_BUF_SIZE 7
 #define DR_MASK_WORD_L 0x00FF
 #define DR_MASK_WORD_U 0xFF00
 
@@ -62,18 +62,22 @@ BOOL g_fst_sens_data_get_flg = FALSE;
 
 /* Reception flag for each data */
 BOOL g_sens_data_get_sns_cnt_flg    = FALSE;
-BOOL g_sens_data_get_gyro_flg     = FALSE;
+BOOL g_sens_data_get_gyro_x_flg   = FALSE;
+BOOL g_sens_data_get_gyro_y_flg   = FALSE;
+BOOL g_sens_data_get_gyro_z_flg   = FALSE;
 BOOL g_sens_data_get_rev_flg     = FALSE;
 BOOL g_sens_data_get_spdpulse_flg    = FALSE;
 BOOL g_sens_data_get_spdpulse_chk_flg  = FALSE;
 
-BOOL g_sens_data_get_gyro_fst_flg    = FALSE;
+BOOL g_sens_data_get_gyro_x_fst_flg  = FALSE;
+BOOL g_sens_data_get_gyro_y_fst_flg  = FALSE;
+BOOL g_sens_data_get_gyro_z_fst_flg  = FALSE;
 BOOL g_sens_data_get_rev_fst_flg    = FALSE;
 BOOL g_sens_data_get_spdpulse_fst_flg   = FALSE;
 BOOL g_sens_data_get_spdpulse_chk_fst_flg  = FALSE;
 
 /* Receive data storage buffer */
-/* [0]:SNS_COUNTER [1]:REV [2]:SPEED_PULSE_FLAG [3]:SPEED_PULSE [4]:GYRO */
+/* [0]:SNS_COUNTER [1]:REV [2]:SPEED_PULSE_FLAG [3]:SPEED_PULSE [4]:GYRO_X [5]:GYRO_Y [6]:GYRO_Z */
 DEAD_RECKONING_RCVDATA_SENSOR   g_sns_buf[DEAD_RECKONING_BUF_SIZE];
 DEAD_RECKONING_SAVEDATA_SENSOR_FIRST g_fst_sns_buf;
 
@@ -101,442 +105,524 @@ int32 DeadReckoningInit(void) {  // LCOV_EXCL_START 8: dead code.
  ******************************************************************************/
 void DeadReckoningRcvMsg(const DEAD_RECKONING_RCVDATA *msg, DEAD_RECKONING_LONLAT_INFO *location_info) {
     AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//    if ((msg == NULL) || (location_info == NULL)) {
-//        FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "msg == NULL\r\n");
-//    } else {
-//        const SENSOR_MSG_GPSDATA_DAT   *rcv_gps_msg   = NULL;
-//        const VEHICLESENS_DATA_MASTER   *rcv_sensor_msg  = NULL;
-//        const VEHICLESENS_DATA_MASTER_FST  *rcv_sensor_msg_fst = NULL;
-//
-//        Struct_GpsData      send_gps_msg;
-//        Struct_SensData      send_sensor_msg;
-//
-//        /* Initialization */
-//        (void)memset(reinterpret_cast<void *>(&send_gps_msg),  0, sizeof(Struct_GpsData));
-//        (void)memset(reinterpret_cast<void *>(&send_sensor_msg), 0, sizeof(Struct_SensData));
-//
-//        /* Flag is set to FALSE */
-//        location_info->calc_called = static_cast<u_int8>(FALSE);
-//        location_info->available = static_cast<u_int8>(FALSE);
-//
-//        if (CID_DEAD_RECKONING_GPS_DATA == msg->hdr.hdr.cid) {
-//            rcv_gps_msg = (const SENSOR_MSG_GPSDATA_DAT *)(&(msg->data[0]));
-//            /* #QAC confirmation Rule11.4 Use structure for member reference(Cast according to shared memory link IF) */
-//
-//            /* Receiving GPS Data for DR */
-//            switch (rcv_gps_msg->ul_did) {
-//                case  VEHICLE_DID_GPS_UBLOX_NAV_POSLLH :
-//                case  VEHICLE_DID_GPS_UBLOX_NAV_STATUS :
-//                case  VEHICLE_DID_GPS_UBLOX_NAV_TIMEUTC :
-//                case  VEHICLE_DID_GPS_UBLOX_NAV_VELNED :
-//                case  VEHICLE_DID_GPS_UBLOX_NAV_DOP :
-//                case  VEHICLE_DID_GPS_UBLOX_NAV_SVINFO :
-//                case  VEHICLE_DID_GPS_UBLOX_NAV_CLOCK :
-//                {
-//                    g_gps_data_get_flg = TRUE;
-//                    break;
-//                }
-//                default:
-//                    break;
-//            }
-//        } else if (CID_DEAD_RECKONING_SENS_DATA == msg->hdr.hdr.cid) {
-//            rcv_sensor_msg = (const VEHICLESENS_DATA_MASTER *)(&(msg->data[0]));
-//            /* #QAC confirmation Rule11.4 Use structure for member reference(Cast according to shared memory link IF) */
-//
-//            /* Sensor data reception for DR */
-//            switch (rcv_sensor_msg->ul_did) {
-//                case  POSHAL_DID_SNS_COUNTER :
-//                {
-//                    g_sns_buf[0].did = rcv_sensor_msg->ul_did;
-//                    g_sns_buf[0].size = static_cast<u_int8>(rcv_sensor_msg->us_size);
-//                    g_sns_buf[0].data[0] = rcv_sensor_msg->uc_data[0];
-//                    g_sens_data_get_sns_cnt_flg = TRUE;
-//                    break;
-//                }
-//                case  POSHAL_DID_REV :
-//                {
-//                    g_sns_buf[1].did = rcv_sensor_msg->ul_did;
-//                    g_sns_buf[1].size = static_cast<u_int8>(rcv_sensor_msg->us_size);
-//                    (void)memcpy(reinterpret_cast<void *>(&(g_sns_buf[1].data[0])),
-//                                 (const void *)(&(rcv_sensor_msg->uc_data[0])), (size_t)rcv_sensor_msg->us_size);
-//                    g_sens_data_get_rev_flg = TRUE;
-//                    break;
-//                }
-//                case  POSHAL_DID_SPEED_PULSE_FLAG :
-//                {
-//                    g_sns_buf[2].did = rcv_sensor_msg->ul_did;
-//                    g_sns_buf[2].size = static_cast<u_int8>(rcv_sensor_msg->us_size);
-//                    (void)memcpy(reinterpret_cast<void *>(&(g_sns_buf[2].data[0])),
-//                                 (const void *)(&(rcv_sensor_msg->uc_data[0])), (size_t)rcv_sensor_msg->us_size);
-//                    g_sens_data_get_spdpulse_chk_flg = TRUE;
-//                    break;
-//                }
-//                case  POSHAL_DID_SPEED_PULSE :
-//                {
-//                    g_sns_buf[3].did = rcv_sensor_msg->ul_did;
-//                    g_sns_buf[3].size = static_cast<u_int8>(rcv_sensor_msg->us_size);
-//                    (void)memcpy(reinterpret_cast<void *>(&(g_sns_buf[3].data[0])),
-//                                 (const void *)(&(rcv_sensor_msg->uc_data[0])), (size_t)rcv_sensor_msg->us_size);
-//                    g_sens_data_get_spdpulse_flg = TRUE;
-//                    break;
-//                }
-//                case  POSHAL_DID_GYRO :
-//                {
-//                    g_sns_buf[4].did = rcv_sensor_msg->ul_did;
-//                    g_sns_buf[4].size = static_cast<u_int8>(rcv_sensor_msg->us_size);
-//                    (void)memcpy(reinterpret_cast<void *>(&(g_sns_buf[4].data[0])),
-//                                 (const void *)(&(rcv_sensor_msg->uc_data[0])), (size_t)rcv_sensor_msg->us_size);
-//                    g_sens_data_get_gyro_flg = TRUE;
-//                    break;
-//                }
-//                default:
-//                    break;
-//            }
-//        } else if (CID_DEAD_RECKONING_SENS_FST_DATA == msg->hdr.hdr.cid) {
-//            u_int16 rev_data_size;
-//
-//            rcv_sensor_msg_fst = (const VEHICLESENS_DATA_MASTER_FST *)(&(msg->data[0]));
-//            /* #QAC confirmation Rule11.4 Use structure for member reference(Cast according to shared memory link IF) */
-//            rev_data_size = static_cast<u_int16>(msg->hdr.hdr.msgbodysize - VEHICLESENS_DELIVERY_FSTSNS_HDR_SIZE);
-//
-//#if DEAD_RECKONING_MAIN_DEBUG
-//            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " DID = %08X, rev_data_size = %d ",
-//                          rcv_sensor_msg_fst->ul_did, rev_data_size);
-//#endif
-//
-//            /* Sensor data reception for DR */
-//            switch (rcv_sensor_msg_fst->ul_did) {
-//                case  POSHAL_DID_REV_FST :
-//                {
-//                    (void)memcpy(
-//                        reinterpret_cast<void *>(&(g_fst_sns_buf.rev_data[g_fst_sns_buf.rev_rcv_size
-//                                                                         / sizeof(g_fst_sns_buf.rev_data[0])])),
-//                                        (const void *)(&(rcv_sensor_msg_fst->uc_data[0])),
-//                                        (size_t)(rev_data_size));
-//
-//                    g_fst_sns_buf.rev_rcv_size = static_cast<u_int16>(
-//                        g_fst_sns_buf.rev_rcv_size + rev_data_size);
-//
-//                    if (g_fst_sns_buf.rev_rcv_size == rcv_sensor_msg_fst->us_size) {
-//                        g_sens_data_get_rev_fst_flg = TRUE;
-//#if DEAD_RECKONING_MAIN_DEBUG
-//                        FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " REV receive flag = TRUE ");
-//#endif
-//                    }
-//                    break;
-//                }
-//                case  POSHAL_DID_SPEED_PULSE_FLAG_FST :
-//                {
-//                    (void)memcpy(
-//                    reinterpret_cast<void *>(&(g_fst_sns_buf.spd_pulse_check_data[g_fst_sns_buf.spd_pulse_check_rcv_size
-//                                                                   / sizeof(g_fst_sns_buf.spd_pulse_check_data[0])])),
-//                                        (const void *)(&(rcv_sensor_msg_fst->uc_data[0])),
-//                                        (size_t)(rev_data_size));
-//
-//                    g_fst_sns_buf.spd_pulse_check_rcv_size = static_cast<u_int16>(
-//                                    g_fst_sns_buf.spd_pulse_check_rcv_size + rev_data_size);
-//
-//                    if (g_fst_sns_buf.spd_pulse_check_rcv_size == rcv_sensor_msg_fst->us_size) {
-//                        g_sens_data_get_spdpulse_chk_fst_flg = TRUE;
-//#if DEAD_RECKONING_MAIN_DEBUG
-//                        FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " SPF receive flag = TRUE ");
-//#endif
-//                    }
-//                    break;
-//                }
-//                case  POSHAL_DID_SPEED_PULSE_FST :
-//                {
-//                    (void)memcpy(
-//                        reinterpret_cast<void *>(&(g_fst_sns_buf.spd_pulse_data[g_fst_sns_buf.spd_pulse_rcv_size
-//                                                                        / sizeof(g_fst_sns_buf.spd_pulse_data[0])])),
-//                                        (const void *)(&(rcv_sensor_msg_fst->uc_data[0])),
-//                                        (size_t)(rev_data_size));
-//
-//                    g_fst_sns_buf.spd_pulse_rcv_size = static_cast<u_int16>(g_fst_sns_buf.spd_pulse_rcv_size + \
-//                                                                                    rev_data_size);
-//
-//                    if (g_fst_sns_buf.spd_pulse_rcv_size == rcv_sensor_msg_fst->us_size) {
-//                        g_sens_data_get_spdpulse_fst_flg = TRUE;
-//#if DEAD_RECKONING_MAIN_DEBUG
-//                        FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " SP receive flag = TRUE ");
-//#endif
-//                    }
-//                    break;
-//                }
-//                case  POSHAL_DID_GYRO_FST :
-//                {
-//                    (void)memcpy(
-//                        reinterpret_cast<void *>(&(g_fst_sns_buf.gyro_data[g_fst_sns_buf.gyro_rcv_size
-//                                                                          / sizeof(g_fst_sns_buf.gyro_data[0])])),
-//                                        (const void *)(&(rcv_sensor_msg_fst->uc_data[0])),
-//                                        (size_t)(rev_data_size));
-//
-//                    g_fst_sns_buf.gyro_rcv_size = static_cast<u_int16>(g_fst_sns_buf.gyro_rcv_size + rev_data_size);
-//
-//#if DEAD_RECKONING_MAIN_DEBUG
-//                    FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
-//                         " g_fst_sns_buf.gyro_rcv_size = %d, rcv_sensor_msg_fst->us_size = %d ",
-//                        g_fst_sns_buf.gyro_rcv_size, rcv_sensor_msg_fst->us_size);
-//#endif
-//                    if (g_fst_sns_buf.gyro_rcv_size == rcv_sensor_msg_fst->us_size) {
-//                        g_sens_data_get_gyro_fst_flg = TRUE;
-//#if DEAD_RECKONING_MAIN_DEBUG
-//                        FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " GYRO receive flag = TRUE ");
-//#endif
-//                    }
-//                    break;
-//                }
-//                default:
-//                    break;
-//            }
-//        } else {
-//            /* nop */
-//        }
-//
-//        /* 4 data received? */
-//        if ((g_sens_data_get_sns_cnt_flg == TRUE) &&
-//                (g_sens_data_get_rev_flg == TRUE) &&
-//                (g_sens_data_get_gyro_flg == TRUE) &&
-//                (g_sens_data_get_spdpulse_flg == TRUE) &&
-//                (g_sens_data_get_spdpulse_chk_flg == TRUE)) {
-//            /* Sensor data acquisition flag ON */
-//            g_sens_data_get_flg = TRUE;
-//
-//            /* Set all flags to FALSE */
-//            g_sens_data_get_sns_cnt_flg   = FALSE;
-//            g_sens_data_get_gyro_flg    = FALSE;
-//            g_sens_data_get_rev_flg    = FALSE;
-//            g_sens_data_get_spdpulse_flg   = FALSE;
-//            g_sens_data_get_spdpulse_chk_flg  = FALSE;
-//        }
-//
-//        /* 4 data received? */
-//        if ((g_sens_data_get_rev_fst_flg == TRUE) &&
-//                (g_sens_data_get_gyro_fst_flg == TRUE) &&
-//                (g_sens_data_get_spdpulse_fst_flg == TRUE) &&
-//                (g_sens_data_get_spdpulse_chk_fst_flg == TRUE)) {
-//            /* Initial sensor data acquisition flag ON */
-//            g_fst_sens_data_get_flg = TRUE;
-//
-//            /* Set all flags to FALSE */
-//            g_sens_data_get_gyro_fst_flg    = FALSE;
-//            g_sens_data_get_rev_fst_flg    = FALSE;
-//            g_sens_data_get_spdpulse_fst_flg   = FALSE;
-//            g_sens_data_get_spdpulse_chk_fst_flg  = FALSE;
-//        }
-//
-//        DeadReckoningRcvMsgFstSens(msg, location_info, rcv_gps_msg, &send_gps_msg, &send_sensor_msg);
-//    }
+    if ((msg == NULL) || (location_info == NULL)) {
+        FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "msg == NULL\r\n");
+    } else {
+        const SENSOR_MSG_GPSDATA_DAT   *rcv_gps_msg   = NULL;
+        const VEHICLESENS_DATA_MASTER   *rcv_sensor_msg  = NULL;
+        const VEHICLESENS_DATA_MASTER_FST  *rcv_sensor_msg_fst = NULL;
+
+        Struct_GpsData      send_gps_msg;
+        Struct_SensData      send_sensor_msg;
+
+        /* Initialization */
+        (void)memset(reinterpret_cast<void *>(&send_gps_msg),  0, sizeof(Struct_GpsData));
+        (void)memset(reinterpret_cast<void *>(&send_sensor_msg), 0, sizeof(Struct_SensData));
+
+        /* Flag is set to FALSE */
+        location_info->calc_called = static_cast<u_int8>(FALSE);
+        location_info->available = static_cast<u_int8>(FALSE);
+
+        if (CID_DEAD_RECKONING_GPS_DATA == msg->hdr.hdr.cid) {
+            rcv_gps_msg = (const SENSOR_MSG_GPSDATA_DAT *)(&(msg->data[0]));
+            /* #QAC confirmation Rule11.4 Use structure for member reference(Cast according to shared memory link IF) */
+
+            /* Receiving GPS Data for DR */
+            switch (rcv_gps_msg->ul_did) {
+                case  VEHICLE_DID_GPS_UBLOX_NAV_POSLLH :
+                case  VEHICLE_DID_GPS_UBLOX_NAV_STATUS :
+                case  VEHICLE_DID_GPS_UBLOX_NAV_TIMEUTC :
+                case  VEHICLE_DID_GPS_UBLOX_NAV_VELNED :
+                case  VEHICLE_DID_GPS_UBLOX_NAV_DOP :
+                case  VEHICLE_DID_GPS_UBLOX_NAV_SVINFO :
+                case  VEHICLE_DID_GPS_UBLOX_NAV_CLOCK :
+                {
+                    g_gps_data_get_flg = TRUE;
+                    break;
+                }
+                default:
+                    break;
+            }
+        } else if (CID_DEAD_RECKONING_SENS_DATA == msg->hdr.hdr.cid) {
+            rcv_sensor_msg = (const VEHICLESENS_DATA_MASTER *)(&(msg->data[0]));
+            /* #QAC confirmation Rule11.4 Use structure for member reference(Cast according to shared memory link IF) */
+
+            /* Sensor data reception for DR */
+            switch (rcv_sensor_msg->ul_did) {
+                case  POSHAL_DID_SNS_COUNTER :
+                {
+                    g_sns_buf[0].did = rcv_sensor_msg->ul_did;
+                    g_sns_buf[0].size = static_cast<u_int8>(rcv_sensor_msg->us_size);
+                    g_sns_buf[0].data[0] = rcv_sensor_msg->uc_data[0];
+                    g_sens_data_get_sns_cnt_flg = TRUE;
+                    break;
+                }
+                case  POSHAL_DID_REV :
+                {
+                    g_sns_buf[1].did = rcv_sensor_msg->ul_did;
+                    g_sns_buf[1].size = static_cast<u_int8>(rcv_sensor_msg->us_size);
+                    (void)memcpy(reinterpret_cast<void *>(&(g_sns_buf[1].data[0])),
+                                 (const void *)(&(rcv_sensor_msg->uc_data[0])), (size_t)rcv_sensor_msg->us_size);
+                    g_sens_data_get_rev_flg = TRUE;
+                    break;
+                }
+                case  POSHAL_DID_SPEED_PULSE_FLAG :
+                {
+                    g_sns_buf[2].did = rcv_sensor_msg->ul_did;
+                    g_sns_buf[2].size = static_cast<u_int8>(rcv_sensor_msg->us_size);
+                    (void)memcpy(reinterpret_cast<void *>(&(g_sns_buf[2].data[0])),
+                                 (const void *)(&(rcv_sensor_msg->uc_data[0])), (size_t)rcv_sensor_msg->us_size);
+                    g_sens_data_get_spdpulse_chk_flg = TRUE;
+                    break;
+                }
+                case  POSHAL_DID_SPEED_PULSE :
+                {
+                    g_sns_buf[3].did = rcv_sensor_msg->ul_did;
+                    g_sns_buf[3].size = static_cast<u_int8>(rcv_sensor_msg->us_size);
+                    (void)memcpy(reinterpret_cast<void *>(&(g_sns_buf[3].data[0])),
+                                 (const void *)(&(rcv_sensor_msg->uc_data[0])), (size_t)rcv_sensor_msg->us_size);
+                    g_sens_data_get_spdpulse_flg = TRUE;
+                    break;
+                }
+                case  POSHAL_DID_GYRO_X :
+                {
+                    g_sns_buf[4].did = rcv_sensor_msg->ul_did;
+                    g_sns_buf[4].size = static_cast<u_int8>(rcv_sensor_msg->us_size);
+                    (void)memcpy(reinterpret_cast<void *>(&(g_sns_buf[4].data[0])),
+                                 (const void *)(&(rcv_sensor_msg->uc_data[0])), (size_t)rcv_sensor_msg->us_size);
+                    g_sens_data_get_gyro_x_flg = TRUE;
+                    break;
+                }
+                case  POSHAL_DID_GYRO_Y :
+                {
+                    g_sns_buf[5].did = rcv_sensor_msg->ul_did;
+                    g_sns_buf[5].size = static_cast<u_int8>(rcv_sensor_msg->us_size);
+                    (void)memcpy(reinterpret_cast<void *>(&(g_sns_buf[5].data[0])),
+                                 (const void *)(&(rcv_sensor_msg->uc_data[0])), (size_t)rcv_sensor_msg->us_size);
+                    g_sens_data_get_gyro_y_flg = TRUE;
+                    break;
+                }
+                case  POSHAL_DID_GYRO_Z :
+                {
+                    g_sns_buf[6].did = rcv_sensor_msg->ul_did;
+                    g_sns_buf[6].size = static_cast<u_int8>(rcv_sensor_msg->us_size);
+                    (void)memcpy(reinterpret_cast<void *>(&(g_sns_buf[6].data[0])),
+                                 (const void *)(&(rcv_sensor_msg->uc_data[0])), (size_t)rcv_sensor_msg->us_size);
+                    g_sens_data_get_gyro_z_flg = TRUE;
+                    break;
+                }
+                default:
+                    break;
+            }
+        } else if (CID_DEAD_RECKONING_SENS_FST_DATA == msg->hdr.hdr.cid) {
+            u_int16 rev_data_size;
+
+            rcv_sensor_msg_fst = (const VEHICLESENS_DATA_MASTER_FST *)(&(msg->data[0]));
+            /* #QAC confirmation Rule11.4 Use structure for member reference(Cast according to shared memory link IF) */
+            rev_data_size = static_cast<u_int16>(msg->hdr.hdr.msgbodysize - VEHICLESENS_DELIVERY_FSTSNS_HDR_SIZE);
+
+#if DEAD_RECKONING_MAIN_DEBUG
+            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " DID = %08X, rev_data_size = %d ",
+                          rcv_sensor_msg_fst->ul_did, rev_data_size);
+#endif
+
+            /* Sensor data reception for DR */
+            switch (rcv_sensor_msg_fst->ul_did) {
+                case  POSHAL_DID_REV_FST :
+                {
+                    (void)memcpy(
+                        reinterpret_cast<void *>(&(g_fst_sns_buf.rev_data[g_fst_sns_buf.rev_rcv_size
+                                                                         / sizeof(g_fst_sns_buf.rev_data[0])])),
+                                        (const void *)(&(rcv_sensor_msg_fst->uc_data[0])),
+                                        (size_t)(rev_data_size));
+
+                    g_fst_sns_buf.rev_rcv_size = static_cast<u_int16>(
+                        g_fst_sns_buf.rev_rcv_size + rev_data_size);
+
+                    if (g_fst_sns_buf.rev_rcv_size == rcv_sensor_msg_fst->us_size) {
+                        g_sens_data_get_rev_fst_flg = TRUE;
+#if DEAD_RECKONING_MAIN_DEBUG
+                        FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " REV receive flag = TRUE ");
+#endif
+                    }
+                    break;
+                }
+                case  POSHAL_DID_SPEED_PULSE_FLAG_FST :
+                {
+                    (void)memcpy(
+                    reinterpret_cast<void *>(&(g_fst_sns_buf.spd_pulse_check_data[g_fst_sns_buf.spd_pulse_check_rcv_size
+                                                                   / sizeof(g_fst_sns_buf.spd_pulse_check_data[0])])),
+                                        (const void *)(&(rcv_sensor_msg_fst->uc_data[0])),
+                                        (size_t)(rev_data_size));
+
+                    g_fst_sns_buf.spd_pulse_check_rcv_size = static_cast<u_int16>(
+                                    g_fst_sns_buf.spd_pulse_check_rcv_size + rev_data_size);
+
+                    if (g_fst_sns_buf.spd_pulse_check_rcv_size == rcv_sensor_msg_fst->us_size) {
+                        g_sens_data_get_spdpulse_chk_fst_flg = TRUE;
+#if DEAD_RECKONING_MAIN_DEBUG
+                        FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " SPF receive flag = TRUE ");
+#endif
+                    }
+                    break;
+                }
+                case  POSHAL_DID_SPEED_PULSE_FST :
+                {
+                    (void)memcpy(
+                        reinterpret_cast<void *>(&(g_fst_sns_buf.spd_pulse_data[g_fst_sns_buf.spd_pulse_rcv_size
+                                                                        / sizeof(g_fst_sns_buf.spd_pulse_data[0])])),
+                                        (const void *)(&(rcv_sensor_msg_fst->uc_data[0])),
+                                        (size_t)(rev_data_size));
+
+                    g_fst_sns_buf.spd_pulse_rcv_size = static_cast<u_int16>(g_fst_sns_buf.spd_pulse_rcv_size + \
+                                                                                    rev_data_size);
+
+                    if (g_fst_sns_buf.spd_pulse_rcv_size == rcv_sensor_msg_fst->us_size) {
+                        g_sens_data_get_spdpulse_fst_flg = TRUE;
+#if DEAD_RECKONING_MAIN_DEBUG
+                        FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " SP receive flag = TRUE ");
+#endif
+                    }
+                    break;
+                }
+                case  POSHAL_DID_GYRO_X_FST :
+                {
+                    (void)memcpy(
+                        reinterpret_cast<void *>(&(g_fst_sns_buf.gyro_x_data[g_fst_sns_buf.gyro_x_rcv_size
+                                                                          / sizeof(g_fst_sns_buf.gyro_x_data[0])])),
+                                        (const void *)(&(rcv_sensor_msg_fst->uc_data[0])),
+                                        (size_t)(rev_data_size));
+
+                    g_fst_sns_buf.gyro_x_rcv_size = static_cast<u_int16>(g_fst_sns_buf.gyro_x_rcv_size + rev_data_size);
+
+#if DEAD_RECKONING_MAIN_DEBUG
+                    FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
+                         " g_fst_sns_buf.gyro_x_rcv_size = %d, rcv_sensor_msg_fst->us_size = %d ",
+                        g_fst_sns_buf.gyro_x_rcv_size, rcv_sensor_msg_fst->us_size);
+#endif
+                    if (g_fst_sns_buf.gyro_x_rcv_size == rcv_sensor_msg_fst->us_size) {
+                        g_sens_data_get_gyro_x_fst_flg = TRUE;
+#if DEAD_RECKONING_MAIN_DEBUG
+                        FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " GYRO_X receive flag = TRUE ");
+#endif
+                    }
+                    break;
+                }
+                case  POSHAL_DID_GYRO_Y_FST :
+                {
+                    (void)memcpy(
+                        reinterpret_cast<void *>(&(g_fst_sns_buf.gyro_y_data[g_fst_sns_buf.gyro_y_rcv_size
+                                                                          / sizeof(g_fst_sns_buf.gyro_y_data[0])])),
+                                        (const void *)(&(rcv_sensor_msg_fst->uc_data[0])),
+                                        (size_t)(rev_data_size));
+
+                    g_fst_sns_buf.gyro_y_rcv_size = static_cast<u_int16>(g_fst_sns_buf.gyro_y_rcv_size + rev_data_size);
+
+#if DEAD_RECKONING_MAIN_DEBUG
+                    FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
+                         " g_fst_sns_buf.gyro_y_rcv_size = %d, rcv_sensor_msg_fst->us_size = %d ",
+                        g_fst_sns_buf.gyro_y_rcv_size, rcv_sensor_msg_fst->us_size);
+#endif
+                    if (g_fst_sns_buf.gyro_y_rcv_size == rcv_sensor_msg_fst->us_size) {
+                        g_sens_data_get_gyro_y_fst_flg = TRUE;
+#if DEAD_RECKONING_MAIN_DEBUG
+                        FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " GYRO_Y receive flag = TRUE ");
+#endif
+                    }
+                    break;
+                }
+                case  POSHAL_DID_GYRO_Z_FST :
+                {
+                    (void)memcpy(
+                        reinterpret_cast<void *>(&(g_fst_sns_buf.gyro_z_data[g_fst_sns_buf.gyro_z_rcv_size
+                                                                          / sizeof(g_fst_sns_buf.gyro_z_data[0])])),
+                                        (const void *)(&(rcv_sensor_msg_fst->uc_data[0])),
+                                        (size_t)(rev_data_size));
+
+                    g_fst_sns_buf.gyro_z_rcv_size = static_cast<u_int16>(g_fst_sns_buf.gyro_z_rcv_size + rev_data_size);
+
+#if DEAD_RECKONING_MAIN_DEBUG
+                    FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
+                         " g_fst_sns_buf.gyro_z_rcv_size = %d, rcv_sensor_msg_fst->us_size = %d ",
+                        g_fst_sns_buf.gyro_z_rcv_size, rcv_sensor_msg_fst->us_size);
+#endif
+                    if (g_fst_sns_buf.gyro_z_rcv_size == rcv_sensor_msg_fst->us_size) {
+                        g_sens_data_get_gyro_z_fst_flg = TRUE;
+#if DEAD_RECKONING_MAIN_DEBUG
+                        FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " GYRO_Z receive flag = TRUE ");
+#endif
+                    }
+                    break;
+                }
+                default:
+                    break;
+            }
+        } else {
+            /* nop */
+        }
+
+        /* 4 data received? */
+        if ((g_sens_data_get_sns_cnt_flg == TRUE) &&
+                (g_sens_data_get_rev_flg == TRUE) &&
+                (g_sens_data_get_gyro_x_flg == TRUE) &&
+                (g_sens_data_get_gyro_y_flg == TRUE) &&
+                (g_sens_data_get_gyro_z_flg == TRUE) &&
+                (g_sens_data_get_spdpulse_flg == TRUE) &&
+                (g_sens_data_get_spdpulse_chk_flg == TRUE)) {
+            /* Sensor data acquisition flag ON */
+            g_sens_data_get_flg = TRUE;
+
+            /* Set all flags to FALSE */
+            g_sens_data_get_sns_cnt_flg   = FALSE;
+            g_sens_data_get_gyro_x_flg    = FALSE;
+            g_sens_data_get_gyro_y_flg    = FALSE;
+            g_sens_data_get_gyro_z_flg    = FALSE;
+            g_sens_data_get_rev_flg    = FALSE;
+            g_sens_data_get_spdpulse_flg   = FALSE;
+            g_sens_data_get_spdpulse_chk_flg  = FALSE;
+        }
+
+        /* 4 data received? */
+        if ((g_sens_data_get_rev_fst_flg == TRUE) &&
+                (g_sens_data_get_gyro_x_fst_flg == TRUE) &&
+                (g_sens_data_get_gyro_y_fst_flg == TRUE) &&
+                (g_sens_data_get_gyro_z_fst_flg == TRUE) &&
+                (g_sens_data_get_spdpulse_fst_flg == TRUE) &&
+                (g_sens_data_get_spdpulse_chk_fst_flg == TRUE)) {
+            /* Initial sensor data acquisition flag ON */
+            g_fst_sens_data_get_flg = TRUE;
+
+            /* Set all flags to FALSE */
+            g_sens_data_get_gyro_x_fst_flg  = FALSE;
+            g_sens_data_get_gyro_y_fst_flg  = FALSE;
+            g_sens_data_get_gyro_z_fst_flg  = FALSE;
+            g_sens_data_get_rev_fst_flg    = FALSE;
+            g_sens_data_get_spdpulse_fst_flg   = FALSE;
+            g_sens_data_get_spdpulse_chk_fst_flg  = FALSE;
+        }
+
+        DeadReckoningRcvMsgFstSens(msg, location_info, rcv_gps_msg, &send_gps_msg, &send_sensor_msg);
+    }
 }
 
-//void  DeadReckoningRcvMsgFstSens(const DEAD_RECKONING_RCVDATA *msg, DEAD_RECKONING_LONLAT_INFO *location_info,
-//                            const SENSOR_MSG_GPSDATA_DAT  *rcv_gps_msg, Struct_GpsData* send_gps_msg,
-//                            Struct_SensData* send_sensor_msg) {
-//    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//       /* Verifying Debug Log Simulator Mode
-//           Perform packet reading here to match some timing.
-//           However,,Differ between GPS and SENSOR.
-//        */
-//    u_int8 fst_sens_send_num = 0U;
-//    /* For GPS data */
-//    if (g_gps_data_get_flg == TRUE) {
-//#if (DR_DEBUG == 1) /* PastModel002_DR_VEHICLE */
-//        FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
-//             "DeadReckoningRcvMsg SEND GPS_DATA: DID[0x%08X] DSIZE[%d] MSG_SIZE[%d] SNS_CNT[%d] \r\n",
-//            rcv_gps_msg.ulDid, rcv_gps_msg.ucData[4], msg->hdr.hdr.msgbodysize, rcv_gps_msg.ucSnsCnt);
-//#endif
-//
-//        if (1) {
-//            rcv_gps_msg = (const SENSOR_MSG_GPSDATA_DAT *)(&(msg->data[0]));
-//            /* #QAC confirmation Rule11.4 Use structure for member reference(Cast according to shared memory link IF) */
-//
-//            /* Set and pass the data part except header/footer */
-//            send_gps_msg->sens_cnt   = rcv_gps_msg->uc_sns_cnt;
-//            send_gps_msg->sens_cnt_flag = rcv_gps_msg->uc_gps_cnt_flag;
-//            send_gps_msg->gps_data_size = rcv_gps_msg->us_size;
-//            send_gps_msg->did    = rcv_gps_msg->ul_did;
-//            send_gps_msg->gps_data   = (const void *)(&rcv_gps_msg->uc_data[0]);
-//        }
-//
-//        /* Providing GPS data to DR_Lib */
-//
-//        g_gps_data_get_flg = FALSE;
-//
-//    } else if (g_sens_data_get_flg == TRUE) {
-//        Struct_DR_DATA      rcv_dr_data;
-//        DR_CALC_INFO      rcv_dr_calc_info;
-//        DEADRECKONING_DATA_MASTER   send_data_master;
-//
-//        if (1) {
-//            /* Each data is stored in the data format for transmission. */
-//            send_sensor_msg->sens_cnt_flag = 1U;
-//            send_sensor_msg->sens_cnt = g_sns_buf[0].data[0];
-//            send_sensor_msg->pulse_rev_tbl.reverse_flag = g_sns_buf[1].data[0];
-//            send_sensor_msg->pulse_rev_tbl.pulse_flag = g_sns_buf[2].data[0];
-//            send_sensor_msg->pulse_rev_tbl.pulse_sum_cyclic = static_cast<u_int16>(
-//                    ((((u_int16)g_sns_buf[3].data[0] << 0) & DR_MASK_WORD_L) |
-//                    (((u_int16)g_sns_buf[3].data[1] << 8) & DR_MASK_WORD_U)));
-//            /* ToDo */
-//            (void)memcpy(reinterpret_cast<void *>(&(send_sensor_msg->gyro_tbl.gyro_data[0])),
-//                         (const void *)(&(g_sns_buf[4].data[0])), sizeof(u_int16) * NUM_OF_100msData);
-//        }
-//
-//#if (DR_DEBUG == 1) /* PastModel002_DR_VEHICLE */
-//        FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "DeadReckoningRcvMsg SEND SENSOR_COUNTER %d \r\n",
-//                       send_sensor_msg->sens_cnt);
-//#endif
-//
-//        /* When the sensor data are ready, Call the DR-calculation process. */
-//        memset(&rcv_dr_data, 0x00, sizeof(rcv_dr_data));   /* Coverity CID:18805 compliant */
-//        memset(&rcv_dr_calc_info, 0x00, sizeof(rcv_dr_calc_info)); /* Coverity CID:18806 compliant */
-//
-//        location_info->calc_called = static_cast<u_int8>(TRUE);
-//        location_info->lonlat.latitude = static_cast<int32>(rcv_dr_data.latitude);
-//        location_info->lonlat.longitude = static_cast<int32>(rcv_dr_data.longitude);
-//
-//        if (rcv_dr_data.dr_status != static_cast<u_int8>(SENSORLOCATION_DRSTATUS_INVALID)) {
-//            location_info->available = static_cast<u_int8>(TRUE);
-//        } else {
-//            location_info->available = static_cast<u_int8>(FALSE);
-//        }
-//
-//        /* Changing the order of registration and delivery of the out structure to the data master for DR */
-//
-//        send_data_master.ul_did = VEHICLE_DID_DR_SNS_COUNTER;
-//        send_data_master.us_size = VEHICLE_DSIZE_DR_SNS_COUNTER;
-//        send_data_master.uc_rcv_flag = 1;
-//        send_data_master.dr_status = rcv_dr_data.dr_status;
-//        (void)memcpy(reinterpret_cast<void *>(&(send_data_master.uc_data[0])),
-//                     (const void *)(&(rcv_dr_data.positioning_time)), (size_t)VEHICLE_DSIZE_DR_SNS_COUNTER);
-//        DeadReckoningSetDataMaster(&send_data_master, (PFUNC_DR_DMASTER_SET_N)DeadReckoningDeliveryProc);
-//
-//        send_data_master.ul_did = VEHICLE_DID_DR_LONGITUDE;
-//        send_data_master.us_size = VEHICLE_DSIZE_LONGITUDE;
-//        send_data_master.uc_rcv_flag = 1;
-//        send_data_master.dr_status = rcv_dr_data.dr_status;
-//        (void)memcpy(reinterpret_cast<void *>(&(send_data_master.uc_data[0])),
-//                     (const void *)(&(rcv_dr_data.longitude)), (size_t)VEHICLE_DSIZE_LONGITUDE);
-//        DeadReckoningSetDataMaster(&send_data_master, (PFUNC_DR_DMASTER_SET_N)DeadReckoningDeliveryProc);
-//
-//        send_data_master.ul_did = VEHICLE_DID_DR_LATITUDE;
-//        send_data_master.us_size = VEHICLE_DSIZE_LATITUDE;
-//        send_data_master.uc_rcv_flag = 1;
-//        send_data_master.dr_status = rcv_dr_data.dr_status;
-//        (void)memcpy(reinterpret_cast<void *>(&(send_data_master.uc_data[0])),
-//                     (const void *)(&(rcv_dr_data.latitude)), (size_t)VEHICLE_DSIZE_LATITUDE);
-//        DeadReckoningSetDataMaster(&send_data_master, (PFUNC_DR_DMASTER_SET_N)DeadReckoningDeliveryProc);
-//
-//        send_data_master.ul_did = VEHICLE_DID_DR_ALTITUDE;
-//        send_data_master.us_size = VEHICLE_DSIZE_ALTITUDE;
-//        send_data_master.uc_rcv_flag = 1;
-//        send_data_master.dr_status = rcv_dr_data.dr_status;
-//        (void)memcpy(reinterpret_cast<void *>(&(send_data_master.uc_data[0])),
-//                     (const void *)(&(rcv_dr_data.altitude)), (size_t)VEHICLE_DSIZE_ALTITUDE);
-//        DeadReckoningSetDataMaster(&send_data_master, (PFUNC_DR_DMASTER_SET_N)DeadReckoningDeliveryProc);
-//
-//        send_data_master.ul_did = VEHICLE_DID_DR_SPEED;
-//        send_data_master.us_size = VEHICLE_DSIZE_SPEED;
-//        send_data_master.uc_rcv_flag = 1;
-//        send_data_master.dr_status = rcv_dr_data.dr_status;
-//        (void)memcpy(reinterpret_cast<void *>(&(send_data_master.uc_data[0])),
-//                     (const void *)(&(rcv_dr_data.rate)), (size_t)VEHICLE_DSIZE_SPEED);
-//        DeadReckoningSetDataMaster(&send_data_master, (PFUNC_DR_DMASTER_SET_N)DeadReckoningDeliveryProc);
-//
-//        send_data_master.ul_did = VEHICLE_DID_DR_HEADING;
-//        send_data_master.us_size = VEHICLE_DSIZE_HEADING;
-//        send_data_master.uc_rcv_flag = 1;
-//        send_data_master.dr_status = rcv_dr_data.dr_status;
-//        (void)memcpy(reinterpret_cast<void *>(&(send_data_master.uc_data[0])),
-//                     (const void *)(&(rcv_dr_data.heading)), (size_t)VEHICLE_DSIZE_HEADING);
-//        DeadReckoningSetDataMaster(&send_data_master, (PFUNC_DR_DMASTER_SET_N)DeadReckoningDeliveryProc);
-//
-//        /* Data master setting,Data delivery(GyroParameter)           */
-//        /* As it is registered for delivery with DID = VEHICLE_DID_DR_GYRO_SCALE_FACTOR_LEVEL    */
-//        /* Process in GyroOffset-> GyroScaleFactor-> GyroScelFactorLevel order(Processing order cannot be changed.) */
-//        send_data_master.ul_did = VEHICLE_DID_DR_GYRO_OFFSET;
-//        send_data_master.us_size = VEHICLE_DSIZE_GYRO_OFFSET;
-//        send_data_master.uc_rcv_flag = DEADRECKONING_RCVFLAG_ON;
-//        send_data_master.dr_status = 0U;       /* Not used */
-//        (void)memcpy(reinterpret_cast<void *>(&(send_data_master.uc_data[0])),
-//                     reinterpret_cast<void *>(&(rcv_dr_calc_info.gyro_offset)), (size_t)send_data_master.us_size);
-//        DeadReckoningSetDataMaster(&send_data_master, (PFUNC_DR_DMASTER_SET_N)DeadReckoningDeliveryProc);
-//
-//        send_data_master.ul_did = VEHICLE_DID_DR_GYRO_SCALE_FACTOR;
-//        send_data_master.us_size = VEHICLE_DSIZE_GYRO_SCALE_FACTOR;
-//        send_data_master.uc_rcv_flag = DEADRECKONING_RCVFLAG_ON;
-//        send_data_master.dr_status = 0U;       /* Not used */
-//        (void)memcpy(reinterpret_cast<void *>(&(send_data_master.uc_data[0])),
-//                     reinterpret_cast<void *>(&(rcv_dr_calc_info.gyro_scale_factor)),
-//                     (size_t)send_data_master.us_size);
-//        DeadReckoningSetDataMaster(&send_data_master, (PFUNC_DR_DMASTER_SET_N)DeadReckoningDeliveryProc);
-//
-//        send_data_master.ul_did = VEHICLE_DID_DR_GYRO_SCALE_FACTOR_LEVEL;
-//        send_data_master.us_size = VEHICLE_DSIZE_GYRO_SCALE_FACTOR_LEVEL;
-//        send_data_master.uc_rcv_flag = DEADRECKONING_RCVFLAG_ON;
-//        send_data_master.dr_status = 0U;       /* Not used */
-//        (void)memcpy(reinterpret_cast<void *>(&(send_data_master.uc_data[0])),
-//                     reinterpret_cast<void *>(&(rcv_dr_calc_info.gyro_scale_factor_level)),
-//                     (size_t)(send_data_master.us_size));
-//        DeadReckoningSetDataMaster(&send_data_master, (PFUNC_DR_DMASTER_SET_N)DeadReckoningDeliveryProc);
-//
-//        /* Data master setting,Data delivery(SpeedPulseParameter)         */
-//        /* As it is registered for delivery with DID = VEHICLE_DID_DR_SPEED_PULSE_SCALE_FACTOR_LEVEL   */
-//        /* Process in SpeedPulseScaleFactor-> SpeedPulseScaleFactorLevel order(Processing order cannot be changed.)  */
-//        send_data_master.ul_did = VEHICLE_DID_DR_SPEED_PULSE_SCALE_FACTOR;
-//        send_data_master.us_size = VEHICLE_DSIZE_SPEED_PULSE_SCALE_FACTOR;
-//        send_data_master.uc_rcv_flag = DEADRECKONING_RCVFLAG_ON;
-//        send_data_master.dr_status = 0U;       /* Not used */
-//        (void)memcpy(reinterpret_cast<void *>(&(send_data_master.uc_data[0])),
-//                     reinterpret_cast<void *>(&(rcv_dr_calc_info.speed_pulse_scale_factor)),
-//                     (size_t)(send_data_master.us_size));
-//        DeadReckoningSetDataMaster(&send_data_master, (PFUNC_DR_DMASTER_SET_N)DeadReckoningDeliveryProc);
-//
-//        send_data_master.ul_did = VEHICLE_DID_DR_SPEED_PULSE_SCALE_FACTOR_LEVEL;
-//        send_data_master.us_size = VEHICLE_DSIZE_SPEED_PULSE_SCALE_FACTOR_LEVEL;
-//        send_data_master.uc_rcv_flag = DEADRECKONING_RCVFLAG_ON;
-//        send_data_master.dr_status = 0U;       /* Not used */
-//        (void)memcpy(reinterpret_cast<void *>(&(send_data_master.uc_data[0])),
-//                     reinterpret_cast<void *>(&(rcv_dr_calc_info.speed_pulse_scale_factor_level)),
-//                     (size_t)(send_data_master.us_size));
-//        DeadReckoningSetDataMaster(&send_data_master, (PFUNC_DR_DMASTER_SET_N)DeadReckoningDeliveryProc);
-//
-//        g_sens_data_get_flg = FALSE;
-//    } else if (g_fst_sens_data_get_flg == TRUE) {
-//#if (DR_DEBUG == 1) /* PastModel002_DR_VEHICLE */
-//        FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "DeadReckoningRcvMsg FstSnsData -> DeadReckoningLibrary. \r\n");
-//#endif
-//        for (fst_sens_send_num = 0; fst_sens_send_num < g_fst_sns_buf.data_num; fst_sens_send_num++) {
-//            /* Each data is stored in the data format for transmission. */
-//            send_sensor_msg->sens_cnt_flag  = 0U;
-//            send_sensor_msg->sens_cnt   = 0U;
-//            send_sensor_msg->pulse_rev_tbl.reverse_flag  = g_fst_sns_buf.rev_data[fst_sens_send_num];
-//            send_sensor_msg->pulse_rev_tbl.pulse_flag   = g_fst_sns_buf.spd_pulse_check_data[fst_sens_send_num];
-//            send_sensor_msg->pulse_rev_tbl.pulse_sum_cyclic = g_fst_sns_buf.spd_pulse_data[fst_sens_send_num];
-//            (void)memcpy(reinterpret_cast<void *>(&(send_sensor_msg->gyro_tbl.gyro_data[0])),
-//                         (const void *)(&(g_fst_sns_buf.gyro_data[fst_sens_send_num * NUM_OF_100msData])),
-//                         (size_t)((sizeof(g_fst_sns_buf.gyro_data[fst_sens_send_num])) * NUM_OF_100msData));
-//
-//#if (DR_DEBUG == 1) /* PastModel002_DR_VEHICLE */
-//            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "DeadReckoningRcvMsg send_sensor_msg.sens_cnt_flag %d \r\n",
-//                          send_sensor_msg->sens_cnt_flag);
-//            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "DeadReckoningRcvMsg SEND SENSOR_COUNTER %d \r\n",
-//                          send_sensor_msg->sens_cnt);
-//#endif
-//
-//            /* Sleep to reduce CPU load */
-//            MilliSecSleep(DR_FST_SENS_CALC_SLEEP_TIME);
-//
-//            /* When the sensor data are ready, Call the DR-calculation process. */
-//        }
-//
-//        g_sens_data_get_flg = FALSE;
-//
-//        g_fst_sens_data_get_flg = FALSE;
-//
-//    } else {
-//        /* nop */
-//    }
-//}
+void  DeadReckoningRcvMsgFstSens(const DEAD_RECKONING_RCVDATA *msg, DEAD_RECKONING_LONLAT_INFO *location_info,
+                            const SENSOR_MSG_GPSDATA_DAT  *rcv_gps_msg, Struct_GpsData* send_gps_msg,
+                            Struct_SensData* send_sensor_msg) {
+    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+       /* Verifying Debug Log Simulator Mode
+           Perform packet reading here to match some timing.
+           However,,Differ between GPS and SENSOR.
+        */
+    u_int8 fst_sens_send_num = 0U;
+    /* For GPS data */
+    if (g_gps_data_get_flg == TRUE) {
+#if (DR_DEBUG == 1) /* PastModel002_DR_VEHICLE */
+        FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
+             "DeadReckoningRcvMsg SEND GPS_DATA: DID[0x%08X] DSIZE[%d] MSG_SIZE[%d] SNS_CNT[%d] \r\n",
+            rcv_gps_msg.ulDid, rcv_gps_msg.ucData[4], msg->hdr.hdr.msgbodysize, rcv_gps_msg.ucSnsCnt);
+#endif
+
+        if (1) {
+            rcv_gps_msg = (const SENSOR_MSG_GPSDATA_DAT *)(&(msg->data[0]));
+            /* #QAC confirmation Rule11.4 Use structure for member reference(Cast according to shared memory link IF) */
+
+            /* Set and pass the data part except header/footer */
+            send_gps_msg->sens_cnt   = rcv_gps_msg->uc_sns_cnt;
+            send_gps_msg->sens_cnt_flag = rcv_gps_msg->uc_gps_cnt_flag;
+            send_gps_msg->gps_data_size = rcv_gps_msg->us_size;
+            send_gps_msg->did    = rcv_gps_msg->ul_did;
+            send_gps_msg->gps_data   = (const void *)(&rcv_gps_msg->uc_data[0]);
+        }
+
+        /* Providing GPS data to DR_Lib */
+
+        g_gps_data_get_flg = FALSE;
+
+    } else if (g_sens_data_get_flg == TRUE) {
+        Struct_DR_DATA      rcv_dr_data;
+        DR_CALC_INFO      rcv_dr_calc_info;
+        DEADRECKONING_DATA_MASTER   send_data_master;
+
+        if (1) {
+            /* Each data is stored in the data format for transmission. */
+            send_sensor_msg->sens_cnt_flag = 1U;
+            send_sensor_msg->sens_cnt = g_sns_buf[0].data[0];
+            send_sensor_msg->pulse_rev_tbl.reverse_flag = g_sns_buf[1].data[0];
+            send_sensor_msg->pulse_rev_tbl.pulse_flag = g_sns_buf[2].data[0];
+            send_sensor_msg->pulse_rev_tbl.pulse_sum_cyclic = static_cast<u_int16>(
+                    ((((u_int16)g_sns_buf[3].data[0] << 0) & DR_MASK_WORD_L) |
+                    (((u_int16)g_sns_buf[3].data[1] << 8) & DR_MASK_WORD_U)));
+            /* ToDo */
+            (void)memcpy(reinterpret_cast<void *>(&(send_sensor_msg->gyro_x_tbl.gyro_data[0])),
+                         (const void *)(&(g_sns_buf[4].data[0])), sizeof(u_int16) * NUM_OF_100msData);
+            (void)memcpy(reinterpret_cast<void *>(&(send_sensor_msg->gyro_y_tbl.gyro_data[0])),
+                         (const void *)(&(g_sns_buf[5].data[0])), sizeof(u_int16) * NUM_OF_100msData);
+            (void)memcpy(reinterpret_cast<void *>(&(send_sensor_msg->gyro_z_tbl.gyro_data[0])),
+                         (const void *)(&(g_sns_buf[6].data[0])), sizeof(u_int16) * NUM_OF_100msData);
+        }
+
+#if (DR_DEBUG == 1) /* PastModel002_DR_VEHICLE */
+        FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "DeadReckoningRcvMsg SEND SENSOR_COUNTER %d \r\n",
+                       send_sensor_msg->sens_cnt);
+#endif
+
+        /* When the sensor data are ready, Call the DR-calculation process. */
+        memset(&rcv_dr_data, 0x00, sizeof(rcv_dr_data));   /* Coverity CID:18805 compliant */
+        memset(&rcv_dr_calc_info, 0x00, sizeof(rcv_dr_calc_info)); /* Coverity CID:18806 compliant */
+
+        location_info->calc_called = static_cast<u_int8>(TRUE);
+        location_info->lonlat.latitude = static_cast<int32>(rcv_dr_data.latitude);
+        location_info->lonlat.longitude = static_cast<int32>(rcv_dr_data.longitude);
+
+        if (rcv_dr_data.dr_status != static_cast<u_int8>(SENSORLOCATION_DRSTATUS_INVALID)) {
+            location_info->available = static_cast<u_int8>(TRUE);
+        } else {
+            location_info->available = static_cast<u_int8>(FALSE);
+        }
+
+        /* Changing the order of registration and delivery of the out structure to the data master for DR */
+
+        send_data_master.ul_did = VEHICLE_DID_DR_SNS_COUNTER;
+        send_data_master.us_size = VEHICLE_DSIZE_DR_SNS_COUNTER;
+        send_data_master.uc_rcv_flag = 1;
+        send_data_master.dr_status = rcv_dr_data.dr_status;
+        (void)memcpy(reinterpret_cast<void *>(&(send_data_master.uc_data[0])),
+                     (const void *)(&(rcv_dr_data.positioning_time)), (size_t)VEHICLE_DSIZE_DR_SNS_COUNTER);
+        DeadReckoningSetDataMaster(&send_data_master, (PFUNC_DR_DMASTER_SET_N)DeadReckoningDeliveryProc);
+
+        send_data_master.ul_did = VEHICLE_DID_DR_LONGITUDE;
+        send_data_master.us_size = VEHICLE_DSIZE_LONGITUDE;
+        send_data_master.uc_rcv_flag = 1;
+        send_data_master.dr_status = rcv_dr_data.dr_status;
+        (void)memcpy(reinterpret_cast<void *>(&(send_data_master.uc_data[0])),
+                     (const void *)(&(rcv_dr_data.longitude)), (size_t)VEHICLE_DSIZE_LONGITUDE);
+        DeadReckoningSetDataMaster(&send_data_master, (PFUNC_DR_DMASTER_SET_N)DeadReckoningDeliveryProc);
+
+        send_data_master.ul_did = VEHICLE_DID_DR_LATITUDE;
+        send_data_master.us_size = VEHICLE_DSIZE_LATITUDE;
+        send_data_master.uc_rcv_flag = 1;
+        send_data_master.dr_status = rcv_dr_data.dr_status;
+        (void)memcpy(reinterpret_cast<void *>(&(send_data_master.uc_data[0])),
+                     (const void *)(&(rcv_dr_data.latitude)), (size_t)VEHICLE_DSIZE_LATITUDE);
+        DeadReckoningSetDataMaster(&send_data_master, (PFUNC_DR_DMASTER_SET_N)DeadReckoningDeliveryProc);
+
+        send_data_master.ul_did = VEHICLE_DID_DR_ALTITUDE;
+        send_data_master.us_size = VEHICLE_DSIZE_ALTITUDE;
+        send_data_master.uc_rcv_flag = 1;
+        send_data_master.dr_status = rcv_dr_data.dr_status;
+        (void)memcpy(reinterpret_cast<void *>(&(send_data_master.uc_data[0])),
+                     (const void *)(&(rcv_dr_data.altitude)), (size_t)VEHICLE_DSIZE_ALTITUDE);
+        DeadReckoningSetDataMaster(&send_data_master, (PFUNC_DR_DMASTER_SET_N)DeadReckoningDeliveryProc);
+
+        send_data_master.ul_did = VEHICLE_DID_DR_SPEED;
+        send_data_master.us_size = VEHICLE_DSIZE_SPEED;
+        send_data_master.uc_rcv_flag = 1;
+        send_data_master.dr_status = rcv_dr_data.dr_status;
+        (void)memcpy(reinterpret_cast<void *>(&(send_data_master.uc_data[0])),
+                     (const void *)(&(rcv_dr_data.rate)), (size_t)VEHICLE_DSIZE_SPEED);
+        DeadReckoningSetDataMaster(&send_data_master, (PFUNC_DR_DMASTER_SET_N)DeadReckoningDeliveryProc);
+
+        send_data_master.ul_did = VEHICLE_DID_DR_HEADING;
+        send_data_master.us_size = VEHICLE_DSIZE_HEADING;
+        send_data_master.uc_rcv_flag = 1;
+        send_data_master.dr_status = rcv_dr_data.dr_status;
+        (void)memcpy(reinterpret_cast<void *>(&(send_data_master.uc_data[0])),
+                     (const void *)(&(rcv_dr_data.heading)), (size_t)VEHICLE_DSIZE_HEADING);
+        DeadReckoningSetDataMaster(&send_data_master, (PFUNC_DR_DMASTER_SET_N)DeadReckoningDeliveryProc);
+
+        /* Data master setting,Data delivery(GyroParameter)           */
+        /* As it is registered for delivery with DID = VEHICLE_DID_DR_GYRO_SCALE_FACTOR_LEVEL    */
+        /* Process in GyroOffset-> GyroScaleFactor-> GyroScelFactorLevel order(Processing order cannot be changed.) */
+        send_data_master.ul_did = VEHICLE_DID_DR_GYRO_OFFSET;
+        send_data_master.us_size = VEHICLE_DSIZE_GYRO_OFFSET;
+        send_data_master.uc_rcv_flag = DEADRECKONING_RCVFLAG_ON;
+        send_data_master.dr_status = 0U;       /* Not used */
+        (void)memcpy(reinterpret_cast<void *>(&(send_data_master.uc_data[0])),
+                     reinterpret_cast<void *>(&(rcv_dr_calc_info.gyro_offset)), (size_t)send_data_master.us_size);
+        DeadReckoningSetDataMaster(&send_data_master, (PFUNC_DR_DMASTER_SET_N)DeadReckoningDeliveryProc);
+
+        send_data_master.ul_did = VEHICLE_DID_DR_GYRO_SCALE_FACTOR;
+        send_data_master.us_size = VEHICLE_DSIZE_GYRO_SCALE_FACTOR;
+        send_data_master.uc_rcv_flag = DEADRECKONING_RCVFLAG_ON;
+        send_data_master.dr_status = 0U;       /* Not used */
+        (void)memcpy(reinterpret_cast<void *>(&(send_data_master.uc_data[0])),
+                     reinterpret_cast<void *>(&(rcv_dr_calc_info.gyro_scale_factor)),
+                     (size_t)send_data_master.us_size);
+        DeadReckoningSetDataMaster(&send_data_master, (PFUNC_DR_DMASTER_SET_N)DeadReckoningDeliveryProc);
+
+        send_data_master.ul_did = VEHICLE_DID_DR_GYRO_SCALE_FACTOR_LEVEL;
+        send_data_master.us_size = VEHICLE_DSIZE_GYRO_SCALE_FACTOR_LEVEL;
+        send_data_master.uc_rcv_flag = DEADRECKONING_RCVFLAG_ON;
+        send_data_master.dr_status = 0U;       /* Not used */
+        (void)memcpy(reinterpret_cast<void *>(&(send_data_master.uc_data[0])),
+                     reinterpret_cast<void *>(&(rcv_dr_calc_info.gyro_scale_factor_level)),
+                     (size_t)(send_data_master.us_size));
+        DeadReckoningSetDataMaster(&send_data_master, (PFUNC_DR_DMASTER_SET_N)DeadReckoningDeliveryProc);
+
+        /* Data master setting,Data delivery(SpeedPulseParameter)         */
+        /* As it is registered for delivery with DID = VEHICLE_DID_DR_SPEED_PULSE_SCALE_FACTOR_LEVEL   */
+        /* Process in SpeedPulseScaleFactor-> SpeedPulseScaleFactorLevel order(Processing order cannot be changed.)  */
+        send_data_master.ul_did = VEHICLE_DID_DR_SPEED_PULSE_SCALE_FACTOR;
+        send_data_master.us_size = VEHICLE_DSIZE_SPEED_PULSE_SCALE_FACTOR;
+        send_data_master.uc_rcv_flag = DEADRECKONING_RCVFLAG_ON;
+        send_data_master.dr_status = 0U;       /* Not used */
+        (void)memcpy(reinterpret_cast<void *>(&(send_data_master.uc_data[0])),
+                     reinterpret_cast<void *>(&(rcv_dr_calc_info.speed_pulse_scale_factor)),
+                     (size_t)(send_data_master.us_size));
+        DeadReckoningSetDataMaster(&send_data_master, (PFUNC_DR_DMASTER_SET_N)DeadReckoningDeliveryProc);
+
+        send_data_master.ul_did = VEHICLE_DID_DR_SPEED_PULSE_SCALE_FACTOR_LEVEL;
+        send_data_master.us_size = VEHICLE_DSIZE_SPEED_PULSE_SCALE_FACTOR_LEVEL;
+        send_data_master.uc_rcv_flag = DEADRECKONING_RCVFLAG_ON;
+        send_data_master.dr_status = 0U;       /* Not used */
+        (void)memcpy(reinterpret_cast<void *>(&(send_data_master.uc_data[0])),
+                     reinterpret_cast<void *>(&(rcv_dr_calc_info.speed_pulse_scale_factor_level)),
+                     (size_t)(send_data_master.us_size));
+        DeadReckoningSetDataMaster(&send_data_master, (PFUNC_DR_DMASTER_SET_N)DeadReckoningDeliveryProc);
+
+        g_sens_data_get_flg = FALSE;
+    } else if (g_fst_sens_data_get_flg == TRUE) {
+#if (DR_DEBUG == 1) /* PastModel002_DR_VEHICLE */
+        FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "DeadReckoningRcvMsg FstSnsData -> DeadReckoningLibrary. \r\n");
+#endif
+        for (fst_sens_send_num = 0; fst_sens_send_num < g_fst_sns_buf.data_num; fst_sens_send_num++) {
+            /* Each data is stored in the data format for transmission. */
+            send_sensor_msg->sens_cnt_flag  = 0U;
+            send_sensor_msg->sens_cnt   = 0U;
+            send_sensor_msg->pulse_rev_tbl.reverse_flag  = g_fst_sns_buf.rev_data[fst_sens_send_num];
+            send_sensor_msg->pulse_rev_tbl.pulse_flag   = g_fst_sns_buf.spd_pulse_check_data[fst_sens_send_num];
+            send_sensor_msg->pulse_rev_tbl.pulse_sum_cyclic = g_fst_sns_buf.spd_pulse_data[fst_sens_send_num];
+            (void)memcpy(reinterpret_cast<void *>(&(send_sensor_msg->gyro_x_tbl.gyro_data[0])),
+                         (const void *)(&(g_fst_sns_buf.gyro_x_data[fst_sens_send_num * NUM_OF_100msData])),
+                         (size_t)((sizeof(g_fst_sns_buf.gyro_x_data[fst_sens_send_num])) * NUM_OF_100msData));
+            (void)memcpy(reinterpret_cast<void *>(&(send_sensor_msg->gyro_y_tbl.gyro_data[0])),
+                         (const void *)(&(g_fst_sns_buf.gyro_y_data[fst_sens_send_num * NUM_OF_100msData])),
+                         (size_t)((sizeof(g_fst_sns_buf.gyro_y_data[fst_sens_send_num])) * NUM_OF_100msData));
+            (void)memcpy(reinterpret_cast<void *>(&(send_sensor_msg->gyro_z_tbl.gyro_data[0])),
+                         (const void *)(&(g_fst_sns_buf.gyro_z_data[fst_sens_send_num * NUM_OF_100msData])),
+                         (size_t)((sizeof(g_fst_sns_buf.gyro_z_data[fst_sens_send_num])) * NUM_OF_100msData));
+
+#if (DR_DEBUG == 1) /* PastModel002_DR_VEHICLE */
+            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "DeadReckoningRcvMsg send_sensor_msg.sens_cnt_flag %d \r\n",
+                          send_sensor_msg->sens_cnt_flag);
+            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "DeadReckoningRcvMsg SEND SENSOR_COUNTER %d \r\n",
+                          send_sensor_msg->sens_cnt);
+#endif
+
+            /* Sleep to reduce CPU load */
+            MilliSecSleep(DR_FST_SENS_CALC_SLEEP_TIME);
+
+            /* When the sensor data are ready, Call the DR-calculation process. */
+        }
+
+        g_sens_data_get_flg = FALSE;
+
+        g_fst_sens_data_get_flg = FALSE;
+
+    } else {
+        /* nop */
+    }
+}
 
 /*******************************************************************************
 * MODULE    : DeadReckoningGetDRData

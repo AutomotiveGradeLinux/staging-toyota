@@ -1,5 +1,5 @@
 #
-# @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+# @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,13 +17,10 @@
 INST_SHLIBS = libPOS_gps_API
 
 ######### compiled sources  #############
-VPATH += ../POS_naviinfo_API/variant/awnavi/src
-
 libPOS_gps_API_SRCS += Gps_API.cpp
 libPOS_gps_API_SRCS += Naviinfo_API.cpp
 
 ######### add include path #############
-CPPFLAGS += -I./
 CPPFLAGS += -I../../../server/include/common
 CPPFLAGS += -I../../include
 CPPFLAGS += -I../../../server/include/nsfw

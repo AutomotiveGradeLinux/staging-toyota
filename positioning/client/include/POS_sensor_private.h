@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -106,15 +106,6 @@ typedef struct {
     T_APIMSG_MSGBUF_HEADER            hdr;                          /* message header  */
     u_int8                            data[SENSOR_MSGBUF_DSIZE];    /* message body    */
 } SENSOR_INTERNAL_MSG_BUF;
-
-/********************************************************************************
- * TAG      TG_GPS_RET_TIMESET_MSG
- * ABSTRACT :GPS Time Setting Response Message Structure
- ********************************************************************************/
-typedef struct {
-    T_APIMSG_MSGBUF_HEADER            header;                       /* Message header */
-    uint64_t                          status;                       /* Response status */
-} TG_GPS_RET_TIMESET_MSG;
 
 /********************************************************************************
  * TAG      :TG_GPSTIME

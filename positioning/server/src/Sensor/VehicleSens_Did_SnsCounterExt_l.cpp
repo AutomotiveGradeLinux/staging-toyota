@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ void VehicleSensInitSnsCounterExtl(void) {
     u_int16  *pus;
 
     memset(&gstSnsCounterExt_l, 0x00, sizeof(VEHICLESENS_DATA_MASTER_EXT));
-//    gstSnsCounterExt_l.ul_did    = POSHAL_DID_SNS_COUNTER;
+    gstSnsCounterExt_l.ul_did    = POSHAL_DID_SNS_COUNTER;
     gstSnsCounterExt_l.us_size    = VEHICLE_DSIZE_SNS_COUNTER_EXT_INIT;
     pus    = reinterpret_cast<u_int16 *>(gstSnsCounterExt_l.uc_data);
     memset(reinterpret_cast<void*>(pus), VEHICLE_DINIT_SNS_COUNTER, VEHICLE_DSIZE_SNS_COUNTER_EXT);
@@ -63,10 +63,10 @@ void VehicleSensInitSnsCounterExtl(void) {
 * NOTE      :
 * RETURN    : void
 ******************************************************************************/
-//void VehicleSensSetSnsCounterExtl(const LSDRV_LSDATA *pst_data) {  // LCOV_EXCL_START 8: dead code
-//    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//    return;
-//}
+void VehicleSensSetSnsCounterExtl(const LSDRV_LSDATA *pst_data) {  // LCOV_EXCL_START 8: dead code
+    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+    return;
+}
 // LCOV_EXCL_STOP
 
 /*******************************************************************************
@@ -77,39 +77,39 @@ void VehicleSensInitSnsCounterExtl(void) {
 * NOTE      :
 * RETURN    : void
 ******************************************************************************/
-//void VehicleSensSetSnsCounterExtlG(const LSDRV_LSDATA_G *pst_data) {
-//    VEHICLESENS_DATA_MASTER_EXT *pst_master;
-//    u_int16 us_start = 0;
-//
-//    pst_master = &gstSnsCounterExt_l;
-//
-//    /* Retrieve the location where the received one is stored */
-//    us_start = gstPkgTempExt.start_point[0];
-//
-//    /* Stored in data master(Order of reception)*/
-//    if (us_start >= VEHICLE_DKEEP_MAX) {
-//        /* Store the latest one at position 0 */
-//        us_start = VEHICLE_DATA_POS_00;
-//        /* If you are discarding old data,,Set a flag */
-//        gstPkgTempExt.data_break = VEHICLE_SNS_BREAK;
-//    }
-//    pst_master->ul_did      = pst_data->ul_did;
-//    pst_master->uc_rcvflag    = VEHICLE_RCVFLAG_ON;
-//    pst_master->uc_data[us_start]  = pst_data->uc_data[0];
-//
-//    /* Update next storage start position and latest data storage position */
-//    us_start++;
-//    gstPkgTempExt.start_point[0] = us_start;
-//
-//    /* Update data master size */
-//    if (gstPkgTempExt.data_break == VEHICLE_SNS_BREAK) {
-//        /* Make the size of all extended data masters */
-//        pst_master->us_size = VEHICLE_DSIZE_SNS_COUNTER_EXT;
-//    } else {
-//        /* Add the size of one received data item */
-//        pst_master->us_size = static_cast<u_int16>(pst_master->us_size + sizeof(u_int8));
-//    }
-//}
+void VehicleSensSetSnsCounterExtlG(const LSDRV_LSDATA_G *pst_data) {
+    VEHICLESENS_DATA_MASTER_EXT *pst_master;
+    u_int16 us_start = 0;
+
+    pst_master = &gstSnsCounterExt_l;
+
+    /* Retrieve the location where the received one is stored */
+    us_start = gstPkgTempExt.start_point[SNSCounter];
+
+    /* Stored in data master(Order of reception)*/
+    if (us_start >= VEHICLE_DKEEP_MAX) {
+        /* Store the latest one at position 0 */
+        us_start = VEHICLE_DATA_POS_00;
+        /* If you are discarding old data,,Set a flag */
+        gstPkgTempExt.data_break = VEHICLE_SNS_BREAK;
+    }
+    pst_master->ul_did      = pst_data->ul_did;
+    pst_master->uc_rcvflag    = VEHICLE_RCVFLAG_ON;
+    pst_master->uc_data[us_start]  = pst_data->uc_data[0];
+
+    /* Update next storage start position and latest data storage position */
+    us_start++;
+    gstPkgTempExt.start_point[SNSCounter] = us_start;
+
+    /* Update data master size */
+    if (gstPkgTempExt.data_break == VEHICLE_SNS_BREAK) {
+        /* Make the size of all extended data masters */
+        pst_master->us_size = VEHICLE_DSIZE_SNS_COUNTER_EXT;
+    } else {
+        /* Add the size of one received data item */
+        pst_master->us_size = static_cast<u_int16>(pst_master->us_size + sizeof(u_int8));
+    }
+}
 
 /*******************************************************************************
 * MODULE    : VehicleSensGetSnsCounterExtl
@@ -120,39 +120,36 @@ void VehicleSensInitSnsCounterExtl(void) {
 * RETURN    : void
 ******************************************************************************/
 void VehicleSensGetSnsCounterExtl(VEHICLESENS_DATA_MASTER_EXT *pst_data) {
-    const VEHICLESENS_DATA_MASTER_EXT *pst_master;
-    u_int16 us_data_cnt = 0;
-    u_int16 us_cnt = 0;
-    u_int16 us_loop_cnt = 0;
+  const VEHICLESENS_DATA_MASTER_EXT *pst_master;
+  uint16_t us_data_cnt = 0; // Number of data contained
+  uint16_t us_loop_cnt = 0; // 64 over index
 
-    /* Store the data master in the specified destination. */
-    pst_master      = &gstSnsCounterExt_l;
-    pst_data->ul_did    = pst_master->ul_did;
-    pst_data->us_size    = pst_master->us_size;
-    pst_data->uc_rcvflag  = pst_master->uc_rcvflag;
+  /* Store the data master in the specified destination. */
+  pst_master      = &gstSnsCounterExt_l;
+  pst_data->ul_did    = pst_master->ul_did;
+  pst_data->us_size    = pst_master->us_size;
+  pst_data->uc_rcvflag  = pst_master->uc_rcvflag;
 
-    /* Checking whether the number of stored entries is looped */
-    if (gstPkgTempExt.data_break == VEHICLE_SNS_BREAK) {  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-        us_data_cnt = VEHICLE_DKEEP_MAX;
+  /* Checking whether the number of stored entries is looped */
+  if (gstPkgTempExt.data_break == VEHICLE_SNS_BREAK) {
+    us_data_cnt = VEHICLE_DKEEP_MAX;
+  } else {
+    us_data_cnt = gstPkgTempExt.start_point[SNSCounter];
+  }
+
+  /* Acquire data from the newest data master */
+  for (uint16_t us_cnt = 0; us_cnt < us_data_cnt; us_cnt++) {
+    if (gstPkgTempExt.data_break == VEHICLE_SNS_BREAK) {
+      /* Get information before loop */
+      if (gstPkgTempExt.start_point[SNSCounter] + us_cnt < VEHICLE_DKEEP_MAX) {
+        pst_data->uc_data[us_cnt] = pst_master->uc_data[(gstPkgTempExt.start_point[SNSCounter] + us_cnt)];
+      } else {
+        pst_data->uc_data[us_cnt] = pst_master->uc_data[us_loop_cnt];
+        us_loop_cnt++;
+      }
     } else {
-        us_data_cnt = gstPkgTempExt.start_point[0];
+      pst_data->uc_data[us_cnt] = pst_master->uc_data[us_cnt];
     }
-
-    /* Acquire data from the newest data master */
-    for (us_cnt = 0; us_cnt < us_data_cnt; us_cnt++) {
-        if (gstPkgTempExt.data_break == VEHICLE_SNS_BREAK) {
-            /* Get information after loop */
-            if (gstPkgTempExt.start_point[0] > us_cnt) {
-                pst_data->uc_data[us_cnt] = pst_master->uc_data[(gstPkgTempExt.start_point[0] - us_cnt - 1)];
-                us_loop_cnt++;
-            } else {
-                pst_data->uc_data[us_cnt] = pst_master->uc_data[(us_data_cnt - us_cnt - 1 + us_loop_cnt)];
-            }
-        } else {
-            if ((u_int32)(us_data_cnt - us_cnt) <= (u_int32)VEHICLE_DKEEP_MAX) {  // LCOV_EXCL_BR_LINE 6: always true
-                pst_data->uc_data[us_cnt] = pst_master->uc_data[(us_data_cnt - us_cnt - 1)];
-            }
-        }
-    }
+  }
 }
 #endif

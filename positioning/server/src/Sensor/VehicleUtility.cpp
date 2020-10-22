@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@
 #include "VehicleUtility.h"
 #include <vehicle_service/positioning_base_library.h>
 
-//#include "gps_hal.h"
+#include "gps_hal.h"
 #include "positioning_common.h"
 
 
@@ -400,7 +400,7 @@ RET_API DEVGpsSndBackupDataLoadReq(void) {
     /** Message header */
     st_snd_msg.hdr.sndpno = 0x0000;
     st_snd_msg.hdr.respno = 0x0000;
-//    st_snd_msg.hdr.cid    = CID_GPS_BACKUPDATA_LOAD;
+    st_snd_msg.hdr.cid    = CID_GPS_BACKUPDATA_LOAD;
     st_snd_msg.hdr.msgbodysize = 0x00;
     st_snd_msg.hdr.rid    = 0x00;
 

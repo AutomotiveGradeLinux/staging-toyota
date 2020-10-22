@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ void VehicleSensInitGyroConnectStatus(void) {
     (void)memset(reinterpret_cast<void *>(&(gstGyroConnectStatus)), static_cast<int>(0x00),
                         sizeof(VEHICLESENS_DATA_MASTER_GYRO_CONNECT_STATUS));
     gstGyroConnectStatus.ul_did  = VEHICLE_DID_GYRO_CONNECT_STATUS;
-//    gstGyroConnectStatus.us_size  = VEHICLE_DSIZE_GYRO_CONNECT_STATUS;
+    gstGyroConnectStatus.us_size  = VEHICLE_DSIZE_GYRO_CONNECT_STATUS;
     gstGyroConnectStatus.uc_data  = VEHICLE_DINIT_GYRO_CONNECT_STATUS;
 }
 
@@ -57,30 +57,30 @@ void VehicleSensInitGyroConnectStatus(void) {
 * RETURN    : VEHICLESENS_EQ  : No data change
 *             VEHICLESENS_NEQ  : Data change
 ******************************************************************************/
-//u_int8 VehicleSensSetGyroConnectStatus(const LSDRV_MSG_LSDATA_DAT_GYRO_CONNECT_STATUS *pst_data) {  // LCOV_EXCL_START 8: dead code.  // NOLINT(whitespace/line_length)
-//    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//    u_int8 uc_ret = VEHICLESENS_EQ;
-//    VEHICLESENS_DATA_MASTER_GYRO_CONNECT_STATUS *pst_master;
-//
-//    if (pst_data == NULL) {
-//        FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "pst_data == NULL\r\n");
-//    } else {
-//        pst_master = &gstGyroConnectStatus;
-//
-//        /* Compare data master and received data */
-//        uc_ret = VehicleSensmemcmp(reinterpret_cast<void *>(&(pst_master->uc_data)),
-//            (const void *)(&(pst_data->uc_data)), (size_t)(pst_data->uc_size));
-//
-//        /* Received data is set in the data master. */
-//        pst_master->ul_did    = pst_data->ul_did;
-//        pst_master->us_size    = (u_int16)pst_data->uc_size;
-//        pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
-//        (void)memcpy(reinterpret_cast<void *>(&(pst_master->uc_data)),
-//            (const void *)(&(pst_data->uc_data)), sizeof(pst_master->uc_data));
-//    }
-//
-//    return(uc_ret);
-//}
+u_int8 VehicleSensSetGyroConnectStatus(const LSDRV_MSG_LSDATA_DAT_GYRO_CONNECT_STATUS *pst_data) {  // LCOV_EXCL_START 8: dead code.  // NOLINT(whitespace/line_length)
+    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+    u_int8 uc_ret = VEHICLESENS_EQ;
+    VEHICLESENS_DATA_MASTER_GYRO_CONNECT_STATUS *pst_master;
+
+    if (pst_data == NULL) {
+        FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "pst_data == NULL\r\n");
+    } else {
+        pst_master = &gstGyroConnectStatus;
+
+        /* Compare data master and received data */
+        uc_ret = VehicleSensmemcmp(reinterpret_cast<void *>(&(pst_master->uc_data)),
+            (const void *)(&(pst_data->uc_data)), (size_t)(pst_data->uc_size));
+
+        /* Received data is set in the data master. */
+        pst_master->ul_did    = pst_data->ul_did;
+        pst_master->us_size    = (u_int16)pst_data->uc_size;
+        pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
+        (void)memcpy(reinterpret_cast<void *>(&(pst_master->uc_data)),
+            (const void *)(&(pst_data->uc_data)), sizeof(pst_master->uc_data));
+    }
+
+    return(uc_ret);
+}
 
 /*******************************************************************************
 * MODULE    : VehicleSensGetGyroConnectStatus

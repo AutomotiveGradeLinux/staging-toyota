@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ static  VEHICLESENS_DATA_MASTER  gstSpeedPulseFlag;    // NOLINT(readability/nol
 *****************************************************************************/
 void VehicleSensInitSpeedPulseFlag(void) {
     (void)memset(reinterpret_cast<void *>(&gstSpeedPulseFlag), 0, sizeof(VEHICLESENS_DATA_MASTER));
-//    gstSpeedPulseFlag.ul_did    = POSHAL_DID_SPEED_PULSE_FLAG;
+    gstSpeedPulseFlag.ul_did    = POSHAL_DID_SPEED_PULSE_FLAG;
     gstSpeedPulseFlag.us_size  = VEHICLE_DSIZE_SPEED_PULSE_FLAG;
     gstSpeedPulseFlag.uc_rcvflag  = VEHICLE_RCVFLAG_OFF;
 }
@@ -55,26 +55,26 @@ void VehicleSensInitSpeedPulseFlag(void) {
 @retval      VEHICLESENS_NEQ  :   With data changes
 @trace
 *****************************************************************************/
-//u_int8 VehicleSensSetSpeedPulseFlag(const LSDRV_LSDATA_G *pst_data) {  // LCOV_EXCL_START 8: dead code
-//    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//    u_int8 uc_ret;
-//    VEHICLESENS_DATA_MASTER *pst_master;
-//
-//    pst_master = &gstSpeedPulseFlag;
-//
-//    /** Compare data master and received data */
-//    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
-//
-//    /** Received data is set in the data master. */
-//    pst_master->ul_did    = pst_data->ul_did;
-//    pst_master->us_size    = pst_data->uc_size;
-//    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
-//    pst_master->uc_snscnt    = pst_data->uc_sns_cnt;
-//    (void)memcpy(reinterpret_cast<void *>(pst_master->uc_data),
-//        (const void *)(pst_data->uc_data), (size_t)(pst_data->uc_size));
-//
-//    return(uc_ret);
-//}
+u_int8 VehicleSensSetSpeedPulseFlag(const LSDRV_LSDATA_G *pst_data) {  // LCOV_EXCL_START 8: dead code
+    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+    u_int8 uc_ret;
+    VEHICLESENS_DATA_MASTER *pst_master;
+
+    pst_master = &gstSpeedPulseFlag;
+
+    /** Compare data master and received data */
+    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
+
+    /** Received data is set in the data master. */
+    pst_master->ul_did    = pst_data->ul_did;
+    pst_master->us_size    = pst_data->uc_size;
+    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
+    pst_master->uc_snscnt    = pst_data->uc_sns_cnt;
+    (void)memcpy(reinterpret_cast<void *>(pst_master->uc_data),
+        (const void *)(pst_data->uc_data), (size_t)(pst_data->uc_size));
+
+    return(uc_ret);
+}
 
 /***************************************************************************
 @brief      Vehicle sensor function NAV-CLOCK GET

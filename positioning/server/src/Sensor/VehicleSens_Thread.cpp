@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,8 +41,6 @@
 #include "VehicleUtility.h"
 #include "VehicleSensor_Thread.h"
 
-
-//#include "MDev_Gps_Ublox.h"
 #include "VehicleIf.h"
 
 /*************************************************/
@@ -77,9 +75,7 @@ static inline RET_API VehicleSens_GeneratePASCDFieldSampleCount(char* pascd, siz
 static inline RET_API VehicleSens_GeneratePASCDFieldTimeOffsetNSpeed(char* pascd, size_t size);
 static inline RET_API VehicleSens_GeneratePASCDFieldChecksum(char* pascd, size_t size);
 static inline RET_API VehicleSens_GeneratePASCDFieldCRLF(char* pascd, size_t size);
-static RET_API VehicleSens_GeneratePASCDSentence(char* pBuf, size_t size);
 static RET_API VehicleSens_DeriveTransmissionStateFor_CWORD27_(VEHICLESENS_TRANSMISSION_PKG* pPkg);
-static RET_API VehicleSens_AddPASCDSentenceToNmeaData(char* pascd, uint8_t* pChgType);
 
 
 /*******************************************************************************
@@ -91,22 +87,22 @@ static RET_API VehicleSens_AddPASCDSentenceToNmeaData(char* pascd, uint8_t* pChg
 * RETURN    :
 ******************************************************************************/
 EFrameworkunifiedStatus VehicleSensThread(HANDLE h_app) {
-//    RET_API  ret_api = RET_NORMAL;        /* Return Values of System API Functions  */
-//    T_APIMSG_MSGBUF_HEADER  *p;          /* Message header      */
+    RET_API  ret_api = RET_NORMAL;        /* Return Values of System API Functions  */
+    T_APIMSG_MSGBUF_HEADER  *p;          /* Message header      */
     RET_API  ret_val;                /* Return value of initialization processing    */
     VEHICLE_MSG_DELIVERY_ENTRY  delivery_entry;
 
-//    static u_int8 msg_buf[sizeof(LSDRV_MSG_LSDATA_FST)]; /* message buffer  */
+    static u_int8 msg_buf[MAX_MSG_BUF_SIZE]; /* message buffer  */
 
-//    void* p_msg_buf = &msg_buf;
-//    LSDRV_MSG_LSDATA_G** p_lsdrv_msg;
-//    VEHICLE_MSG_BUF** p_vehicle_msg;
-//    POS_MSGINFO *p_pos_msg;
+    void* p_msg_buf = &msg_buf;
+    LSDRV_MSG_LSDATA_G** p_lsdrv_msg;
+    VEHICLE_MSG_BUF** p_vehicle_msg;
+    POS_MSGINFO *p_pos_msg;
 
 
 
-//    p_lsdrv_msg = reinterpret_cast<LSDRV_MSG_LSDATA_G**>(&p_msg_buf);
-//    p_vehicle_msg = reinterpret_cast<VEHICLE_MSG_BUF**>(&p_msg_buf);
+    p_lsdrv_msg = reinterpret_cast<LSDRV_MSG_LSDATA_G**>(&p_msg_buf);
+    p_vehicle_msg = reinterpret_cast<VEHICLE_MSG_BUF**>(&p_msg_buf);
 
     VehicleUtilityInitTimer();
     (void)PosSetupThread(h_app, ETID_POS_MAIN);
@@ -119,246 +115,246 @@ EFrameworkunifiedStatus VehicleSensThread(HANDLE h_app) {
     gPseudoSecClockCounter = 0u;
 
     if (RET_NORMAL == ret_val) {  // LCOV_EXCL_BR_LINE 6: always be RET_NORMAL
-//        while (1) {
-//            /* Message reception processing */
-//            p_msg_buf = &msg_buf;
-//            ret_api = _pb_RcvMsg(PNO_VEHICLE_SENSOR, sizeof(msg_buf), &p_msg_buf, RM_WAIT);
-//
-//            /* Internal debug log output */
-//            FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, 
-//                          "[ret_api = 0x%x]",
-//                          ret_api);
-//
-//            /* When the message is received successfully */
-//            if (ret_api == RET_RCVMSG) {
-//                p = reinterpret_cast<T_APIMSG_MSGBUF_HEADER *>(p_msg_buf);
-//
-//                switch (p->hdr.cid) {  // LCOV_EXCL_BR_LINE 200: some DID is not used
-//                    case CID_VEHICLEIF_DELIVERY_ENTRY:
-//                    {
-//                        memcpy(&(delivery_entry), &(p_msg_buf), sizeof(VEHICLE_MSG_DELIVERY_ENTRY));
-//
-//                        /* Sort by received DID */
-//                        switch (delivery_entry.data.did) {  // LCOV_EXCL_BR_LINE 200: DR DID is not used
-//                            case VEHICLE_DID_DR_ALTITUDE :
-//                            case VEHICLE_DID_DR_LATITUDE :
-//                            case VEHICLE_DID_DR_SPEED :
-//                            case VEHICLE_DID_DR_HEADING :
-//                            case VEHICLE_DID_DR_GYRO_SCALE_FACTOR_LEVEL :
-//                            case VEHICLE_DID_DR_SPEED_PULSE_SCALE_FACTOR_LEVEL :
-//                            {
-//                                // LCOV_EXCL_START 8: dead code
-//                                AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//                                VehicleSensDrDeliveryEntry((const VEHICLE_MSG_DELIVERY_ENTRY *)p_msg_buf);
-//                                // LCOV_EXCL_STOP
-//                            }
-//                            break;
-//                            default:
-//                                /* Vehicle sensor information delivery registration */
-//                                VehicleSensDeliveryEntry((const VEHICLE_MSG_DELIVERY_ENTRY *)p_msg_buf);
-//                                break;
-//                        }
-//                        break;
-//                    }
-//                    case CID_VEHICLEIF_GET_VEHICLE_DATA:
-//                    {
-//                        /* Vehicle sensor information acquisition */
-//                        VehicleSensGetVehicleData((const VEHICLE_MSG_GET_VEHICLE_DATA *)p_msg_buf);
-//                        break;
-//                    }
-//                    case CID_LINESENS_VEHICLE_DATA:
-//                    {
-//                        /* LineSensor Vehicle Signal Notification */
-//                        VehicleSensLineSensDataDelivery((const LSDRV_MSG_LSDATA *)p_msg_buf,
-//                                                          (PFUNC_DMASTER_SET_N)VehicleSensDataMasterSetN);
-//                        break;
-//                    }
-//                    case CID_LINESENS_VEHICLE_DATA_G:
-//                    {
-//                        /* Data disruption monitoring process */
-//                        VehicleSensDataDisrptMonitorProc(
-//                            (reinterpret_cast<LSDRV_MSG_LSDATA_G*>(*p_lsdrv_msg))->st_para.st_data[0].ul_did);
-//                        VehicleSensLineSensDataDeliveryG((const LSDRV_MSG_LSDATA_G *)p_msg_buf,
-//                                                            (PFUNC_DMASTER_SET_N)VehicleSensDataMasterSetN);
-//                        break;
-//                    }
-//                    case CID_LINESENS_VEHICLE_DATA_GYRO_TROUBLE:
-//                    {
-//                        // LCOV_EXCL_START 8: dead code
-//                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//                        /* Gyro Failure Status Notification */
-//                        VehicleSensLineSensDataDeliveryGyroTrouble((const LSDRV_MSG_LSDATA_GYRO_TROUBLE *)p_msg_buf,
-//                                (PFUNC_DMASTER_SET_N)VehicleSensDataMasterSetN);
-//                        break;
-//                        // LCOV_EXCL_STOP
-//                    }
-//                    case CID_LINESENS_VEHICLE_DATA_SYS_GPS_INTERRUPT_SIGNAL:
-//                    {
-//                        // LCOV_EXCL_START 8: dead code
-//                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//                        /* SYS GPS interrupt notification */
-//                        VehicleSensLineSensDataDeliverySysGpsInterruptSignal(
-//                            (const LSDRV_MSG_LSDATA_GPS_INTERRUPT_SIGNAL *)p_msg_buf,
-//                            (PFUNC_DMASTER_SET_SHARED_MEMORY)VehicleSensDataMasterSetSharedMemory);
-//                        break;
-//                        // LCOV_EXCL_STOP
-//                    }
-//                    case CID_LINESENS_VEHICLE_DATA_GYRO_CONNECT_STATUS:
-//                    {
-//                        // LCOV_EXCL_START 8: dead code
-//                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//                        /* Gyro Failure Status Notification */
-//                        VehicleSensLineSensDataDeliveryGyroConnectStatus(
-//                            (const LSDRV_MSG_LSDATA_GYRO_CONNECT_STATUS *)p_msg_buf,
-//                            (PFUNC_DMASTER_SET_SHARED_MEMORY)VehicleSensDataMasterSetSharedMemory);
-//                        break;
-//                        // LCOV_EXCL_STOP
-//                    }
-//                    case CID_LINESENS_VEHICLE_DATA_GPS_ANTENNA_STATUS:
-//                    {
-//                        // LCOV_EXCL_START 8: dead code
-//                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//                        /* GPS antenna failure status notification */
-//                        VehicleSensLineSensDataDeliveryGpsAntennaStatus(
-//                            (const LSDRV_MSG_LSDATA_GPS_ANTENNA_STATUS *)p_msg_buf,
-//                            (PFUNC_DMASTER_SET_N)VehicleSensDataMasterSetN);
-//                        break;
-//                        // LCOV_EXCL_STOP
-//                    }
-//                    case CID_SENSORIF_PKG_DELIVERY_ENTRY_EXT:
-//                    {
-//                        /* Vehicle Sensor Information Extended Package Delivery Registration */
-//                        VehicleSensPkgDeliveryEntryExt((const SENSOR_MSG_DELIVERY_ENTRY *)p_msg_buf);
-//                        break;
-//                    }
-//                    case CID_LINESENS_VEHICLE_DATA_FST:
-//                    {
-//                        /* LineSensor Vehicle Initial Sensor Signal Notification */
-//                        VehicleSensLineSensDataDeliveryFstG((const LSDRV_MSG_LSDATA_FST *)p_msg_buf,
-//                                                            (PFUNC_DMASTER_SET_N)VehicleSensDataMasterSetN);
-//                        break;
-//                    }
-//                    case CID_GPS_DATA:
-//                    {
-//                        /* GPS information notification */
-//                        VehicleSensGpsDataDelivery(reinterpret_cast<SENSOR_MSG_GPSDATA *>(p_msg_buf),
-//                            (PFUNC_DMASTER_SET_N)VehicleSensDataMasterSetN,
-//                            (PFUNC_DMASTER_SET_SHARED_MEMORY)VehicleSensDataMasterSetSharedMemory);
-//                        break;
-//                    }
-//                    case CID_POSIF_SET_DATA:
-//                    {
-//                        p_pos_msg =
-//                        reinterpret_cast<POS_MSGINFO*>((reinterpret_cast<VEHICLE_MSG_BUF*>(*p_vehicle_msg))->data);
-//                        /* Data disruption monitoring process */
-//                        VehicleSensDataDisrptMonitorProc(p_pos_msg->did);
-//
-//                        /* Data Setting Notification */
-//                        VehicleSensCommonDataDelivery((const VEHICLE_MSG_BUF *)p_msg_buf,
-//                                                      (PFUNC_DMASTER_SET_N)VehicleSensDataMasterSetN);
-//                        break;
-//                    }
-//                    case CID_GPS_RETTIMESETTING:
-//                    {
-//                        /* GPS time setting result notification */
-//                        VehicleSensGpsTimeDelivery((const VEHICLE_MSG_BUF *)p_msg_buf);
-//                        break;
-//                    }
-//                    case CID_DEAD_RECKONING_GPS_DATA :  /* GPS data distribution for DR */
-//                    case CID_DEAD_RECKONING_SENS_DATA :  /* Sensor Data Delivery for DR */
-//                    case CID_DEAD_RECKONING_SENS_FST_DATA :  /* Initial Sensor Data Delivery for DR */
-//                    {
-//                        // LCOV_EXCL_START 8: dead code
-//                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//                        VehicleSensDrRcvMsg((const DEAD_RECKONING_RCVDATA *)p_msg_buf);
-//                        break;
-//                        // LCOV_EXCL_STOP
-//                    }
-//                    case CID_VEHICLEIF_GET_DR_DATA :
-//                    {
-//                        // LCOV_EXCL_START 8: dead code
-//                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//                        /* Vehicle sensor information acquisition */
-//                        DeadReckoningGetDRData((const DEADRECKONING_MSG_GET_DR_DATA *)p_msg_buf);
-//                        break;
-//                        // LCOV_EXCL_STOP
-//                    }
-//                    case CID_DR_MAP_MATCHING_DATA :  /* Map matching information */
-//                    {
-//                        // LCOV_EXCL_START 8: dead code
-//                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//                        DeadReckoningSetMapMatchingData((const DR_MSG_MAP_MATCHING_DATA *)p_msg_buf);
-//                        break;
-//                        // LCOV_EXCL_STOP
-//                    }
-//                    case CID_DR_CLEAR_BACKUP_DATA :  /* Clear backup data */
-//                    {
-//                        // LCOV_EXCL_START 8: dead code
-//                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//                        DeadReckoningClearBackupData((const DR_MSG_CLEAR_BACKUP_DATA*)p_msg_buf);
-//                        break;
-//                        // LCOV_EXCL_STOP
-//                    }
-//                    case CID_VEHICLEDEBUG_LOG_GET : /* Log acquisition request */
-//                    {
-//                        // LCOV_EXCL_START 8: dead code
-//                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//                        VehicleSensGetLog((const VEHICLEDEBUG_MSG_BUF *)p_msg_buf);
-//                        break;
-//                        // LCOV_EXCL_STOP
-//                    }
-//                    case CID_VEHICLEDEBUG_LOG_SET :  /* Log Setting Request */
-//                    {
-//                        // LCOV_EXCL_START 8: dead code
-//                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//                        VehicleSensSetLog((const VEHICLEDEBUG_MSG_BUF *)p_msg_buf);
-//                        break;
-//                        // LCOV_EXCL_STOP
-//                    }
-//                    case CANINPUT_CID_LOCALTIME_NOTIFICATION : /* CAN information acquisition */
-//                    {
-//                        // LCOV_EXCL_START 8: dead code
-//                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//                        VehicleSensWriteLocalTime((const CANINPUT_MSG_INFO*)p_msg_buf);
-//                        break;
-//                        // LCOV_EXCL_STOP
-//                    }
-//                    case CID_EPH_NUM_NOTIFICATION :  /* Set effective ephemeris count at shutdown */
-//                    {
-//                        // LCOV_EXCL_START 8: dead code
-//                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//                        VehicleSensSetEphNumSharedMemory((const SENSOR_MSG_GPSDATA *)p_msg_buf);
-//                        break;
-//                        // LCOV_EXCL_STOP
-//                    }
-//                    case CID_SENSORIF__CWORD82__REQUEST:
-//                    {
-//                        // LCOV_EXCL_START 8: dead code
-//                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//                        /* Requests to send GPS _CWORD82_ commands */
-//                        VehicleSensSetVehicleData((const VEHICLE_MSG_SEND *)p_msg_buf);
-//                        break;
-//                        // LCOV_EXCL_STOP
-//                    }
-//                    case CID_THREAD_STOP_REQ:
-//                    {
-//                        /* Thread stop processing */
-//                        VehicleSensThreadStopProcess();
-//                        break;
-//                    }
-//                    case CID_TIMER_TOUT:
-//                    {
-//                        /* Timeout notification reception processing */
-//                        VehicleSensRcvMsgTout(reinterpret_cast<TimerToutMsg*>(p_msg_buf));
-//                        break;
-//                    }
-//                    default:
-//                        break;
-//                }
-//            } else {
-//                FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "ret_api != RET_RCVMSG\r\n");
-//            }
-//        }
+        while (1) {
+            /* Message reception processing */
+            p_msg_buf = &msg_buf;
+            ret_api = _pb_RcvMsg(PNO_VEHICLE_SENSOR, sizeof(msg_buf), &p_msg_buf, RM_WAIT);
+
+            /* Internal debug log output */
+            FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, 
+                          "[ret_api = 0x%x]",
+                          ret_api);
+
+            /* When the message is received successfully */
+            if (ret_api == RET_RCVMSG) {
+                p = reinterpret_cast<T_APIMSG_MSGBUF_HEADER *>(p_msg_buf);
+
+                switch (p->hdr.cid) {  // LCOV_EXCL_BR_LINE 200: some DID is not used
+                    case CID_VEHICLEIF_DELIVERY_ENTRY:
+                    {
+                        memcpy(&(delivery_entry), &(p_msg_buf), sizeof(VEHICLE_MSG_DELIVERY_ENTRY));
+
+                        /* Sort by received DID */
+                        switch (delivery_entry.data.did) {  // LCOV_EXCL_BR_LINE 200: DR DID is not used
+                            case VEHICLE_DID_DR_ALTITUDE :
+                            case VEHICLE_DID_DR_LATITUDE :
+                            case VEHICLE_DID_DR_SPEED :
+                            case VEHICLE_DID_DR_HEADING :
+                            case VEHICLE_DID_DR_GYRO_SCALE_FACTOR_LEVEL :
+                            case VEHICLE_DID_DR_SPEED_PULSE_SCALE_FACTOR_LEVEL :
+                            {
+                                // LCOV_EXCL_START 8: dead code
+                                AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+                                VehicleSensDrDeliveryEntry((const VEHICLE_MSG_DELIVERY_ENTRY *)p_msg_buf);
+                                // LCOV_EXCL_STOP
+                            }
+                            break;
+                            default:
+                                /* Vehicle sensor information delivery registration */
+                                VehicleSensDeliveryEntry((const VEHICLE_MSG_DELIVERY_ENTRY *)p_msg_buf);
+                                break;
+                        }
+                        break;
+                    }
+                    case CID_VEHICLEIF_GET_VEHICLE_DATA:
+                    {
+                        /* Vehicle sensor information acquisition */
+                        VehicleSensGetVehicleData((const VEHICLE_MSG_GET_VEHICLE_DATA *)p_msg_buf);
+                        break;
+                    }
+                    case CID_LINESENS_VEHICLE_DATA:
+                    {
+                        /* LineSensor Vehicle Signal Notification */
+                        VehicleSensLineSensDataDelivery((const LSDRV_MSG_LSDATA *)p_msg_buf,
+                                                          (PFUNC_DMASTER_SET_N)VehicleSensDataMasterSetN);
+                        break;
+                    }
+                    case CID_LINESENS_VEHICLE_DATA_G:
+                    {
+                        /* Data disruption monitoring process */
+                        VehicleSensDataDisrptMonitorProc(
+                            (reinterpret_cast<LSDRV_MSG_LSDATA_G*>(*p_lsdrv_msg))->st_para.st_data[0].ul_did);
+                        VehicleSensLineSensDataDeliveryG((const LSDRV_MSG_LSDATA_G *)p_msg_buf,
+                                                            (PFUNC_DMASTER_SET_N)VehicleSensDataMasterSetN);
+                        break;
+                    }
+                    case CID_LINESENS_VEHICLE_DATA_GYRO_TROUBLE:
+                    {
+                        // LCOV_EXCL_START 8: dead code
+                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+                        /* Gyro Failure Status Notification */
+                        VehicleSensLineSensDataDeliveryGyroTrouble((const LSDRV_MSG_LSDATA_GYRO_TROUBLE *)p_msg_buf,
+                                (PFUNC_DMASTER_SET_N)VehicleSensDataMasterSetN);
+                        break;
+                        // LCOV_EXCL_STOP
+                    }
+                    case CID_LINESENS_VEHICLE_DATA_SYS_GPS_INTERRUPT_SIGNAL:
+                    {
+                        // LCOV_EXCL_START 8: dead code
+                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+                        /* SYS GPS interrupt notification */
+                        VehicleSensLineSensDataDeliverySysGpsInterruptSignal(
+                            (const LSDRV_MSG_LSDATA_GPS_INTERRUPT_SIGNAL *)p_msg_buf,
+                            (PFUNC_DMASTER_SET_SHARED_MEMORY)VehicleSensDataMasterSetSharedMemory);
+                        break;
+                        // LCOV_EXCL_STOP
+                    }
+                    case CID_LINESENS_VEHICLE_DATA_GYRO_CONNECT_STATUS:
+                    {
+                        // LCOV_EXCL_START 8: dead code
+                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+                        /* Gyro Failure Status Notification */
+                        VehicleSensLineSensDataDeliveryGyroConnectStatus(
+                            (const LSDRV_MSG_LSDATA_GYRO_CONNECT_STATUS *)p_msg_buf,
+                            (PFUNC_DMASTER_SET_SHARED_MEMORY)VehicleSensDataMasterSetSharedMemory);
+                        break;
+                        // LCOV_EXCL_STOP
+                    }
+                    case CID_LINESENS_VEHICLE_DATA_GPS_ANTENNA_STATUS:
+                    {
+                        // LCOV_EXCL_START 8: dead code
+                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+                        /* GPS antenna failure status notification */
+                        VehicleSensLineSensDataDeliveryGpsAntennaStatus(
+                            (const LSDRV_MSG_LSDATA_GPS_ANTENNA_STATUS *)p_msg_buf,
+                            (PFUNC_DMASTER_SET_N)VehicleSensDataMasterSetN);
+                        break;
+                        // LCOV_EXCL_STOP
+                    }
+                    case CID_SENSORIF_PKG_DELIVERY_ENTRY_EXT:
+                    {
+                        /* Vehicle Sensor Information Extended Package Delivery Registration */
+                        VehicleSensPkgDeliveryEntryExt((const SENSOR_MSG_DELIVERY_ENTRY *)p_msg_buf);
+                        break;
+                    }
+                    case CID_LINESENS_VEHICLE_DATA_FST:
+                    {
+                        /* LineSensor Vehicle Initial Sensor Signal Notification */
+                        VehicleSensLineSensDataDeliveryFstG((const LSDRV_MSG_LSDATA_FST *)p_msg_buf,
+                                                            (PFUNC_DMASTER_SET_N)VehicleSensDataMasterSetN);
+                        break;
+                    }
+                    case CID_GPS_DATA:
+                    {
+                        /* GPS information notification */
+                        VehicleSensGpsDataDelivery(reinterpret_cast<SENSOR_MSG_GPSDATA *>(p_msg_buf),
+                            (PFUNC_DMASTER_SET_N)VehicleSensDataMasterSetN,
+                            (PFUNC_DMASTER_SET_SHARED_MEMORY)VehicleSensDataMasterSetSharedMemory);
+                        break;
+                    }
+                    case CID_POSIF_SET_DATA:
+                    {
+                        p_pos_msg =
+                        reinterpret_cast<POS_MSGINFO*>((reinterpret_cast<VEHICLE_MSG_BUF*>(*p_vehicle_msg))->data);
+                        /* Data disruption monitoring process */
+                        VehicleSensDataDisrptMonitorProc(p_pos_msg->did);
+
+                        /* Data Setting Notification */
+                        VehicleSensCommonDataDelivery((const VEHICLE_MSG_BUF *)p_msg_buf,
+                                                      (PFUNC_DMASTER_SET_N)VehicleSensDataMasterSetN);
+                        break;
+                    }
+                    case CID_GPS_RETTIMESETTING:
+                    {
+                        /* GPS time setting result notification */
+                        VehicleSensGpsTimeDelivery((const VEHICLE_MSG_BUF *)p_msg_buf);
+                        break;
+                    }
+                    case CID_DEAD_RECKONING_GPS_DATA :  /* GPS data distribution for DR */
+                    case CID_DEAD_RECKONING_SENS_DATA :  /* Sensor Data Delivery for DR */
+                    case CID_DEAD_RECKONING_SENS_FST_DATA :  /* Initial Sensor Data Delivery for DR */
+                    {
+                        // LCOV_EXCL_START 8: dead code
+                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+                        VehicleSensDrRcvMsg((const DEAD_RECKONING_RCVDATA *)p_msg_buf);
+                        break;
+                        // LCOV_EXCL_STOP
+                    }
+                    case CID_VEHICLEIF_GET_DR_DATA :
+                    {
+                        // LCOV_EXCL_START 8: dead code
+                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+                        /* Vehicle sensor information acquisition */
+                        DeadReckoningGetDRData((const DEADRECKONING_MSG_GET_DR_DATA *)p_msg_buf);
+                        break;
+                        // LCOV_EXCL_STOP
+                    }
+                    case CID_DR_MAP_MATCHING_DATA :  /* Map matching information */
+                    {
+                        // LCOV_EXCL_START 8: dead code
+                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+                        DeadReckoningSetMapMatchingData((const DR_MSG_MAP_MATCHING_DATA *)p_msg_buf);
+                        break;
+                        // LCOV_EXCL_STOP
+                    }
+                    case CID_DR_CLEAR_BACKUP_DATA :  /* Clear backup data */
+                    {
+                        // LCOV_EXCL_START 8: dead code
+                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+                        DeadReckoningClearBackupData((const DR_MSG_CLEAR_BACKUP_DATA*)p_msg_buf);
+                        break;
+                        // LCOV_EXCL_STOP
+                    }
+                    case CID_VEHICLEDEBUG_LOG_GET : /* Log acquisition request */
+                    {
+                        // LCOV_EXCL_START 8: dead code
+                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+                        VehicleSensGetLog((const VEHICLEDEBUG_MSG_BUF *)p_msg_buf);
+                        break;
+                        // LCOV_EXCL_STOP
+                    }
+                    case CID_VEHICLEDEBUG_LOG_SET :  /* Log Setting Request */
+                    {
+                        // LCOV_EXCL_START 8: dead code
+                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+                        VehicleSensSetLog((const VEHICLEDEBUG_MSG_BUF *)p_msg_buf);
+                        break;
+                        // LCOV_EXCL_STOP
+                    }
+                    case CANINPUT_CID_LOCALTIME_NOTIFICATION : /* CAN information acquisition */
+                    {
+                        // LCOV_EXCL_START 8: dead code
+                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+                        VehicleSensWriteLocalTime((const CANINPUT_MSG_INFO*)p_msg_buf);
+                        break;
+                        // LCOV_EXCL_STOP
+                    }
+                    case CID_EPH_NUM_NOTIFICATION :  /* Set effective ephemeris count at shutdown */
+                    {
+                        // LCOV_EXCL_START 8: dead code
+                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+                        VehicleSensSetEphNumSharedMemory((const SENSOR_MSG_GPSDATA *)p_msg_buf);
+                        break;
+                        // LCOV_EXCL_STOP
+                    }
+                    case CID_SENSORIF__CWORD82__REQUEST:
+                    {
+                        // LCOV_EXCL_START 8: dead code
+                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+                        /* Requests to send GPS _CWORD82_ commands */
+                        VehicleSensSetVehicleData((const VEHICLE_MSG_SEND *)p_msg_buf);
+                        break;
+                        // LCOV_EXCL_STOP
+                    }
+                    case CID_THREAD_STOP_REQ:
+                    {
+                        /* Thread stop processing */
+                        VehicleSensThreadStopProcess();
+                        break;
+                    }
+                    case CID_TIMER_TOUT:
+                    {
+                        /* Timeout notification reception processing */
+                        VehicleSensRcvMsgTout(reinterpret_cast<TimerToutMsg*>(p_msg_buf));
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            } else {
+                FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "ret_api != RET_RCVMSG\r\n");
+            }
+        }
     } else {
         FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "VehicleSens: VehicleSens_MainThread Initial Error!! :%d", ret_val);
         _pb_Exit();
@@ -462,7 +458,7 @@ void VehicleSensGetVehicleData(const VEHICLE_MSG_GET_VEHICLE_DATA *msg) {
     int32    ret_val;
     int32    event_val;
     EventID    event_id;
-//    SENSOR_MSG_GPSDATA_DAT    gps_master;  /* GPS Data Master */
+    SENSOR_MSG_GPSDATA_DAT    gps_master;  /* GPS Data Master */
 
     /* Check the DID */
     ret_val = VehicleSensCheckDid(msg->data.did);
@@ -480,24 +476,24 @@ void VehicleSensGetVehicleData(const VEHICLE_MSG_GET_VEHICLE_DATA *msg) {
                 (msg->data.did != VEHICLE_DID_MOTION_HEADING))) {
                 /* _CWORD71_ processing speed(Memset modification) */
                 /* Retrieval of the data master fails.,Initialize size to 0 to prevent unauthorized writes */
-//                gps_master.us_size = 0;
-//                VehicleSensGetGpsDataMaster(msg->data.did, get_method, &gps_master);
-//                /* Check the data size */
-//                if (msg->data.size < gps_master.us_size) {
-//                    /* Shared memory error(Insufficient storage size) */
-//                    event_val = VEHICLE_RET_ERROR_OUTOF_MEMORY;
-//                } else {
-//                    /* Write data master to shared memory */
-//                    PosSetShareData(share_top,
-//                                    msg->data.offset, (const void *)&gps_master.uc_data, gps_master.us_size);
-//
-//                    /* Set Successful Completion */
-//                    event_val = VEHICLE_RET_NORMAL;
-//                    SensLogWriteOutputData(SENSLOG_DATA_O_UNSPECIFIED,
-//                                            msg->data.did, msg->data.pno,
-//                                            reinterpret_cast<uint8_t *>(&(gps_master.uc_data[0])),
-//                                            gps_master.us_size, SENSLOG_RES_SUCCESS);
-//                }
+                gps_master.us_size = 0;
+                VehicleSensGetGpsDataMaster(msg->data.did, get_method, &gps_master);
+                /* Check the data size */
+                if (msg->data.size < gps_master.us_size) {
+                    /* Shared memory error(Insufficient storage size) */
+                    event_val = VEHICLE_RET_ERROR_OUTOF_MEMORY;
+                } else {
+                    /* Write data master to shared memory */
+                    PosSetShareData(share_top,
+                                    msg->data.offset, (const void *)&gps_master.uc_data, gps_master.us_size);
+
+                    /* Set Successful Completion */
+                    event_val = VEHICLE_RET_NORMAL;
+                    SensLogWriteOutputData(SENSLOG_DATA_O_UNSPECIFIED,
+                                            msg->data.did, msg->data.pno,
+                                            reinterpret_cast<uint8_t *>(&(gps_master.uc_data[0])),
+                                            gps_master.us_size, SENSLOG_RES_SUCCESS);
+                }
             } else {
                 (void)memset(reinterpret_cast<void *>(&master), 0, sizeof(VEHICLESENS_DATA_MASTER));
                 VehicleSensGetDataMaster(msg->data.did, get_method, &master);
@@ -677,18 +673,18 @@ void VehicleSensGetVehiclePkgData(const SENSOR_MSG_GET_SENSOR_DATA *msg) {  // L
 * NOTE      :
 * RETURN    : void
 ******************************************************************************/
-//void VehicleSensLineSensDataDelivery(const LSDRV_MSG_LSDATA *msg, PFUNC_DMASTER_SET_N p_datamaster_set_n) {
-//    int32  i;
-//    BOOL  sens_ext;
-//
-//    sens_ext = TRUE;
-//
-//    for (i = 0; i < msg->st_para.uc_data_num; i++) {
-//        /* Setting Vehicle Signal Data from LineSensor as Data Master */
-//        VehicleSensSetDataMasterLineSens((const LSDRV_LSDATA *) & (msg->st_para.st_data[i]),
-//                                          p_datamaster_set_n, sens_ext);
-//    }
-//}
+void VehicleSensLineSensDataDelivery(const LSDRV_MSG_LSDATA *msg, PFUNC_DMASTER_SET_N p_datamaster_set_n) {
+    int32  i;
+    BOOL  sens_ext;
+
+    sens_ext = TRUE;
+
+    for (i = 0; i < msg->st_para.uc_data_num; i++) {
+        /* Setting Vehicle Signal Data from LineSensor as Data Master */
+        VehicleSensSetDataMasterLineSens((const LSDRV_LSDATA *) & (msg->st_para.st_data[i]),
+                                          p_datamaster_set_n, sens_ext);
+    }
+}
 
 /*******************************************************************************
 * MODULE    : VehicleSensLineSensDataDeliveryG
@@ -699,22 +695,22 @@ void VehicleSensGetVehiclePkgData(const SENSOR_MSG_GET_SENSOR_DATA *msg) {  // L
 * NOTE      :
 * RETURN    : void
 ******************************************************************************/
-//void VehicleSensLineSensDataDeliveryG(const LSDRV_MSG_LSDATA_G *msg, PFUNC_DMASTER_SET_N p_datamaster_set_n) {
-//    int32  i;
-//    BOOL  sens_ext;
-//
-//    sens_ext = TRUE;
-//    if (g_sent_fst_pkg_delivery_ext == TRUE) {
-//        /* Initial Expansion Package Data Delivery,Without storing extended data */
-//        sens_ext = FALSE;
-//    }
-//
-//    for (i = 0; i < msg->st_para.uc_data_num; i++) {
-//        /* Setting Vehicle Signal Data from LineSensor as Data Master */
-//        VehicleSensSetDataMasterLineSensG((const LSDRV_LSDATA_G *) & (msg->st_para.st_data[i]),
-//                                              p_datamaster_set_n, sens_ext);
-//    }
-//}
+void VehicleSensLineSensDataDeliveryG(const LSDRV_MSG_LSDATA_G *msg, PFUNC_DMASTER_SET_N p_datamaster_set_n) {
+    int32  i;
+    BOOL  sens_ext;
+
+    sens_ext = TRUE;
+    if (g_sent_fst_pkg_delivery_ext == TRUE) {
+        /* Initial Expansion Package Data Delivery,Without storing extended data */
+        sens_ext = FALSE;
+    }
+
+    for (i = 0; i < msg->st_para.uc_data_num; i++) {
+        /* Setting Vehicle Signal Data from LineSensor as Data Master */
+        VehicleSensSetDataMasterLineSensG((const LSDRV_LSDATA_G *) & (msg->st_para.st_data[i]),
+                                              p_datamaster_set_n, sens_ext);
+    }
+}
 
 /*******************************************************************************
 * MODULE    : VehicleSensLineSensDataDeliveryGyroTrouble
@@ -725,12 +721,12 @@ void VehicleSensGetVehiclePkgData(const SENSOR_MSG_GET_SENSOR_DATA *msg) {  // L
 * NOTE      :
 * RETURN    : void
 ******************************************************************************/
-//void VehicleSensLineSensDataDeliveryGyroTrouble(const LSDRV_MSG_LSDATA_GYRO_TROUBLE *msg, PFUNC_DMASTER_SET_N p_datamaster_set_n) {  // LCOV_EXCL_START 8 : dead code  // NOLINT(whitespace/line_length)
-//    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//    /* Setting Gyro Failure Status Data from LineSensor to Data Master */
-//    VehicleSensSetDataMasterGyroTrouble((const LSDRV_MSG_LSDATA_DAT_GYRO_TROUBLE *)&(msg->st_para),
-//                                           p_datamaster_set_n);
-//}
+void VehicleSensLineSensDataDeliveryGyroTrouble(const LSDRV_MSG_LSDATA_GYRO_TROUBLE *msg, PFUNC_DMASTER_SET_N p_datamaster_set_n) {  // LCOV_EXCL_START 8 : dead code  // NOLINT(whitespace/line_length)
+    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+    /* Setting Gyro Failure Status Data from LineSensor to Data Master */
+    VehicleSensSetDataMasterGyroTrouble((const LSDRV_MSG_LSDATA_DAT_GYRO_TROUBLE *)&(msg->st_para),
+                                           p_datamaster_set_n);
+}
 // LCOV_EXCL_STOP
 
 /*******************************************************************************
@@ -742,12 +738,12 @@ void VehicleSensGetVehiclePkgData(const SENSOR_MSG_GET_SENSOR_DATA *msg) {  // L
 * NOTE      :
 * RETURN    : void
 ******************************************************************************/
-//void VehicleSensLineSensDataDeliverySysGpsInterruptSignal(const LSDRV_MSG_LSDATA_GPS_INTERRUPT_SIGNAL *msg, PFUNC_DMASTER_SET_SHARED_MEMORY p_datamaster_set_sharedmemory) {  // LCOV_EXCL_START 8 :dead code  // NOLINT(whitespace/line_length)
-//    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//    /* Sets the SYS GPS interrupt data from the LineSensor to the data master. */
-//    VehicleSensSetDataMasterSysGpsInterruptSignal((const LSDRV_MSG_LSDATA_DAT_GPS_INTERRUPT_SIGNAL *)&(msg->st_para),
-//                                                    p_datamaster_set_sharedmemory);
-//}
+void VehicleSensLineSensDataDeliverySysGpsInterruptSignal(const LSDRV_MSG_LSDATA_GPS_INTERRUPT_SIGNAL *msg, PFUNC_DMASTER_SET_SHARED_MEMORY p_datamaster_set_sharedmemory) {  // LCOV_EXCL_START 8 :dead code  // NOLINT(whitespace/line_length)
+    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+    /* Sets the SYS GPS interrupt data from the LineSensor to the data master. */
+    VehicleSensSetDataMasterSysGpsInterruptSignal((const LSDRV_MSG_LSDATA_DAT_GPS_INTERRUPT_SIGNAL *)&(msg->st_para),
+                                                    p_datamaster_set_sharedmemory);
+}
 // LCOV_EXCL_STOP
 
 /*******************************************************************************
@@ -759,12 +755,12 @@ void VehicleSensGetVehiclePkgData(const SENSOR_MSG_GET_SENSOR_DATA *msg) {  // L
 * NOTE      :
 * RETURN    : void
 ******************************************************************************/
-//void VehicleSensLineSensDataDeliveryGyroConnectStatus(const LSDRV_MSG_LSDATA_GYRO_CONNECT_STATUS *msg, PFUNC_DMASTER_SET_SHARED_MEMORY p_datamaster_set_sharedmemory) {  // LCOV_EXCL_START 8 : dead code  // NOLINT(whitespace/line_length)
-//    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//    /* Setting Gyro Connection Status Data from LineSensor to Data Master */
-//    VehicleSensSetDataMasterGyroConnectStatus((const LSDRV_MSG_LSDATA_DAT_GYRO_CONNECT_STATUS *)&(msg->st_para),
-//                                                p_datamaster_set_sharedmemory);
-//}
+void VehicleSensLineSensDataDeliveryGyroConnectStatus(const LSDRV_MSG_LSDATA_GYRO_CONNECT_STATUS *msg, PFUNC_DMASTER_SET_SHARED_MEMORY p_datamaster_set_sharedmemory) {  // LCOV_EXCL_START 8 : dead code  // NOLINT(whitespace/line_length)
+    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+    /* Setting Gyro Connection Status Data from LineSensor to Data Master */
+    VehicleSensSetDataMasterGyroConnectStatus((const LSDRV_MSG_LSDATA_DAT_GYRO_CONNECT_STATUS *)&(msg->st_para),
+                                                p_datamaster_set_sharedmemory);
+}
 // LCOV_EXCL_STOP
 
 /*******************************************************************************
@@ -776,12 +772,12 @@ void VehicleSensGetVehiclePkgData(const SENSOR_MSG_GET_SENSOR_DATA *msg) {  // L
 * NOTE      :
 * RETURN    : void
 ******************************************************************************/
-//void VehicleSensLineSensDataDeliveryGpsAntennaStatus(const LSDRV_MSG_LSDATA_GPS_ANTENNA_STATUS *msg, PFUNC_DMASTER_SET_N p_datamaster_set_n) {  // LCOV_EXCL_START 8 : dead code  // NOLINT(whitespace/line_length)
-//    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//    /* Setting GPS Antenna Connection Status Data from LineSensor as Data Master */
-//    VehicleSensSetDataMasterGpsAntennaStatus((const LSDRV_MSG_LSDATA_DAT_GPS_ANTENNA_STATUS *)&(msg->st_para),
-//                                               p_datamaster_set_n);
-//}
+void VehicleSensLineSensDataDeliveryGpsAntennaStatus(const LSDRV_MSG_LSDATA_GPS_ANTENNA_STATUS *msg, PFUNC_DMASTER_SET_N p_datamaster_set_n) {  // LCOV_EXCL_START 8 : dead code  // NOLINT(whitespace/line_length)
+    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+    /* Setting GPS Antenna Connection Status Data from LineSensor as Data Master */
+    VehicleSensSetDataMasterGpsAntennaStatus((const LSDRV_MSG_LSDATA_DAT_GPS_ANTENNA_STATUS *)&(msg->st_para),
+                                               p_datamaster_set_n);
+}
 // LCOV_EXCL_STOP
 
 #if CONFIG_SENSOR_EXT_VALID        /* Initial Sensor Support */
@@ -794,9 +790,9 @@ void VehicleSensGetVehiclePkgData(const SENSOR_MSG_GET_SENSOR_DATA *msg) {  // L
 * NOTE      :
 * RETURN    : void
 ******************************************************************************/
-//void VehicleSensLineSensDataDeliveryFst(const LSDRV_MSG_LSDATA_FST *msg, PFUNC_DMASTER_SET_N p_datamaster_set_n) {  // LCOV_EXCL_START 8 : dead code  // NOLINT(whitespace/line_length)
-//    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//}
+void VehicleSensLineSensDataDeliveryFst(const LSDRV_MSG_LSDATA_FST *msg, PFUNC_DMASTER_SET_N p_datamaster_set_n) {  // LCOV_EXCL_START 8 : dead code  // NOLINT(whitespace/line_length)
+    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+}
 // LCOV_EXCL_STOP
 #endif
 
@@ -810,22 +806,22 @@ void VehicleSensGetVehiclePkgData(const SENSOR_MSG_GET_SENSOR_DATA *msg) {  // L
 * NOTE      :
 * RETURN    : void
 ******************************************************************************/
-//void VehicleSensLineSensDataDeliveryFstG(const LSDRV_MSG_LSDATA_FST *msg, PFUNC_DMASTER_SET_N p_datamaster_set_n) {
-//    /* Internal debug log output */
-//    FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, "+");
-//
-//    if (msg == NULL) {  // LCOV_EXCL_BR_LINE 6:msg cannot be null
-//        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//        FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "msg == NULL\r\n");  // LCOV_EXCL_LINE 8: dead code
-//    } else {
-//        /* Set Vehicle Signal Data from LineSensor (Initial Sensor) as Data Master */
-//        VehicleSensSetDataMasterLineSensFstG((const LSDRV_MSG_LSDATA_DAT_FST *) & (msg->st_para),
-//                p_datamaster_set_n);
-//    }
-//
-//    /* Internal debug log output */
-//    FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, "-");
-//}
+void VehicleSensLineSensDataDeliveryFstG(const LSDRV_MSG_LSDATA_FST *msg, PFUNC_DMASTER_SET_N p_datamaster_set_n) {
+    /* Internal debug log output */
+    FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, "+");
+
+    if (msg == NULL) {  // LCOV_EXCL_BR_LINE 6:msg cannot be null
+        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+        FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "msg == NULL\r\n");  // LCOV_EXCL_LINE 8: dead code
+    } else {
+        /* Set Vehicle Signal Data from LineSensor (Initial Sensor) as Data Master */
+        VehicleSensSetDataMasterLineSensFstG((const LSDRV_MSG_LSDATA_DAT_FST *) & (msg->st_para),
+                p_datamaster_set_n);
+    }
+
+    /* Internal debug log output */
+    FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, "-");
+}
 #endif
 
 /*******************************************************************************
@@ -838,26 +834,26 @@ void VehicleSensGetVehiclePkgData(const SENSOR_MSG_GET_SENSOR_DATA *msg) {  // L
 * NOTE      :
 * RETURN    : void
 ******************************************************************************/
-//void VehicleSensGpsDataDelivery(SENSOR_MSG_GPSDATA *msg,
-//                                PFUNC_DMASTER_SET_N p_datamaster_set_n,
-//                                PFUNC_DMASTER_SET_SHARED_MEMORY p_datamaster_set_sharedmemory) {
-//    /* Setting GPS Data as Data Master */
-//    if (msg->st_para.ul_did == VEHICLE_DID_MAIN_GPS_INTERRUPT_SIGNAL) {  // LCOV_EXCL_BR_LINE 6:DID is not used
-//        // LCOV_EXCL_START 8: dead code
-//        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//        /* [PastModel002 Specifications] GPS->_CWORD102_ interrupt or not is obtained from GPS */
-//        VehicleSensSetDataMasterMainGpsInterruptSignal((const SENSOR_MSG_GPSDATA_DAT *)&(msg->st_para),
-//                                                         p_datamaster_set_sharedmemory);
-//        // LCOV_EXCL_STOP
-//    } else {
-//        FRAMEWORKUNIFIEDLOG(ZONE_27, __FUNCTION__, 
-//                      "VehicleSensGpsDataDelivery VehicleSensSetDataMasterGps() -->");
-//        VehicleSensSetDataMasterGps(reinterpret_cast<SENSOR_MSG_GPSDATA_DAT *>(&(msg->st_para)),
-//                                      p_datamaster_set_n);
-//        FRAMEWORKUNIFIEDLOG(ZONE_27, __FUNCTION__, 
-//                      "VehicleSensGpsDataDelivery VehicleSensSetDataMasterGps() <--");
-//    }
-//}
+void VehicleSensGpsDataDelivery(SENSOR_MSG_GPSDATA *msg,
+                                PFUNC_DMASTER_SET_N p_datamaster_set_n,
+                                PFUNC_DMASTER_SET_SHARED_MEMORY p_datamaster_set_sharedmemory) {
+    /* Setting GPS Data as Data Master */
+    if (msg->st_para.ul_did == VEHICLE_DID_MAIN_GPS_INTERRUPT_SIGNAL) {  // LCOV_EXCL_BR_LINE 6:DID is not used
+        // LCOV_EXCL_START 8: dead code
+        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+        /* [PastModel002 Specifications] GPS->_CWORD102_ interrupt or not is obtained from GPS */
+        VehicleSensSetDataMasterMainGpsInterruptSignal((const SENSOR_MSG_GPSDATA_DAT *)&(msg->st_para),
+                                                         p_datamaster_set_sharedmemory);
+        // LCOV_EXCL_STOP
+    } else {
+        FRAMEWORKUNIFIEDLOG(ZONE_27, __FUNCTION__, 
+                      "VehicleSensGpsDataDelivery VehicleSensSetDataMasterGps() -->");
+        VehicleSensSetDataMasterGps(reinterpret_cast<SENSOR_MSG_GPSDATA_DAT *>(&(msg->st_para)),
+                                      p_datamaster_set_n);
+        FRAMEWORKUNIFIEDLOG(ZONE_27, __FUNCTION__, 
+                      "VehicleSensGpsDataDelivery VehicleSensSetDataMasterGps() <--");
+    }
+}
 
 /*******************************************************************************
 * MODULE    : VehicleSensDataMasterSetN
@@ -871,71 +867,49 @@ void VehicleSensGetVehiclePkgData(const SENSOR_MSG_GET_SENSOR_DATA *msg) {  // L
 ******************************************************************************/
 void VehicleSensDataMasterSetN(DID did, u_int8 chg_type, u_int8 get_method) {
 
-//    /* Call the data delivery process */
-//    VehicleSensDeliveryProc(did, chg_type, get_method);
   u_int8 chgType;
 
   chgType = chg_type;
 
   switch (did) {
-//    case POSHAL_DID_SPEED_KMPH:
-//    {
-//      if (ChkUnitType(UNIT_TYPE_GRADE1) == TRUE) {
-//        /* For creating PASCD Sentence of NMEA */
-//
-//        int ret;
-//        VEHICLESENS_VEHICLE_SPEED_DAT stVehicleSpeed;
-//
-//        ret = clock_gettime(CLOCK_MONOTONIC, &(stVehicleSpeed.ts));
-//        if (ret != 0) {
-//          FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "clock_gettime error:%m");
-//        } else {
-//          VEHICLESENS_DATA_MASTER stData;
-//          SENSORMOTION_SPEEDINFO_DAT* pSpdInfo;
-//
-//          VehicleSensGetMotionSpeed(&stData, VEHICLESENS_GETMETHOD_INTERNAL);  // LCOV_EXCL_BR_LINE 6:unexpected branch  //NOLINT (whitespace/line_length)
-//          pSpdInfo = (SENSORMOTION_SPEEDINFO_DAT*)(stData.uc_data);
-//
-//          stVehicleSpeed.speed = pSpdInfo->Speed;
-//
-//          VehicleSens_StoreVehicleSpeed(&stVehicleSpeed);  // LCOV_EXCL_BR_LINE 6:unexpected branch  //NOLINT (whitespace/line_length)
-//        }
-//      }
-//
-//      break;
-//    }
-//    case POSHAL_DID_GPS_NMEA:
-//    {
-//      RET_API ret;
-//      static char pascd[VEHICLESENS_NMEA_PASCD_LEN_MAX];
-//
-//      ret = VehicleSens_GeneratePASCDSentence(pascd, sizeof(pascd));
-//
-////      fprintf(stderr, "PASCD,%s", pascd); // TODO 171120
-//      if (ret != RET_NORMAL) {
-//        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, 
-//        "ERROR: VehicleSens_GeneratePASCDSentence:%d", ret);
-//      } else {
-//        ret = VehicleSens_AddPASCDSentenceToNmeaData(pascd, &chgType);
-//        if (ret != RET_NORMAL) {
-//          FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, 
-//          "ERROR: VehicleSens_AddPASCDSentenceToNmeaData:%d", ret);
-//        }
-//      }
-//
-//      VehilceSens_InitVehicleSpeed();
-//
-//      break;
-//    }
+    case POSHAL_DID_SPEED_KMPH:
+    {
+      if (ChkUnitType(UNIT_TYPE_GRADE1) == TRUE) {
+        /* For creating PASCD Sentence of NMEA */
+
+        int ret;
+        VEHICLESENS_VEHICLE_SPEED_DAT stVehicleSpeed;
+
+        ret = clock_gettime(CLOCK_MONOTONIC, &(stVehicleSpeed.ts));
+        if (ret != 0) {
+          FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "clock_gettime error:%m");
+        } else {
+          VEHICLESENS_DATA_MASTER stData;
+          SENSORMOTION_SPEEDINFO_DAT* pSpdInfo;
+
+          VehicleSensGetMotionSpeed(&stData, VEHICLESENS_GETMETHOD_INTERNAL);  // LCOV_EXCL_BR_LINE 6:unexpected branch  //NOLINT (whitespace/line_length)
+          pSpdInfo = (SENSORMOTION_SPEEDINFO_DAT*)(stData.uc_data);
+
+          stVehicleSpeed.speed = pSpdInfo->Speed;
+
+          VehicleSens_StoreVehicleSpeed(&stVehicleSpeed);  // LCOV_EXCL_BR_LINE 6:unexpected branch  //NOLINT (whitespace/line_length)
+        }
+      }
+
+      break;
+    }
+    case POSHAL_DID_GPS_NMEA:
+    {
+      VehilceSens_InitVehicleSpeed();
+
+      break;
+    }
     default:
       break;
   }
 
   /* Call the data delivery process */
   VehicleSensDeliveryProc( did, chgType, get_method );
-
-  return;
-
 }
 
 /*******************************************************************************
@@ -966,43 +940,43 @@ void VehicleSensDataMasterSetSharedMemory(DID did, u_int8 chg_type) {  // LCOV_E
 * RETURN    : void
 ******************************************************************************/
 void VehicleSensSetVehicleData(const VEHICLE_MSG_SEND *msg) {
-//    u_int16    size;            /* Data length setting          */
-//    u_int16    all_len;          /* Sent message length          */
-//    u_int16    mode;            /* Mode information            */
-//    RID      req_id = 0;          /* Resources ID            */
-//
-//    T_APIMSG_MSGBUF_HEADER  header;      /* Message header          */
-//    TG_GPS_SND_DATA      data;      /* Message body          */
-//    u_int8  snd_buf[(sizeof(T_APIMSG_MSGBUF_HEADER) + sizeof(TG_GPS_SND_DATA))];
-//
-//    /* Message header generation */
-//    size = sizeof(data);
-//    header.signo = 0;            /* Signal information        */
-//    header.hdr.sndpno = PNO_VEHICLE_SENSOR;  /* Source thread number      */
-//    header.hdr.respno = 0;          /* Destination process No.      */
-//    header.hdr.cid = CID_GPS__CWORD82__REQUEST;  /* Command ID          */
-//    header.hdr.msgbodysize = size;      /* Message data length setting    */
-//    header.hdr.rid = req_id;          /* Resource ID Setting        */
-//    header.hdr.reserve = 0;          /* Reserved Area Clear      */
-//
-//    /* Message body generating */
-//    data.us_size = msg->data.size;
-//    memcpy(&(data.ub_data[0]), &(msg->data.data[0]), msg->data.size);
-//
-//    /* Reserved Area Clear      */
-//    data.reserve[0] = 0;
-//    data.reserve[1] = 0;
-//    data.reserve[2] = 0;
-//    data.reserve[3] = 0;
-//
-//    /* Message generation */
-//    (void)memcpy(&snd_buf[0], &header, sizeof(header));
-//    (void)memcpy(&snd_buf[sizeof(header)], &data, sizeof(data));
-//    all_len = static_cast<u_int16>(size + sizeof(header));
-//    mode    = 0;
-//
-//    FRAMEWORKUNIFIEDLOG(ZONE_27, __FUNCTION__, "VehicleSensSetVehicleData NMEA = %s", data.ub_data);
-//    (void)_pb_SndMsg(PNO_NAVI_GPS_MAIN, all_len, reinterpret_cast<void *>(&snd_buf[0]), mode);
+    u_int16    size;            /* Data length setting          */
+    u_int16    all_len;          /* Sent message length          */
+    u_int16    mode;            /* Mode information            */
+    RID      req_id = 0;          /* Resources ID            */
+
+    T_APIMSG_MSGBUF_HEADER  header;      /* Message header          */
+    TG_GPS_SND_DATA      data;      /* Message body          */
+    u_int8  snd_buf[(sizeof(T_APIMSG_MSGBUF_HEADER) + sizeof(TG_GPS_SND_DATA))];
+
+    /* Message header generation */
+    size = sizeof(data);
+    header.signo = 0;            /* Signal information        */
+    header.hdr.sndpno = PNO_VEHICLE_SENSOR;  /* Source thread number      */
+    header.hdr.respno = 0;          /* Destination process No.      */
+    header.hdr.cid = CID_GPS__CWORD82__REQUEST;  /* Command ID          */
+    header.hdr.msgbodysize = size;      /* Message data length setting    */
+    header.hdr.rid = req_id;          /* Resource ID Setting        */
+    header.hdr.reserve = 0;          /* Reserved Area Clear      */
+
+    /* Message body generating */
+    data.us_size = msg->data.size;
+    memcpy(&(data.ub_data[0]), &(msg->data.data[0]), msg->data.size);
+
+    /* Reserved Area Clear      */
+    data.reserve[0] = 0;
+    data.reserve[1] = 0;
+    data.reserve[2] = 0;
+    data.reserve[3] = 0;
+
+    /* Message generation */
+    (void)memcpy(&snd_buf[0], &header, sizeof(header));
+    (void)memcpy(&snd_buf[sizeof(header)], &data, sizeof(data));
+    all_len = static_cast<u_int16>(size + sizeof(header));
+    mode    = 0;
+
+    FRAMEWORKUNIFIEDLOG(ZONE_27, __FUNCTION__, "VehicleSensSetVehicleData NMEA = %s", data.ub_data);
+    (void)_pb_SndMsg(PNO_NAVI_GPS_MAIN, all_len, reinterpret_cast<void *>(&snd_buf[0]), mode);
 }
 
 /*******************************************************************************
@@ -1108,23 +1082,23 @@ void VehicleSensWriteLocalTime(const CANINPUT_MSG_INFO *msg) {  // LCOV_EXCL_STA
 * NOTE      :
 * RETURN    : void
 ******************************************************************************/
-//void VehicleSensSetEphNumSharedMemory(const SENSOR_MSG_GPSDATA *msg) {  // LCOV_EXCL_START 8 : dead code
-//    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//    RET_API    ret_api;
-//    u_int8    ephemeris_num;
-//
-//    if (msg != NULL) {
-//        ephemeris_num = msg->st_para.uc_data[0];
-//
-//        ret_api = VehicleSensWriteDataValidEphemerisNum(ephemeris_num);
-//
-//        if (ret_api != RET_NORMAL) {
-//            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Share Memory write error.");
-//        }
-//    }
-//
-//    return;
-//}
+void VehicleSensSetEphNumSharedMemory(const SENSOR_MSG_GPSDATA *msg) {  // LCOV_EXCL_START 8 : dead code
+    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+    RET_API    ret_api;
+    u_int8    ephemeris_num;
+
+    if (msg != NULL) {
+        ephemeris_num = msg->st_para.uc_data[0];
+
+        ret_api = VehicleSensWriteDataValidEphemerisNum(ephemeris_num);
+
+        if (ret_api != RET_NORMAL) {
+            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Share Memory write error.");
+        }
+    }
+
+    return;
+}
 // LCOV_EXCL_STOP
 
 /*******************************************************************************
@@ -1180,32 +1154,32 @@ void  VehicleSensDrRcvMsg(const DEAD_RECKONING_RCVDATA * msg) {  // LCOV_EXCL_ST
  * @retval      none
  */
 void VehicleSensCommonDataDelivery(const VEHICLE_MSG_BUF *msg, PFUNC_DMASTER_SET_N p_datamaster_set_n) {
-//    const POS_MSGINFO  *pstPosMsg = (const POS_MSGINFO *) & (msg->data[0]);
-//
-//    /* Individual processing for each data ID */
-//    switch (pstPosMsg->did) {
-//        case VEHICLE_DID_SETTINGTIME:
-//        {
-//            /* By checking the evacuation message information,Determine whether the GPS time has already been set and requested */
-//            if (NULL == g_wait_for_resp_set_n) {
-//                /* GPS time settable */
-//                /* GPS time setting data transmission */
-//                VehicleSensGpsTimeSndMsg(pstPosMsg);
-//
-//                /* Save message information(Used when a response is received.)*/
-//                (void)memcpy(&g_wait_for_resp_msg, msg, sizeof(VEHICLE_MSG_BUF));
-//                g_wait_for_resp_set_n = p_datamaster_set_n;
-//            } else {
-//                /* GPS time setting process is already in progress:Reply BUSY to requesting processes */
-//                FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "SetGpsTime already.");
-//            }
-//            break;
-//        }
-//        default:
-//            /* Set the specified data in the data master */
-//            VehicleSensSetDataMasterData((const POS_MSGINFO *)msg->data, p_datamaster_set_n);
-//            break;
-//    }
+    const POS_MSGINFO  *pstPosMsg = (const POS_MSGINFO *) & (msg->data[0]);
+
+    /* Individual processing for each data ID */
+    switch (pstPosMsg->did) {
+        case VEHICLE_DID_SETTINGTIME:
+        {
+            /* By checking the evacuation message information,Determine whether the GPS time has already been set and requested */
+            if (NULL == g_wait_for_resp_set_n) {
+                /* GPS time settable */
+                /* GPS time setting data transmission */
+                VehicleSensGpsTimeSndMsg(pstPosMsg);
+
+                /* Save message information(Used when a response is received.)*/
+                (void)memcpy(&g_wait_for_resp_msg, msg, sizeof(VEHICLE_MSG_BUF));
+                g_wait_for_resp_set_n = p_datamaster_set_n;
+            } else {
+                /* GPS time setting process is already in progress:Reply BUSY to requesting processes */
+                FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "SetGpsTime already.");
+            }
+            break;
+        }
+        default:
+            /* Set the specified data in the data master */
+            VehicleSensSetDataMasterData((const POS_MSGINFO *)msg->data, p_datamaster_set_n);
+            break;
+    }
 
     return;
 }
@@ -1220,45 +1194,45 @@ void VehicleSensCommonDataDelivery(const VEHICLE_MSG_BUF *msg, PFUNC_DMASTER_SET
  * @return      none
  * @retval      none
  */
-//void VehicleSensGpsTimeSndMsg(const POS_MSGINFO *pos_msg) {
-//    RET_API    ret_api = RET_NORMAL;    /* System API return value */
-//    u_int16    size = 0;          /* Data length setting */
-//    u_int16    all_len = 0;        /* Sent message length */
-//    u_int16    mode = 0;          /* Mode information */
-//    RID      req_id = 0;          /* Resources ID */
-//    T_APIMSG_MSGBUF_HEADER  header;      /* Message header */
-//    TG_GPS_SND_DATA      data;      /* Message body */
-//    u_int8    snd_buf[(sizeof(T_APIMSG_MSGBUF_HEADER) + sizeof(TG_GPS_SND_DATA))];
-//
-//    memset(&header, 0x00, sizeof(T_APIMSG_MSGBUF_HEADER));
-//    memset(&data, 0x00, sizeof(TG_GPS_SND_DATA));
-//
-//    /* Message header generation */
-//    size = sizeof(data);
-//    header.signo = 0;            /* Signal information          */
-//    header.hdr.sndpno = PNO_VEHICLE_SENSOR;  /* Source thread number      */
-//    header.hdr.respno = 0;          /* Destination process No.      */
-//    header.hdr.cid = CID_GPS_TIMESETTING;  /* Command ID          */
-//    header.hdr.msgbodysize = size;      /* Message data length setting  */
-//    header.hdr.rid = req_id;          /* Resource ID Setting        */
-//
-//    /* Message body generating */
-//    data.us_size = pos_msg->size;
-//    memcpy(&(data.ub_data[0]), &(pos_msg->data[0]), pos_msg->size);
-//
-//    /* Messaging */
-//    (void)memcpy(&snd_buf[0], &header, sizeof(header));
-//    (void)memcpy(&snd_buf[sizeof(header)], &data, sizeof(data));
-//    all_len = static_cast<u_int16>(size + sizeof(header));
-//    mode   = 0;
-//    ret_api = _pb_SndMsg(PNO_NAVI_GPS_MAIN, all_len, reinterpret_cast<void *>(&snd_buf[0]), mode);
-//    if (RET_NORMAL != ret_api) {
-//        /* Message transmission processing failed */
-//        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "send Message failed.");
-//    }
-//
-//    return;
-//}
+void VehicleSensGpsTimeSndMsg(const POS_MSGINFO *pos_msg) {
+    RET_API    ret_api = RET_NORMAL;    /* System API return value */
+    u_int16    size = 0;          /* Data length setting */
+    u_int16    all_len = 0;        /* Sent message length */
+    u_int16    mode = 0;          /* Mode information */
+    RID      req_id = 0;          /* Resources ID */
+    T_APIMSG_MSGBUF_HEADER  header;      /* Message header */
+    TG_GPS_SND_DATA      data;      /* Message body */
+    u_int8    snd_buf[(sizeof(T_APIMSG_MSGBUF_HEADER) + sizeof(TG_GPS_SND_DATA))];
+
+    memset(&header, 0x00, sizeof(T_APIMSG_MSGBUF_HEADER));
+    memset(&data, 0x00, sizeof(TG_GPS_SND_DATA));
+
+    /* Message header generation */
+    size = sizeof(data);
+    header.signo = 0;            /* Signal information          */
+    header.hdr.sndpno = PNO_VEHICLE_SENSOR;  /* Source thread number      */
+    header.hdr.respno = 0;          /* Destination process No.      */
+    header.hdr.cid = CID_GPS_TIMESETTING;  /* Command ID          */
+    header.hdr.msgbodysize = size;      /* Message data length setting  */
+    header.hdr.rid = req_id;          /* Resource ID Setting        */
+
+    /* Message body generating */
+    data.us_size = pos_msg->size;
+    memcpy(&(data.ub_data[0]), &(pos_msg->data[0]), pos_msg->size);
+
+    /* Messaging */
+    (void)memcpy(&snd_buf[0], &header, sizeof(header));
+    (void)memcpy(&snd_buf[sizeof(header)], &data, sizeof(data));
+    all_len = static_cast<u_int16>(size + sizeof(header));
+    mode   = 0;
+    ret_api = _pb_SndMsg(PNO_NAVI_GPS_MAIN, all_len, reinterpret_cast<void *>(&snd_buf[0]), mode);
+    if (RET_NORMAL != ret_api) {
+        /* Message transmission processing failed */
+        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "send Message failed.");
+    }
+
+    return;
+}
 
 /**
  * @brief
@@ -1271,29 +1245,29 @@ void VehicleSensCommonDataDelivery(const VEHICLE_MSG_BUF *msg, PFUNC_DMASTER_SET
  * @retval      none
  */
 void VehicleSensGpsTimeDelivery(const VEHICLE_MSG_BUF *msg) {
-//    int32              event_val = POS_RET_ERROR_INNER;  /* Event value */
-//    const TG_GPS_RET_TIMESET_MSG  *gps_ret_time;            /* GPS time setting response message */
-//
-//    /* Determine the GPS time setting result */
-//    gps_ret_time = (const TG_GPS_RET_TIMESET_MSG *)msg;
-//
-//    if (GPS_SENDOK == gps_ret_time->status) {
-//        event_val = POS_RET_NORMAL;
-//    } else {
-//        event_val = POS_RET_ERROR_TIMEOUT;
-//    }
-//
-//    /* Set the specified data in the data master */
-//    if (POS_RET_NORMAL == event_val) {
-//        VehicleSensSetDataMasterData((const POS_MSGINFO *)&g_wait_for_resp_msg.data, g_wait_for_resp_set_n);
-//    }
-//    FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, 
-//                  "SetGpsTime Result[%d] EventVal[%d]",
-//                  static_cast<uint32_t>(gps_ret_time->status), static_cast<uint32_t>(event_val));
-//
-//    /* Clear saved message information */
-//    (void)memset(&g_wait_for_resp_msg, 0x00, sizeof(VEHICLE_MSG_BUF));
-//    g_wait_for_resp_set_n = NULL;
+    int32              event_val = POS_RET_ERROR_INNER;  /* Event value */
+    const TG_GPS_RET_TIMESET_MSG  *gps_ret_time;            /* GPS time setting response message */
+
+    /* Determine the GPS time setting result */
+    gps_ret_time = (const TG_GPS_RET_TIMESET_MSG *)msg;
+
+    if (GPS_SENDOK == gps_ret_time->status) {
+        event_val = POS_RET_NORMAL;
+    } else {
+        event_val = POS_RET_ERROR_TIMEOUT;
+    }
+
+    /* Set the specified data in the data master */
+    if (POS_RET_NORMAL == event_val) {
+        VehicleSensSetDataMasterData((const POS_MSGINFO *)&g_wait_for_resp_msg.data, g_wait_for_resp_set_n);
+    }
+    FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, 
+                  "SetGpsTime Result[%d] EventVal[%d]",
+                  static_cast<uint32_t>(gps_ret_time->status), static_cast<uint32_t>(event_val));
+
+    /* Clear saved message information */
+    (void)memset(&g_wait_for_resp_msg, 0x00, sizeof(VEHICLE_MSG_BUF));
+    g_wait_for_resp_set_n = NULL;
 
     return;
 }
@@ -1380,42 +1354,45 @@ static void VehicleSensInitDataDisrptMonitor(void) {
  * @param[in]   did  Data type
  */
 static void VehicleSensDataDisrptMonitorProc(DID did) {
-//    static BOOL is_rcv_sns_data = FALSE;
-//
-//    switch (did) {
-//        case POSHAL_DID_GYRO:
-//        case POSHAL_DID_GSNS_X:
-//        case POSHAL_DID_GSNS_Y:
-//        case POSHAL_DID_SPEED_PULSE:
-//        case POSHAL_DID_REV:
-//        case POSHAL_DID_GPS_ANTENNA:
-//        case POSHAL_DID_GYRO_EXT:
-//        case POSHAL_DID_GYRO_TEMP:
-//        case POSHAL_DID_PULSE_TIME:
-//        case POSHAL_DID_SNS_COUNTER:
-//        {
-//            if (is_rcv_sns_data == FALSE) {
-//                /* Initial sensor data reception monitoring timer */
-//                VehicleUtilityStopTimer(SNS_FST_TIMER);
-//                is_rcv_sns_data = TRUE;
-//
-//                FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "is_rcv_sns_data=TRUE");
-//            }
-//
-//            /* Cyclic sensor data reception monitoring timer stopped */
-//            VehicleUtilityStopTimer(SNS_CYCLE_TIMER);
-//            /* Cyclic sensor data reception monitoring timer setting */
-//            VehicleUtilitySetTimer(SNS_CYCLE_TIMER);
-//            /* Sensor data interruption log output timer */
-//            VehicleUtilityStopTimer(SNS_DISRPT_TIMER);
-//
-//            break;
-//        }
-//        default:
-//        {
-//            /* nop */
-//        }
-//    }
+    static BOOL is_rcv_sns_data = FALSE;
+
+    switch (did) {
+        case POSHAL_DID_GYRO_X:
+        case POSHAL_DID_GYRO_Y:
+        case POSHAL_DID_GYRO_Z:
+        case POSHAL_DID_GSNS_X:
+        case POSHAL_DID_GSNS_Y:
+        case POSHAL_DID_GSNS_Z:
+        case POSHAL_DID_SPEED_PULSE:
+        case POSHAL_DID_REV:
+        case POSHAL_DID_GPS_ANTENNA:
+        case POSHAL_DID_GYRO_EXT:
+        case POSHAL_DID_GYRO_TEMP:
+        case POSHAL_DID_PULSE_TIME:
+        case POSHAL_DID_SNS_COUNTER:
+        {
+            if (is_rcv_sns_data == FALSE) {
+                /* Initial sensor data reception monitoring timer */
+                VehicleUtilityStopTimer(SNS_FST_TIMER);
+                is_rcv_sns_data = TRUE;
+
+                FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "is_rcv_sns_data=TRUE");
+            }
+
+            /* Cyclic sensor data reception monitoring timer stopped */
+            VehicleUtilityStopTimer(SNS_CYCLE_TIMER);
+            /* Cyclic sensor data reception monitoring timer setting */
+            VehicleUtilitySetTimer(SNS_CYCLE_TIMER);
+            /* Sensor data interruption log output timer */
+            VehicleUtilityStopTimer(SNS_DISRPT_TIMER);
+
+            break;
+        }
+        default:
+        {
+            /* nop */
+        }
+    }
 
     return;
 }
@@ -2074,137 +2051,6 @@ static inline RET_API VehicleSens_GeneratePASCDFieldCRLF(char* pascd, size_t siz
 
 /**
  * @brief
- *  Generate PASCD Sentence (Vehicle Speed Data)
- *
- * @details  This is for creating PASCD Sentence of NMEA. <br>
- *           You can generate PASCD Sentence.
- *
- * @param[in/out]   char* pBuf  : buffer pointer for PASCD Sentence
- * @param[in]       size_t size : buffer size
- *
- * @return      RET_NORMAL         : success
- * @return      RET_ERROR          : failed
- *
- * @note        Sample: $PASCD,86399.999,C,D,0,10,0.12,12.345,,,...,*89<CR><LF>
- */
-static RET_API VehicleSens_GeneratePASCDSentence(char* pBuf, size_t size) {
-  RET_API ret_api;
-
-  char* pWork;
-
-  pWork = (char*)malloc(size);
-  if (pWork == NULL) {  // LCOV_EXCL_BR_LINE 200: can not NULL
-    // LCOV_EXCL_START 8: invalid
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "ERROR: malloc:%m");
-    ret_api = RET_ERROR;
-    // LCOV_EXCL_STOP
-  } else {
-    memset(pWork, 0x00, size);
-
-    /* Field1: $PASCD */
-    ret_api = VehicleSens_GeneratePASCDFieldId(pWork, size);
-    if (ret_api == RET_ERROR) {  // LCOV_EXCL_BR_LINE 200: can not exceed buffer size
-    // LCOV_EXCL_START 8: invalid
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, 
-      "ERROR: VehicleSens_GeneratePASCDFieldId:%d", ret_api);
-    // LCOV_EXCL_STOP
-    }
-
-    /* Field2: timestamp */
-    if (ret_api != RET_ERROR) {  // LCOV_EXCL_BR_LINE 200: can not exceed buffer size
-      ret_api = VehicleSens_GeneratePASCDFieldTimestamp(pWork, size);
-      if (ret_api == RET_ERROR) {  // LCOV_EXCL_BR_LINE 200: can not exceed buffer size
-      // LCOV_EXCL_START 8: invalid
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, 
-        "ERROR: VehicleSens_GeneratePASCDFieldTimestamp:%d", ret_api);
-      // LCOV_EXCL_STOP
-      }
-    }
-
-    /* Field3: sensorType */
-    if (ret_api != RET_ERROR) {  // LCOV_EXCL_BR_LINE 200: can not exceed buffer size
-      ret_api = VehicleSens_GeneratePASCDFieldSensorType(pWork, size);
-      if (ret_api == RET_ERROR) {  // LCOV_EXCL_BR_LINE 200: can not exceed buffer size
-      // LCOV_EXCL_START 8: invalid
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, 
-        "ERROR: VehicleSens_GeneratePASCDFieldSensorType:%d", ret_api);
-      // LCOV_EXCL_STOP
-      }
-    }
-
-    /* Field4: transmissionState */
-    if (ret_api != RET_ERROR) {  // LCOV_EXCL_BR_LINE 200: can not exceed buffer size
-      ret_api = VehicleSens_GeneratePASCDFieldTransmissionState(pWork, size);
-      if (ret_api == RET_ERROR) {  // LCOV_EXCL_BR_LINE 200: can not exceed buffer size
-        // LCOV_EXCL_START 8: invalid
-        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, 
-        "ERROR: VehicleSens_GeneratePASCDFieldTransmissionState:%d", ret_api);
-        // LCOV_EXCL_STOP
-      }
-    }
-
-    /* Field5: slipDetect */
-    if (ret_api != RET_ERROR) {
-      ret_api = VehicleSens_GeneratePASCDFieldSlipDetect(pWork, size);
-      if (ret_api == RET_ERROR) {
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, 
-        "ERROR: VehicleSens_GeneratePASCDFieldSlipDetect:%d", ret_api);
-      }
-    }
-
-    /* Field6: sampleCount */
-    if (ret_api != RET_ERROR) {
-      ret_api = VehicleSens_GeneratePASCDFieldSampleCount(pWork, size);
-      if (ret_api == RET_ERROR) {
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, 
-        "ERROR: VehicleSens_GeneratePASCDFieldSampleCount:%d", ret_api);
-      }
-    }
-
-    /* Field7: timeOffset_i */
-    /* Field8: speed_i */
-    if (ret_api != RET_ERROR) {
-      ret_api = VehicleSens_GeneratePASCDFieldTimeOffsetNSpeed(pWork, size);
-      if (ret_api == RET_ERROR) {
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, 
-        "ERROR: VehicleSens_GeneratePASCDFieldTimeOffsetNSpeed:%d", ret_api);
-      }
-    }
-
-    /* Field9: Checksum */
-    if (ret_api != RET_ERROR) {
-      ret_api = VehicleSens_GeneratePASCDFieldChecksum(pWork, size);
-      if (ret_api == RET_ERROR) {
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, 
-        "ERROR: VehicleSens_GeneratePASCDFieldChecksum:%d", ret_api);
-      }
-    }
-
-    /* Field10: CRLF */
-    if (ret_api != RET_ERROR) {
-      ret_api = VehicleSens_GeneratePASCDFieldCRLF(pWork, size);
-      if (ret_api == RET_ERROR) {
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, 
-        "ERROR: VehicleSens_GeneratePASCDFieldCRLF:%d", ret_api);
-      }
-    }
-
-    /* Set Generated PASCD Sentence to the given buffer */
-    memcpy(pBuf, pWork, size);
-
-    free(pWork);
-  }
-
-  return ret_api;
-}
-
-/**
- * @brief
  *  Derive Transmission State For _CWORD27_
  *
  * @details  This is for creating PASCD Sentence of NMEA. <br>
@@ -2296,74 +2142,3 @@ static RET_API VehicleSens_DeriveTransmissionStateFor_CWORD27_(VEHICLESENS_TRANS
 
   return ret_api;
 }
-
-/**
- * @brief
- *  Add PASCD Sentence To NMEA Data of DataMaster
- *
- * @details  This function add the PASCD Sentence to the structure of <br>
- *           master data of NMEA information.
- *
- * @param[in/out]   char* pBuf        : buffer pointer for PASCD Sentence
- * @param[in]       uint8_t* pChgType : changed or not
- *
- * @return      RET_NORMAL         : success
- * @return      RET_ERROR          : failed
- */
-static RET_API VehicleSens_AddPASCDSentenceToNmeaData(char* pascd, uint8_t* pChgType) {
-  RET_API ret_api = RET_ERROR;
-//  SENSOR_MSG_GPSDATA_DAT stGpsMaster;
-//  MDEV_GPS_NMEA* pNmea;
-//  TG_GPS_NMEA_INFO* pNmeaHdr;
-//  int32_t i;
-//  uint8_t size;
-//  uint16_t offset;
-//  uint16_t eod = 0; /* offset to the end of data */
-//  size_t length;
-//
-//  /* Get present NMEA data as base */
-//  VehicleSensGetGpsDataMaster(POSHAL_DID_GPS_NMEA, VEHICLESENS_GETMETHOD_GPS, &stGpsMaster);
-//
-//  pNmea = (MDEV_GPS_NMEA*)(stGpsMaster.uc_data);
-//  pNmeaHdr = (TG_GPS_NMEA_INFO*)(pNmea->uc_nmea_data);
-//
-//  /* Search for the end of data */
-//  for (i = 0; i < POS_SNS_GPS_NMEA_SNO_MAX; i++) {
-//    if (((pNmeaHdr->ul_rcvsts) & (POS_SNS_GPS_NMEA_GGA << i)) != 0) {
-//      offset = pNmeaHdr->st_nmea_sentence_info[i].us_offset;
-//      size = pNmeaHdr->st_nmea_sentence_info[i].uc_size;
-//
-//      if (eod <= offset + size) {  // LCOV_EXCL_BR_LINE 200: can not exceed  size
-//        eod = offset + size;
-//      }
-//    }
-//  }
-//
-//  length = strnlen(pascd, VEHICLESENS_NMEA_PASCD_LEN_MAX);
-//  if (length == VEHICLESENS_NMEA_PASCD_LEN_MAX) {  // LCOV_EXCL_BR_LINE 200: can not exceed  size
-//    // LCOV_EXCL_START 8: invalid
-//    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "ERROR: PASCD Sentence is wrong.");
-//    // LCOV_EXCL_STOP
-//  } else {
-//    if ((eod + length) > SENSOR_MSG_VSINFO_DSIZE) {  // LCOV_EXCL_BR_LINE 200: can not exceed  size
-//      // LCOV_EXCL_START 8: invalid
-//      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "ERROR: NMEA Buffer is too small.");
-//      // LCOV_EXCL_STOP
-//    } else {
-//      pNmeaHdr->ul_rcvsts |= POS_SNS_GPS_NMEA_PASCD;
-//
-//      (void)memcpy((pNmea->uc_nmea_data) + eod, pascd, length);
-//      pNmeaHdr->st_nmea_sentence_info[POS_SNS_GPS_NMEA_SNO_PASCD].uc_size = length;
-//      pNmeaHdr->st_nmea_sentence_info[POS_SNS_GPS_NMEA_SNO_PASCD].us_offset = eod;
-//    }
-//
-//    *pChgType = VehicleSensSetGpsNmeaG(&stGpsMaster);
-//
-//    ret_api = RET_NORMAL;
-//  }
-
-  return ret_api;
-}
-#include <vehicle_service/positioning_base_library.h>

@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@
  */
 
 #include <native_service/frameworkunified_types.h>
-//#include <gps_hal.h>
+#include <gps_hal.h>
 
 /*---------------------------------------------------------------------------------*
  * Definition                                                                      *
@@ -48,7 +48,7 @@
 /* SENSOR_RET_API */
 #define SENSOR_RET_NORMAL             0     //!< \~english normal finish
 #define SENSOR_RET_ERROR_PID          (-1)  //!< \~english thread ID error
-#define SENSOR_RET_ERROR_DID          (-2)  //!< \~english data ID error
+#define SENSOR_RET_ERROR_DID          (-2)  //!< \~english unregistered data ID error
 #define SENSOR_RET_ERROR_DID_DIS      (-3)  //!< \~english data ID not CAN ID
 #define SENSOR_RET_ERROR_PARAM        (-4)  //!< \~english parameter error
 #define SENSOR_RET_ERROR_BUFFULL      (-5)  //!< \~english buffer full error

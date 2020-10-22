@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@
  *****************************************************************************/
 typedef struct {
     T_APIMSG_MSGBUF_HEADER    hdr;                            /* Message header */
-    u_int8                    data[CANINPUT_MSGBUF_DSIZE];    /* Message data (Localtime) */
+    uint8_t                   data[CANINPUT_MSGBUF_DSIZE];    /* Message data (Localtime) */
 } CANINPUT_MSG_INFO;
 
 /************************************************************************

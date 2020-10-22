@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@
 /*************************************************/
 /*           Global variable                      */
 /*************************************************/
-//static  VEHICLESENS_DATA_MASTER_FST  g_st_gsnsx_fst_l;    // NOLINT(readability/nolint)
+static  VEHICLESENS_DATA_MASTER_FST  g_st_gsnsx_fst_l;    // NOLINT(readability/nolint)
 
 /**
  * @brief
@@ -36,11 +36,11 @@
  *   GSNS_X data master initialization processing
  */
 void VehicleSensInitGsnsXFstl(void) {
-//    memset(&g_st_gsnsx_fst_l, 0x00, sizeof(VEHICLESENS_DATA_MASTER_FST));
-//    g_st_gsnsx_fst_l.ul_did        = POSHAL_DID_GSNS_X_FST;
-//    g_st_gsnsx_fst_l.us_size      = VEHICLE_DSIZE_GSNS_X_EXT_INIT;
-//    g_st_gsnsx_fst_l.uc_rcvflag      = VEHICLE_RCVFLAG_OFF;
-//    g_st_gsnsx_fst_l.partition_flg  = 0;
+    memset(&g_st_gsnsx_fst_l, 0x00, sizeof(VEHICLESENS_DATA_MASTER_FST));
+    g_st_gsnsx_fst_l.ul_did        = POSHAL_DID_GSNS_X_FST;
+    g_st_gsnsx_fst_l.us_size      = VEHICLE_DSIZE_GSNS_X_EXT_INIT;
+    g_st_gsnsx_fst_l.uc_rcvflag      = VEHICLE_RCVFLAG_OFF;
+    g_st_gsnsx_fst_l.partition_flg  = 0;
 }
 
 /**
@@ -54,56 +54,56 @@ void VehicleSensInitGsnsXFstl(void) {
  * @return  VEHICLESENS_EQ  No data change<br>
  *      VEHICLESENS_NEQ Data change
  */
-//u_int8 VehicleSensSetGsnsXFstG(const LSDRV_LSDATA_FST_GSENSOR_X *pst_data) {
-//    static u_int8 uc_ret  = VEHICLESENS_EQ;
-//    VEHICLESENS_DATA_MASTER_FST *pst_master;
-//
-//    u_int8  partition_max;    /* Total number of partitions            */
-//    u_int8  partition_num;    /* Data number          */
-//
-//    pst_master = &g_st_gsnsx_fst_l;
-//
-//    partition_max = pst_data->uc_partition_max;
-//    partition_num = pst_data->uc_partition_num;
-//
-//    if (partition_max == 1) {
-//        /* Compare data master and received data */
-//        uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
-//
-//        /* Received data is set in the data master. */
-//        pst_master->ul_did      = pst_data->ul_did;
-//        pst_master->us_size      = pst_data->uc_size;
-//        pst_master->uc_rcvflag    = VEHICLE_RCVFLAG_ON;
-//        pst_master->partition_flg  = 0;
-//        memset(pst_master->uc_data, 0x00, sizeof(pst_master->uc_data));
-//        memcpy(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
-//    } else if (partition_max == 2) {
-//        if (partition_num == 1) {
-//            /* Compare data master and received data */
-//            uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
-//
-//            /* Received data is set in the data master. */
-//            pst_master->ul_did      = pst_data->ul_did;
-//            pst_master->us_size      = static_cast<u_int16>(pst_master->us_size + pst_data->uc_size);
-//            pst_master->partition_flg  = 1;
-//            memcpy(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
-//        } else if (partition_num == 2) {
-//            /* Compare data master and received data */
-//            if (uc_ret == VEHICLESENS_EQ) {
-//                uc_ret = VehicleSensmemcmp(&pst_master->uc_data[VEHICLE_DSIZE_GSNSX_FST],
-//                    pst_data->uc_data, pst_data->uc_size);
-//            }
-//
-//            /* Received data is set in the data master. */
-//            pst_master->ul_did      = pst_data->ul_did;
-//            pst_master->us_size      = static_cast<u_int16>(pst_master->us_size + pst_data->uc_size);
-//            pst_master->uc_rcvflag    = VEHICLE_RCVFLAG_ON;
-//            pst_master->partition_flg  = 1;
-//            memcpy(&pst_master->uc_data[VEHICLE_DSIZE_GSNSX_FST], pst_data->uc_data, pst_data->uc_size);
-//        } else { }
-//    } else { }
-//    return(uc_ret);
-//}
+u_int8 VehicleSensSetGsnsXFstG(const LSDRV_LSDATA_FST_GSENSOR_X *pst_data) {
+    static u_int8 uc_ret  = VEHICLESENS_EQ;
+    VEHICLESENS_DATA_MASTER_FST *pst_master;
+
+    u_int8  partition_max;    /* Total number of partitions            */
+    u_int8  partition_num;    /* Data number          */
+
+    pst_master = &g_st_gsnsx_fst_l;
+
+    partition_max = pst_data->uc_partition_max;
+    partition_num = pst_data->uc_partition_num;
+
+    if (partition_max == 1) {
+        /* Compare data master and received data */
+        uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
+
+        /* Received data is set in the data master. */
+        pst_master->ul_did      = pst_data->ul_did;
+        pst_master->us_size      = pst_data->uc_size;
+        pst_master->uc_rcvflag    = VEHICLE_RCVFLAG_ON;
+        pst_master->partition_flg  = 0;
+        memset(pst_master->uc_data, 0x00, sizeof(pst_master->uc_data));
+        memcpy(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
+    } else if (partition_max == 2) {
+        if (partition_num == 1) {
+            /* Compare data master and received data */
+            uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
+
+            /* Received data is set in the data master. */
+            pst_master->ul_did      = pst_data->ul_did;
+            pst_master->us_size      = static_cast<u_int16>(pst_master->us_size + pst_data->uc_size);
+            pst_master->partition_flg  = 1;
+            memcpy(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
+        } else if (partition_num == 2) {
+            /* Compare data master and received data */
+            if (uc_ret == VEHICLESENS_EQ) {
+                uc_ret = VehicleSensmemcmp(&pst_master->uc_data[VEHICLE_DSIZE_GSNSX_FST],
+                    pst_data->uc_data, pst_data->uc_size);
+            }
+
+            /* Received data is set in the data master. */
+            pst_master->ul_did      = pst_data->ul_did;
+            pst_master->us_size      = static_cast<u_int16>(pst_master->us_size + pst_data->uc_size);
+            pst_master->uc_rcvflag    = VEHICLE_RCVFLAG_ON;
+            pst_master->partition_flg  = 1;
+            memcpy(&pst_master->uc_data[VEHICLE_DSIZE_GSNSX_FST], pst_data->uc_data, pst_data->uc_size);
+        } else { }
+    } else { }
+    return(uc_ret);
+}
 
 /**
  * @brief
@@ -113,15 +113,15 @@ void VehicleSensInitGsnsXFstl(void) {
  *
  * @param[in]  Pointer to the data master acquisition destination
  */
-//void VehicleSensGetGsnsXFstl(VEHICLESENS_DATA_MASTER_FST *pst_data) {
-//    const VEHICLESENS_DATA_MASTER_FST *pst_master;
-//
-//    pst_master = &g_st_gsnsx_fst_l;
-//
-//    /* Store the data master in the specified destination. */
-//    pst_data->ul_did        = pst_master->ul_did;
-//    pst_data->us_size        = pst_master->us_size;
-//    pst_data->uc_rcvflag      = pst_master->uc_rcvflag;
-//    pst_data->partition_flg  = pst_master->partition_flg;
-//    memcpy(pst_data->uc_data, pst_master->uc_data, pst_master->us_size);
-//}
+void VehicleSensGetGsnsXFstl(VEHICLESENS_DATA_MASTER_FST *pst_data) {
+    const VEHICLESENS_DATA_MASTER_FST *pst_master;
+
+    pst_master = &g_st_gsnsx_fst_l;
+
+    /* Store the data master in the specified destination. */
+    pst_data->ul_did        = pst_master->ul_did;
+    pst_data->us_size        = pst_master->us_size;
+    pst_data->uc_rcvflag      = pst_master->uc_rcvflag;
+    pst_data->partition_flg  = pst_master->partition_flg;
+    memcpy(pst_data->uc_data, pst_master->uc_data, pst_master->us_size);
+}

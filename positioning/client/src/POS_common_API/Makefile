@@ -1,5 +1,5 @@
 #
-# @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+# @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,20 +17,12 @@
 INST_SHLIBS = libPOS_common_API
 
 ######### compiled sources  #############
-VPATH += ../SensorLocation_API/common
-
-libPOS_common_API_SRCS += SensorLocation_API.cpp
 libPOS_common_API_SRCS += Common_API.cpp
 
 ######### add include path #############
-CPPFLAGS += -I./
 CPPFLAGS += -I../../../server/include/common
 CPPFLAGS += -I../../include
 CPPFLAGS += -I../../../server/include/nsfw
-CPPFLAGS += -I../SensorLocation_API/common
-
-CPPFLAGS += -I../Vehicle_API
-CPPFLAGS += -I../Vehicle_API/common
 
 ######### add compile option #############
 CPPFLAGS += -DLINUX -fPIC

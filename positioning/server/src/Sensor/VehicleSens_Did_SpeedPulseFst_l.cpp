@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,11 +46,11 @@ void VehicleSensInitSpeedPulseFstl(void) {
     u_int16  *pus;
 
     memset(&gstSpeedPulseFst_l, 0x00, sizeof(VEHICLESENS_DATA_MASTER_FST));
-//    gstSpeedPulseFst_l.ul_did      = POSHAL_DID_SPEED_PULSE_FST;
+    gstSpeedPulseFst_l.ul_did      = POSHAL_DID_SPEED_PULSE_FST;
     gstSpeedPulseFst_l.us_size      = 0;
     gstSpeedPulseFst_l.partition_flg  = 0;
     pus    = reinterpret_cast<u_int16 *>(gstSpeedPulseFst_l.uc_data);
-//    memset(reinterpret_cast<void*>(pus), VEHICLE_DINIT_SPEED_PULSE, VEHICLE_DSIZE_SPEED_PULSE_FST);
+    memset(reinterpret_cast<void*>(pus), VEHICLE_DINIT_SPEED_PULSE, VEHICLE_DSIZE_SPEED_PULSE_FST);
 }
 
 /*******************************************************************************
@@ -62,25 +62,25 @@ void VehicleSensInitSpeedPulseFstl(void) {
 * RETURN    : VEHICLESENS_EQ  : No data change
 *             VEHICLESENS_NEQ  : Data change
 ******************************************************************************/
-//u_int8 VehicleSensSetSpeedPulseFstl(const LSDRV_LSDATA_FST *pst_data) {
-//    u_int8 uc_ret;
-//    VEHICLESENS_DATA_MASTER_FST *pst_master;
-//
-//    pst_master = &gstSpeedPulseFst_l;
-//
-//    /* Compare data master and received data */
-//    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
-//
-//    /* Received data is set in the data master. */
-//    pst_master->ul_did    = pst_data->ul_did;
-//    pst_master->us_size    = pst_data->uc_size;
-//    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
-//    memset(pst_master->uc_data, 0x00, sizeof(pst_master->uc_data));
-//    memcpy(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//
-//    return(uc_ret);
-//}
+u_int8 VehicleSensSetSpeedPulseFstl(const LSDRV_LSDATA_FST *pst_data) {
+    u_int8 uc_ret;
+    VEHICLESENS_DATA_MASTER_FST *pst_master;
+
+    pst_master = &gstSpeedPulseFst_l;
+
+    /* Compare data master and received data */
+    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
+
+    /* Received data is set in the data master. */
+    pst_master->ul_did    = pst_data->ul_did;
+    pst_master->us_size    = pst_data->uc_size;
+    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
+    memset(pst_master->uc_data, 0x00, sizeof(pst_master->uc_data));
+    memcpy(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+
+    return(uc_ret);
+}
 
 /*******************************************************************************
 * MODULE    : VehicleSensSetSpeedPulseFstG
@@ -91,62 +91,62 @@ void VehicleSensInitSpeedPulseFstl(void) {
 * RETURN    : VEHICLESENS_EQ  : No data change
 *             VEHICLESENS_NEQ  : Data change
 ******************************************************************************/
-//u_int8 VehicleSensSetSpeedPulseFstG(const LSDRV_LSDATA_FST_SPEED *pst_data) {
-//    static u_int8 uc_ret  = VEHICLESENS_EQ;
-//    VEHICLESENS_DATA_MASTER_FST *pst_master;
-//
-//    u_int8  partition_max;    /* Total number of partitions            */
-//    u_int8  partition_num;    /* Data number          */
-//
-//    pst_master = &gstSpeedPulseFst_l;
-//
-//    partition_max = pst_data->uc_partition_max;
-//    partition_num = pst_data->uc_partition_num;
-//
-//    if (partition_max == 1) {  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//        /* Compare data master and received data */
-//        /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//        uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
-//
-//        /* Received data is set in the data master. */
-//        pst_master->ul_did      = pst_data->ul_did;
-//        pst_master->us_size      = pst_data->uc_size;
-//        pst_master->uc_rcvflag    = VEHICLE_RCVFLAG_ON;
-//        pst_master->partition_flg  = 0;
-//        memset(pst_master->uc_data, 0x00, sizeof(pst_master->uc_data));
-//        memcpy(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//    } else if (partition_max == 2) {  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//        if (partition_num == 1) {  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//            /* Compare data master and received data */
-//            /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//            uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
-//
-//            /* Received data is set in the data master. */
-//            pst_master->ul_did      = pst_data->ul_did;
-//            /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//            pst_master->us_size = static_cast<u_int16>(pst_master->us_size + pst_data->uc_size);
-//            pst_master->partition_flg  = 1;
-//            memcpy(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//        } else if (partition_num == 2) {  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//            /* Compare data master and received data */
-//            if (uc_ret == VEHICLESENS_EQ) {
-//                uc_ret = VehicleSensmemcmp(&pst_master->uc_data[VEHICLE_DSIZE_SPEED_PULSE_FST],
-//                                    pst_data->uc_data, pst_data->uc_size);  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//            }
-//
-//            /* Received data is set in the data master. */
-//            pst_master->ul_did      = pst_data->ul_did;
-//            /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//            pst_master->us_size = static_cast<u_int16>(pst_master->us_size + pst_data->uc_size);
-//            pst_master->uc_rcvflag    = VEHICLE_RCVFLAG_ON;
-//            pst_master->partition_flg  = 1;
-//            memcpy(&pst_master->uc_data[VEHICLE_DSIZE_SPEED_PULSE_FST],
-//                                    pst_data->uc_data, pst_data->uc_size);  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//        } else {}
-//    } else {}
-//
-//    return(uc_ret);
-//}
+u_int8 VehicleSensSetSpeedPulseFstG(const LSDRV_LSDATA_FST_SPEED *pst_data) {
+    static u_int8 uc_ret  = VEHICLESENS_EQ;
+    VEHICLESENS_DATA_MASTER_FST *pst_master;
+
+    u_int8  partition_max;    /* Total number of partitions            */
+    u_int8  partition_num;    /* Data number          */
+
+    pst_master = &gstSpeedPulseFst_l;
+
+    partition_max = pst_data->uc_partition_max;
+    partition_num = pst_data->uc_partition_num;
+
+    if (partition_max == 1) {  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+        /* Compare data master and received data */
+        /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+        uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
+
+        /* Received data is set in the data master. */
+        pst_master->ul_did      = pst_data->ul_did;
+        pst_master->us_size      = pst_data->uc_size;
+        pst_master->uc_rcvflag    = VEHICLE_RCVFLAG_ON;
+        pst_master->partition_flg  = 0;
+        memset(pst_master->uc_data, 0x00, sizeof(pst_master->uc_data));
+        memcpy(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+    } else if (partition_max == 2) {  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+        if (partition_num == 1) {  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+            /* Compare data master and received data */
+            /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+            uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
+
+            /* Received data is set in the data master. */
+            pst_master->ul_did      = pst_data->ul_did;
+            /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+            pst_master->us_size = static_cast<u_int16>(pst_master->us_size + pst_data->uc_size);
+            pst_master->partition_flg  = 1;
+            memcpy(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+        } else if (partition_num == 2) {  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+            /* Compare data master and received data */
+            if (uc_ret == VEHICLESENS_EQ) {
+                uc_ret = VehicleSensmemcmp(&pst_master->uc_data[VEHICLE_DSIZE_SPEED_PULSE_FST],
+                                    pst_data->uc_data, pst_data->uc_size);  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+            }
+
+            /* Received data is set in the data master. */
+            pst_master->ul_did      = pst_data->ul_did;
+            /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+            pst_master->us_size = static_cast<u_int16>(pst_master->us_size + pst_data->uc_size);
+            pst_master->uc_rcvflag    = VEHICLE_RCVFLAG_ON;
+            pst_master->partition_flg  = 1;
+            memcpy(&pst_master->uc_data[VEHICLE_DSIZE_SPEED_PULSE_FST],
+                                    pst_data->uc_data, pst_data->uc_size);  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+        } else {}
+    } else {}
+
+    return(uc_ret);
+}
 
 /*******************************************************************************
 * MODULE    : VehicleSensGetSpeedPulseFstl

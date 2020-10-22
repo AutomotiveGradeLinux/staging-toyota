@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -119,11 +119,11 @@ EFrameworkunifiedStatus CommUsbIfNotifyOnCommUSBAvailability(CbFuncPtr fp_on_cmd
     happ = _pb_GetAppHandle();
     if (happ != NULL) {  // LCOV_EXCL_BR_LINE 4: nsfw error
         /* PS_CommUSB/Availability Changing notification registration */
-//        estatus = FrameworkunifiedSubscribeNotificationWithCallback(happ, NTFY_CommUSB_Availability, fp_on_cmd);  // LCOV_EXCL_BR_LINE 6:unexpected branch  //NOLINT (whitespace/line_length)
-//        if (eFrameworkunifiedStatusOK != estatus) {  // LCOV_EXCL_BR_LINE 4: nsfw error
-//            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, 
-//                          "PositioningSubscriveNotificationswithCallback ERROR!! [estatus=%d]", estatus);
-//        }
+        estatus = FrameworkunifiedSubscribeNotificationWithCallback(happ, NTFY_CommUSB_Availability, fp_on_cmd);  // LCOV_EXCL_BR_LINE 6:unexpected branch  //NOLINT (whitespace/line_length)
+        if (eFrameworkunifiedStatusOK != estatus) {  // LCOV_EXCL_BR_LINE 4: nsfw error
+            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, 
+                          "PositioningSubscriveNotificationswithCallback ERROR!! [estatus=%d]", estatus);
+        }
     } else {
         FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "_pb_GetAppHandle ERROR!! [happ=%p]", happ);
     }

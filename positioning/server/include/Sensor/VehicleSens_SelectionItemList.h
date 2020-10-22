@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,10 +33,10 @@
 #if CONFIG_SENSOR_EXT_VALID                /* Initial Sensor Support */
 /* ++ Addition of DID9 related to PastModel002 supported_UBX commands */
 /* ++ GPS _CWORD82_ support (To add the target DID 3) */
-#define VEHICLESENS_SELECTION_ITEM_LIST_LEN    (81)            /* Number of data in Vehicle Sensor Selection Item List */
+#define VEHICLESENS_SELECTION_ITEM_LIST_LEN    (87)            /* Number of data in Vehicle Sensor Selection Item List */
 /* -- GPS _CWORD82_ support */
 #else
-#define VEHICLESENS_SELECTION_ITEM_LIST_LEN    (50 + 10)        /* Number of data in Vehicle Sensor Selection Item List  */
+#define VEHICLESENS_SELECTION_ITEM_LIST_LEN    (63)        /* Number of data in Vehicle Sensor Selection Item List  */
 /* -- PastModel002 support */
 #endif
 /* Sum of bits 29 through 31*/

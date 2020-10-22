@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ static  VEHICLESENS_DATA_MASTER  gstGyroTemp_l;     // NOLINT(readability/nolint
  */
 void VehicleSensInitGyroTempl(void) {
     (void)memset(reinterpret_cast<void *>(&gstGyroTemp_l), 0, sizeof(VEHICLESENS_DATA_MASTER));
-//    gstGyroTemp_l.ul_did    = POSHAL_DID_GYRO_TEMP;
+    gstGyroTemp_l.ul_did    = POSHAL_DID_GYRO_TEMP;
     gstGyroTemp_l.us_size  = VEHICLE_DSIZE_GYRO_TEMP;
     gstGyroTemp_l.uc_rcvflag  = VEHICLE_RCVFLAG_OFF;
 }
@@ -53,24 +53,24 @@ void VehicleSensInitGyroTempl(void) {
  * @return  VEHICLESENS_EQ  No data change<br>
  *      VEHICLESENS_NEQ Data change
  */
-//u_int8 VehicleSensSetGyroTemplG(const LSDRV_LSDATA_G *pst_data) {
-//    u_int8 uc_ret;
-//    VEHICLESENS_DATA_MASTER *pst_master;
-//
-//    pst_master = &gstGyroTemp_l;
-//
-//    /* Compare data master and received data */
-//    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
-//
-//    /* Received data is set in the data master. */
-//    pst_master->ul_did    = pst_data->ul_did;
-//    pst_master->us_size    = pst_data->uc_size;
-//    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
-//    (void)memcpy(reinterpret_cast<void *>(pst_master->uc_data),
-//        (const void *)(pst_data->uc_data), (size_t)(pst_data->uc_size));
-//
-//    return(uc_ret);
-//}
+u_int8 VehicleSensSetGyroTemplG(const LSDRV_LSDATA_G *pst_data) {
+    u_int8 uc_ret;
+    VEHICLESENS_DATA_MASTER *pst_master;
+
+    pst_master = &gstGyroTemp_l;
+
+    /* Compare data master and received data */
+    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
+
+    /* Received data is set in the data master. */
+    pst_master->ul_did    = pst_data->ul_did;
+    pst_master->us_size    = pst_data->uc_size;
+    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
+    (void)memcpy(reinterpret_cast<void *>(pst_master->uc_data),
+        (const void *)(pst_data->uc_data), (size_t)(pst_data->uc_size));
+
+    return(uc_ret);
+}
 
 /**
  * @brief

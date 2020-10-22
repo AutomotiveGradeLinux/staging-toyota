@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -578,276 +578,279 @@ u_int8 VehicleSensDeliveryGPS(DID ul_did, u_int8 uc_get_method, u_int8 uc_curren
     SENSORMOTION_MSG_HEADINGINFO            *pheading_msg;
 #endif
 
-//    SENSOR_MSG_GPSDATA_DAT            gps_master;
-//    VEHICLESENS_DELIVERY_FORMAT        delivery_data;
-//    u_int16                            length;
-//    u_int16                            senslog_len;
-//    RET_API                                 ret = RET_NORMAL;  /* API return value                       */
+    SENSOR_MSG_GPSDATA_DAT            gps_master;
+    VEHICLESENS_DELIVERY_FORMAT        delivery_data;
+    u_int16                            length;
+    u_int16                            senslog_len;
+    RET_API                                 ret = RET_NORMAL;  /* API return value                       */
     u_int8                                  uc_result = SENSLOG_RES_SUCCESS; /* Send/Receive result      */
 
-//    VehicleSensGetGpsDataMaster(ul_did, uc_current_get_method, &gps_master);
-//
-//    if (ul_did == POSHAL_DID_GPS_TIME) {
-//        /* GPS time,Because there is no header in the message to be delivered,
-//        Padding deliveryData headers */
-//        (void)memcpy(reinterpret_cast<void*>(&delivery_data),
-//                     reinterpret_cast<void*>(&gps_master.uc_data[0]), gps_master.us_size);
-//        length = gps_master.us_size;
-//        senslog_len = length;
-//        *cid = CID_VEHICLESENS_VEHICLE_INFO_GPS_TIME;
-//    } else if (ul_did == VEHICLE_DID_LOCATION_LONLAT) {
-//        plonlat_msg = reinterpret_cast<SENSORLOCATION_MSG_LONLATINFO*>(&delivery_data);
-//        /* Acquire the applicable data information from the data master..*/
-//        VehicleSensGetDataMaster(ul_did, uc_current_get_method, stmaster);
-//        (void)memcpy(reinterpret_cast<void*>(&(plonlat_msg->data)),
-//                     reinterpret_cast<void*>(&(stmaster->uc_data[0])), stmaster->us_size);
-//        length = (u_int16)(stmaster->us_size);
-//        senslog_len = length;
-//        *cid = CID_POSIF_REGISTER_LISTENER_LONLAT;
-//    } else if (ul_did == VEHICLE_DID_LOCATION_ALTITUDE) {
-//        paltitude_msg = reinterpret_cast<SENSORLOCATION_MSG_ALTITUDEINFO*>(&delivery_data);
-//        /* Acquire the applicable data information from the data master..*/
-//        VehicleSensGetDataMaster(ul_did, uc_get_method, stmaster);
-//        (void)memcpy(reinterpret_cast<void*>(&(paltitude_msg->data)),
-//                     reinterpret_cast<void*>(&stmaster->uc_data[0]), stmaster->us_size);
-//        length = (u_int16)(stmaster->us_size);
-//        senslog_len = length;
-//        *cid = CID_POSIF_REGISTER_LISTENER_ALTITUDE;
-//    } else if (ul_did == VEHICLE_DID_MOTION_HEADING) {
-//        pheading_msg = reinterpret_cast<SENSORMOTION_MSG_HEADINGINFO*>(&delivery_data);
-//        /* Acquire the applicable data information from the data master..*/
-//        VehicleSensGetDataMaster(ul_did, uc_get_method, stmaster);
-//        (void)memcpy(reinterpret_cast<void*>(&(pheading_msg->data)),
-//                     reinterpret_cast<void*>(&stmaster->uc_data[0]), stmaster->us_size);
-//        length = (u_int16)(stmaster->us_size);
-//        senslog_len = length;
-//        *cid = CID_POSIF_REGISTER_LISTENER_HEADING;
-//    } else {
-//        delivery_data.header.did                    = gps_master.ul_did;
-//        delivery_data.header.size                = gps_master.us_size;
-//        delivery_data.header.rcv_flag                = gps_master.uc_rcv_flag;
-//        delivery_data.header.sensor_cnt            = gps_master.uc_sns_cnt;
-//        (void)memcpy(reinterpret_cast<void *>(&delivery_data.data[0]),
-//                     reinterpret_cast<void *>(&gps_master.uc_data[0]),
-//                     (size_t)delivery_data.header.size);
-//
-//        length = static_cast<u_int16>((u_int16)sizeof(delivery_data.header) + \
-//                                            delivery_data.header.size);
-//        senslog_len = delivery_data.header.size;
-//        *cid = CID_VEHICLESENS_VEHICLE_INFO;
-//    }
-//
-//    /* Call Vehicle Sensor Information Notification Transmission Process.*/
-//    ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
-//                          pst_pno_tbl->st_pno_data[pno_index].us_pno,
-//                          static_cast<CID>(*cid),
-//                          length,
-//                          (const void *)&delivery_data);
-//    uc_result = SENSLOG_RES_SUCCESS;
-//    if (ret != RET_NORMAL) {
-//        uc_result = SENSLOG_RES_FAIL;
-//    }
-//    if (*cid != CID_VEHICLESENS_VEHICLE_INFO) {
-//        SensLogWriteOutputData(SENSLOG_DATA_O_UNSPECIFIED, ul_did,
-//                                 pst_pno_tbl->st_pno_data[pno_index].us_pno,
-//                                 reinterpret_cast<uint8_t *>(&delivery_data),
-//                                 senslog_len, uc_result);
-//    } else {
-//        SensLogWriteOutputData(SENSLOG_DATA_O_UNSPECIFIED, ul_did,
-//                                 pst_pno_tbl->st_pno_data[pno_index].us_pno,
-//                                 reinterpret_cast<uint8_t *>(&(delivery_data.data[0])),
-//                                 senslog_len, uc_result);
-//    }
+    VehicleSensGetGpsDataMaster(ul_did, uc_current_get_method, &gps_master);
+
+    if (ul_did == POSHAL_DID_GPS_TIME) {
+        /* GPS time,Because there is no header in the message to be delivered,
+        Padding deliveryData headers */
+        (void)memcpy(reinterpret_cast<void*>(&delivery_data),
+                     reinterpret_cast<void*>(&gps_master.uc_data[0]), gps_master.us_size);
+        length = gps_master.us_size;
+        senslog_len = length;
+        *cid = CID_VEHICLESENS_VEHICLE_INFO_GPS_TIME;
+    } else if (ul_did == VEHICLE_DID_LOCATION_LONLAT) {
+        plonlat_msg = reinterpret_cast<SENSORLOCATION_MSG_LONLATINFO*>(&delivery_data);
+        /* Acquire the applicable data information from the data master..*/
+        VehicleSensGetDataMaster(ul_did, uc_current_get_method, stmaster);
+        (void)memcpy(reinterpret_cast<void*>(&(plonlat_msg->data)),
+                     reinterpret_cast<void*>(&(stmaster->uc_data[0])), stmaster->us_size);
+        length = (u_int16)(stmaster->us_size);
+        senslog_len = length;
+        *cid = CID_POSIF_REGISTER_LISTENER_LONLAT;
+    } else if (ul_did == VEHICLE_DID_LOCATION_ALTITUDE) {
+        paltitude_msg = reinterpret_cast<SENSORLOCATION_MSG_ALTITUDEINFO*>(&delivery_data);
+        /* Acquire the applicable data information from the data master..*/
+        VehicleSensGetDataMaster(ul_did, uc_get_method, stmaster);
+        (void)memcpy(reinterpret_cast<void*>(&(paltitude_msg->data)),
+                     reinterpret_cast<void*>(&stmaster->uc_data[0]), stmaster->us_size);
+        length = (u_int16)(stmaster->us_size);
+        senslog_len = length;
+        *cid = CID_POSIF_REGISTER_LISTENER_ALTITUDE;
+    } else if (ul_did == VEHICLE_DID_MOTION_HEADING) {
+        pheading_msg = reinterpret_cast<SENSORMOTION_MSG_HEADINGINFO*>(&delivery_data);
+        /* Acquire the applicable data information from the data master..*/
+        VehicleSensGetDataMaster(ul_did, uc_get_method, stmaster);
+        (void)memcpy(reinterpret_cast<void*>(&(pheading_msg->data)),
+                     reinterpret_cast<void*>(&stmaster->uc_data[0]), stmaster->us_size);
+        length = (u_int16)(stmaster->us_size);
+        senslog_len = length;
+        *cid = CID_POSIF_REGISTER_LISTENER_HEADING;
+    } else {
+        delivery_data.header.did                    = gps_master.ul_did;
+        delivery_data.header.size                = gps_master.us_size;
+        delivery_data.header.rcv_flag                = gps_master.uc_rcv_flag;
+        delivery_data.header.sensor_cnt            = gps_master.uc_sns_cnt;
+        (void)memcpy(reinterpret_cast<void *>(&delivery_data.data[0]),
+                     reinterpret_cast<void *>(&gps_master.uc_data[0]),
+                     (size_t)delivery_data.header.size);
+
+        length = static_cast<u_int16>((u_int16)sizeof(delivery_data.header) + \
+                                            delivery_data.header.size);
+        senslog_len = delivery_data.header.size;
+        *cid = CID_VEHICLESENS_VEHICLE_INFO;
+    }
+
+    /* Call Vehicle Sensor Information Notification Transmission Process.*/
+    ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
+                          pst_pno_tbl->st_pno_data[pno_index].us_pno,
+                          static_cast<CID>(*cid),
+                          length,
+                          (const void *)&delivery_data);
+    uc_result = SENSLOG_RES_SUCCESS;
+    if (ret != RET_NORMAL) {
+        uc_result = SENSLOG_RES_FAIL;
+    }
+    if (*cid != CID_VEHICLESENS_VEHICLE_INFO) {
+        SensLogWriteOutputData(SENSLOG_DATA_O_UNSPECIFIED, ul_did,
+                                 pst_pno_tbl->st_pno_data[pno_index].us_pno,
+                                 reinterpret_cast<uint8_t *>(&delivery_data),
+                                 senslog_len, uc_result);
+    } else {
+        SensLogWriteOutputData(SENSLOG_DATA_O_UNSPECIFIED, ul_did,
+                                 pst_pno_tbl->st_pno_data[pno_index].us_pno,
+                                 reinterpret_cast<uint8_t *>(&(delivery_data.data[0])),
+                                 senslog_len, uc_result);
+    }
     return uc_result;
 }
 
 u_int8 VehicleSensDeliveryFst(DID ul_did, u_int8 uc_get_method, int32 pno_index,
                             const VEHICLESENS_DELIVERY_PNO_TBL *pst_pno_tbl) {
-//    VEHICLESENS_DATA_MASTER_FST             st_master_fst;        /* Master of initial sensor data         */
-//    VEHICLESENS_DATA_MASTER_FST             st_master_fst_temp;   /* For temporary storage                        */
+    VEHICLESENS_DATA_MASTER_FST             st_master_fst;        /* Master of initial sensor data         */
+    VEHICLESENS_DATA_MASTER_FST             st_master_fst_temp;   /* For temporary storage                        */
 
     RET_API                                 ret = RET_NORMAL;  /* API return value                       */
     u_int8                                  uc_result = SENSLOG_RES_SUCCESS; /* Send/Receive result      */
-//    (void)memset(reinterpret_cast<void *>(&st_master_fst),
-//                 0,
-//                 sizeof(VEHICLESENS_DATA_MASTER_FST));
-//    (void)memset(reinterpret_cast<void *>(&st_master_fst_temp),
-//                 0,
-//                 sizeof(VEHICLESENS_DATA_MASTER_FST));
-//    VehicleSensGetDataMasterFst(ul_did, uc_get_method, &st_master_fst);
-//    if (st_master_fst.partition_flg == 1) {
-//        /* When the partitioning flag is enabled,Or exceeds the size that can be sent,Perform split transmission */
-//        memcpy(&st_master_fst_temp, &st_master_fst, sizeof(VEHICLESENS_DATA_MASTER_FST));
-//        if ((ul_did == POSHAL_DID_GYRO_FST) ||    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                (ul_did == POSHAL_DID_GSNS_X_FST) ||
-//                (ul_did == POSHAL_DID_GSNS_Y_FST)) {
-//            /* 1st session */
-//            /* Call Vehicle Sensor Information Notification Transmission Process.*/
-//            /* Size of data that can be transmitted in one division(Same size definition used)*/
-//            st_master_fst_temp.us_size = LSDRV_FSTSNS_DSIZE_GYRO;
-//            ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
-//                                  pst_pno_tbl->st_pno_data[pno_index].us_pno,
-//                                  CID_VEHICLESENS_VEHICLE_INFO,
-//                                  /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                                  static_cast<u_int16>(st_master_fst_temp.us_size + 8),
-//                                  (const void *)&st_master_fst_temp);
-//            uc_result = SENSLOG_RES_SUCCESS;
-//            if (ret != RET_NORMAL) {
-//                uc_result = SENSLOG_RES_FAIL;
-//            }
-//            SensLogWriteOutputData(SENSLOG_DATA_O_SYS,
-//                                    ul_did,
-//                                    pst_pno_tbl->st_pno_data[pno_index].us_pno,
-//                                    reinterpret_cast<uint8_t *>(&(st_master_fst_temp.uc_data[0])),
-//                                    st_master_fst_temp.us_size,
-//                                    uc_result);
-//
-//            /* Second time */
-//            /* Call Vehicle Sensor Information Notification Transmission Process.*/
-//            (void)memset(reinterpret_cast<void *>(&st_master_fst_temp.uc_data[0]),
-//                         0,
-//                         sizeof(u_int8) * VEHICLE_DSIZE_DATA_MASTER_FST);
-//            /* Size of the data - Transmission size(Same size definition used)Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//            st_master_fst_temp.us_size = static_cast<u_int16>(st_master_fst.us_size - \
-//                                                        LSDRV_FSTSNS_DSIZE_GYRO);
-//            memcpy(&st_master_fst_temp.uc_data[0],
-//                   &st_master_fst.uc_data[LSDRV_FSTSNS_DSIZE_GYRO],
-//                   st_master_fst_temp.us_size);
-//                   /* Ignore->MISRA-C++:2008 Rule 5-0-5 #Coverity_19347 */
-//            ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
-//                                  pst_pno_tbl->st_pno_data[pno_index].us_pno,
-//                                  CID_VEHICLESENS_VEHICLE_INFO,
-//                                  /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                                  static_cast<u_int16>(st_master_fst_temp.us_size + 8),
-//                                  (const void *)&st_master_fst_temp);
-//            uc_result = SENSLOG_RES_SUCCESS;
-//            if (ret != RET_NORMAL) {
-//                uc_result = SENSLOG_RES_FAIL;
-//            }
-//            SensLogWriteOutputData(SENSLOG_DATA_O_SYS,
-//                                    ul_did,
-//                                    pst_pno_tbl->st_pno_data[pno_index].us_pno,
-//                                    reinterpret_cast<uint8_t *>(&(st_master_fst_temp.uc_data[0])),
-//                                    st_master_fst_temp.us_size,
-//                                    uc_result);
-//        } else if (ul_did == POSHAL_DID_REV_FST) {   /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//            /* 1st session */
-//            /* Call Vehicle Sensor Information Notification Transmission Process.*/
-//            /* Size of data that can be transmitted in one division */
-//            st_master_fst_temp.us_size = LSDRV_FSTSNS_DSIZE_REV;
-//            ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
-//                                  pst_pno_tbl->st_pno_data[pno_index].us_pno,
-//                                  CID_VEHICLESENS_VEHICLE_INFO,
-//                                  /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                                  static_cast<u_int16>(st_master_fst_temp.us_size + 8),
-//                                  (const void *)&st_master_fst_temp);
-//            uc_result = SENSLOG_RES_SUCCESS;
-//            if (ret != RET_NORMAL) {
-//                uc_result = SENSLOG_RES_FAIL;
-//            }
-//            SensLogWriteOutputData(SENSLOG_DATA_O_SYS,
-//                                    ul_did,
-//                                    pst_pno_tbl->st_pno_data[pno_index].us_pno,
-//                                    reinterpret_cast<uint8_t *>(&(st_master_fst_temp.uc_data[0])),
-//                                    st_master_fst_temp.us_size,
-//                                    uc_result);
-//
-//            /* Second time */
-//            /* Call Vehicle Sensor Information Notification Transmission Process.*/
-//            (void)memset(reinterpret_cast<void *>(&st_master_fst_temp.uc_data[0]),
-//                         0,
-//                         sizeof(u_int8) * VEHICLE_DSIZE_DATA_MASTER_FST);
-//            /* Size of the data - Transmission size Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//            st_master_fst_temp.us_size = static_cast<u_int16>(st_master_fst.us_size - \
-//                                                LSDRV_FSTSNS_DSIZE_REV);
-//            /* Ignore->MISRA-C++:2008 Rule 5-0-5 #Coverity_19347 */
-//            memcpy(&st_master_fst_temp.uc_data[0],
-//                   &st_master_fst.uc_data[LSDRV_FSTSNS_DSIZE_REV],
-//                   st_master_fst_temp.us_size);
-//            ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
-//                                  pst_pno_tbl->st_pno_data[pno_index].us_pno,
-//                                  CID_VEHICLESENS_VEHICLE_INFO,
-//                                  /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                                  static_cast<u_int16>(st_master_fst_temp.us_size + 8),
-//                                  (const void *)&st_master_fst_temp);
-//            uc_result = SENSLOG_RES_SUCCESS;
-//            if (ret != RET_NORMAL) {
-//                uc_result = SENSLOG_RES_FAIL;
-//            }
-//            SensLogWriteOutputData(SENSLOG_DATA_O_SYS,
-//                                    ul_did,
-//                                    pst_pno_tbl->st_pno_data[pno_index].us_pno,
-//                                    reinterpret_cast<uint8_t *>(&(st_master_fst_temp.uc_data[0])),
-//                                    st_master_fst_temp.us_size,
-//                                    uc_result);
-//        } else {
-//            /* 1st session */
-//            /* Call Vehicle Sensor Information Notification Transmission Process.*/
-//            /* Size of data that can be transmitted in one division(Same size definition used)*/
-//            st_master_fst_temp.us_size = LSDRV_FSTSNS_DSIZE_GYRO_TEMP;
-//            ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
-//                                  pst_pno_tbl->st_pno_data[pno_index].us_pno,
-//                                  CID_VEHICLESENS_VEHICLE_INFO,
-//                                  /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                                  static_cast<u_int16>(st_master_fst_temp.us_size + 8),
-//                                  (const void *)&st_master_fst_temp);
-//            uc_result = SENSLOG_RES_SUCCESS;
-//            if (ret != RET_NORMAL) {
-//                uc_result = SENSLOG_RES_FAIL;
-//            }
-//            SensLogWriteOutputData(SENSLOG_DATA_O_SYS,
-//                                    ul_did,
-//                                    pst_pno_tbl->st_pno_data[pno_index].us_pno,
-//                                    reinterpret_cast<uint8_t *>(&(st_master_fst_temp.uc_data[0])),
-//                                    st_master_fst_temp.us_size,
-//                                    uc_result);
-//            /* Second time */
-//            /* Call Vehicle Sensor Information Notification Transmission Process.*/
-//            (void)memset(reinterpret_cast<void *>(&st_master_fst_temp.uc_data[0]),
-//                         0,
-//                         sizeof(u_int8) * VEHICLE_DSIZE_DATA_MASTER_FST);
-//            /* Size of the data - Transmission size(Same size definition used)Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//            st_master_fst_temp.us_size = static_cast<u_int16>(st_master_fst.us_size - \
-//                                                LSDRV_FSTSNS_DSIZE_GYRO_TEMP);
-//            memcpy(&st_master_fst_temp.uc_data[0],
-//                   &st_master_fst.uc_data[LSDRV_FSTSNS_DSIZE_GYRO_TEMP],
-//                   st_master_fst_temp.us_size);  /* Ignore->MISRA-C++:2008 Rule 5-0-5 #Coverity_19347*/
-//            ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
-//                                  pst_pno_tbl->st_pno_data[pno_index].us_pno,
-//                                  CID_VEHICLESENS_VEHICLE_INFO,
-//                                  /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                                  static_cast<u_int16>(st_master_fst_temp.us_size + 8),
-//                                  (const void *)&st_master_fst_temp);
-//            uc_result = SENSLOG_RES_SUCCESS;
-//            if (ret != RET_NORMAL) {
-//                uc_result = SENSLOG_RES_FAIL;
-//            }
-//            SensLogWriteOutputData(SENSLOG_DATA_O_SYS,
-//                                    ul_did,
-//                                    pst_pno_tbl->st_pno_data[pno_index].us_pno,
-//                                    reinterpret_cast<uint8_t *>(&(st_master_fst_temp.uc_data[0])),
-//                                    st_master_fst_temp.us_size,
-//                                    uc_result);
-//        }
-//    } else {
-//        /* Call Vehicle Sensor Information Notification Transmission Process.*/
-//        ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
-//                              pst_pno_tbl->st_pno_data[pno_index].us_pno,
-//                              CID_VEHICLESENS_VEHICLE_INFO,
-//                              /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                              static_cast<u_int16>(st_master_fst.us_size + 8),
-//                              (const void *)&st_master_fst);
-//        uc_result = SENSLOG_RES_SUCCESS;
-//        if (ret != RET_NORMAL) {
-//            uc_result = SENSLOG_RES_FAIL;
-//        }
-//        SensLogWriteOutputData(SENSLOG_DATA_O_SYS,
-//                                ul_did,
-//                                pst_pno_tbl->st_pno_data[pno_index].us_pno,
-//                                reinterpret_cast<uint8_t *>(&(st_master_fst.uc_data[0])),
-//                                st_master_fst.us_size,
-//                                uc_result);
-//    }
+    (void)memset(reinterpret_cast<void *>(&st_master_fst),
+                 0,
+                 sizeof(VEHICLESENS_DATA_MASTER_FST));
+    (void)memset(reinterpret_cast<void *>(&st_master_fst_temp),
+                 0,
+                 sizeof(VEHICLESENS_DATA_MASTER_FST));
+    VehicleSensGetDataMasterFst(ul_did, uc_get_method, &st_master_fst);
+    if (st_master_fst.partition_flg == 1) {
+        /* When the partitioning flag is enabled,Or exceeds the size that can be sent,Perform split transmission */
+        memcpy(&st_master_fst_temp, &st_master_fst, sizeof(VEHICLESENS_DATA_MASTER_FST));
+        if ((ul_did == POSHAL_DID_GYRO_X_FST) ||    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                (ul_did == POSHAL_DID_GYRO_Y_FST) ||
+                (ul_did == POSHAL_DID_GYRO_Z_FST) ||
+                (ul_did == POSHAL_DID_GSNS_X_FST) ||
+                (ul_did == POSHAL_DID_GSNS_Y_FST) ||
+                (ul_did == POSHAL_DID_GSNS_Z_FST)) {
+            /* 1st session */
+            /* Call Vehicle Sensor Information Notification Transmission Process.*/
+            /* Size of data that can be transmitted in one division(Same size definition used)*/
+            st_master_fst_temp.us_size = LSDRV_FSTSNS_DSIZE_GYRO_X;
+            ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
+                                  pst_pno_tbl->st_pno_data[pno_index].us_pno,
+                                  CID_VEHICLESENS_VEHICLE_INFO,
+                                  /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                                  static_cast<u_int16>(st_master_fst_temp.us_size + 8),
+                                  (const void *)&st_master_fst_temp);
+            uc_result = SENSLOG_RES_SUCCESS;
+            if (ret != RET_NORMAL) {
+                uc_result = SENSLOG_RES_FAIL;
+            }
+            SensLogWriteOutputData(SENSLOG_DATA_O_SYS,
+                                    ul_did,
+                                    pst_pno_tbl->st_pno_data[pno_index].us_pno,
+                                    reinterpret_cast<uint8_t *>(&(st_master_fst_temp.uc_data[0])),
+                                    st_master_fst_temp.us_size,
+                                    uc_result);
+
+            /* Second time */
+            /* Call Vehicle Sensor Information Notification Transmission Process.*/
+            (void)memset(reinterpret_cast<void *>(&st_master_fst_temp.uc_data[0]),
+                         0,
+                         sizeof(u_int8) * VEHICLE_DSIZE_DATA_MASTER_FST);
+            /* Size of the data - Transmission size(Same size definition used)Ignore->MISRA-C++:2008 Rule 5-0-5 */
+            st_master_fst_temp.us_size = static_cast<u_int16>(st_master_fst.us_size - \
+                                                        LSDRV_FSTSNS_DSIZE_GYRO_X);
+            memcpy(&st_master_fst_temp.uc_data[0],
+                   &st_master_fst.uc_data[LSDRV_FSTSNS_DSIZE_GYRO_X],
+                   st_master_fst_temp.us_size);
+                   /* Ignore->MISRA-C++:2008 Rule 5-0-5 #Coverity_19347 */
+            ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
+                                  pst_pno_tbl->st_pno_data[pno_index].us_pno,
+                                  CID_VEHICLESENS_VEHICLE_INFO,
+                                  /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                                  static_cast<u_int16>(st_master_fst_temp.us_size + 8),
+                                  (const void *)&st_master_fst_temp);
+            uc_result = SENSLOG_RES_SUCCESS;
+            if (ret != RET_NORMAL) {
+                uc_result = SENSLOG_RES_FAIL;
+            }
+            SensLogWriteOutputData(SENSLOG_DATA_O_SYS,
+                                    ul_did,
+                                    pst_pno_tbl->st_pno_data[pno_index].us_pno,
+                                    reinterpret_cast<uint8_t *>(&(st_master_fst_temp.uc_data[0])),
+                                    st_master_fst_temp.us_size,
+                                    uc_result);
+        } else if (ul_did == POSHAL_DID_REV_FST) {   /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+            /* 1st session */
+            /* Call Vehicle Sensor Information Notification Transmission Process.*/
+            /* Size of data that can be transmitted in one division */
+            st_master_fst_temp.us_size = LSDRV_FSTSNS_DSIZE_REV;
+            ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
+                                  pst_pno_tbl->st_pno_data[pno_index].us_pno,
+                                  CID_VEHICLESENS_VEHICLE_INFO,
+                                  /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                                  static_cast<u_int16>(st_master_fst_temp.us_size + 8),
+                                  (const void *)&st_master_fst_temp);
+            uc_result = SENSLOG_RES_SUCCESS;
+            if (ret != RET_NORMAL) {
+                uc_result = SENSLOG_RES_FAIL;
+            }
+            SensLogWriteOutputData(SENSLOG_DATA_O_SYS,
+                                    ul_did,
+                                    pst_pno_tbl->st_pno_data[pno_index].us_pno,
+                                    reinterpret_cast<uint8_t *>(&(st_master_fst_temp.uc_data[0])),
+                                    st_master_fst_temp.us_size,
+                                    uc_result);
+
+            /* Second time */
+            /* Call Vehicle Sensor Information Notification Transmission Process.*/
+            (void)memset(reinterpret_cast<void *>(&st_master_fst_temp.uc_data[0]),
+                         0,
+                         sizeof(u_int8) * VEHICLE_DSIZE_DATA_MASTER_FST);
+            /* Size of the data - Transmission size Ignore->MISRA-C++:2008 Rule 5-0-5 */
+            st_master_fst_temp.us_size = static_cast<u_int16>(st_master_fst.us_size - \
+                                                LSDRV_FSTSNS_DSIZE_REV);
+            /* Ignore->MISRA-C++:2008 Rule 5-0-5 #Coverity_19347 */
+            memcpy(&st_master_fst_temp.uc_data[0],
+                   &st_master_fst.uc_data[LSDRV_FSTSNS_DSIZE_REV],
+                   st_master_fst_temp.us_size);
+            ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
+                                  pst_pno_tbl->st_pno_data[pno_index].us_pno,
+                                  CID_VEHICLESENS_VEHICLE_INFO,
+                                  /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                                  static_cast<u_int16>(st_master_fst_temp.us_size + 8),
+                                  (const void *)&st_master_fst_temp);
+            uc_result = SENSLOG_RES_SUCCESS;
+            if (ret != RET_NORMAL) {
+                uc_result = SENSLOG_RES_FAIL;
+            }
+            SensLogWriteOutputData(SENSLOG_DATA_O_SYS,
+                                    ul_did,
+                                    pst_pno_tbl->st_pno_data[pno_index].us_pno,
+                                    reinterpret_cast<uint8_t *>(&(st_master_fst_temp.uc_data[0])),
+                                    st_master_fst_temp.us_size,
+                                    uc_result);
+        } else {
+            /* 1st session */
+            /* Call Vehicle Sensor Information Notification Transmission Process.*/
+            /* Size of data that can be transmitted in one division(Same size definition used)*/
+            st_master_fst_temp.us_size = LSDRV_FSTSNS_DSIZE_GYRO_TEMP;
+            ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
+                                  pst_pno_tbl->st_pno_data[pno_index].us_pno,
+                                  CID_VEHICLESENS_VEHICLE_INFO,
+                                  /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                                  static_cast<u_int16>(st_master_fst_temp.us_size + 8),
+                                  (const void *)&st_master_fst_temp);
+            uc_result = SENSLOG_RES_SUCCESS;
+            if (ret != RET_NORMAL) {
+                uc_result = SENSLOG_RES_FAIL;
+            }
+            SensLogWriteOutputData(SENSLOG_DATA_O_SYS,
+                                    ul_did,
+                                    pst_pno_tbl->st_pno_data[pno_index].us_pno,
+                                    reinterpret_cast<uint8_t *>(&(st_master_fst_temp.uc_data[0])),
+                                    st_master_fst_temp.us_size,
+                                    uc_result);
+            /* Second time */
+            /* Call Vehicle Sensor Information Notification Transmission Process.*/
+            (void)memset(reinterpret_cast<void *>(&st_master_fst_temp.uc_data[0]),
+                         0,
+                         sizeof(u_int8) * VEHICLE_DSIZE_DATA_MASTER_FST);
+            /* Size of the data - Transmission size(Same size definition used)Ignore->MISRA-C++:2008 Rule 5-0-5 */
+            st_master_fst_temp.us_size = static_cast<u_int16>(st_master_fst.us_size - \
+                                                LSDRV_FSTSNS_DSIZE_GYRO_TEMP);
+            memcpy(&st_master_fst_temp.uc_data[0],
+                   &st_master_fst.uc_data[LSDRV_FSTSNS_DSIZE_GYRO_TEMP],
+                   st_master_fst_temp.us_size);  /* Ignore->MISRA-C++:2008 Rule 5-0-5 #Coverity_19347*/
+            ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
+                                  pst_pno_tbl->st_pno_data[pno_index].us_pno,
+                                  CID_VEHICLESENS_VEHICLE_INFO,
+                                  /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                                  static_cast<u_int16>(st_master_fst_temp.us_size + 8),
+                                  (const void *)&st_master_fst_temp);
+            uc_result = SENSLOG_RES_SUCCESS;
+            if (ret != RET_NORMAL) {
+                uc_result = SENSLOG_RES_FAIL;
+            }
+            SensLogWriteOutputData(SENSLOG_DATA_O_SYS,
+                                    ul_did,
+                                    pst_pno_tbl->st_pno_data[pno_index].us_pno,
+                                    reinterpret_cast<uint8_t *>(&(st_master_fst_temp.uc_data[0])),
+                                    st_master_fst_temp.us_size,
+                                    uc_result);
+        }
+    } else {
+        /* Call Vehicle Sensor Information Notification Transmission Process.*/
+        ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
+                              pst_pno_tbl->st_pno_data[pno_index].us_pno,
+                              CID_VEHICLESENS_VEHICLE_INFO,
+                              /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                              static_cast<u_int16>(st_master_fst.us_size + 8),
+                              (const void *)&st_master_fst);
+        uc_result = SENSLOG_RES_SUCCESS;
+        if (ret != RET_NORMAL) {
+            uc_result = SENSLOG_RES_FAIL;
+        }
+        SensLogWriteOutputData(SENSLOG_DATA_O_SYS,
+                                ul_did,
+                                pst_pno_tbl->st_pno_data[pno_index].us_pno,
+                                reinterpret_cast<uint8_t *>(&(st_master_fst.uc_data[0])),
+                                st_master_fst.us_size,
+                                uc_result);
+    }
 
     return uc_result;
 }
@@ -990,335 +993,318 @@ u_int8 VehicleSensDeliveryOther(DID ul_did, u_int8 uc_current_get_method, int32 
 
     return uc_result;
 }
+
 void VehicleSensDeliveryProc(DID ul_did, u_int8 uc_chg_type, u_int8 uc_get_method) {
-    u_int8                                    uc_current_get_method;    /* Data collection way                    */
-    int32                                    i;                    /* Generic counters                     */
-    int32                                    j;                    /* Generic counters                     */
-    VEHICLESENS_DATA_MASTER                    stmaster;            /* Data master of normal data            */
-    const VEHICLESENS_DELIVERY_PNO_TBL        *pst_pno_tbl;            /* Vehicle Sensor Destination PNO Table Pointer    */
-    SENSOR_PKG_MSG_VSINFO                    st_pkg_master;        /* Data master for package delivery */
-    u_int8                                    uc_data_cnt;            /* Counter for the number of data  */
-    u_int16                                    us_index;            /* Package delivery management table reference  */
-    DID                                        ul_pkg_did;            /* DID for package data acquisition  */
-    u_int16                                    us_offset;            /* For offset calculation      */
-    u_int16                                    us_next_offset;        /* Next offset value      */
-    u_int16                                    us_boundary_adj;        /* For boundary adjustment    */
-#if CONFIG_SENSOR_EXT_VALID                    /* Initial Sensor Support */
-    u_int32                                    cid;
-    RET_API                                    ret = RET_NORMAL;    /* API return value                        */
-    u_int8                                    uc_result = SENSLOG_RES_SUCCESS;    /* Send/Receive result        */
-#endif
+  VEHICLESENS_DATA_MASTER             stmaster; /* Data master of normal data            */
+  const VEHICLESENS_DELIVERY_PNO_TBL *pst_pno_tbl; /* Vehicle Sensor Destination PNO Table Pointer    */
+  SENSOR_PKG_MSG_VSINFO               st_pkg_master; /* Data master for package delivery */
+  uint32_t                            cid;
+  uint8_t                             uc_result = SENSLOG_RES_SUCCESS; /* Send/Receive result        */
 
-    /* Obtain the data acquisition method from the Vehicle Selection Item List */
-    uc_current_get_method = VehicleSensGetSelectionItemList(ul_did);
+  /* Obtain the data acquisition method from the Vehicle Selection Item List */
+  uint8_t uc_current_get_method = VehicleSensGetSelectionItemList(ul_did);
 
-    if (uc_current_get_method == uc_get_method) {
-        /* When the data acquisition methods match (= delivery target) */
+  if (uc_current_get_method == uc_get_method) {
+    /* When the data acquisition methods match (= delivery target) */
 
-        /* Obtain the shipping destination PNO */
-        pst_pno_tbl = (const VEHICLESENS_DELIVERY_PNO_TBL *)VehicleSensMakeDeliveryPnoTbl(ul_did, uc_chg_type);
+    /* Obtain the shipping destination PNO */
+    pst_pno_tbl = (const VEHICLESENS_DELIVERY_PNO_TBL *) VehicleSensMakeDeliveryPnoTbl(ul_did, uc_chg_type);
 
-        if ((pst_pno_tbl->us_dnum) > 0) {
-            /* When there is a shipping destination PNO registration */
-            /* For boundary adjustment */
-            us_boundary_adj = (u_int16)VEHICLESENS_BIT1 | (u_int16)VEHICLESENS_BIT0;
-            /* Vehicle sensor information notification transmission process */
-            for (i = 0; i < (pst_pno_tbl->us_dnum); i++) {
-                if (VEHICLESENS_DELIVERY_METHOD_PACKAGE == pst_pno_tbl->st_pno_data[i].uc_method) {
-                    /* When the delivery method is the package method */
-                    (void)memset(reinterpret_cast<void *>(&st_pkg_master), 0, sizeof(SENSOR_PKG_MSG_VSINFO));
+    if ((pst_pno_tbl->us_dnum) > 0) {
+      /* When there is a shipping destination PNO registration */
+      /* For boundary adjustment */
+      uint16_t us_boundary_adj = (u_int16) VEHICLESENS_BIT1 | (u_int16) VEHICLESENS_BIT0; /* #012 */
+      /* Vehicle sensor information notification transmission process */
+      for (uint32_t i = 0; i < (pst_pno_tbl->us_dnum); i++) {
+        if (VEHICLESENS_DELIVERY_METHOD_PACKAGE == pst_pno_tbl->st_pno_data[i].uc_method) {
+          /* When the delivery method is the package method */
+          (void) memset(reinterpret_cast<void *>(&st_pkg_master), 0, sizeof(SENSOR_PKG_MSG_VSINFO));
 
-                    us_index = pst_pno_tbl->st_pno_data[i].us_pkg_start_idx;
-                    uc_data_cnt = 0U;
-                    us_offset  = 0U;
-                    for (j = 0; j < SENSOR_PKG_DELIVERY_MAX; j++) {
-                        ul_pkg_did = g_stpkgdelivery_tbl_mng.st_pkg_data[us_index].ul_did;    /* Get DID            */
-                        st_pkg_master.usOffset[uc_data_cnt] = us_offset;         /* Offset setting    */
-                        uc_current_get_method = VehicleSensGetSelectionItemList(ul_pkg_did);  /* Data collection way    */
-                        if (VEHICLESENS_GETMETHOD_GPS == uc_current_get_method) {
-//                            VehicleSensGetGpsDataMaster(ul_pkg_did,
-//                                        uc_current_get_method,
-//                                    reinterpret_cast<SENSOR_MSG_GPSDATA_DAT *>(&st_pkg_master.ucData[us_offset]));
-                        } else {
-                                VehicleSensGetDataMaster(ul_pkg_did,
-                                    uc_current_get_method,
-                                    reinterpret_cast<VEHICLESENS_DATA_MASTER *>(&st_pkg_master.ucData[us_offset]));
-                        }
-                        uc_data_cnt++;                                                /* Data count increment    */
-                        if ((us_index == pst_pno_tbl->st_pno_data[i].us_pkg_end_idx) ||
-                        (VEHICLESENS_LINK_INDEX_END == g_stpkgdelivery_tbl_mng.st_pkg_data[us_index].usdlvry_idx)) {
-                            st_pkg_master.ucDNum = uc_data_cnt;                       /* To save the number of data        */
-                            break;
-                        } else {
-                            /* By creating the following processing contents,Need to obtain an offset value */
-                            us_next_offset = VehicleSensGetDataMasterOffset(ul_pkg_did);  /* Next offset calculation */
-                            /* Boundary adjustment of data size */
-                            if ((us_next_offset & us_boundary_adj) != 0) {
-                                /* If you need to adjust */
-                                /* Mask Lower Bit */
-                                us_next_offset = static_cast<u_int16>(us_next_offset & ~us_boundary_adj);
-                                /* Add numbers */
-                                us_next_offset = static_cast<u_int16>(us_next_offset + (u_int16)VEHICLESENS_BIT2);
-                            }
-                            us_offset = static_cast<u_int16>(us_offset +us_next_offset);
-                            /* Get next index  */
-                            us_index = g_stpkgdelivery_tbl_mng.st_pkg_data[us_index].usdlvry_idx;
-                        }
-                    }
-//                    ret = PosSndMsg(PNO_VEHICLE_SENSOR,
-//                                            pst_pno_tbl->st_pno_data[i].us_pno,
-//                                            CID_SENSOR_PKG_INFO,
-//                                            (u_int16)sizeof(SENSOR_PKG_MSG_VSINFO),
-//                                            (const void *)&st_pkg_master);
-//                    uc_result = SENSLOG_RES_SUCCESS;
-//                    if (ret != RET_NORMAL) {
-//                        uc_result = SENSLOG_RES_FAIL;
-//                    }
-//                    SensLogWriteOutputData(SENSLOG_DATA_O_SYS_PKG, 0, pst_pno_tbl->st_pno_data[i].us_pno,
-//                                             reinterpret_cast<uint8_t *>(&st_pkg_master),
-//                                             sizeof(SENSOR_PKG_MSG_VSINFO), uc_result);
-                } else {
-                    /* When the delivery system is normal */
-                    /* Acquire the applicable data information from the data master..*/
-                    if (VEHICLESENS_GETMETHOD_GPS == uc_current_get_method) {
-//                        uc_result = VehicleSensDeliveryGPS(ul_did, uc_get_method, uc_current_get_method, i,
-//                            &cid, &stmaster, pst_pno_tbl);
-                    }
-                    else if ((VEHICLESENS_GETMETHOD_NAVI == uc_get_method)  ||  // NOLINT(readability/braces)
-                            (VEHICLESENS_GETMETHOD_OTHER == uc_get_method) ||
-                            (VEHICLESENS_GETMETHOD_INTERNAL == uc_get_method)) {
-//                        uc_result = VehicleSensDeliveryOther(ul_did, uc_current_get_method, i,
-//                            &cid, &stmaster, pst_pno_tbl);
-                    }
-
-#if CONFIG_SENSOR_EXT_VALID                /* Initial Sensor Support */
-                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                    else if ((ul_did == POSHAL_DID_GYRO_FST) ||    // NOLINT(readability/braces)
-//                              (ul_did == POSHAL_DID_REV_FST)  ||
-//                              (ul_did == POSHAL_DID_GYRO_TEMP_FST) ||
-//                              (ul_did == POSHAL_DID_GSNS_X_FST) ||
-//                              (ul_did == POSHAL_DID_GSNS_Y_FST) ||
-//                              (ul_did == POSHAL_DID_SPEED_PULSE_FST)) {   /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                        /* Acquire the applicable data information from the data master for the initial sensor..*/
-//                        uc_result = VehicleSensDeliveryFst(ul_did, uc_get_method, i, pst_pno_tbl);
-//                    }
-#endif
-                    else if (ul_did == VEHICLE_DID_GYRO_TROUBLE) {  // LCOV_EXCL_BR_LINE 6:DID is not used
-                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//                        uc_result = VehicleSensDeliveryGyro(ul_did, uc_current_get_method, i, pst_pno_tbl);  // LCOV_EXCL_LINE 8: dead code  // NOLINT(whitespace/line_length)
-                    }
-                    else {    // NOLINT(readability/braces)
-                        (void)memset(reinterpret_cast<void *>(&stmaster), 0x00, sizeof(stmaster));
-                        VehicleSensGetDataMaster(ul_did, uc_current_get_method, &stmaster);
-
-                        /* Call Vehicle Sensor Information Notification Transmission Process.*/
-//                        ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
-//                                              pst_pno_tbl->st_pno_data[i].us_pno,
-//                                              CID_VEHICLESENS_VEHICLE_INFO,
-//                                              (u_int16)sizeof(VEHICLESENS_DATA_MASTER),
-//                                              (const void *)&stmaster);
-//                        uc_result = SENSLOG_RES_SUCCESS;
-//                        if (ret != RET_NORMAL) {
-//                            uc_result = SENSLOG_RES_FAIL;
-//                        }
-//                        SensLogWriteOutputData(SENSLOG_DATA_O_SYS,
-//                                                ul_did,
-//                                                pst_pno_tbl->st_pno_data[i].us_pno,
-//                                                reinterpret_cast<uint8_t *>(&(stmaster.uc_data[0])),
-//                                                stmaster.us_size,
-//                                                uc_result);
-                    }
-                }
+          uint16_t us_index = pst_pno_tbl->st_pno_data[i].us_pkg_start_idx;
+          uint8_t uc_data_cnt = 0U;
+          uint16_t us_offset = 0U;
+          for (uint32_t j = 0; j < SENSOR_PKG_DELIVERY_MAX; j++) {
+            DID ul_pkg_did = g_stpkgdelivery_tbl_mng.st_pkg_data[us_index].ul_did; /* Get DID            */
+            st_pkg_master.usOffset[uc_data_cnt] = us_offset; /* Offset setting    */
+            uc_current_get_method = VehicleSensGetSelectionItemList(ul_pkg_did); /* Data collection way    */
+            if (VEHICLESENS_GETMETHOD_GPS == uc_current_get_method) {
+              VehicleSensGetGpsDataMaster(ul_pkg_did, uc_current_get_method,
+                  reinterpret_cast<SENSOR_MSG_GPSDATA_DAT *>(&st_pkg_master.ucData[us_offset]));
             }
+            else {
+              VehicleSensGetDataMaster(ul_pkg_did, uc_current_get_method,
+                  reinterpret_cast<VEHICLESENS_DATA_MASTER *>(&st_pkg_master.ucData[us_offset]));
+            }
+            uc_data_cnt++; /* Data count increment    */
+            if ((us_index == pst_pno_tbl->st_pno_data[i].us_pkg_end_idx)
+                || (VEHICLESENS_LINK_INDEX_END == g_stpkgdelivery_tbl_mng.st_pkg_data[us_index].usdlvry_idx)) {
+              st_pkg_master.ucDNum = uc_data_cnt; /* To save the number of data        */
+              break;
+            }
+            else {
+              /* By creating the following processing contents,Need to obtain an offset value */
+              uint16_t us_next_offset = VehicleSensGetDataMasterOffset(ul_pkg_did); /* Next offset calculation */
+              /* Boundary adjustment of data size */
+              if ((us_next_offset & us_boundary_adj) != 0) {
+                /* If you need to adjust */
+                /* Mask Lower Bit */
+                us_next_offset = static_cast<u_int16>(us_next_offset & ~us_boundary_adj);
+                /* Add numbers */
+                us_next_offset = static_cast<u_int16>(us_next_offset + (u_int16) VEHICLESENS_BIT2);
+              }
+              us_offset = static_cast<u_int16>(us_offset + us_next_offset);
+              /* Get next index  */
+              us_index = g_stpkgdelivery_tbl_mng.st_pkg_data[us_index].usdlvry_idx;
+            }
+          }
+          RET_API ret = PosSndMsg(PNO_VEHICLE_SENSOR, pst_pno_tbl->st_pno_data[i].us_pno,
+              CID_SENSOR_PKG_INFO, (u_int16) sizeof(SENSOR_PKG_MSG_VSINFO), (const void *) &st_pkg_master);
+          uc_result = SENSLOG_RES_SUCCESS;
+          if (ret != RET_NORMAL) {
+            uc_result = SENSLOG_RES_FAIL;
+          }
+          SensLogWriteOutputData(SENSLOG_DATA_O_SYS_PKG, 0, pst_pno_tbl->st_pno_data[i].us_pno,
+              reinterpret_cast<uint8_t *>(&st_pkg_master), sizeof(SENSOR_PKG_MSG_VSINFO), uc_result);
         }
+        else {
+          /* When the delivery system is normal */
+          /* Acquire the applicable data information from the data master..*/
+          if (VEHICLESENS_GETMETHOD_GPS == uc_current_get_method) {
+            uc_result = VehicleSensDeliveryGPS(ul_did, uc_get_method, uc_current_get_method, i, &cid, &stmaster,
+                pst_pno_tbl);
+          }
+          else if ((VEHICLESENS_GETMETHOD_NAVI == uc_get_method) ||  // NOLINT(readability/braces)
+              (VEHICLESENS_GETMETHOD_OTHER == uc_get_method) || (VEHICLESENS_GETMETHOD_INTERNAL == uc_get_method)) {
+            uc_result = VehicleSensDeliveryOther(ul_did, uc_current_get_method, i, &cid, &stmaster, pst_pno_tbl);
+          }
+
+#if CONFIG_SENSOR_EXT_VALID                 /* Initial Sensor Support */
+          /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+          else if ((ul_did == POSHAL_DID_GYRO_X_FST)  ||    // NOLINT(readability/braces)
+              (ul_did == POSHAL_DID_GYRO_Y_FST)  ||    // NOLINT(readability/braces)
+              (ul_did == POSHAL_DID_GYRO_Z_FST)  ||    // NOLINT(readability/braces)
+              (ul_did == POSHAL_DID_REV_FST)     ||
+              (ul_did == POSHAL_DID_GYRO_TEMP_FST) ||
+              (ul_did == POSHAL_DID_GSNS_X_FST) ||
+              (ul_did == POSHAL_DID_GSNS_Y_FST) ||
+              (ul_did == POSHAL_DID_GSNS_Z_FST) ||
+              (ul_did == POSHAL_DID_SPEED_PULSE_FST)) { /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+            /* Acquire the applicable data information from the data master for the initial sensor..*/
+            uc_result = VehicleSensDeliveryFst(ul_did, uc_get_method, i, pst_pno_tbl);
+          }
+#endif
+          else if (ul_did == VEHICLE_DID_GYRO_TROUBLE) {  // LCOV_EXCL_BR_LINE 6:DID is not used
+            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+            uc_result = VehicleSensDeliveryGyro(ul_did, uc_current_get_method, i, pst_pno_tbl); // LCOV_EXCL_LINE 8: dead code  // NOLINT(whitespace/line_length)
+          }
+          else {    // NOLINT(readability/braces)
+            (void) memset(reinterpret_cast<void *>(&stmaster), 0x00, sizeof(stmaster));
+            VehicleSensGetDataMaster(ul_did, uc_current_get_method, &stmaster);
+
+            /* Call Vehicle Sensor Information Notification Transmission Process.*/
+            RET_API ret = VehicleSndMsg(PNO_VEHICLE_SENSOR, pst_pno_tbl->st_pno_data[i].us_pno,
+                CID_VEHICLESENS_VEHICLE_INFO, (u_int16) sizeof(VEHICLESENS_DATA_MASTER), (const void *) &stmaster);
+            uc_result = SENSLOG_RES_SUCCESS;
+            if (ret != RET_NORMAL) {
+              uc_result = SENSLOG_RES_FAIL;
+            }
+            SensLogWriteOutputData(SENSLOG_DATA_O_SYS, ul_did, pst_pno_tbl->st_pno_data[i].us_pno,
+                reinterpret_cast<uint8_t *>(&(stmaster.uc_data[0])), stmaster.us_size, uc_result);
+          }
+        }
+      }
     }
+  }
 }
 
-//u_int8 VehicleSensFirstDeliverySens(PNO us_pno, DID ul_did, u_int8 uc_get_method,
-//                                     VEHICLESENS_DATA_MASTER_FST* stmaster_fst,
-//                                     VEHICLESENS_DATA_MASTER_FST* stmaster_fst_temp) {
-//    RET_API                     ret = RET_NORMAL;  /* API return value                       */
-//    u_int8                      uc_result = SENSLOG_RES_SUCCESS; /* Send/Receive result      */
-//    /* Acquire the applicable data information from the data master for the initial sensor..*/
-//    (void)memset(reinterpret_cast<void *>(stmaster_fst), 0, sizeof(VEHICLESENS_DATA_MASTER_FST));
-//    (void)memset(reinterpret_cast<void *>(stmaster_fst_temp),    0, sizeof(VEHICLESENS_DATA_MASTER_FST));
-//    VehicleSensGetDataMasterFst(ul_did, uc_get_method, stmaster_fst);
-//
-//    /* Internal debug log output */
-//    FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, 
-//                  "[LOG:POSHAL_DID_GYRO_FST,POSHAL_DID_SPEED_PULSE_FST]");
-//
-//    if (stmaster_fst->partition_flg == 1) {
-//        /* When the partitioning flag is enabled,Or exceeds the size that can be sent,Perform split transmission */
-//        memcpy(stmaster_fst_temp, stmaster_fst, sizeof(VEHICLESENS_DATA_MASTER_FST));
-//        if ((ul_did == POSHAL_DID_GYRO_FST) ||    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                (ul_did == POSHAL_DID_GSNS_X_FST) ||
-//                (ul_did == POSHAL_DID_GSNS_Y_FST)) {
-//            /* Internal debug log output */
-//            FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, 
-//                          "[CALL:VehicleSndMsg:INPOSHAL_DID_GYRO_FST Partition]");
-//
-//            /* 1st session */
-//            /* Call Vehicle Sensor Information Notification Transmission Process.*/
-//            /* Size of data that can be transmitted in one division(Same size definition used) */
-//            stmaster_fst_temp->us_size = LSDRV_FSTSNS_DSIZE_GYRO;
-//            ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
-//                                  us_pno,
-//                                  CID_VEHICLESENS_VEHICLE_INFO,
-//                                  /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                                  static_cast<u_int16>(stmaster_fst_temp->us_size + 8),
-//                                  (const void *)stmaster_fst_temp);
-//            uc_result = SENSLOG_RES_SUCCESS;
-//            if (ret != RET_NORMAL) {
-//                uc_result = SENSLOG_RES_FAIL;
-//            }
-//            SensLogWriteOutputData(SENSLOG_DATA_O_SYS,
-//                                    ul_did,
-//                                    us_pno,
-//                                    reinterpret_cast<uint8_t *>(&(stmaster_fst_temp->uc_data[0])),
-//                                    stmaster_fst_temp->us_size,
-//                                    uc_result);
-//
-//            /* Second time */
-//            /* Call Vehicle Sensor Information Notification Transmission Process.*/
-//            (void)memset(reinterpret_cast<void *>(&stmaster_fst_temp->uc_data[0]),
-//                         0,
-//                         sizeof(u_int8) * VEHICLE_DSIZE_DATA_MASTER_FST);
-//            /* Size of the data - Transmission size(Same size definition used) Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//            stmaster_fst_temp->us_size = static_cast<u_int16>(stmaster_fst->us_size - LSDRV_FSTSNS_DSIZE_GYRO);
-//            /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//            memcpy(&stmaster_fst_temp->uc_data[0],
-//                   &stmaster_fst->uc_data[LSDRV_FSTSNS_DSIZE_GYRO],
-//                   stmaster_fst_temp->us_size);
-//            ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
-//                                  us_pno,
-//                                  CID_VEHICLESENS_VEHICLE_INFO,
-//                                  /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                                  static_cast<u_int16>(stmaster_fst_temp->us_size + 8),
-//                                  (const void *)stmaster_fst_temp);
-//            uc_result = SENSLOG_RES_SUCCESS;
-//            if (ret != RET_NORMAL) {
-//                uc_result = SENSLOG_RES_FAIL;
-//            }
-//            SensLogWriteOutputData(SENSLOG_DATA_O_SYS, ul_did, us_pno,
-//                                    reinterpret_cast<uint8_t *>(&(stmaster_fst_temp->uc_data[0])),
-//                                    stmaster_fst_temp->us_size, uc_result);
-//        } else if (ul_did == POSHAL_DID_REV_FST) {   /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//            /* Internal debug log output */
-//            FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, 
-//                          "[CALL:VehicleSndMsg:INPOSHAL_DID_REV_FST Partition]");
-//
-//            /* 1st session */
-//            /* Call Vehicle Sensor Information Notification Transmission Process.*/
-//            stmaster_fst_temp->us_size = LSDRV_FSTSNS_DSIZE_REV;    /* Size of data that can be transmitted in one division */
-//            ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
-//                                  us_pno,
-//                                  CID_VEHICLESENS_VEHICLE_INFO,
-//                                  /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                                  static_cast<u_int16>(stmaster_fst_temp->us_size + 8),
-//                                  (const void *)stmaster_fst_temp);
-//            uc_result = SENSLOG_RES_SUCCESS;
-//            if (ret != RET_NORMAL) {
-//                uc_result = SENSLOG_RES_FAIL;
-//            }
-//            SensLogWriteOutputData(SENSLOG_DATA_O_SYS, ul_did, us_pno,
-//                                   reinterpret_cast<uint8_t *>(&(stmaster_fst_temp->uc_data[0])),
-//                                   stmaster_fst_temp->us_size, uc_result);
-//
-//            /* Second time */
-//            /* Call Vehicle Sensor Information Notification Transmission Process.*/
-//            (void)memset(reinterpret_cast<void *>(&stmaster_fst_temp->uc_data[0]),
-//                         0,
-//                         sizeof(u_int8) * VEHICLE_DSIZE_DATA_MASTER_FST);
-//            /* Size of the data - Transmission size Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//            stmaster_fst_temp->us_size = static_cast<u_int16>(stmaster_fst->us_size - LSDRV_FSTSNS_DSIZE_REV);
-//            /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//            memcpy(&stmaster_fst_temp->uc_data[0],
-//                   &stmaster_fst->uc_data[LSDRV_FSTSNS_DSIZE_REV],
-//                   stmaster_fst_temp->us_size);
-//            ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
-//                                  us_pno,
-//                                  CID_VEHICLESENS_VEHICLE_INFO,
-//                                  /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                                  static_cast<u_int16>(stmaster_fst_temp->us_size + 8),
-//                                  (const void *)stmaster_fst_temp);
-//            uc_result = SENSLOG_RES_SUCCESS;
-//            if (ret != RET_NORMAL) {
-//                uc_result = SENSLOG_RES_FAIL;
-//            }
-//            SensLogWriteOutputData(SENSLOG_DATA_O_SYS, ul_did, us_pno,
-//                                    reinterpret_cast<uint8_t *>(&(stmaster_fst_temp->uc_data[0])),
-//                                    stmaster_fst_temp->us_size, uc_result);
-//        } else {
-//            /* Internal debug log output */
-//            FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, 
-//                          "[CALL:Vehicle_SndMsg:POSHAL_DID_SPEED_PULSE_FST Partition]");
-//
-//            /* 1st session */
-//            /* Call Vehicle Sensor Information Notification Transmission Process.*/
-//            /* Size of data that can be transmitted in one division(Same size definition used) */
-//            stmaster_fst_temp->us_size = LSDRV_FSTSNS_DSIZE_GYRO_TEMP;
-//            ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
-//                                    us_pno,
-//                                    CID_VEHICLESENS_VEHICLE_INFO,
-//                                    /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                                    static_cast<u_int16>(stmaster_fst_temp->us_size + 8),
-//                                    (const void *)stmaster_fst_temp);
-//            uc_result = SENSLOG_RES_SUCCESS;
-//            if (ret != RET_NORMAL) {
-//                uc_result = SENSLOG_RES_FAIL;
-//            }
-//            SensLogWriteOutputData(SENSLOG_DATA_O_SYS, ul_did, us_pno,
-//                                    reinterpret_cast<uint8_t *>(&(stmaster_fst_temp->uc_data[0])),
-//                                    stmaster_fst_temp->us_size, uc_result);
-//
-//            /* Second time */
-//            /* Call Vehicle Sensor Information Notification Transmission Process.*/
-//            (void)memset(reinterpret_cast<void *>(&stmaster_fst_temp->uc_data[0]),
-//                         0,
-//                         sizeof(u_int8) * VEHICLE_DSIZE_DATA_MASTER_FST);
-//            /* Size of the data - Transmission size(Same size definition used) Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//            stmaster_fst_temp->us_size = static_cast<u_int16>(stmaster_fst->us_size - LSDRV_FSTSNS_DSIZE_GYRO_TEMP);
-//            /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//            memcpy(&stmaster_fst_temp->uc_data[0],
-//                   &stmaster_fst->uc_data[LSDRV_FSTSNS_DSIZE_GYRO_TEMP],
-//                   stmaster_fst_temp->us_size);
-//            ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
-//                                  us_pno,
-//                                  CID_VEHICLESENS_VEHICLE_INFO,
-//                                  /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                                  static_cast<u_int16>(stmaster_fst_temp->us_size + 8),
-//                                  (const void *)stmaster_fst_temp);
-//            uc_result = SENSLOG_RES_SUCCESS;
-//            if (ret != RET_NORMAL) {
-//                uc_result = SENSLOG_RES_FAIL;
-//            }
-//            SensLogWriteOutputData(SENSLOG_DATA_O_SYS, ul_did, us_pno,
-//                                    reinterpret_cast<uint8_t *>(&(stmaster_fst_temp->uc_data[0])),
-//                                    stmaster_fst_temp->us_size, uc_result);
-//        }
-//    } else {
-//        /* Internal debug log output */
-//        FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, "[CALL:VehicleSndMsg]");
-//
-//        /* Call Vehicle Sensor Information Notification Transmission Process.*/
-//        ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
-//                              us_pno,
-//                              CID_VEHICLESENS_VEHICLE_INFO,
-//                              /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                              static_cast<u_int16>(stmaster_fst->us_size + 8),
-//                              (const void *)stmaster_fst);
-//        uc_result = SENSLOG_RES_SUCCESS;
-//        if (ret != RET_NORMAL) {
-//            uc_result = SENSLOG_RES_FAIL;
-//        }
-//        SensLogWriteOutputData(SENSLOG_DATA_O_SYS, ul_did, us_pno,
-//                                reinterpret_cast<uint8_t *>(&(stmaster_fst->uc_data[0])),
-//                                stmaster_fst->us_size, uc_result);
-//    }
-//
-//    return uc_result;
-//}
+u_int8 VehicleSensFirstDeliverySens(PNO us_pno, DID ul_did, u_int8 uc_get_method,
+                                     VEHICLESENS_DATA_MASTER_FST* stmaster_fst,
+                                     VEHICLESENS_DATA_MASTER_FST* stmaster_fst_temp) {
+    RET_API                     ret = RET_NORMAL;  /* API return value                       */
+    u_int8                      uc_result = SENSLOG_RES_SUCCESS; /* Send/Receive result      */
+    /* Acquire the applicable data information from the data master for the initial sensor..*/
+    (void)memset(reinterpret_cast<void *>(stmaster_fst), 0, sizeof(VEHICLESENS_DATA_MASTER_FST));
+    (void)memset(reinterpret_cast<void *>(stmaster_fst_temp),    0, sizeof(VEHICLESENS_DATA_MASTER_FST));
+    VehicleSensGetDataMasterFst(ul_did, uc_get_method, stmaster_fst);
+
+    /* Internal debug log output */
+    FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, 
+                  "[LOG:POSHAL_DID_GYRO_FST,POSHAL_DID_SPEED_PULSE_FST]");
+
+    if (stmaster_fst->partition_flg == 1) {
+        /* When the partitioning flag is enabled,Or exceeds the size that can be sent,Perform split transmission */
+        memcpy(stmaster_fst_temp, stmaster_fst, sizeof(VEHICLESENS_DATA_MASTER_FST));
+        if ((ul_did == POSHAL_DID_GYRO_X_FST) ||    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                (ul_did == POSHAL_DID_GYRO_Y_FST) ||
+                (ul_did == POSHAL_DID_GYRO_Z_FST) ||
+                (ul_did == POSHAL_DID_GSNS_X_FST) ||
+                (ul_did == POSHAL_DID_GSNS_Y_FST) ||
+                (ul_did == POSHAL_DID_GSNS_Z_FST)) {
+            /* Internal debug log output */
+            FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, 
+                          "[CALL:VehicleSndMsg:INPOSHAL_DID_GYRO_FST Partition]");
+
+            /* 1st session */
+            /* Call Vehicle Sensor Information Notification Transmission Process.*/
+            /* Size of data that can be transmitted in one division(Same size definition used) */
+            stmaster_fst_temp->us_size = LSDRV_FSTSNS_DSIZE_GYRO_X;
+            ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
+                                  us_pno,
+                                  CID_VEHICLESENS_VEHICLE_INFO,
+                                  /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                                  static_cast<u_int16>(stmaster_fst_temp->us_size + 8),
+                                  (const void *)stmaster_fst_temp);
+            uc_result = SENSLOG_RES_SUCCESS;
+            if (ret != RET_NORMAL) {
+                uc_result = SENSLOG_RES_FAIL;
+            }
+            SensLogWriteOutputData(SENSLOG_DATA_O_SYS,
+                                    ul_did,
+                                    us_pno,
+                                    reinterpret_cast<uint8_t *>(&(stmaster_fst_temp->uc_data[0])),
+                                    stmaster_fst_temp->us_size,
+                                    uc_result);
+
+            /* Second time */
+            /* Call Vehicle Sensor Information Notification Transmission Process.*/
+            (void)memset(reinterpret_cast<void *>(&stmaster_fst_temp->uc_data[0]),
+                         0,
+                         sizeof(u_int8) * VEHICLE_DSIZE_DATA_MASTER_FST);
+            /* Size of the data - Transmission size(Same size definition used) Ignore->MISRA-C++:2008 Rule 5-0-5 */
+            stmaster_fst_temp->us_size = static_cast<u_int16>(stmaster_fst->us_size - LSDRV_FSTSNS_DSIZE_GYRO_X);
+            /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+            memcpy(&stmaster_fst_temp->uc_data[0],
+                   &stmaster_fst->uc_data[LSDRV_FSTSNS_DSIZE_GYRO_X],
+                   stmaster_fst_temp->us_size);
+            ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
+                                  us_pno,
+                                  CID_VEHICLESENS_VEHICLE_INFO,
+                                  /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                                  static_cast<u_int16>(stmaster_fst_temp->us_size + 8),
+                                  (const void *)stmaster_fst_temp);
+            uc_result = SENSLOG_RES_SUCCESS;
+            if (ret != RET_NORMAL) {
+                uc_result = SENSLOG_RES_FAIL;
+            }
+            SensLogWriteOutputData(SENSLOG_DATA_O_SYS, ul_did, us_pno,
+                                    reinterpret_cast<uint8_t *>(&(stmaster_fst_temp->uc_data[0])),
+                                    stmaster_fst_temp->us_size, uc_result);
+        } else if (ul_did == POSHAL_DID_REV_FST) {   /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+            /* Internal debug log output */
+            FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, 
+                          "[CALL:VehicleSndMsg:INPOSHAL_DID_REV_FST Partition]");
+
+            /* 1st session */
+            /* Call Vehicle Sensor Information Notification Transmission Process.*/
+            stmaster_fst_temp->us_size = LSDRV_FSTSNS_DSIZE_REV;    /* Size of data that can be transmitted in one division */
+            ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
+                                  us_pno,
+                                  CID_VEHICLESENS_VEHICLE_INFO,
+                                  /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                                  static_cast<u_int16>(stmaster_fst_temp->us_size + 8),
+                                  (const void *)stmaster_fst_temp);
+            uc_result = SENSLOG_RES_SUCCESS;
+            if (ret != RET_NORMAL) {
+                uc_result = SENSLOG_RES_FAIL;
+            }
+            SensLogWriteOutputData(SENSLOG_DATA_O_SYS, ul_did, us_pno,
+                                   reinterpret_cast<uint8_t *>(&(stmaster_fst_temp->uc_data[0])),
+                                   stmaster_fst_temp->us_size, uc_result);
+
+            /* Second time */
+            /* Call Vehicle Sensor Information Notification Transmission Process.*/
+            (void)memset(reinterpret_cast<void *>(&stmaster_fst_temp->uc_data[0]),
+                         0,
+                         sizeof(u_int8) * VEHICLE_DSIZE_DATA_MASTER_FST);
+            /* Size of the data - Transmission size Ignore->MISRA-C++:2008 Rule 5-0-5 */
+            stmaster_fst_temp->us_size = static_cast<u_int16>(stmaster_fst->us_size - LSDRV_FSTSNS_DSIZE_REV);
+            /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+            memcpy(&stmaster_fst_temp->uc_data[0],
+                   &stmaster_fst->uc_data[LSDRV_FSTSNS_DSIZE_REV],
+                   stmaster_fst_temp->us_size);
+            ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
+                                  us_pno,
+                                  CID_VEHICLESENS_VEHICLE_INFO,
+                                  /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                                  static_cast<u_int16>(stmaster_fst_temp->us_size + 8),
+                                  (const void *)stmaster_fst_temp);
+            uc_result = SENSLOG_RES_SUCCESS;
+            if (ret != RET_NORMAL) {
+                uc_result = SENSLOG_RES_FAIL;
+            }
+            SensLogWriteOutputData(SENSLOG_DATA_O_SYS, ul_did, us_pno,
+                                    reinterpret_cast<uint8_t *>(&(stmaster_fst_temp->uc_data[0])),
+                                    stmaster_fst_temp->us_size, uc_result);
+        } else {
+            /* Internal debug log output */
+            FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, 
+                          "[CALL:Vehicle_SndMsg:POSHAL_DID_SPEED_PULSE_FST Partition]");
+
+            /* 1st session */
+            /* Call Vehicle Sensor Information Notification Transmission Process.*/
+            /* Size of data that can be transmitted in one division(Same size definition used) */
+            stmaster_fst_temp->us_size = LSDRV_FSTSNS_DSIZE_GYRO_TEMP;
+            ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
+                                    us_pno,
+                                    CID_VEHICLESENS_VEHICLE_INFO,
+                                    /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                                    static_cast<u_int16>(stmaster_fst_temp->us_size + 8),
+                                    (const void *)stmaster_fst_temp);
+            uc_result = SENSLOG_RES_SUCCESS;
+            if (ret != RET_NORMAL) {
+                uc_result = SENSLOG_RES_FAIL;
+            }
+            SensLogWriteOutputData(SENSLOG_DATA_O_SYS, ul_did, us_pno,
+                                    reinterpret_cast<uint8_t *>(&(stmaster_fst_temp->uc_data[0])),
+                                    stmaster_fst_temp->us_size, uc_result);
+
+            /* Second time */
+            /* Call Vehicle Sensor Information Notification Transmission Process.*/
+            (void)memset(reinterpret_cast<void *>(&stmaster_fst_temp->uc_data[0]),
+                         0,
+                         sizeof(u_int8) * VEHICLE_DSIZE_DATA_MASTER_FST);
+            /* Size of the data - Transmission size(Same size definition used) Ignore->MISRA-C++:2008 Rule 5-0-5 */
+            stmaster_fst_temp->us_size = static_cast<u_int16>(stmaster_fst->us_size - LSDRV_FSTSNS_DSIZE_GYRO_TEMP);
+            /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+            memcpy(&stmaster_fst_temp->uc_data[0],
+                   &stmaster_fst->uc_data[LSDRV_FSTSNS_DSIZE_GYRO_TEMP],
+                   stmaster_fst_temp->us_size);
+            ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
+                                  us_pno,
+                                  CID_VEHICLESENS_VEHICLE_INFO,
+                                  /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                                  static_cast<u_int16>(stmaster_fst_temp->us_size + 8),
+                                  (const void *)stmaster_fst_temp);
+            uc_result = SENSLOG_RES_SUCCESS;
+            if (ret != RET_NORMAL) {
+                uc_result = SENSLOG_RES_FAIL;
+            }
+            SensLogWriteOutputData(SENSLOG_DATA_O_SYS, ul_did, us_pno,
+                                    reinterpret_cast<uint8_t *>(&(stmaster_fst_temp->uc_data[0])),
+                                    stmaster_fst_temp->us_size, uc_result);
+        }
+    } else {
+        /* Internal debug log output */
+        FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, "[CALL:VehicleSndMsg]");
+
+        /* Call Vehicle Sensor Information Notification Transmission Process.*/
+        ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
+                              us_pno,
+                              CID_VEHICLESENS_VEHICLE_INFO,
+                              /* Data size + data information Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                              static_cast<u_int16>(stmaster_fst->us_size + 8),
+                              (const void *)stmaster_fst);
+        uc_result = SENSLOG_RES_SUCCESS;
+        if (ret != RET_NORMAL) {
+            uc_result = SENSLOG_RES_FAIL;
+        }
+        SensLogWriteOutputData(SENSLOG_DATA_O_SYS, ul_did, us_pno,
+                                reinterpret_cast<uint8_t *>(&(stmaster_fst->uc_data[0])),
+                                stmaster_fst->us_size, uc_result);
+    }
+
+    return uc_result;
+}
 
 u_int8 VehicleSensFirstDeliveryOther(PNO us_pno, DID ul_did, u_int8 uc_get_method,
                                     u_int32* cid,
@@ -1403,79 +1389,79 @@ void VehicleSensFirstDelivery(PNO us_pno, DID ul_did) {
     uc_get_method = VehicleSensGetSelectionItemList(ul_did);
 
     if (VEHICLESENS_GETMETHOD_GPS == uc_get_method) {
-//        SENSOR_MSG_GPSDATA_DAT            gps_master;
+        SENSOR_MSG_GPSDATA_DAT            gps_master;
         VEHICLESENS_DELIVERY_FORMAT        delivery_data;
         u_int16                            length;
         u_int16                            senslog_len;
 
-//        VehicleSensGetGpsDataMaster(ul_did, uc_get_method, &gps_master);
+        VehicleSensGetGpsDataMaster(ul_did, uc_get_method, &gps_master);
 
-//        if (ul_did == POSHAL_DID_GPS_TIME) {
-//            /* GPS time,Because there is no header in the message to be delivered,Padding deliveryData headers */
-//            (void)memcpy(reinterpret_cast<void*>(&delivery_data),
-//                         reinterpret_cast<void*>(&gps_master.uc_data[0]), gps_master.us_size);
-//            length = gps_master.us_size;
-//            senslog_len = length;
-//            cid = CID_VEHICLESENS_VEHICLE_INFO_GPS_TIME;
-//        } else if (ul_did == VEHICLE_DID_LOCATION_LONLAT) {
-//            pLonLatMsg = reinterpret_cast<SENSORLOCATION_MSG_LONLATINFO*>(&delivery_data);
-//            /* Acquire the applicable data information from the data master..*/
-//            VehicleSensGetDataMaster(ul_did, uc_get_method, &stmaster);
-//            (void)memcpy(reinterpret_cast<void*>(&(pLonLatMsg->data)),
-//                         reinterpret_cast<void*>(&(stmaster.uc_data[0])), stmaster.us_size);
-//            length = (u_int16)stmaster.us_size;
-//            senslog_len = length;
-//            cid = CID_POSIF_REGISTER_LISTENER_LONLAT;
-//        } else if (ul_did == VEHICLE_DID_LOCATION_ALTITUDE) {
-//            pAltitudeMsg = reinterpret_cast<SENSORLOCATION_MSG_ALTITUDEINFO*>(&delivery_data);
-//            /* Acquire the applicable data information from the data master..*/
-//            VehicleSensGetDataMaster(ul_did, uc_get_method, &stmaster);
-//            (void)memcpy(reinterpret_cast<void*>(&(pAltitudeMsg->data)),
-//                         reinterpret_cast<void*>(&stmaster.uc_data[0]), stmaster.us_size);
-//            length = (u_int16)stmaster.us_size;
-//            senslog_len = length;
-//            cid = CID_POSIF_REGISTER_LISTENER_ALTITUDE;
-//        } else if (ul_did == VEHICLE_DID_MOTION_HEADING) {
-//            pHeadingMsg = reinterpret_cast<SENSORMOTION_MSG_HEADINGINFO*>(&delivery_data);
-//            /* Acquire the applicable data information from the data master..*/
-//            VehicleSensGetDataMaster(ul_did, uc_get_method, &stmaster);
-//            (void)memcpy(reinterpret_cast<void*>(&(pHeadingMsg->data)),
-//                         reinterpret_cast<void*>(&stmaster.uc_data[0]), stmaster.us_size);
-//            length = (u_int16)stmaster.us_size;
-//            senslog_len = length;
-//            cid = CID_POSIF_REGISTER_LISTENER_HEADING;
-//        } else {
-//
-//            delivery_data.header.did                    = gps_master.ul_did;
-//            delivery_data.header.size                = gps_master.us_size;
-//            delivery_data.header.rcv_flag                = gps_master.uc_rcv_flag;
-//            delivery_data.header.sensor_cnt            = gps_master.uc_sns_cnt;
-//            (void)memcpy(reinterpret_cast<void *>(&delivery_data.data[0]),
-//                         reinterpret_cast<void *>(&gps_master.uc_data[0]),
-//                         (size_t)delivery_data.header.size);
-//
-//            length = static_cast<u_int16>((u_int16)sizeof(delivery_data.header) + delivery_data.header.size);
-//            senslog_len = delivery_data.header.size;
-//            cid = CID_VEHICLESENS_VEHICLE_INFO;
-//        }
+        if (ul_did == POSHAL_DID_GPS_TIME) {
+            /* GPS time,Because there is no header in the message to be delivered,Padding deliveryData headers */
+            (void)memcpy(reinterpret_cast<void*>(&delivery_data),
+                         reinterpret_cast<void*>(&gps_master.uc_data[0]), gps_master.us_size);
+            length = gps_master.us_size;
+            senslog_len = length;
+            cid = CID_VEHICLESENS_VEHICLE_INFO_GPS_TIME;
+        } else if (ul_did == VEHICLE_DID_LOCATION_LONLAT) {
+            pLonLatMsg = reinterpret_cast<SENSORLOCATION_MSG_LONLATINFO*>(&delivery_data);
+            /* Acquire the applicable data information from the data master..*/
+            VehicleSensGetDataMaster(ul_did, uc_get_method, &stmaster);
+            (void)memcpy(reinterpret_cast<void*>(&(pLonLatMsg->data)),
+                         reinterpret_cast<void*>(&(stmaster.uc_data[0])), stmaster.us_size);
+            length = (u_int16)stmaster.us_size;
+            senslog_len = length;
+            cid = CID_POSIF_REGISTER_LISTENER_LONLAT;
+        } else if (ul_did == VEHICLE_DID_LOCATION_ALTITUDE) {
+            pAltitudeMsg = reinterpret_cast<SENSORLOCATION_MSG_ALTITUDEINFO*>(&delivery_data);
+            /* Acquire the applicable data information from the data master..*/
+            VehicleSensGetDataMaster(ul_did, uc_get_method, &stmaster);
+            (void)memcpy(reinterpret_cast<void*>(&(pAltitudeMsg->data)),
+                         reinterpret_cast<void*>(&stmaster.uc_data[0]), stmaster.us_size);
+            length = (u_int16)stmaster.us_size;
+            senslog_len = length;
+            cid = CID_POSIF_REGISTER_LISTENER_ALTITUDE;
+        } else if (ul_did == VEHICLE_DID_MOTION_HEADING) {
+            pHeadingMsg = reinterpret_cast<SENSORMOTION_MSG_HEADINGINFO*>(&delivery_data);
+            /* Acquire the applicable data information from the data master..*/
+            VehicleSensGetDataMaster(ul_did, uc_get_method, &stmaster);
+            (void)memcpy(reinterpret_cast<void*>(&(pHeadingMsg->data)),
+                         reinterpret_cast<void*>(&stmaster.uc_data[0]), stmaster.us_size);
+            length = (u_int16)stmaster.us_size;
+            senslog_len = length;
+            cid = CID_POSIF_REGISTER_LISTENER_HEADING;
+        } else {
+
+            delivery_data.header.did                    = gps_master.ul_did;
+            delivery_data.header.size                = gps_master.us_size;
+            delivery_data.header.rcv_flag                = gps_master.uc_rcv_flag;
+            delivery_data.header.sensor_cnt            = gps_master.uc_sns_cnt;
+            (void)memcpy(reinterpret_cast<void *>(&delivery_data.data[0]),
+                         reinterpret_cast<void *>(&gps_master.uc_data[0]),
+                         (size_t)delivery_data.header.size);
+
+            length = static_cast<u_int16>((u_int16)sizeof(delivery_data.header) + delivery_data.header.size);
+            senslog_len = delivery_data.header.size;
+            cid = CID_VEHICLESENS_VEHICLE_INFO;
+        }
 
         /* Call Vehicle Sensor Information Notification Transmission Process.*/
-//        ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
-//                              us_pno,
-//                              static_cast<CID>(cid),
-//                              length,
-//                              (const void *)&delivery_data);
-//        uc_result = SENSLOG_RES_SUCCESS;
-//        if (ret != RET_NORMAL) {
-//            uc_result = SENSLOG_RES_FAIL;
-//        }
-//        if (cid != CID_VEHICLESENS_VEHICLE_INFO) {
-//            SensLogWriteOutputData(SENSLOG_DATA_O_UNSPECIFIED, ul_did, us_pno,
-//                                     reinterpret_cast<uint8_t *>(&delivery_data), senslog_len, uc_result);
-//        } else {
-//            SensLogWriteOutputData(SENSLOG_DATA_O_UNSPECIFIED, ul_did, us_pno,
-//                                   reinterpret_cast<uint8_t *>(&(delivery_data.data[0])), senslog_len, uc_result);
-//        }
+        ret = VehicleSndMsg(PNO_VEHICLE_SENSOR,
+                              us_pno,
+                              static_cast<CID>(cid),
+                              length,
+                              (const void *)&delivery_data);
+        uc_result = SENSLOG_RES_SUCCESS;
+        if (ret != RET_NORMAL) {
+            uc_result = SENSLOG_RES_FAIL;
+        }
+        if (cid != CID_VEHICLESENS_VEHICLE_INFO) {
+            SensLogWriteOutputData(SENSLOG_DATA_O_UNSPECIFIED, ul_did, us_pno,
+                                     reinterpret_cast<uint8_t *>(&delivery_data), senslog_len, uc_result);
+        } else {
+            SensLogWriteOutputData(SENSLOG_DATA_O_UNSPECIFIED, ul_did, us_pno,
+                                   reinterpret_cast<uint8_t *>(&(delivery_data.data[0])), senslog_len, uc_result);
+        }
     }
     else if ((VEHICLESENS_GETMETHOD_NAVI == uc_get_method)  ||    // NOLINT(readability/braces)
             (VEHICLESENS_GETMETHOD_OTHER == uc_get_method) ||
@@ -1484,15 +1470,18 @@ void VehicleSensFirstDelivery(PNO us_pno, DID ul_did) {
     }
 #if CONFIG_SENSOR_EXT_VALID                /* Initial Sensor Support */
     /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//    else if ((ul_did == POSHAL_DID_GYRO_FST) ||  // NOLINT(readability/braces)
-//             (ul_did == POSHAL_DID_REV_FST) ||
-//             (ul_did == POSHAL_DID_GYRO_TEMP_FST) ||
-//             (ul_did == POSHAL_DID_GSNS_X_FST) ||
-//             (ul_did == POSHAL_DID_GSNS_Y_FST) ||
-//             (ul_did == POSHAL_DID_SPEED_PULSE_FST)) {   /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//        /* Acquire the applicable data information from the data master for the initial sensor..*/
-//        uc_result = VehicleSensFirstDeliverySens(us_pno, ul_did, uc_get_method, &stMasterFst, &stMasterFst_temp);
-//    }
+    else if ((ul_did == POSHAL_DID_GYRO_X_FST) ||  // NOLINT(readability/braces)
+             (ul_did == POSHAL_DID_GYRO_Y_FST) ||  // NOLINT(readability/braces)
+             (ul_did == POSHAL_DID_GYRO_Z_FST) ||  // NOLINT(readability/braces)
+             (ul_did == POSHAL_DID_REV_FST) ||
+             (ul_did == POSHAL_DID_GYRO_TEMP_FST) ||
+             (ul_did == POSHAL_DID_GSNS_X_FST) ||
+             (ul_did == POSHAL_DID_GSNS_Y_FST) ||
+             (ul_did == POSHAL_DID_GSNS_Z_FST) ||
+             (ul_did == POSHAL_DID_SPEED_PULSE_FST)) {   /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+        /* Acquire the applicable data information from the data master for the initial sensor..*/
+        uc_result = VehicleSensFirstDeliverySens(us_pno, ul_did, uc_get_method, &stMasterFst, &stMasterFst_temp);
+    }
 #endif
     else if (ul_did == VEHICLE_DID_GYRO_TROUBLE) {  // LCOV_EXCL_BR_LINE 8 : DID in not used
     // LCOV_EXCL_START 8: DID is not used
@@ -1598,9 +1587,9 @@ void VehicleSensFirstPkgDelivery(const SENSOR_MSG_DELIVERY_ENTRY_DAT *pst_data) 
         /* Data collection way        */
         uc_get_method = VehicleSensGetSelectionItemList(ul_pkg_did);
         if (VEHICLESENS_GETMETHOD_GPS == uc_get_method) {
-//            VehicleSensGetGpsDataMaster(ul_pkg_did,
-//                                         uc_get_method,
-//                                         reinterpret_cast<SENSOR_MSG_GPSDATA_DAT *>(&st_pkg_master.ucData[us_offset]));
+            VehicleSensGetGpsDataMaster(ul_pkg_did,
+                                         uc_get_method,
+                                         reinterpret_cast<SENSOR_MSG_GPSDATA_DAT *>(&st_pkg_master.ucData[us_offset]));
         } else {
             VehicleSensGetDataMaster(ul_pkg_did,
                                       uc_get_method,
@@ -1652,12 +1641,12 @@ void VehicleSensFirstPkgDeliveryExt(const SENSOR_MSG_DELIVERY_ENTRY_DAT *pst_dat
     u_int16                        usOffset = 0;            /* For offset calculation                */
     u_int16                        usNextOffset;            /* Next offset value                */
     u_int16                        usBoundaryAdj;            /* For boundary adjustment                */
-    static VEHICLESENS_DATA_MASTER_EXT stExtDataTemp[8];/* Extended data master temporary storage area */
-    u_int16                        usDataCnt[8] = {0};        /* For storing the number of data items                */
+    static VEHICLESENS_DATA_MASTER_EXT stExtDataTemp[11];/* Extended data master temporary storage area */
+    u_int16                        usDataCnt[11] = {0};        /* For storing the number of data items                */
     u_int8                        ucDivideCnt;            /* Total number of partitions      */
     u_int8                        ucDivide100Cnt = 0;            /* Total number of 100 partitions      */
     u_int8                        ucDivideSendCnt;        /* Number of divided transmissions    */
-    u_int16                        usDivideSendSize[8] = {0};    /* Split Send Size            */
+    u_int16                        usDivideSendSize[11] = {0};    /* Split Send Size            */
     u_int16                        ucDivideSendPoint;        /* Split transmission data acquisition position   */
     u_int8                        ucDataBreak;            /* Storage area of all data undelivered flag  */
     RET_API                        ret = RET_NORMAL;        /* API return value                    */
@@ -1678,45 +1667,49 @@ void VehicleSensFirstPkgDeliveryExt(const SENSOR_MSG_DELIVERY_ENTRY_DAT *pst_dat
                     "VEHICLESENS_DELIVERYCTRL: VehicleSensGetSelectionItemList error :%d\r\n", ucGetMethod);
         }
 
-//        if ((ulPkgDid == POSHAL_DID_GYRO_EXT)   ||    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                (ulPkgDid == POSHAL_DID_GSNS_X)      ||     /* Ignore->MISRA-C++:2008 Rule 2-7-2 */
-//                (ulPkgDid == POSHAL_DID_GSNS_Y)      ||     /* Ignore->MISRA-C++:2008 Rule 2-7-2 */
-//                (ulPkgDid == POSHAL_DID_SPEED_PULSE) ||    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                (ulPkgDid == POSHAL_DID_REV) ||
-//                (ulPkgDid == POSHAL_DID_GYRO_TEMP) ||
-//                (ulPkgDid == POSHAL_DID_PULSE_TIME) ||
-//                (ulPkgDid == POSHAL_DID_SNS_COUNTER)) {   /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//            /* Store in the extended data master information buffer */
-//            VehicleSensGetDataMasterExt(ulPkgDid, ucGetMethod, &stExtDataTemp[i]);
-//            /* Obtain the number of data items */
-//            if ((ulPkgDid == POSHAL_DID_SNS_COUNTER) ||
-//                    (ulPkgDid == POSHAL_DID_REV)) {
-//                usDataCnt[i]        = stExtDataTemp[i].us_size;            /* 1data 1byte */
-//                /* Store the transmission size for 10 items */
-//                usDivideSendSize[i]    = 10;
-//            } else if (ulPkgDid == POSHAL_DID_GYRO_TEMP) {
-//                usDataCnt[i]        = stExtDataTemp[i].us_size / 2;        /* 1data 2byte */
-//                /* Store the transmission size for 10 items */
-//                usDivideSendSize[i]    = 20;
-//            }
-//            else if (ulPkgDid == POSHAL_DID_PULSE_TIME) {    // NOLINT(readability/braces)
-//                usDataCnt[i]        = stExtDataTemp[i].us_size / 132;    /* 1data 132byte */
-//                /* Store the transmission size for 10 items */
-//                usDivideSendSize[i]    = 1320;
-//            }
-//            else {  // NOLINT(readability/braces)
-//                usDataCnt[i]        = stExtDataTemp[i].us_size / 2;  /* 1data 2byte Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                /* Store the transmission size for 100 items */
-//                usDivideSendSize[i]    = 200;
-//
-//                // divide cnt is 100
-//                if (((usDataCnt[i] % VEHICLESENS_PKG_EXT_SEND_MAX_10DATA) > 0) || (usDataCnt[i] == 0)) {
-//                    ucDivide100Cnt = static_cast<u_int8>((usDataCnt[i] / VEHICLESENS_PKG_EXT_SEND_MAX_10DATA) + 1);
-//                } else {
-//                    ucDivide100Cnt = static_cast<u_int8>(usDataCnt[i] / VEHICLESENS_PKG_EXT_SEND_MAX_10DATA);
-//                }
-//            }
-//        }
+        if ((ulPkgDid == POSHAL_DID_GYRO_EXT)   ||
+                (ulPkgDid == POSHAL_DID_GYRO_X)      ||
+                (ulPkgDid == POSHAL_DID_GYRO_Y)      ||
+                (ulPkgDid == POSHAL_DID_GYRO_Z)      ||
+                (ulPkgDid == POSHAL_DID_GSNS_X)      ||
+                (ulPkgDid == POSHAL_DID_GSNS_Y)      ||
+                (ulPkgDid == POSHAL_DID_GSNS_Z)      ||
+                (ulPkgDid == POSHAL_DID_SPEED_PULSE) ||
+                (ulPkgDid == POSHAL_DID_REV) ||
+                (ulPkgDid == POSHAL_DID_GYRO_TEMP) ||
+                (ulPkgDid == POSHAL_DID_PULSE_TIME) ||
+                (ulPkgDid == POSHAL_DID_SNS_COUNTER)) {
+            /* Store in the extended data master information buffer */
+            VehicleSensGetDataMasterExt(ulPkgDid, ucGetMethod, &stExtDataTemp[i]);
+            /* Obtain the number of data items */
+            if ((ulPkgDid == POSHAL_DID_SNS_COUNTER) ||
+                    (ulPkgDid == POSHAL_DID_REV)) {
+                usDataCnt[i]        = stExtDataTemp[i].us_size;            /* 1data 1byte */
+                /* Store the transmission size for 10 items */
+                usDivideSendSize[i]    = 10;
+            } else if (ulPkgDid == POSHAL_DID_GYRO_TEMP) {
+                usDataCnt[i]        = stExtDataTemp[i].us_size / 2;        /* 1data 2byte */
+                /* Store the transmission size for 10 items */
+                usDivideSendSize[i]    = 20;
+            }
+            else if (ulPkgDid == POSHAL_DID_PULSE_TIME) {    // NOLINT(readability/braces)
+                usDataCnt[i]        = stExtDataTemp[i].us_size / 132;    /* 1data 132byte */
+                /* Store the transmission size for 10 items */
+                usDivideSendSize[i]    = 1320;
+            }
+            else {  // NOLINT(readability/braces)
+                usDataCnt[i]        = stExtDataTemp[i].us_size / 2;  /* 1data 2byte Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                /* Store the transmission size for 100 items */
+                usDivideSendSize[i]    = 200;
+
+                // divide cnt is 100
+                if (((usDataCnt[i] % VEHICLESENS_PKG_EXT_SEND_MAX_10DATA) > 0) || (usDataCnt[i] == 0)) {
+                    ucDivide100Cnt = static_cast<u_int8>((usDataCnt[i] / VEHICLESENS_PKG_EXT_SEND_MAX_10DATA) + 1);
+                } else {
+                    ucDivide100Cnt = static_cast<u_int8>(usDataCnt[i] / VEHICLESENS_PKG_EXT_SEND_MAX_10DATA);
+                }
+            }
+        }
     }
     /* All-data undelivered flag holding Ignore->MISRA-C ++: 2008 Rule 5-0-5 */
     ucDataBreak = static_cast<u_int8>(gstPkgTempExt.data_break);
@@ -1746,80 +1739,80 @@ void VehicleSensFirstPkgDeliveryExt(const SENSOR_MSG_DELIVERY_ENTRY_DAT *pst_dat
             stPkgMaster.usOffset[i]        = usOffset;                /* Offset setting        */
             /*  copy Data ID of extended data master structure,Size of the data,Receive flag,Reserved */
             memcpy(reinterpret_cast<void *>(&stPkgMaster.ucData[usOffset]),
-                   reinterpret_cast<void *>(&stExtDataTemp[i]), 8);
-//            if ((ulPkgDid == POSHAL_DID_SNS_COUNTER) ||
-//                    (ulPkgDid == POSHAL_DID_REV) ||
-//                    (ulPkgDid == POSHAL_DID_PULSE_TIME) ||
-//                    (ulPkgDid == POSHAL_DID_GYRO_TEMP)) {
-//                if (usDataCnt[i] > VEHICLESENS_PKG_EXT_SEND_MAX) {   /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                    /* Calculate the data acquisition position */
-//                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                    ucDivideSendPoint = static_cast<u_int16>((u_int16)ucDivideSendCnt * usDivideSendSize[i]);
-//                    /* Update the data size*/
-//                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                    stPkgMaster.ucData[usOffset + 4]        = (u_int8)usDivideSendSize[i];
-//                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                    stPkgMaster.ucData[usOffset + 5]        = (u_int8)(usDivideSendSize[i] >> 8);
-//                    /* Create 10 divided transmission data of sensor counters of extended data master structure */
-//                    memcpy(reinterpret_cast<void *>(&stPkgMaster.ucData[usOffset + 8]),
-//                           reinterpret_cast<void *>(&stExtDataTemp[i].uc_data[ucDivideSendPoint]),
-//                           usDivideSendSize[i]);    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                    /* Subtract the number of created transmission data */
-//                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                    usDataCnt[i] = static_cast<u_int16>(usDataCnt[i] - VEHICLESENS_PKG_EXT_SEND_MAX);
-//                } else {
-//                    /* Calculate the data acquisition position */
-//                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                    ucDivideSendPoint = static_cast<u_int16>((u_int16)ucDivideSendCnt * usDivideSendSize[i]);
-//                    /* Update the data size*/
-//                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                    stPkgMaster.ucData[usOffset + 4] = (u_int8)(stExtDataTemp[i].us_size - (u_int16)ucDivideSendPoint);
-//                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 Ignore->MISRA-C++:2008 Rule 5-0-21 */
-//                    stPkgMaster.ucData[usOffset + 5] = \
-//                                (u_int8)((stExtDataTemp[i].us_size - (u_int16)ucDivideSendPoint) >> 8);
-//                    /* Create the remaining divided send data of sensor counter of extended data master structure */
-//                    memcpy(reinterpret_cast<void *>(&stPkgMaster.ucData[usOffset + 8]),
-//                           reinterpret_cast<void *>(&stExtDataTemp[i].uc_data[ucDivideSendPoint]),
-//                           stExtDataTemp[i].us_size - ucDivideSendPoint);    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                    /* Since all buffers have been created, the number of data is set to 0. */
-//                    usDataCnt[i] = 0;
-//                }
-//            } else {
-//                if (usDataCnt[i] > VEHICLESENS_PKG_EXT_SEND_MAX_10DATA) {   /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                    /* Calculate the data acquisition position */
-//                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                    ucDivideSendPoint = static_cast<u_int16>((u_int16)ucDivideSendCnt * usDivideSendSize[i]);
-//                    /* Update the data size*/
-//                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                    stPkgMaster.ucData[usOffset + 4]        = (u_int8)usDivideSendSize[i];
-//                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                    stPkgMaster.ucData[usOffset + 5]        = (u_int8)(usDivideSendSize[i] >> 8);
-//                    /* Create 100 divided transmission data of vehicle sensor data of extended data master structure */
-//                    memcpy(reinterpret_cast<void *>(&stPkgMaster.ucData[usOffset + 8]),
-//                           reinterpret_cast<void *>(&stExtDataTemp[i].uc_data[ucDivideSendPoint]),
-//                           usDivideSendSize[i]);    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                    /* Subtract the number of created transmission data */
-//                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                    usDataCnt[i] = static_cast<u_int16>(usDataCnt[i] - VEHICLESENS_PKG_EXT_SEND_MAX_10DATA);
-//                } else {
-//                    /* Calculate the data acquisition position */
-//                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                    ucDivideSendPoint = static_cast<u_int16>((u_int16)ucDivideSendCnt * usDivideSendSize[i]);
-//                    /* Update the data size*/
-//                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                    stPkgMaster.ucData[usOffset + 4] = \
-//                                (u_int8)(stExtDataTemp[i].us_size - (u_int16)ucDivideSendPoint);
-//                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 Ignore->MISRA-C++:2008 Rule 5-0-21 */
-//                    stPkgMaster.ucData[usOffset + 5] = \
-//                                (u_int8)((stExtDataTemp[i].us_size - (u_int16)ucDivideSendPoint) >> 8);
-//                    /* Create the remaining divided transmission data of the vehicle sensor data of the extended data master structure. */
-//                    memcpy(reinterpret_cast<void *>(&stPkgMaster.ucData[usOffset + 8]),
-//                           reinterpret_cast<void *>(&stExtDataTemp[i].uc_data[ucDivideSendPoint]),
-//                           stExtDataTemp[i].us_size - ucDivideSendPoint);    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//                    /* Since all buffers have been created, the number of data is set to 0. */
-//                    usDataCnt[i] = 0;
-//                }
-//            }
+                   reinterpret_cast<void *>(&stExtDataTemp[i]), 11);
+            if ((ulPkgDid == POSHAL_DID_SNS_COUNTER) ||
+                    (ulPkgDid == POSHAL_DID_REV) ||
+                    (ulPkgDid == POSHAL_DID_PULSE_TIME) ||
+                    (ulPkgDid == POSHAL_DID_GYRO_TEMP)) {
+                if (usDataCnt[i] > VEHICLESENS_PKG_EXT_SEND_MAX) {   /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                    /* Calculate the data acquisition position */
+                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                    ucDivideSendPoint = static_cast<u_int16>((u_int16)ucDivideSendCnt * usDivideSendSize[i]);
+                    /* Update the data size*/
+                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                    stPkgMaster.ucData[usOffset + 4]        = (u_int8)usDivideSendSize[i];
+                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                    stPkgMaster.ucData[usOffset + 5]        = (u_int8)(usDivideSendSize[i] >> 8);
+                    /* Create 10 divided transmission data of sensor counters of extended data master structure */
+                    memcpy(reinterpret_cast<void *>(&stPkgMaster.ucData[usOffset + 8]),
+                           reinterpret_cast<void *>(&stExtDataTemp[i].uc_data[ucDivideSendPoint]),
+                           usDivideSendSize[i]);    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                    /* Subtract the number of created transmission data */
+                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                    usDataCnt[i] = static_cast<u_int16>(usDataCnt[i] - VEHICLESENS_PKG_EXT_SEND_MAX);
+                } else {
+                    /* Calculate the data acquisition position */
+                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                    ucDivideSendPoint = static_cast<u_int16>((u_int16)ucDivideSendCnt * usDivideSendSize[i]);
+                    /* Update the data size*/
+                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                    stPkgMaster.ucData[usOffset + 4] = (u_int8)(stExtDataTemp[i].us_size - (u_int16)ucDivideSendPoint);
+                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 Ignore->MISRA-C++:2008 Rule 5-0-21 */
+                    stPkgMaster.ucData[usOffset + 5] = \
+                                (u_int8)((stExtDataTemp[i].us_size - (u_int16)ucDivideSendPoint) >> 8);
+                    /* Create the remaining divided send data of sensor counter of extended data master structure */
+                    memcpy(reinterpret_cast<void *>(&stPkgMaster.ucData[usOffset + 8]),
+                           reinterpret_cast<void *>(&stExtDataTemp[i].uc_data[ucDivideSendPoint]),
+                           stExtDataTemp[i].us_size - ucDivideSendPoint);    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                    /* Since all buffers have been created, the number of data is set to 0. */
+                    usDataCnt[i] = 0;
+                }
+            } else {
+                if (usDataCnt[i] > VEHICLESENS_PKG_EXT_SEND_MAX_10DATA) {   /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                    /* Calculate the data acquisition position */
+                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                    ucDivideSendPoint = static_cast<u_int16>((u_int16)ucDivideSendCnt * usDivideSendSize[i]);
+                    /* Update the data size*/
+                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                    stPkgMaster.ucData[usOffset + 4]        = (u_int8)usDivideSendSize[i];
+                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                    stPkgMaster.ucData[usOffset + 5]        = (u_int8)(usDivideSendSize[i] >> 8);
+                    /* Create 100 divided transmission data of vehicle sensor data of extended data master structure */
+                    memcpy(reinterpret_cast<void *>(&stPkgMaster.ucData[usOffset + 8]),
+                           reinterpret_cast<void *>(&stExtDataTemp[i].uc_data[ucDivideSendPoint]),
+                           usDivideSendSize[i]);    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                    /* Subtract the number of created transmission data */
+                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                    usDataCnt[i] = static_cast<u_int16>(usDataCnt[i] - VEHICLESENS_PKG_EXT_SEND_MAX_10DATA);
+                } else {
+                    /* Calculate the data acquisition position */
+                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                    ucDivideSendPoint = static_cast<u_int16>((u_int16)ucDivideSendCnt * usDivideSendSize[i]);
+                    /* Update the data size*/
+                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                    stPkgMaster.ucData[usOffset + 4] = \
+                                (u_int8)(stExtDataTemp[i].us_size - (u_int16)ucDivideSendPoint);
+                    /* Ignore->MISRA-C++:2008 Rule 5-0-5 Ignore->MISRA-C++:2008 Rule 5-0-21 */
+                    stPkgMaster.ucData[usOffset + 5] = \
+                                (u_int8)((stExtDataTemp[i].us_size - (u_int16)ucDivideSendPoint) >> 8);
+                    /* Create the remaining divided transmission data of the vehicle sensor data of the extended data master structure. */
+                    memcpy(reinterpret_cast<void *>(&stPkgMaster.ucData[usOffset + 8]),
+                           reinterpret_cast<void *>(&stExtDataTemp[i].uc_data[ucDivideSendPoint]),
+                           stExtDataTemp[i].us_size - ucDivideSendPoint);    /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                    /* Since all buffers have been created, the number of data is set to 0. */
+                    usDataCnt[i] = 0;
+                }
+            }
             /* Next offset calculation    */
             /* Boundary adjustment of data size */
             usNextOffset = VehicleSensGetDataMasterExtOffset(ulPkgDid);

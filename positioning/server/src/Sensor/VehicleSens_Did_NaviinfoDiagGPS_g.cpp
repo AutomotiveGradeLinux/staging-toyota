@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ void VehicleSensInitNaviinfoDiagGPSg(void) {
     /** Data ID setting */
     gstNaviinfoDiagGPS_g.ul_did    = VEHICLE_DID_NAVIINFO_DIAG_GPS;
     /** Data size setting */
-//    gstNaviinfoDiagGPS_g.us_size    = sizeof(NAVIINFO_DIAG_GPS);
+    gstNaviinfoDiagGPS_g.us_size    = sizeof(NAVIINFO_DIAG_GPS);
 }
 
 /****************************************************************************
@@ -54,23 +54,23 @@ void VehicleSensInitNaviinfoDiagGPSg(void) {
 @retval     VEHICLESENS_EQ  : No data change
 @retval     VEHICLESENS_NEQ : Data change
 *******************************************************************************/
-//u_int8 VehicleSensSetNaviinfoDiagGPSg(const NAVIINFO_DIAG_GPS *pst_diag_data) {
-//    u_int8  uc_ret;
-//    VEHICLESENS_DATA_MASTER_GPS_FORMAT  *pst_master;
-//
-//    pst_master = &gstNaviinfoDiagGPS_g;
-//
-//    /** With the contents of the current data master,Compare received data */
-//    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_diag_data, sizeof(NAVIINFO_DIAG_GPS));
-//
-//    /** Received data is set in the data master. */
-//    pst_master->ul_did    = VEHICLE_DID_NAVIINFO_DIAG_GPS;
-//    pst_master->us_size    = sizeof(NAVIINFO_DIAG_GPS);
-//    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
-//    memcpy(pst_master->uc_data, pst_diag_data, sizeof(NAVIINFO_DIAG_GPS));
-//
-//    return(uc_ret);
-//}
+u_int8 VehicleSensSetNaviinfoDiagGPSg(const NAVIINFO_DIAG_GPS *pst_diag_data) {
+    u_int8  uc_ret;
+    VEHICLESENS_DATA_MASTER_GPS_FORMAT  *pst_master;
+
+    pst_master = &gstNaviinfoDiagGPS_g;
+
+    /** With the contents of the current data master,Compare received data */
+    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_diag_data, sizeof(NAVIINFO_DIAG_GPS));
+
+    /** Received data is set in the data master. */
+    pst_master->ul_did    = VEHICLE_DID_NAVIINFO_DIAG_GPS;
+    pst_master->us_size    = sizeof(NAVIINFO_DIAG_GPS);
+    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
+    memcpy(pst_master->uc_data, pst_diag_data, sizeof(NAVIINFO_DIAG_GPS));
+
+    return(uc_ret);
+}
 
 /****************************************************************************
 @brief      VehicleSensGetNaviinfoDiagGPSg<BR>
@@ -81,14 +81,14 @@ void VehicleSensInitNaviinfoDiagGPSg(void) {
 @return     none
 @retval     none
 *******************************************************************************/
-//void VehicleSensGetNaviinfoDiagGPSg(SENSOR_MSG_GPSDATA_DAT *pst_data) {
-//    const VEHICLESENS_DATA_MASTER_GPS_FORMAT *pst_master;
-//
-//    pst_master = reinterpret_cast<VEHICLESENS_DATA_MASTER_GPS_FORMAT*>(&gstNaviinfoDiagGPS_g);
-//
-//    /* Store the data master in the specified destination. */
-//    pst_data->ul_did    = pst_master->ul_did;
-//    pst_data->us_size    = pst_master->us_size;
-//    pst_data->uc_rcv_flag  = pst_master->uc_rcvflag;
-//    memcpy(pst_data->uc_data, pst_master->uc_data, pst_master->us_size);  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//}
+void VehicleSensGetNaviinfoDiagGPSg(SENSOR_MSG_GPSDATA_DAT *pst_data) {
+    const VEHICLESENS_DATA_MASTER_GPS_FORMAT *pst_master;
+
+    pst_master = reinterpret_cast<VEHICLESENS_DATA_MASTER_GPS_FORMAT*>(&gstNaviinfoDiagGPS_g);
+
+    /* Store the data master in the specified destination. */
+    pst_data->ul_did    = pst_master->ul_did;
+    pst_data->us_size    = pst_master->us_size;
+    pst_data->uc_rcv_flag  = pst_master->uc_rcvflag;
+    memcpy(pst_data->uc_data, pst_master->uc_data, pst_master->us_size);  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+}

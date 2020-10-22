@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,14 +23,12 @@
 #ifndef POSITIONING_SERVER_INCLUDE_NSFW_POSITIONING_COMMON_H_
 #define POSITIONING_SERVER_INCLUDE_NSFW_POSITIONING_COMMON_H_
 
+#include <positioning_hal.h>
+
 /*---------------------------------------------------------------------------------*
  * Definition                                                                      *
  *---------------------------------------------------------------------------------*/
 /* Thread control command ID */
-#define CID_THREAD_CREATE_COMP        (0x0001) /* Thread start completion notification */
-#define CID_THREAD_STOP_REQ           (0x0002) /* Thread termination request     */
-#define CID_THREAD_STOP_COMP          (0x0003) /* Thread termination notice */
-
 #define CID_EXTTERM_REQ               (0x0011) /* External pin status request     */
 
 /* Internal thread activation status determination */
@@ -44,18 +42,6 @@
 /*---------------------------------------------------------------------------------*
  * ENUMERATION                                                                     *
  *---------------------------------------------------------------------------------*/
-/*!
-   @brief   Thread ID
-*/
-typedef enum {
-    ETID_POS_MAIN = 0,
-    ETID_POS_SENS,
-    ETID_POS_GPS,
-    ETID_POS_GPS_RECV,
-    ETID_POS_GPS_ROLLOVER,
-    ETID_POS_MAX
-} EnumTID_POS;
-
 /*!
    @brief   Positioning operating status definitions
 */
@@ -82,30 +68,6 @@ typedef enum {
 typedef struct {
   EnumSetupMode_POS e_mode;           /* Thread activation mode */
 } ST_THREAD_SETUP_INFO;
-
-
-//    Duplicate/Confrict countermeasure
-/* NMEA commands ****************************/
-#define GPS_NMEA_NUM_SENTENCE           16
-
-/*!
-    @brief GPS NMEA sentence information
-*/
-typedef struct GpsNmeaSentenceInfo {
-  u_int8                  uc_size;              /* Size of the sentence          */
-  u_int8                  reserve;              /* Reserved                    */
-  u_int16                 us_offset;            /* Beginning of the sentence        */
-} TG_GPS_NMEA_SENTENCE_INFO;
-
-/*!
-    @brief GPS NMEA information
-*/
-typedef struct GpsNmeaInfo {
-  u_int32                   ul_rcvsts;                                    /* NMEA received data                */
-  u_int8                    reserve[4];                                   /* Reserved                    */
-  TG_GPS_NMEA_SENTENCE_INFO st_nmea_sentence_info[GPS_NMEA_NUM_SENTENCE]; /* Sentence information              */
-} TG_GPS_NMEA_INFO;
-
 
 /*---------------------------------------------------------------------------------*
  * Prototype                                                                       *

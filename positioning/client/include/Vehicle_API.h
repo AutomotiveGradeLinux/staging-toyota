@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -94,7 +94,7 @@ typedef struct {
 ************************************************************************/
 typedef struct {
     T_APIMSG_MSGBUF_HEADER    hdr;          /* Message header */
-//    VEHICLE_MSG_SEND_DAT      data;         /* Message data */
+    VEHICLE_MSG_SEND_DAT      data;         /* Message data */
 } VEHICLE_MSG_SEND;
 
 /* -- GPS _CWORD82_ support */

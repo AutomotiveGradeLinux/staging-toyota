@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -107,7 +107,9 @@ typedef struct {
     /* Set "0" for initial sensor transmission and "1" for periodic transmission. */
     u_int8                sens_cnt;         /* Sensor data transmission counter value Set "0" at initial transmission of sensor */
     Struct_PulseRevTbl    pulse_rev_tbl;    /* Vehicle speed/REV Data table */
-    Struct_GyroTbl        gyro_tbl;         /* Gyro data table */
+    Struct_GyroTbl        gyro_x_tbl;       /* Gyro(X axis) data table */
+    Struct_GyroTbl        gyro_y_tbl;       /* Gyro(Y axis) data table */
+    Struct_GyroTbl        gyro_z_tbl;       /* Gyro(Z axis) data table */
 } Struct_SensData;
 
 /* GPS data */

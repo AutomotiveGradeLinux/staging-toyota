@@ -1,5 +1,5 @@
 #
-# @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+# @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -38,7 +38,6 @@ libPOS_Sensor_SRCS += VehicleUtility.cpp
 libPOS_Sensor_SRCS += GpsInt.cpp
 libPOS_Sensor_SRCS += VehicleSens_Thread.cpp
 libPOS_Sensor_SRCS += VehicleSens_FromAccess.cpp
-libPOS_Sensor_SRCS += VehicleSens_FromMng.cpp
 libPOS_Sensor_SRCS += VehicleSens_Common.cpp
 libPOS_Sensor_SRCS += VehicleSens_SelectionItemList.cpp
 libPOS_Sensor_SRCS += VehicleSens_SharedMemory.cpp
@@ -54,12 +53,18 @@ libPOS_Sensor_SRCS += VehicleSens_Did_Nav_Clock_g.cpp
 libPOS_Sensor_SRCS += VehicleSens_Did_SysGpsInterruptSignal.cpp
 libPOS_Sensor_SRCS += VehicleSens_Did_SnsCounter_l.cpp
 libPOS_Sensor_SRCS += VehicleSens_Did_GyroExt_l.cpp
-libPOS_Sensor_SRCS += VehicleSens_Did_Gyro.cpp
+libPOS_Sensor_SRCS += VehicleSens_Did_GyroYExt_l.cpp
+libPOS_Sensor_SRCS += VehicleSens_Did_GyroZExt_l.cpp
+libPOS_Sensor_SRCS += VehicleSens_Did_GyroX.cpp
+libPOS_Sensor_SRCS += VehicleSens_Did_GyroY.cpp
+libPOS_Sensor_SRCS += VehicleSens_Did_GyroZ.cpp
 libPOS_Sensor_SRCS += VehicleSens_Did_Nav_Dop_g.cpp
 libPOS_Sensor_SRCS += VehicleSens_Did_GyroTrouble.cpp
 libPOS_Sensor_SRCS += VehicleSens_Did_SnsCounterExt_l.cpp
 libPOS_Sensor_SRCS += VehicleSens_Did_Gps_CWORD82__CWORD44_Gp4_g.cpp
-libPOS_Sensor_SRCS += VehicleSens_Did_Gyro_l.cpp
+libPOS_Sensor_SRCS += VehicleSens_Did_GyroX_l.cpp
+libPOS_Sensor_SRCS += VehicleSens_Did_GyroY_l.cpp
+libPOS_Sensor_SRCS += VehicleSens_Did_GyroZ_l.cpp
 libPOS_Sensor_SRCS += VehicleSens_Did_GyroConnectStatus.cpp
 libPOS_Sensor_SRCS += VehicleSens_Did_RevFst_l.cpp
 libPOS_Sensor_SRCS += VehicleSens_Did_RevExt_l.cpp
@@ -72,7 +77,9 @@ libPOS_Sensor_SRCS += VehicleSens_Did_Nav_TimeUtc_g.cpp
 libPOS_Sensor_SRCS += VehicleSens_Did_SpeedPulseFlagFst_l.cpp
 libPOS_Sensor_SRCS += VehicleSens_Did_SnsCounter.cpp
 libPOS_Sensor_SRCS += VehicleSens_Did_SpeedPulseFst_l.cpp
-libPOS_Sensor_SRCS += VehicleSens_Did_GyroFst_l.cpp
+libPOS_Sensor_SRCS += VehicleSens_Did_GyroXFst_l.cpp
+libPOS_Sensor_SRCS += VehicleSens_Did_GyroYFst_l.cpp
+libPOS_Sensor_SRCS += VehicleSens_Did_GyroZFst_l.cpp
 libPOS_Sensor_SRCS += VehicleSens_Did_Nav_Status_g.cpp
 libPOS_Sensor_SRCS += VehicleSens_Did_Gps_CWORD82_Nmea_g.cpp
 libPOS_Sensor_SRCS += VehicleSens_Did_SpeedPulse.cpp
@@ -106,6 +113,10 @@ libPOS_Sensor_SRCS += VehicleSens_Did_GsnsY.cpp
 libPOS_Sensor_SRCS += VehicleSens_Did_GsnsY_l.cpp
 libPOS_Sensor_SRCS += VehicleSens_Did_GsnsYExt_l.cpp
 libPOS_Sensor_SRCS += VehicleSens_Did_GsnsYFst_l.cpp
+libPOS_Sensor_SRCS += VehicleSens_Did_GsnsZ.cpp
+libPOS_Sensor_SRCS += VehicleSens_Did_GsnsZ_l.cpp
+libPOS_Sensor_SRCS += VehicleSens_Did_GsnsZExt_l.cpp
+libPOS_Sensor_SRCS += VehicleSens_Did_GsnsZFst_l.cpp
 libPOS_Sensor_SRCS += VehicleSens_Did_GyroTemp.cpp
 libPOS_Sensor_SRCS += VehicleSens_Did_GyroTemp_l.cpp
 libPOS_Sensor_SRCS += VehicleSens_Did_GyroTempExt_l.cpp
@@ -135,26 +146,10 @@ libPOS_Sensor_SRCS += VehicleSens_DeliveryCtrl.cpp
 libPOS_Sensor_SRCS += SensorLog.cpp
 
 ######### add include path #############
-CPPFLAGS += -I./
 CPPFLAGS += -I../../include/Sensor
 CPPFLAGS += -I../../include/nsfw
-CPPFLAGS += -I../../include/common
 CPPFLAGS += -I../../include/ServiceInterface
-CPPFLAGS += -I../../../client/
 CPPFLAGS += -I../../../client/include
-CPPFLAGS += -I../../../client/src/Vehicle_API/common
-CPPFLAGS += -I../../../client/src/POS_sensor_API/common
-CPPFLAGS += -I../../../client/src/POS_gps_API
-CPPFLAGS += -I../../../client/src/POS_naviinfo_API/common
-CPPFLAGS += -I../../../client/src/CanInput_API/common
-CPPFLAGS += -I../../../client/src/SensorLocation_API/common
-CPPFLAGS += -I../ServiceInterface/BackupMgrIf
-CPPFLAGS += -I../ServiceInterface/ClockIf
-CPPFLAGS += -I../ServiceInterface/CommunicationIf
-CPPFLAGS += -I../ServiceInterface/CommUsbIf
-CPPFLAGS += -I../ServiceInterface/DevDetectSrvIf
-CPPFLAGS += -I../ServiceInterface/PSMShadowIf
-CPPFLAGS += -I../ServiceInterface/DiagSrvIf
 
 CPPFLAGS += -I../ServiceInterface/VehicleIf
 CPPFLAGS += -I../nsfw/include
@@ -164,7 +159,6 @@ CPPFLAGS += -I$(SDKTARGETSYSROOT)/usr/agl/include/vehicle_service
 
 ######### add compile option #############
 CPPFLAGS += -DLINUX
-CPPFLAGS += -DCONFIG_SENSOR_EXT_VALID=1
 
 LDFLAGS += -Wl,--no-undefined
 LDFLAGS += -Wl,--no-as-needed
@@ -177,6 +171,11 @@ CPPFLAGS += -Wformat
 
 ######### add library path #############
 LDFLAGS +=
+
+INSTALL = install
+CREATE_DIR = $(DESTDIR)/nv/BS/vs/positioning/rwdata
+install-data:
+	$(INSTALL) -d -m 775 $(CREATE_DIR)
 
 include ../../../../vehicle_service.mk
 

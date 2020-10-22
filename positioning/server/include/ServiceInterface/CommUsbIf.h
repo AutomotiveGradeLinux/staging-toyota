@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,8 +28,8 @@
  *---------------------------------------------------------------------------------*/
 #include <native_service/frameworkunified_types.h>
 #include <native_service/frameworkunified_framework_if.h>
-//#include <stub/commusb_api.h>
-//#include <stub/commusb_notifications.h>
+#include <stub/commusb_api.h>
+#include <stub/commusb_notifications.h>
 
 #include <vehicle_service/positioning_base_library.h>
 

@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ void VehicleSensInitGpsClockDriftG(void) {
     memset(&gGpsClockDrift_g, 0x00, sizeof(VEHICLESENS_DATA_MASTER));
 
     /** Data ID setting */
-//    gGpsClockDrift_g.ul_did    = POSHAL_DID_GPS_CLOCK_DRIFT;
+    gGpsClockDrift_g.ul_did    = POSHAL_DID_GPS_CLOCK_DRIFT;
     /** Data size setting */
     gGpsClockDrift_g.us_size    = sizeof(int32_t);
     /** Data content setting */
@@ -72,7 +72,7 @@ u_int8 VehicleSensSetGpsClockDriftG(const int32_t *p_data) {
     uc_ret = VehicleSensmemcmp(pst_master->uc_data, p_data, sizeof(int32_t));
 
     /** Received data is set in the data master. */
-//    pst_master->ul_did    = POSHAL_DID_GPS_CLOCK_DRIFT;
+    pst_master->ul_did    = POSHAL_DID_GPS_CLOCK_DRIFT;
     pst_master->us_size    = sizeof(int32_t);
     pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
     memset(pst_master->uc_data, 0x00, sizeof(pst_master->uc_data));
@@ -87,16 +87,16 @@ u_int8 VehicleSensSetGpsClockDriftG(const int32_t *p_data) {
  *
  * @param[out]  SENSOR_MSG_GPSDATA_DAT*
  */
-//void VehicleSensGetGpsClockDriftG(SENSOR_MSG_GPSDATA_DAT *pst_data) {
-//    const VEHICLESENS_DATA_MASTER *pst_master;
-//
-//    pst_master = &gGpsClockDrift_g;
-//
-//    /* Store the data master in the specified destination. */
-//    pst_data->ul_did    = pst_master->ul_did;
-//    pst_data->us_size    = pst_master->us_size;
-//    pst_data->uc_rcv_flag  = pst_master->uc_rcvflag;
-//    memcpy(pst_data->uc_data, pst_master->uc_data, pst_master->us_size);
-//
-//    return;
-//}
+void VehicleSensGetGpsClockDriftG(SENSOR_MSG_GPSDATA_DAT *pst_data) {
+    const VEHICLESENS_DATA_MASTER *pst_master;
+
+    pst_master = &gGpsClockDrift_g;
+
+    /* Store the data master in the specified destination. */
+    pst_data->ul_did    = pst_master->ul_did;
+    pst_data->us_size    = pst_master->us_size;
+    pst_data->uc_rcv_flag  = pst_master->uc_rcvflag;
+    memcpy(pst_data->uc_data, pst_master->uc_data, pst_master->us_size);
+
+    return;
+}

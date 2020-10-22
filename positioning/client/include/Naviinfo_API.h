@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,7 +82,7 @@
  *****************************************************************************/
 typedef struct {
     T_APIMSG_MSGBUF_HEADER       hdr;                      /* Message header    */
-//    NAVIINFO_ALL                 dat;                      /* Message data section    */
+    NAVIINFO_ALL                 dat;                      /* Message data section    */
 } NAVIINFO_DELIVER_MSG;
 
 /*****************************************************************************
@@ -102,7 +102,7 @@ typedef struct {
 #ifdef __cplusplus
 extern "C" {
 #endif
-//extern int32 VehicleSetVehicleData(PNO pid, VEHICLE_MSG_SEND_DAT *p_data);
+extern int32 VehicleSetVehicleData(PNO pid, VEHICLE_MSG_SEND_DAT *p_data);
 #ifdef __cplusplus
 }
 #endif

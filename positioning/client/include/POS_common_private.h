@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,11 @@
  * Definition                                                                      *
  *---------------------------------------------------------------------------------*/
 /*--- for message ---*/
+/*
+ * Maximum receive message size
+ * - Set the value based on the message receiving buffer size of the local thread
+ */
+#define MAX_MSG_BUF_SIZE                    (4096)
 
 /* command ID */
 #define CID_POSIF_SET_DATA        0x0790    /* set data command ID  */

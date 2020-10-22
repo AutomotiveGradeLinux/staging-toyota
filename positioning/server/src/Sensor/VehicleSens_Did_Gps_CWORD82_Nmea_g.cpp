@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@
 
 #include <vehicle_service/positioning_base_library.h>
 #include "VehicleSens_DataMaster.h"
-//#include "gps_hal.h"
+#include "gps_hal.h"
 
 /*************************************************/
 /*           Global variable                      */
@@ -63,23 +63,23 @@ void VehicleSensInitGps_CWORD82_NmeaG(void) {
 * RETURN    : VEHICLESENS_EQ   : No data change
 *             VEHICLESENS_NEQ  : Data change
 *******************************************************************************/
-//u_int8 VehicleSensSetGps_CWORD82_NmeaG(const SENSOR_MSG_GPSDATA_DAT *pst_data) {
-//    u_int8 uc_ret;
-//    VEHICLESENS_DATA_MASTER_GPS_FORMAT *pst_master;
-//
-//    pst_master = &gstGps_CWORD82_Nmea_g;
-//
-//    /* Compare data master and received data */
-//    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->us_size);
-//
-//    /* Received data is set in the data master. */
-//    pst_master->ul_did        = pst_data->ul_did;
-//    pst_master->us_size       = pst_data->us_size;
-//    pst_master->uc_rcvflag    = VEHICLE_RCVFLAG_ON;
-//    memcpy(pst_master->uc_data, pst_data->uc_data, pst_data->us_size);
-//
-//    return(uc_ret);
-//}
+u_int8 VehicleSensSetGps_CWORD82_NmeaG(const SENSOR_MSG_GPSDATA_DAT *pst_data) {
+    u_int8 uc_ret;
+    VEHICLESENS_DATA_MASTER_GPS_FORMAT *pst_master;
+
+    pst_master = &gstGps_CWORD82_Nmea_g;
+
+    /* Compare data master and received data */
+    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->us_size);
+
+    /* Received data is set in the data master. */
+    pst_master->ul_did        = pst_data->ul_did;
+    pst_master->us_size       = pst_data->us_size;
+    pst_master->uc_rcvflag    = VEHICLE_RCVFLAG_ON;
+    memcpy(pst_master->uc_data, pst_data->uc_data, pst_data->us_size);
+
+    return(uc_ret);
+}
 
 /*******************************************************************************
 * MODULE    : VehicleSensGetGps_CWORD82_NmeaG
@@ -89,14 +89,14 @@ void VehicleSensInitGps_CWORD82_NmeaG(void) {
 * NOTE      :
 * RETURN    : void
 ******************************************************************************/
-//void VehicleSensGetGps_CWORD82_NmeaG(SENSOR_MSG_GPSDATA_DAT *pst_data) {
-//    const VEHICLESENS_DATA_MASTER_GPS_FORMAT *pst_master;
-//
-//    pst_master = &gstGps_CWORD82_Nmea_g;
-//
-//    /* Store the data master in the specified destination. */
-//    pst_data->ul_did    = pst_master->ul_did;
-//    pst_data->us_size    = pst_master->us_size;
-//    pst_data->uc_rcv_flag  = pst_master->uc_rcvflag;
-//    memcpy(pst_data->uc_data, pst_master->uc_data, pst_master->us_size);  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
-//}
+void VehicleSensGetGps_CWORD82_NmeaG(SENSOR_MSG_GPSDATA_DAT *pst_data) {
+    const VEHICLESENS_DATA_MASTER_GPS_FORMAT *pst_master;
+
+    pst_master = &gstGps_CWORD82_Nmea_g;
+
+    /* Store the data master in the specified destination. */
+    pst_data->ul_did    = pst_master->ul_did;
+    pst_data->us_size    = pst_master->us_size;
+    pst_data->uc_rcv_flag  = pst_master->uc_rcvflag;
+    memcpy(pst_data->uc_data, pst_master->uc_data, pst_master->us_size);  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+}

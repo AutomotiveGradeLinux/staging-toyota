@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -101,13 +101,17 @@ typedef struct {
 * ABSTRACT  : LineSensor Vehicle Signal-Storage Message Structures
 ***********************************************************************/
 typedef struct {
-    u_int16                   gyro_data[DEAD_RECKONING_SENSOR_FIRST_NUM * NUM_OF_100msData];    /* Data content */
+    u_int16                   gyro_x_data[DEAD_RECKONING_SENSOR_FIRST_NUM * NUM_OF_100msData];  /* Data content */
+    u_int16                   gyro_y_data[DEAD_RECKONING_SENSOR_FIRST_NUM * NUM_OF_100msData];  /* Data content */
+    u_int16                   gyro_z_data[DEAD_RECKONING_SENSOR_FIRST_NUM * NUM_OF_100msData];  /* Data content */
     u_int16                   spd_pulse_data[DEAD_RECKONING_SENSOR_FIRST_NUM];                  /* Data content */
     u_int8                    spd_pulse_check_data[DEAD_RECKONING_SENSOR_FIRST_NUM];            /* Data content */
     u_int8                    rev_data[DEAD_RECKONING_SENSOR_FIRST_NUM];                        /* Data content */
     u_int8                    data_num;                                                         /* Number of data */
     u_int8                    reserve[3];                                                       /* reserve */
-    u_int16                   gyro_rcv_size;                                                    /* Receiving Size */
+    u_int16                   gyro_x_rcv_size;                                                  /* Receiving Size */
+    u_int16                   gyro_y_rcv_size;                                                  /* Receiving Size */
+    u_int16                   gyro_z_rcv_size;                                                  /* Receiving Size */
     u_int16                   spd_pulse_rcv_size;                                               /* Receiving Size */
     u_int16                   spd_pulse_check_rcv_size;                                         /* Receiving Size */
     u_int16                   rev_rcv_size;                                                     /* Receiving Size */
@@ -129,9 +133,9 @@ typedef struct {
 ************************************************************************/
 
 void DeadReckoningRcvMsg(const DEAD_RECKONING_RCVDATA *msg, DEAD_RECKONING_LONLAT_INFO *location_info);
-//void  DeadReckoningRcvMsgFstSens(const DEAD_RECKONING_RCVDATA *msg, DEAD_RECKONING_LONLAT_INFO *location_info,
-//                            const SENSOR_MSG_GPSDATA_DAT  *rcv_gps_msg, Struct_GpsData* send_gps_msg,
-//                            Struct_SensData* send_sensor_msg);
+void  DeadReckoningRcvMsgFstSens(const DEAD_RECKONING_RCVDATA *msg, DEAD_RECKONING_LONLAT_INFO *location_info,
+                            const SENSOR_MSG_GPSDATA_DAT  *rcv_gps_msg, Struct_GpsData* send_gps_msg,
+                            Struct_SensData* send_sensor_msg);
 int32 DeadReckoningInit(void);
 void DeadReckoningGetDRData(const DEADRECKONING_MSG_GET_DR_DATA *msg);
 void DeadReckoningSetMapMatchingData(const DR_MSG_MAP_MATCHING_DATA *msg);

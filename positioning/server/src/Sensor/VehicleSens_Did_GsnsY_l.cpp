@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ static  VEHICLESENS_DATA_MASTER  gstGsnsY_l;    // NOLINT(readability/nolint)
 ******************************************************************************/
 void VehicleSensInitGsnsYl(void) {
     memset(&gstGsnsY_l, 0x00, sizeof(VEHICLESENS_DATA_MASTER));
-//    gstGsnsY_l.ul_did    = POSHAL_DID_GSNS_Y;
+    gstGsnsY_l.ul_did    = POSHAL_DID_GSNS_Y;
     gstGsnsY_l.us_size    = VEHICLE_DSIZE_GSNS_Y;
     gstGsnsY_l.uc_rcvflag  = VEHICLE_RCVFLAG_OFF;
 }
@@ -59,24 +59,24 @@ void VehicleSensInitGsnsYl(void) {
  *      VEHICLESENS_NEQ Data change
  *
  */
-//u_int8 VehicleSensSetGsnsYlG(const LSDRV_LSDATA_G *pst_data) {
-//    u_int8 uc_ret;
-//    VEHICLESENS_DATA_MASTER *pst_master;
-//
-//    pst_master = &gstGsnsY_l;
-//
-//    /* Compare data master and received data */
-//    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
-//
-//    /* Received data is set in the data master. */
-//    pst_master->ul_did    = pst_data->ul_did;
-//    pst_master->us_size    = pst_data->uc_size;
-//    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
-//    (void)memcpy(reinterpret_cast<void *>(pst_master->uc_data),
-//        (const void *)(pst_data->uc_data), (size_t)(pst_data->uc_size));
-//
-//    return(uc_ret);
-//}
+u_int8 VehicleSensSetGsnsYlG(const LSDRV_LSDATA_G *pst_data) {
+    u_int8 uc_ret;
+    VEHICLESENS_DATA_MASTER *pst_master;
+
+    pst_master = &gstGsnsY_l;
+
+    /* Compare data master and received data */
+    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
+
+    /* Received data is set in the data master. */
+    pst_master->ul_did    = pst_data->ul_did;
+    pst_master->us_size    = pst_data->uc_size;
+    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
+    (void)memcpy(reinterpret_cast<void *>(pst_master->uc_data),
+        (const void *)(pst_data->uc_data), (size_t)(pst_data->uc_size));
+
+    return(uc_ret);
+}
 
 /*******************************************************************************
 * MODULE    : VehicleSensGetGsnsYl

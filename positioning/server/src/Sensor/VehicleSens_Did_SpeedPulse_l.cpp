@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ static  VEHICLESENS_DATA_MASTER  gstSpeedPulse_l;    // NOLINT(readability/nolin
 ******************************************************************************/
 void VehicleSensInitSpeedPulsel(void) {
     (void)memset(reinterpret_cast<void *>(&gstSpeedPulse_l), 0, sizeof(VEHICLESENS_DATA_MASTER));
-//    gstSpeedPulse_l.ul_did    = POSHAL_DID_SPEED_PULSE;
+    gstSpeedPulse_l.ul_did    = POSHAL_DID_SPEED_PULSE;
     gstSpeedPulse_l.us_size    = VEHICLE_DSIZE_SPEED_PULSE;
     gstSpeedPulse_l.uc_rcvflag  = VEHICLE_RCVFLAG_OFF;
 }
@@ -56,25 +56,25 @@ void VehicleSensInitSpeedPulsel(void) {
 * RETURN    : VEHICLESENS_EQ  : No data change
 *             VEHICLESENS_NEQ  : Data change
 ******************************************************************************/
-//u_int8 VehicleSensSetSpeedPulsel(const LSDRV_LSDATA *pst_data) {
-//    u_int8 uc_ret;
-//    VEHICLESENS_DATA_MASTER *pst_master;
-//
-//    pst_master = &gstSpeedPulse_l;
-//
-//    /* Compare data master and received data */
-//    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
-//
-//    /* Received data is set in the data master. */
-//    pst_master->ul_did    = pst_data->ul_did;
-//    pst_master->us_size    = pst_data->uc_size;
-//    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
-//    pst_master->uc_snscnt    = pst_data->uc_sns_cnt;
-//    (void)memcpy(reinterpret_cast<void *>(pst_master->uc_data),
-//        (const void *)(pst_data->uc_data), (size_t)(pst_data->uc_size));
-//
-//    return(uc_ret);
-//}
+u_int8 VehicleSensSetSpeedPulsel(const LSDRV_LSDATA *pst_data) {
+    u_int8 uc_ret;
+    VEHICLESENS_DATA_MASTER *pst_master;
+
+    pst_master = &gstSpeedPulse_l;
+
+    /* Compare data master and received data */
+    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
+
+    /* Received data is set in the data master. */
+    pst_master->ul_did    = pst_data->ul_did;
+    pst_master->us_size    = pst_data->uc_size;
+    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
+    pst_master->uc_snscnt    = pst_data->uc_sns_cnt;
+    (void)memcpy(reinterpret_cast<void *>(pst_master->uc_data),
+        (const void *)(pst_data->uc_data), (size_t)(pst_data->uc_size));
+
+    return(uc_ret);
+}
 
 /*******************************************************************************
 * MODULE    : VehicleSensSetSpeedPulselG
@@ -85,25 +85,25 @@ void VehicleSensInitSpeedPulsel(void) {
 * RETURN    : VEHICLESENS_EQ  : No data change
 *             VEHICLESENS_NEQ  : Data change
 ******************************************************************************/
-//u_int8 VehicleSensSetSpeedPulselG(const LSDRV_LSDATA_G *pst_data) {
-//    u_int8 uc_ret;
-//    VEHICLESENS_DATA_MASTER *pst_master;
-//
-//    pst_master = &gstSpeedPulse_l;
-//
-//    /* Compare data master and received data */
-//    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
-//
-//    /* Received data is set in the data master. */
-//    pst_master->ul_did    = pst_data->ul_did;
-//    pst_master->us_size    = pst_data->uc_size;
-//    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
-//    pst_master->uc_snscnt    = pst_data->uc_sns_cnt;
-//    (void)memcpy(reinterpret_cast<void *>(pst_master->uc_data),
-//        (const void *)(pst_data->uc_data), (size_t)(pst_data->uc_size));
-//
-//    return(uc_ret);
-//}
+u_int8 VehicleSensSetSpeedPulselG(const LSDRV_LSDATA_G *pst_data) {
+    u_int8 uc_ret;
+    VEHICLESENS_DATA_MASTER *pst_master;
+
+    pst_master = &gstSpeedPulse_l;
+
+    /* Compare data master and received data */
+    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->uc_size);
+
+    /* Received data is set in the data master. */
+    pst_master->ul_did    = pst_data->ul_did;
+    pst_master->us_size    = pst_data->uc_size;
+    pst_master->uc_rcvflag  = VEHICLE_RCVFLAG_ON;
+    pst_master->uc_snscnt    = pst_data->uc_sns_cnt;
+    (void)memcpy(reinterpret_cast<void *>(pst_master->uc_data),
+        (const void *)(pst_data->uc_data), (size_t)(pst_data->uc_size));
+
+    return(uc_ret);
+}
 
 /*******************************************************************************
 * MODULE    : VehicleSensGetSpeedPulsel

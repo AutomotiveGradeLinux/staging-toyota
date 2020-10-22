@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@
 
 #include <vehicle_service/positioning_base_library.h>
 #include "VehicleSens_DataMaster.h"
-//#include "gps_hal.h"
+#include "gps_hal.h"
 #include "POS_private.h"
 #include "DeadReckoning_main.h"
 #include "VehicleSens_DeliveryCtrl.h"
@@ -56,7 +56,7 @@ VEHICLESENS_PKG_DELIVERY_TEMP_EXT  gstPkgTempExt;  // NOLINT(readability/nolint)
 /*************************************************/
 /*           Function prototype                    */
 /*************************************************/
-//static uint8_t VehicleSensGetSensorCnt(void);
+static uint8_t VehicleSensGetSensorCnt(void);
 
 
 /*******************************************************************************
@@ -72,9 +72,12 @@ void  VehicleSensInitDataMaster(void) {
 
     VehicleSensInitSpeedPulsel();
     VehicleSensInitSpeedKmphl();
-    VehicleSensInitGyrol();
+    VehicleSensInitGyroXl();
+    VehicleSensInitGyroYl();
+    VehicleSensInitGyroZl();
     VehicleSensInitGsnsXl();
     VehicleSensInitGsnsYl();
+    VehicleSensInitGsnsZl();
     VehicleSensInitRevl();
     VehicleSensInitGpsAntennal();
     VehicleSensInitSnsCounterl();
@@ -83,13 +86,19 @@ void  VehicleSensInitDataMaster(void) {
     VehicleSensInitGyroRevl();
     VehicleSensInitSnsCounterExtl();
     VehicleSensInitGyroExtl();
+    VehicleSensInitGyroYExtl();
+    VehicleSensInitGyroZExtl();
     VehicleSensInitSpeedPulseExtl();
     VehicleSensInitRevExtl();
     VehicleSensInitGsnsXExtl();
     VehicleSensInitGsnsYExtl();
+    VehicleSensInitGsnsZExtl();
     VehicleSensInitGsnsXFstl();
     VehicleSensInitGsnsYFstl();
-    VehicleSensInitGyroFstl();
+    VehicleSensInitGsnsZFstl();
+    VehicleSensInitGyroXFstl();
+    VehicleSensInitGyroYFstl();
+    VehicleSensInitGyroZFstl();
     VehicleSensInitSpeedPulseFstl();
     VehicleSensInitSpeedPulseFlagFstl();
     VehicleSensInitRevFstl();
@@ -157,51 +166,73 @@ void  VehicleSensInitDataMaster(void) {
 * NOTE      :
 * RETURN    : void
 ******************************************************************************/
-//void  VehicleSensSetDataMasterLineSens(const LSDRV_LSDATA *pst_data,
-//        PFUNC_DMASTER_SET_N p_data_master_set_n,
-//        BOOL b_sens_ext) {
-//    u_int8  uc_chg_type;
-//
-//    /*------------------------------------------------------*/
-//    /*  Call the data set processing associated with the DID      */
-//    /*  Call the data master set notification process      */
-//    /*------------------------------------------------------*/
-//    switch (pst_data->ul_did) {
-//        case POSHAL_DID_SPEED_PULSE:
+void  VehicleSensSetDataMasterLineSens(const LSDRV_LSDATA *pst_data,
+        PFUNC_DMASTER_SET_N p_data_master_set_n,
+        BOOL b_sens_ext) {
+    u_int8  uc_chg_type;
+
+    /*------------------------------------------------------*/
+    /*  Call the data set processing associated with the DID      */
+    /*  Call the data master set notification process      */
+    /*------------------------------------------------------*/
+    switch (pst_data->ul_did) {
+        case POSHAL_DID_SPEED_PULSE:
+        {
+            uc_chg_type = VehicleSensSetSpeedPulsel(pst_data);
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+
+            break;
+        }
+//        case POSHAL_DID_GYRO_X:
 //        {
-//            uc_chg_type = VehicleSensSetSpeedPulsel(pst_data);
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//
-//            break;
-//        }
-//        case POSHAL_DID_GYRO:
-//        {
-//            uc_chg_type = VehicleSensSetGyrol(pst_data);
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//            break;
-//        }
-//        case POSHAL_DID_REV:
-//        {
-//            uc_chg_type = VehicleSensSetRevl(pst_data);
-//#if (DR_DEBUG == 1)  /* PastModel002_DR_VEHICLE  */
-//            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "VehicleSens_SetDataMaster POSHAL_DID_REV \r\n");
-//#endif
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//            /* ++ PastModel002 support DR */
-//            VehicleSensDeliveryProcDR(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//            /* -- PastModel002 support DR */
-//            break;
-//        }
-//        case POSHAL_DID_GPS_ANTENNA:
-//        {
-//            uc_chg_type = VehicleSensSetGpsAntennal(pst_data);
+//            uc_chg_type = VehicleSensSetGyroXl(pst_data);
 //            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
 //            break;
 //        }
-//        default:
-//            break;
-//    }
-//}
+        case POSHAL_DID_GYRO_Y:
+        {
+            uc_chg_type = VehicleSensSetGyroYl(pst_data);
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            break;
+        }
+        case POSHAL_DID_GYRO_Z:
+        {
+            uc_chg_type = VehicleSensSetGyroZl(pst_data);
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            break;
+        }
+        case POSHAL_DID_REV:
+        {
+            uc_chg_type = VehicleSensSetRevl(pst_data);
+#if (DR_DEBUG == 1)  /* PastModel002_DR_VEHICLE  */
+            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "VehicleSens_SetDataMaster POSHAL_DID_REV \r\n");
+#endif
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            /* ++ PastModel002 support DR */
+            VehicleSensDeliveryProcDR(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            /* -- PastModel002 support DR */
+            break;
+        }
+        case POSHAL_DID_GPS_ANTENNA:
+        {
+            uc_chg_type = VehicleSensSetGpsAntennal(pst_data);
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            break;
+        }
+        case POSHAL_DID_GYRO_X:
+        case POSHAL_DID_GYRO_EXT:    /* 3 to 14bit A/D value,0bit:REV */
+        {
+            uc_chg_type = VehicleSensSetGyroRevl(pst_data);
+//            if (b_sens_ext == TRUE) {
+//                VehicleSensSetGyroExtl(pst_data);
+//            }
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            break;
+        }
+        default:
+            break;
+    }
+}
 
 /*******************************************************************************
 * MODULE    : VehicleSensSetDataMasterLineSensG
@@ -212,63 +243,62 @@ void  VehicleSensInitDataMaster(void) {
 * NOTE      :
 * RETURN    : void
 ******************************************************************************/
-//void  VehicleSensSetDataMasterLineSensG(const LSDRV_LSDATA_G *pst_data,
-//        PFUNC_DMASTER_SET_N p_data_master_set_n,
-//        BOOL b_sens_ext) {
-//    u_int8  uc_chg_type;
-//    SENSORMOTION_SPEEDINFO_DAT stSpeed;
-//    const VEHICLESENS_DATA_MASTER* pst_master;
-//    u_int16 usSP_KMPH = 0;            /* Vehicle speed(km/h)      */
-//
-//    /*------------------------------------------------------*/
-//    /*  Call the data set processing associated with the DID      */
-//    /*  Call the data master set notification process      */
-//    /*------------------------------------------------------*/
-//    switch (pst_data->ul_did) {
-//        case POSHAL_DID_SPEED_PULSE:
+void  VehicleSensSetDataMasterLineSensG(const LSDRV_LSDATA_G *pst_data,
+        PFUNC_DMASTER_SET_N p_data_master_set_n,
+        BOOL b_sens_ext) {
+    u_int8  uc_chg_type;
+    SENSORMOTION_SPEEDINFO_DAT stSpeed;
+    const VEHICLESENS_DATA_MASTER* pst_master;
+    u_int16 usSP_KMPH = 0;            /* Vehicle speed(km/h)      */
+
+    /*------------------------------------------------------*/
+    /*  Call the data set processing associated with the DID      */
+    /*  Call the data master set notification process      */
+    /*------------------------------------------------------*/
+    switch (pst_data->ul_did) {
+        case POSHAL_DID_SPEED_PULSE:
+        {
+            uc_chg_type = VehicleSensSetSpeedPulselG(pst_data);
+#if (DR_DEBUG == 1)  /* PastModel002_DR_VEHICLE  */
+            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "VehicleSens_SetDataMaster POSHAL_DID_SPEED_PULSE \r\n");
+#endif
+            if (b_sens_ext == TRUE) {
+                VehicleSensSetSpeedPulseExtlG(pst_data);
+            }
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            /* ++ PastModel002 support DR */
+            VehicleSensDeliveryProcDR(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            /* -- PastModel002 support DR */
+            break;
+        }
+        case POSHAL_DID_SPEED_KMPH:
+        {
+            uc_chg_type = VehicleSensSetSpeedKmphlG(pst_data);
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+
+            /* Set the data master of Motion Seepd (Internal) */
+            pst_master = (const VEHICLESENS_DATA_MASTER*)pst_data;
+            memset(&stSpeed, 0x00, sizeof(SENSORMOTION_SPEEDINFO_DAT));
+            /* When the notified size is ""0"",The vehicle speed cannot be calculated with the line sensor. */
+            if (pst_master->us_size == 0) {
+                stSpeed.isEnable  = FALSE;
+            } else {
+                stSpeed.isEnable  = TRUE;
+                memcpy(&usSP_KMPH, pst_master->uc_data, sizeof(u_int16));
+            }
+            stSpeed.getMethod = SENSOR_GET_METHOD_POS;
+            /* Unit conversion [0.01km/h] -> [0.01m/s] */
+            stSpeed.Speed     = static_cast<uint16_t>((1000 * usSP_KMPH) / 3600);
+
+            uc_chg_type = VehicleSensSetMotionSpeedI(&stSpeed);
+            (*p_data_master_set_n)(VEHICLE_DID_MOTION_SPEED_INTERNAL, uc_chg_type, VEHICLESENS_GETMETHOD_INTERNAL);
+            break;
+        }
+//        case POSHAL_DID_GYRO_X:
 //        {
-//            uc_chg_type = VehicleSensSetSpeedPulselG(pst_data);
+//            uc_chg_type = VehicleSensSetGyroXlG(pst_data);
 //#if (DR_DEBUG == 1)  /* PastModel002_DR_VEHICLE  */
-//            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "VehicleSens_SetDataMaster POSHAL_DID_SPEED_PULSE \r\n");
-//#endif
-//            if (b_sens_ext == TRUE) {
-//                VehicleSensSetSpeedPulseExtlG(pst_data);
-//            }
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//            /* ++ PastModel002 support DR */
-//            VehicleSensDeliveryProcDR(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//            /* -- PastModel002 support DR */
-//            break;
-//        }
-//        case POSHAL_DID_SPEED_KMPH:
-//        {
-//            uc_chg_type = VehicleSensSetSpeedKmphlG(pst_data);
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//
-//            /* Set the data master of Motion Seepd (Internal) */
-//            pst_master = (const VEHICLESENS_DATA_MASTER*)pst_data;
-//            memset(&stSpeed, 0x00, sizeof(SENSORMOTION_SPEEDINFO_DAT));
-//            /* When the notified size is ""0"",The vehicle speed cannot be calculated with the line sensor. */
-//            if (pst_master->us_size == 0) {
-//                stSpeed.isEnable  = FALSE;
-//            } else {
-//                stSpeed.isEnable  = TRUE;
-//                memcpy(&usSP_KMPH, pst_master->uc_data, sizeof(u_int16));
-//            }
-//            stSpeed.getMethod = SENSOR_GET_METHOD_POS;
-//            /* Unit conversion [0.01km/h] -> [0.01m/s] */
-//            stSpeed.Speed     = static_cast<uint16_t>((1000 * usSP_KMPH) / 3600);
-//
-//            uc_chg_type = VehicleSensSetMotionSpeedI(&stSpeed);
-//            (*p_data_master_set_n)(VEHICLE_DID_MOTION_SPEED_INTERNAL, uc_chg_type, VEHICLESENS_GETMETHOD_INTERNAL);
-//            break;
-//        }
-//
-//        case POSHAL_DID_GYRO:
-//        {
-//            uc_chg_type = VehicleSensSetGyrolG(pst_data);
-//#if (DR_DEBUG == 1)  /* PastModel002_DR_VEHICLE  */
-//            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "VehicleSens_SetDataMaster POSHAL_DID_GYRO \r\n");
+//            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "VehicleSens_SetDataMaster POSHAL_DID_GYRO_X \r\n");
 //#endif
 //            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
 //            /* ++ PastModel002 support DR */
@@ -276,101 +306,137 @@ void  VehicleSensInitDataMaster(void) {
 //            /* -- PastModel002 support DR */
 //            break;
 //        }
-//        case POSHAL_DID_SNS_COUNTER:
-//        {
-//#if (DR_DEBUG == 1)  /* PastModel002_DR_VEHICLE  */
-//            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "VehicleSens_SetDataMaster POSHAL_DID_SNS_COUNTER \r\n");
-//#endif
-//            uc_chg_type = VehicleSensSetSnsCounterlG(pst_data);
-//            if (b_sens_ext == TRUE) {
-//                VehicleSensSetSnsCounterExtlG(pst_data);
-//            }
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//            /* ++ PastModel002 support DR */
-//            VehicleSensDeliveryProcDR(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//            /* -- PastModel002 support DR */
-//            break;
-//        }
-//        case POSHAL_DID_GYRO_EXT:    /* 3 to 14bit A/D value,0bit:REV */
-//        {
-//            uc_chg_type = VehicleSensSetGyroRevlG(pst_data);
-//
-//            if (b_sens_ext == TRUE) {
-//                VehicleSensSetGyroExtlG(pst_data);
-//            }
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//
-//            break;
-//        }
-//
-//        case POSHAL_DID_SPEED_PULSE_FLAG:
-//        {
-//            uc_chg_type = VehicleSensSetSpeedPulseFlag((const LSDRV_LSDATA_G *)pst_data);
-//
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//            /* ++ PastModel002 support DR */
-//            VehicleSensDeliveryProcDR(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//            /* -- PastModel002 support DR */
-//
-//            break;
-//        }
-//        case POSHAL_DID_GPS_INTERRUPT_FLAG:
-//        {
-//            uc_chg_type = VehicleSensSetGpsInterruptFlag((const LSDRV_LSDATA_G *)pst_data);
-//
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//
-//            break;
-//        }
-//        case POSHAL_DID_REV:
-//        {
-//            uc_chg_type = VehicleSensSetRevlG(pst_data);
-//            if (b_sens_ext == TRUE) {
-//                VehicleSensSetRevExtlG(pst_data);
-//            }
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//            break;
-//        }
-//        case POSHAL_DID_GYRO_TEMP:
-//        {
-//            uc_chg_type = VehicleSensSetGyroTemplG(pst_data);
-//            if (b_sens_ext == TRUE) {
-//                VehicleSensSetGyroTempExtlG(pst_data);
-//            }
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//            break;
-//        }
-//        case POSHAL_DID_GSNS_X:
-//        {
-//            uc_chg_type = VehicleSensSetGsnsXlG(pst_data);
-//            if (b_sens_ext == TRUE) {
-//                VehicleSensSetGsnsXExtlG(pst_data);
-//            }
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//            break;
-//        }
-//        case POSHAL_DID_GSNS_Y:
-//        {
-//            uc_chg_type = VehicleSensSetGsnsYlG(pst_data);
-//            if (b_sens_ext == TRUE) {
-//                VehicleSensSetGsnsYExtlG(pst_data);
-//            }
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//            break;
-//        }
-//        case POSHAL_DID_PULSE_TIME:
-//        {
-//            uc_chg_type = VehicleSensSetPulseTimelG(pst_data);
-//            if (b_sens_ext == TRUE) {
-//                VehicleSensSetPulseTimeExtlG(pst_data);
-//            }
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//            break;
-//        }
-//        default:
-//            break;
-//    }
-//}
+        case POSHAL_DID_GYRO_Y:
+        {
+            uc_chg_type = VehicleSensSetGyroYlG(pst_data);
+            if (b_sens_ext == TRUE) {
+                VehicleSensSetGyroYExtlG(pst_data);
+            }
+#if (DR_DEBUG == 1)
+            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "VehicleSens_SetDataMaster POSHAL_DID_GYRO_Y \r\n");
+#endif
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            VehicleSensDeliveryProcDR(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            break;
+        }
+        case POSHAL_DID_GYRO_Z:
+        {
+            uc_chg_type = VehicleSensSetGyroZlG(pst_data);
+            if (b_sens_ext == TRUE) {
+                VehicleSensSetGyroZExtlG(pst_data);
+            }
+#if (DR_DEBUG == 1)
+            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "VehicleSens_SetDataMaster POSHAL_DID_GYRO_Z \r\n");
+#endif
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            VehicleSensDeliveryProcDR(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            break;
+        }
+        case POSHAL_DID_SNS_COUNTER:
+        {
+#if (DR_DEBUG == 1)  /* PastModel002_DR_VEHICLE  */
+            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "VehicleSens_SetDataMaster POSHAL_DID_SNS_COUNTER \r\n");
+#endif
+            uc_chg_type = VehicleSensSetSnsCounterlG(pst_data);
+            if (b_sens_ext == TRUE) {
+                VehicleSensSetSnsCounterExtlG(pst_data);
+            }
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            /* ++ PastModel002 support DR */
+            VehicleSensDeliveryProcDR(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            /* -- PastModel002 support DR */
+            break;
+        }
+        case POSHAL_DID_GYRO_X:
+        case POSHAL_DID_GYRO_EXT:    /* 3 to 14bit A/D value,0bit:REV */
+        {
+            uc_chg_type = VehicleSensSetGyroRevlG(pst_data);
+
+            if (b_sens_ext == TRUE) {
+                VehicleSensSetGyroExtlG(pst_data);
+            }
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+
+            break;
+        }
+
+        case POSHAL_DID_SPEED_PULSE_FLAG:
+        {
+            uc_chg_type = VehicleSensSetSpeedPulseFlag((const LSDRV_LSDATA_G *)pst_data);
+
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            /* ++ PastModel002 support DR */
+            VehicleSensDeliveryProcDR(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            /* -- PastModel002 support DR */
+
+            break;
+        }
+        case POSHAL_DID_GPS_INTERRUPT_FLAG:
+        {
+            uc_chg_type = VehicleSensSetGpsInterruptFlag((const LSDRV_LSDATA_G *)pst_data);
+
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+
+            break;
+        }
+        case POSHAL_DID_REV:
+        {
+            uc_chg_type = VehicleSensSetRevlG(pst_data);
+            if (b_sens_ext == TRUE) {
+                VehicleSensSetRevExtlG(pst_data);
+            }
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            break;
+        }
+        case POSHAL_DID_GYRO_TEMP:
+        {
+            uc_chg_type = VehicleSensSetGyroTemplG(pst_data);
+            if (b_sens_ext == TRUE) {
+                VehicleSensSetGyroTempExtlG(pst_data);
+            }
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            break;
+        }
+        case POSHAL_DID_GSNS_X:
+        {
+            uc_chg_type = VehicleSensSetGsnsXlG(pst_data);
+            if (b_sens_ext == TRUE) {
+                VehicleSensSetGsnsXExtlG(pst_data);
+            }
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            break;
+        }
+        case POSHAL_DID_GSNS_Y:
+        {
+            uc_chg_type = VehicleSensSetGsnsYlG(pst_data);
+            if (b_sens_ext == TRUE) {
+                VehicleSensSetGsnsYExtlG(pst_data);
+            }
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            break;
+        }
+        case POSHAL_DID_GSNS_Z:
+        {
+            uc_chg_type = VehicleSensSetGsnsZlG(pst_data);
+            if (b_sens_ext == TRUE) {
+                VehicleSensSetGsnsZExtlG(pst_data);
+            }
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            break;
+        }
+        case POSHAL_DID_PULSE_TIME:
+        {
+            uc_chg_type = VehicleSensSetPulseTimelG(pst_data);
+            if (b_sens_ext == TRUE) {
+                VehicleSensSetPulseTimeExtlG(pst_data);
+            }
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            break;
+        }
+        default:
+            break;
+    }
+}
 
 #if CONFIG_SENSOR_EXT_VALID        /* Initial Sensor Support */
 /*******************************************************************************
@@ -382,31 +448,43 @@ void  VehicleSensInitDataMaster(void) {
 * NOTE      :
 * RETURN    : void
 ******************************************************************************/
-//void  VehicleSensSetDataMasterLineSensFst(const LSDRV_LSDATA_FST *pst_data, PFUNC_DMASTER_SET_N p_data_master_set_n) {  // LCOV_EXCL_START 8: dead code  // // NOLINT(whitespace/line_length)
-//    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//    u_int8  uc_chg_type;
-//
-//    /*------------------------------------------------------*/
-//    /*  Call the data set processing associated with the DID      */
-//    /*  Call the data master set notification process      */
-//    /*------------------------------------------------------*/
-//    switch (pst_data->ul_did) {
-//        case POSHAL_DID_GYRO_FST:    /* 3 to 14bit A/D value,0bit:REV */
-//        {
-//            uc_chg_type = VehicleSensSetGyroFstl(pst_data);
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//            break;
-//        }
-//        case POSHAL_DID_SPEED_PULSE_FST:
-//        {
-//            uc_chg_type = VehicleSensSetSpeedPulseFstl(pst_data);
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//            break;
-//        }
-//        default:
-//            break;
-//    }
-//}
+void  VehicleSensSetDataMasterLineSensFst(const LSDRV_LSDATA_FST *pst_data, PFUNC_DMASTER_SET_N p_data_master_set_n) {  // LCOV_EXCL_START 8: dead code  // // NOLINT(whitespace/line_length)
+    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+    u_int8  uc_chg_type;
+
+    /*------------------------------------------------------*/
+    /*  Call the data set processing associated with the DID      */
+    /*  Call the data master set notification process      */
+    /*------------------------------------------------------*/
+    switch (pst_data->ul_did) {
+        case POSHAL_DID_GYRO_X_FST:    /* 3 to 14bit A/D value,0bit:REV */
+        {
+            uc_chg_type = VehicleSensSetGyroXFstl(pst_data);
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            break;
+        }
+        case POSHAL_DID_GYRO_Y_FST:    /* 3 to 14bit A/D value,0bit:REV */
+        {
+            uc_chg_type = VehicleSensSetGyroYFstl(pst_data);
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            break;
+        }
+        case POSHAL_DID_GYRO_Z_FST:    /* 3 to 14bit A/D value,0bit:REV */
+        {
+            uc_chg_type = VehicleSensSetGyroZFstl(pst_data);
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            break;
+        }
+        case POSHAL_DID_SPEED_PULSE_FST:
+        {
+            uc_chg_type = VehicleSensSetSpeedPulseFstl(pst_data);
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            break;
+        }
+        default:
+            break;
+    }
+}
 // LCOV_EXCL_STOP
 /*******************************************************************************
 * MODULE    : VehicleSensSetDataMasterLineSensFstG
@@ -417,118 +495,158 @@ void  VehicleSensInitDataMaster(void) {
 * NOTE      :
 * RETURN    : void
 ******************************************************************************/
-//void  VehicleSensSetDataMasterLineSensFstG(const LSDRV_MSG_LSDATA_DAT_FST  *pst_data,
-//        PFUNC_DMASTER_SET_N p_data_master_set_n) {
-//    u_int8  uc_chg_type;
-//
-//    /* Internal debug log output */
-//    FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, "+");
-//
-//    /*------------------------------------------------------*/
-//    /*  Call the data set processing associated with the DID      */
-//    /*  Call the data master set notification process      */
-//    /*------------------------------------------------------*/
-//    switch (pst_data->st_gyro.ul_did) {
-//        case POSHAL_DID_GYRO_FST:
-//        {
-//            uc_chg_type = VehicleSensSetGyroFstG(&(pst_data->st_gyro));
-//            if (pst_data->st_gyro.uc_partition_max == pst_data->st_gyro.uc_partition_num)
-//            {
-//                (*p_data_master_set_n)(pst_data->st_gyro.ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//            }
-//            break;
-//        }
-//        default:
-//            break;
-//    }
-//
-//    switch (pst_data->st_speed.ul_did) {
-//        case POSHAL_DID_SPEED_PULSE_FST:
-//        {
-//            uc_chg_type = VehicleSensSetSpeedPulseFstG(&(pst_data->st_speed));
-//            if (pst_data->st_speed.uc_partition_max == pst_data->st_speed.uc_partition_num)
-//            {
-//                (*p_data_master_set_n)(pst_data->st_speed.ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//            }
-//            break;
-//        }
-//        default:
-//            break;
-//    }
-//
-//    switch (pst_data->st_spd_pulse_flg.ul_did) {
-//        case POSHAL_DID_SPEED_PULSE_FLAG_FST:
-//        {
-//            uc_chg_type = VehicleSensSetSpeedPulseFlagFstG(&(pst_data->st_spd_pulse_flg));
-//            if (pst_data->st_spd_pulse_flg.uc_partition_max == pst_data->st_spd_pulse_flg.uc_partition_num)
-//            {
-//                (*p_data_master_set_n)(pst_data->st_spd_pulse_flg.ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//            }
-//            break;
-//        }
-//        default:
-//            break;
-//    }
-//
-//    switch (pst_data->st_rev.ul_did) {
-//        case POSHAL_DID_REV_FST:
-//        {
-//            uc_chg_type = VehicleSensSetRevFstG(&(pst_data->st_rev));
-//            if (pst_data->st_rev.uc_partition_max == pst_data->st_rev.uc_partition_num)
-//            {
-//                (*p_data_master_set_n)(pst_data->st_rev.ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//            }
-//            break;
-//        }
-//        default:
-//            break;
-//    }
-//
-//    switch (pst_data->st_gyro_temp.ul_did) {
-//        case POSHAL_DID_GYRO_TEMP_FST:
-//        {
-//            uc_chg_type = VehicleSensSetGyroTempFstG(&(pst_data->st_gyro_temp));
-//
-//            if (pst_data->st_gyro_temp.uc_partition_max == pst_data->st_gyro_temp.uc_partition_num) {
-//                (*p_data_master_set_n)(pst_data->st_gyro_temp.ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//            }
-//            break;
-//        }
-//        default:
-//            break;
-//    }
-//
-//    switch (pst_data->st_gsns_x.ul_did) {
-//        case POSHAL_DID_GSNS_X_FST:
-//        {
-//            uc_chg_type = VehicleSensSetGsnsXFstG(&(pst_data->st_gsns_x));
-//
-//            if (pst_data->st_gsns_x.uc_partition_max == pst_data->st_gsns_x.uc_partition_num) {
-//                (*p_data_master_set_n)(pst_data->st_gsns_x.ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//            }
-//            break;
-//        }
-//        default:
-//            break;
-//    }
-//
-//    switch (pst_data->st_gsns_y.ul_did) {
-//        case POSHAL_DID_GSNS_Y_FST:
-//        {
-//            uc_chg_type = VehicleSensSetGsnsYFstG(&(pst_data->st_gsns_y));
-//
-//            if (pst_data->st_gsns_y.uc_partition_max == pst_data->st_gsns_y.uc_partition_num) {
-//                (*p_data_master_set_n)(pst_data->st_gsns_y.ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//            }
-//            break;
-//        }
-//        default:
-//            break;
-//    }
-//
-//    /* Internal debug log output */
-//    FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, "-");
-//}
+void  VehicleSensSetDataMasterLineSensFstG(const LSDRV_MSG_LSDATA_DAT_FST  *pst_data,
+        PFUNC_DMASTER_SET_N p_data_master_set_n) {
+    u_int8  uc_chg_type;
+
+    /* Internal debug log output */
+    FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, "+");
+
+    /*------------------------------------------------------*/
+    /*  Call the data set processing associated with the DID      */
+    /*  Call the data master set notification process      */
+    /*------------------------------------------------------*/
+    switch (pst_data->st_gyro_x.ul_did) {
+        case POSHAL_DID_GYRO_X_FST:
+        {
+            uc_chg_type = VehicleSensSetGyroXFstG(&(pst_data->st_gyro_x));
+            if (pst_data->st_gyro_x.uc_partition_max == pst_data->st_gyro_x.uc_partition_num)
+            {
+                (*p_data_master_set_n)(pst_data->st_gyro_x.ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            }
+            break;
+        }
+        default:
+            break;
+    }
+
+    switch (pst_data->st_gyro_y.ul_did) {
+        case POSHAL_DID_GYRO_Y_FST:
+        {
+            uc_chg_type = VehicleSensSetGyroYFstG(&(pst_data->st_gyro_y));
+            if (pst_data->st_gyro_y.uc_partition_max == pst_data->st_gyro_y.uc_partition_num) {
+                (*p_data_master_set_n)(pst_data->st_gyro_y.ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            }
+            break;
+        }
+        default:
+            break;
+    }
+
+    switch (pst_data->st_gyro_z.ul_did) {
+        case POSHAL_DID_GYRO_Z_FST:
+        {
+            uc_chg_type = VehicleSensSetGyroZFstG(&(pst_data->st_gyro_z));
+            if (pst_data->st_gyro_z.uc_partition_max == pst_data->st_gyro_z.uc_partition_num) {
+                (*p_data_master_set_n)(pst_data->st_gyro_z.ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            }
+            break;
+        }
+        default:
+            break;
+    }
+
+    switch (pst_data->st_speed.ul_did) {
+        case POSHAL_DID_SPEED_PULSE_FST:
+        {
+            uc_chg_type = VehicleSensSetSpeedPulseFstG(&(pst_data->st_speed));
+            if (pst_data->st_speed.uc_partition_max == pst_data->st_speed.uc_partition_num)
+            {
+                (*p_data_master_set_n)(pst_data->st_speed.ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            }
+            break;
+        }
+        default:
+            break;
+    }
+
+    switch (pst_data->st_spd_pulse_flg.ul_did) {
+        case POSHAL_DID_SPEED_PULSE_FLAG_FST:
+        {
+            uc_chg_type = VehicleSensSetSpeedPulseFlagFstG(&(pst_data->st_spd_pulse_flg));
+            if (pst_data->st_spd_pulse_flg.uc_partition_max == pst_data->st_spd_pulse_flg.uc_partition_num)
+            {
+                (*p_data_master_set_n)(pst_data->st_spd_pulse_flg.ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            }
+            break;
+        }
+        default:
+            break;
+    }
+
+    switch (pst_data->st_rev.ul_did) {
+        case POSHAL_DID_REV_FST:
+        {
+            uc_chg_type = VehicleSensSetRevFstG(&(pst_data->st_rev));
+            if (pst_data->st_rev.uc_partition_max == pst_data->st_rev.uc_partition_num)
+            {
+                (*p_data_master_set_n)(pst_data->st_rev.ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            }
+            break;
+        }
+        default:
+            break;
+    }
+
+    switch (pst_data->st_gyro_temp.ul_did) {
+        case POSHAL_DID_GYRO_TEMP_FST:
+        {
+            uc_chg_type = VehicleSensSetGyroTempFstG(&(pst_data->st_gyro_temp));
+
+            if (pst_data->st_gyro_temp.uc_partition_max == pst_data->st_gyro_temp.uc_partition_num) {
+                (*p_data_master_set_n)(pst_data->st_gyro_temp.ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            }
+            break;
+        }
+        default:
+            break;
+    }
+
+    switch (pst_data->st_gsns_x.ul_did) {
+        case POSHAL_DID_GSNS_X_FST:
+        {
+            uc_chg_type = VehicleSensSetGsnsXFstG(&(pst_data->st_gsns_x));
+
+            if (pst_data->st_gsns_x.uc_partition_max == pst_data->st_gsns_x.uc_partition_num) {
+                (*p_data_master_set_n)(pst_data->st_gsns_x.ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            }
+            break;
+        }
+        default:
+            break;
+    }
+
+    switch (pst_data->st_gsns_y.ul_did) {
+        case POSHAL_DID_GSNS_Y_FST:
+        {
+            uc_chg_type = VehicleSensSetGsnsYFstG(&(pst_data->st_gsns_y));
+
+            if (pst_data->st_gsns_y.uc_partition_max == pst_data->st_gsns_y.uc_partition_num) {
+                (*p_data_master_set_n)(pst_data->st_gsns_y.ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            }
+            break;
+        }
+        default:
+            break;
+    }
+
+    switch (pst_data->st_gsns_z.ul_did) {
+        case POSHAL_DID_GSNS_Z_FST:
+        {
+            uc_chg_type = VehicleSensSetGsnsZFstG(&(pst_data->st_gsns_z));
+
+            if (pst_data->st_gsns_z.uc_partition_max == pst_data->st_gsns_z.uc_partition_num) {
+                (*p_data_master_set_n)(pst_data->st_gsns_z.ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+            }
+            break;
+        }
+        default:
+            break;
+    }
+
+    /* Internal debug log output */
+    FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, "-");
+}
 #endif
 
 /*******************************************************************************
@@ -540,329 +658,330 @@ void  VehicleSensInitDataMaster(void) {
 * NOTE      :
 * RETURN    : void
 ******************************************************************************/
-//void  VehicleSensSetDataMasterGps(SENSOR_MSG_GPSDATA_DAT *pst_data,
-//                                       PFUNC_DMASTER_SET_N p_data_master_set_n) {
-//    u_int8  uc_chg_type;
-//    SENSORLOCATION_LONLATINFO_DAT lstLonLat;
-//    SENSORLOCATION_ALTITUDEINFO_DAT lstAltitude;
-//    SENSORMOTION_HEADINGINFO_DAT lstHeading;
-//    MDEV_GPS_CUSTOMDATA *pstCustomData;
-//
-////    RET_API   ret;
-//
-////    char* pEnvPositioning_CWORD86_ = NULL;
-////    BOOL sndFlg;
-//
-//    VEHICLESENS_DATA_MASTER st_data;
-//    u_int8 antennaState = 0;
-//    u_int8 sensCount = 0;
-//    u_int8 ucResult = SENSLOG_RES_SUCCESS;
-//
-//    EFrameworkunifiedStatus eStatus = eFrameworkunifiedStatusFail;
-//    BOOL bIsAvailable;
-//    PNO us_pno;
-//
-//    /* Antenna Connection Information */
-//    (void)memset(reinterpret_cast<void *>(&st_data),  0, sizeof(st_data));
-//    VehicleSensGetGpsAntennal(&st_data);
-//    antennaState = st_data.uc_data[0];
-//
-//    /* Sensor Counter */
-//    (void)memset(reinterpret_cast<void *>(&st_data),  0, sizeof(st_data));
-//    VehicleSensGetSnsCounterl(&st_data);
-//    /** Sensor Counter Value Calculation */
-//    /** Subtract sensor counter according to data amount from sensor counter.(Rounded off) */
-//    /** Communication speed9600bps = 1200byte/s,Sensor counter is 1 count at 100ms. */
-//    sensCount = st_data.uc_data[0];
-//
-//    FRAMEWORKUNIFIEDLOG(ZONE_27, __FUNCTION__, 
-//            "antennaState = %d, sensCount = %d", antennaState, sensCount);
-//
-//    /*------------------------------------------------------*/
-//    /*  Call the data set processing associated with the DID      */
-//    /*  Call the data master set notification process      */
-//    /*------------------------------------------------------*/
-//    switch (pst_data->ul_did) {  // LCOV_EXCL_BR_LINE 6:some DID is not used
-//        case VEHICLE_DID_GPS_UBLOX_NAV_VELNED:
-//        {
-//            // LCOV_EXCL_START 8 : dead code
-//            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//#if (GPS_DEBUG == 1)  /* PastModel002_DR_VEHICLE  */
-//            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
-//                "VehicleSens_SetDataMaster VEHICLE_DID_GPS_UBLOX_NAV_VELNED \r\n");
-//#endif
-//            uc_chg_type = VehicleSensSetNavVelnedG(pst_data);
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//            /* ++ PastModel002 support DR */
-//            VehicleSensDeliveryProcDR(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//            /* -- PastModel002 support DR */
-//            break;
-//            // LCOV_EXCL_STOP
-//        }
-//        case VEHICLE_DID_GPS_UBLOX_NAV_TIMEUTC:
-//        {
-//            // LCOV_EXCL_START 8 : dead code
-//            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//#if (GPS_DEBUG == 1)  /* PastModel002_DR_VEHICLE  */
-//            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
-//                "VehicleSens_SetDataMaster VEHICLE_DID_GPS_UBLOX_NAV_TIMEUTC \r\n");
-//#endif
-//            uc_chg_type = VehicleSensSetNavTimeUtcG(pst_data);
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//            /* ++ PastModel002 support DR */
-//            VehicleSensDeliveryProcDR(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//            /* -- PastModel002 support DR */
-//            break;
-//            // LCOV_EXCL_STOP
-//        }
-//        case VEHICLE_DID_GPS_UBLOX_NAV_TIMEGPS:
-//        {
-//            // LCOV_EXCL_START 8 : dead code
-//            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//#if (GPS_DEBUG == 1)  /* PastModel002_DR_VEHICLE  */
-//            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
-//                "VehicleSens_SetDataMaster VEHICLE_DID_GPS_UBLOX_NAV_TIMEGPS \r\n");
-//#endif
-//            uc_chg_type = VehicleSensSetNavTimeGpsG(pst_data);
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//            break;
-//            // LCOV_EXCL_STOP
-//        }
-//        case VEHICLE_DID_GPS_UBLOX_NAV_SVINFO:
-//        {
-//            // LCOV_EXCL_START 8 : dead code
-//            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//#if (GPS_DEBUG == 1)  /* PastModel002_DR_VEHICLE  */
-//            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
-//                "VehicleSens_SetDataMaster VEHICLE_DID_GPS_UBLOX_NAV_SVINFO \r\n");
-//#endif
-//            uc_chg_type = VehicleSensSetNavSvInfoG(pst_data);
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//            /* ++ PastModel002 support DR */
-//            VehicleSensDeliveryProcDR(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//            /* -- PastModel002 support DR */
-//            break;
-//            // LCOV_EXCL_STOP
-//        }
-//        case VEHICLE_DID_GPS_UBLOX_NAV_STATUS:
-//        {
-//            // LCOV_EXCL_START 8 : dead code
-//            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//#if (GPS_DEBUG == 1)  /* PastModel002_DR_VEHICLE  */
-//            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
-//                "VehicleSens_SetDataMaster VEHICLE_DID_GPS_UBLOX_NAV_STATUS \r\n");
-//#endif
-//            uc_chg_type = VehicleSensSetNavStatusG(pst_data);
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//            /* ++ PastModel002 support DR */
-//            VehicleSensDeliveryProcDR(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//            /* -- PastModel002 support DR */
-//            break;
-//            // LCOV_EXCL_STOP
-//        }
-//        case VEHICLE_DID_GPS_UBLOX_NAV_POSLLH:
-//        {
-//            // LCOV_EXCL_START 8 : dead code
-//            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//#if (GPS_DEBUG == 1)  /* PastModel002_DR_VEHICLE  */
-//            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
-//                "VehicleSens_SetDataMaster VEHICLE_DID_GPS_UBLOX_NAV_POSLLH \r\n");
-//#endif
-//            uc_chg_type = VehicleSensSetNavPosllhG(pst_data);
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//            /* ++ PastModel002 support DR */
-//            VehicleSensDeliveryProcDR(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//            /* -- PastModel002 support DR */
-//            break;
-//            // LCOV_EXCL_STOP
-//        }
-//        case VEHICLE_DID_GPS_UBLOX_NAV_CLOCK:
-//        {
-//            // LCOV_EXCL_START 8 : dead code
-//            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//#if (GPS_DEBUG == 1)  /* PastModel002_DR_VEHICLE  */
-//            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
-//                "VehicleSens_SetDataMaster VEHICLE_DID_GPS_UBLOX_NAV_CLOCK \r\n");
-//#endif
-//            uc_chg_type = VehicleSensSetNavClockG(pst_data);
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//            /* ++ PastModel002 support DR */
-//            VehicleSensDeliveryProcDR(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//            /* -- PastModel002 support DR */
-//            break;
-//            // LCOV_EXCL_STOP
-//        }
-//        case VEHICLE_DID_GPS_UBLOX_NAV_DOP:
-//        {
-//            // LCOV_EXCL_START 8 : dead code
-//            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//#if (GPS_DEBUG == 1)  /* PastModel002_DR_VEHICLE  */
-//            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
-//                "VehicleSens_SetDataMaster VEHICLE_DID_GPS_UBLOX_NAV_DOP \r\n");
-//#endif
-//            uc_chg_type = VehicleSensSetNavDopG(pst_data);
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//            /* ++ PastModel002 support DR */
-//            VehicleSensDeliveryProcDR(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//            /* -- PastModel002 support DR */
-//            break;
-//            // LCOV_EXCL_STOP
-//        }
-//        case VEHICLE_DID_GPS_UBLOX_MON_HW:
-//        {
-//            // LCOV_EXCL_START 8 : dead code
-//            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//#if (GPS_DEBUG == 1)  /* PastModel002_DR_VEHICLE  */
-//            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "VehicleSens_SetDataMaster VEHICLE_DID_GPS_UBLOX_MON_HW \r\n");
-//#endif
-//            uc_chg_type = VehicleSensSetMonHwG(pst_data);
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//            break;
-//            // LCOV_EXCL_STOP
-//        }
-//        case VEHICLE_DID_GPS_COUNTER:
-//        {
-//            // LCOV_EXCL_START 8 : dead code
-//            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//            uc_chg_type = VehicleSensSetGpsCounterg(pst_data);
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//            break;
-//            // LCOV_EXCL_STOP
-//        }
-//        /* GPS raw data(_CWORD82_ NMEA) */
-//        case VEHICLE_DID_GPS__CWORD82__NMEA:
-//        {
-//            /* NMEA data */
-//            FRAMEWORKUNIFIEDLOG(ZONE_27, __FUNCTION__, 
-//                "VehicleSens_GpsDataDelivery VEHICLE_DID_GPS__CWORD82__NMEA -->");
-//
-//            /* Insert Antenna Connection Status and Sensor Counter */
-//            pst_data->uc_data[1] = antennaState; /* Insert Antennas into 2byte Eyes */
-//            /* Place counters at 3byte */
-//            pst_data->uc_data[2] = static_cast<u_int8>(sensCount - (u_int8)(((GPS_NMEA_SZ * 10) / 1200) + 1));
-//
-//            uc_chg_type = VehicleSensSetGps_CWORD82_NmeaG(pst_data);  /* Ignore->MISRA-C++:2008 Rule 5-2-5 */
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//            FRAMEWORKUNIFIEDLOG(ZONE_27, __FUNCTION__, 
-//                "VehicleSens_GpsDataDelivery VEHICLE_DID_GPS__CWORD82__NMEA <--");
-//            break;
-//        }
-//        /* GPS raw data(FullBinary) */
-//        case POSHAL_DID_GPS__CWORD82__FULLBINARY:
-//        {
-//            /* FullBin data */
-//            FRAMEWORKUNIFIEDLOG(ZONE_27, __FUNCTION__, 
-//                "VehicleSens_GpsDataDelivery POSHAL_DID_GPS__CWORD82__FULLBINARY -->");
-//
-//            /* Insert Antenna Connection Status and Sensor Counter */
-//            pst_data->uc_data[0] = antennaState; /* Insert Antennas into 1byte Eyes */
-//            /* Place counters at 2byte */
-//            pst_data->uc_data[1] = static_cast<u_int8>(sensCount - (u_int8)(((GPS_CMD_FULLBIN_SZ * 10) / 1200) + 1));
-//
-//            uc_chg_type = VehicleSensSetGps_CWORD82_FullBinaryG(pst_data);
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//            FRAMEWORKUNIFIEDLOG(ZONE_27, __FUNCTION__, 
-//                "VehicleSens_GpsDataDelivery POSHAL_DID_GPS__CWORD82__FULLBINARY <--");
-//            break;
-//        }
-//        /* GPS raw data(Specific information) */
-//        case POSHAL_DID_GPS__CWORD82___CWORD44_GP4:
-//        {
-//            /* GPS-specific information */
-//            uc_chg_type = VehicleSensSetGps_CWORD82__CWORD44_Gp4G(pst_data);  /* Ignore->MISRA-C++:2008 Rule 5-2-5 */
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//            break;
-//        }
-//        case POSHAL_DID_GPS_CUSTOMDATA:
-//        {
-//            pstCustomData = reinterpret_cast<MDEV_GPS_CUSTOMDATA*>(pst_data->uc_data);
-//            /* Latitude/LongitudeInformation */
-//            (void)memcpy(&lstLonLat, &(pstCustomData->st_lonlat), sizeof(SENSORLOCATION_LONLATINFO_DAT));
-//            lstLonLat.SyncCnt = VehicleSensGetSensorCnt(); /* Synchronization counter setting */
-//            uc_chg_type = VehicleSensSetLocationLonLatG(&lstLonLat);
-//            (*p_data_master_set_n)(VEHICLE_DID_LOCATION_LONLAT, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//
-//            /* Altitude information */
-//            (void)memcpy(&lstAltitude, &(pstCustomData->st_altitude), sizeof(SENSORLOCATION_ALTITUDEINFO_DAT));
-//            lstAltitude.SyncCnt = VehicleSensGetSensorCnt(); /* Synchronization counter setting */
-//            uc_chg_type = VehicleSensSetLocationAltitudeG(&lstAltitude);
-//            (*p_data_master_set_n)(VEHICLE_DID_LOCATION_ALTITUDE, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//
-//            /* Bearing information */
-//            (void)memcpy(&lstHeading, &(pstCustomData->st_heading), sizeof(SENSORMOTION_HEADINGINFO_DAT));
-//            lstHeading.SyncCnt = VehicleSensGetSensorCnt(); /* Synchronization counter setting */
-//            uc_chg_type = VehicleSensSetMotionHeadingG(&lstHeading);
-//            (*p_data_master_set_n)(VEHICLE_DID_MOTION_HEADING, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//
-//            /* GPS time information */
-//            uc_chg_type = VehicleSensSetGpsTimeG(&(pstCustomData->st_gps_time));
-//            (*p_data_master_set_n)(POSHAL_DID_GPS_TIME, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//
-//            /* Set GPS time to CLOCK */
-//            eStatus = ClockIfDtimeSetGpsTime(&(pstCustomData->st_gps_time), &bIsAvailable);
-//            if ((bIsAvailable == TRUE) && (eStatus != eFrameworkunifiedStatusOK)) {
-//                ucResult = SENSLOG_RES_FAIL;
-//                FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-//                    "ClockIfDtimeSetGpsTime ERROR!! [ret=%d, y=%d, m=%d, d=%d, h=%d, n=%d, s=%d, sts=%d]",
-//                    eStatus, pstCustomData->st_gps_time.utc.year, pstCustomData->st_gps_time.utc.month,
-//                    pstCustomData->st_gps_time.utc.date,
-//                    pstCustomData->st_gps_time.utc.hour, pstCustomData->st_gps_time.utc.minute,
-//                    pstCustomData->st_gps_time.utc.second, pstCustomData->st_gps_time.tdsts);
-//            }
-//            us_pno = _pb_CnvName2Pno(SENSLOG_PNAME_CLOCK);
-//            SensLogWriteOutputData(SENSLOG_DATA_O_TIME_CS, 0, us_pno,
-//                            reinterpret_cast<uint8_t *>(&(pstCustomData->st_gps_time)),
-//                            sizeof(pstCustomData->st_gps_time), ucResult);
-//
-//            /* Diag Info */
-//            uc_chg_type = VehicleSensSetNaviinfoDiagGPSg(&(pstCustomData->st_diag_gps));
-//            (*p_data_master_set_n)(VEHICLE_DID_NAVIINFO_DIAG_GPS, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//            break;
-//        }
-//        /* GPS raw data(NMEA except _CWORD82_) */
-//        case POSHAL_DID_GPS_NMEA:
-//        {
-//            /* NMEA data */
-//            uc_chg_type = VehicleSensSetGpsNmeaG(pst_data);
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//            break;
-//        }
-//        /* GPS version(except _CWORD82_) */
-//        case POSHAL_DID_GPS_VERSION:
-//        {
-//            VehicleSensSetGpsVersion(pst_data);
-//            break;
-//        }
-//        /* Raw GPS time data */
-//        case POSHAL_DID_GPS_TIME_RAW:
-//        {
-//            (void)VehicleSensSetGpsTimeRawG(reinterpret_cast<SENSOR_GPSTIME_RAW*>(pst_data->uc_data));
-//            break;
-//        }
-//        case POSHAL_DID_GPS_WKNROLLOVER:
-//        {
-//            (void)VehicleSensSetWknRolloverG(reinterpret_cast<SENSOR_WKNROLLOVER*>(pst_data->uc_data));
-//            break;
-//        }
-//        /* GPS clock drift */
-//        case POSHAL_DID_GPS_CLOCK_DRIFT:
-//        {
-//            uc_chg_type = VehicleSensSetGpsClockDriftG(reinterpret_cast<int32_t*>(pst_data->uc_data));
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//            break;
-//        }
-//        /* GPS clock frequency */
-//        case POSHAL_DID_GPS_CLOCK_FREQ:
-//        {
-//            uc_chg_type = VehicleSensSetGpsClockFreqG(reinterpret_cast<uint32_t*>(pst_data->uc_data));
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//            break;
-//        }
-//
-//        default:
-//            break;
-//    }
-//}
+void  VehicleSensSetDataMasterGps(SENSOR_MSG_GPSDATA_DAT *pst_data,
+                                       PFUNC_DMASTER_SET_N p_data_master_set_n) {
+    u_int8  uc_chg_type;
+    SENSORLOCATION_LONLATINFO_DAT lstLonLat;
+    SENSORLOCATION_ALTITUDEINFO_DAT lstAltitude;
+    SENSORMOTION_HEADINGINFO_DAT lstHeading;
+    MDEV_GPS_CUSTOMDATA *pstCustomData;
+
+    VEHICLESENS_DATA_MASTER st_data;
+    u_int8 antennaState = 0;
+    u_int8 sensCount = 0;
+    u_int8 ucResult = SENSLOG_RES_SUCCESS;
+
+    EFrameworkunifiedStatus eStatus = eFrameworkunifiedStatusFail;
+    BOOL bIsAvailable;
+    PNO us_pno;
+
+    /* Antenna Connection Information */
+    (void)memset(reinterpret_cast<void *>(&st_data),  0, sizeof(st_data));
+    VehicleSensGetGpsAntennal(&st_data);
+    antennaState = st_data.uc_data[0];
+
+    /* Sensor Counter */
+    (void)memset(reinterpret_cast<void *>(&st_data),  0, sizeof(st_data));
+    VehicleSensGetSnsCounterl(&st_data);
+    /** Sensor Counter Value Calculation */
+    /** Subtract sensor counter according to data amount from sensor counter.(Rounded off) */
+    /** Communication speed9600bps = 1200byte/s,Sensor counter is 1 count at 100ms. */
+    sensCount = st_data.uc_data[0];
+
+    FRAMEWORKUNIFIEDLOG(ZONE_27, __FUNCTION__, 
+            "antennaState = %d, sensCount = %d", antennaState, sensCount);
+
+    /*------------------------------------------------------*/
+    /*  Call the data set processing associated with the DID      */
+    /*  Call the data master set notification process      */
+    /*------------------------------------------------------*/
+    switch (pst_data->ul_did) {  // LCOV_EXCL_BR_LINE 6:some DID is not used
+        case VEHICLE_DID_GPS_UBLOX_NAV_VELNED:
+        {
+            // LCOV_EXCL_START 8 : dead code
+            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+#if (GPS_DEBUG == 1)  /* PastModel002_DR_VEHICLE  */
+            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
+                "VehicleSens_SetDataMaster VEHICLE_DID_GPS_UBLOX_NAV_VELNED \r\n");
+#endif
+            uc_chg_type = VehicleSensSetNavVelnedG(pst_data);
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+            /* ++ PastModel002 support DR */
+            VehicleSensDeliveryProcDR(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+            /* -- PastModel002 support DR */
+            break;
+            // LCOV_EXCL_STOP
+        }
+        case VEHICLE_DID_GPS_UBLOX_NAV_TIMEUTC:
+        {
+            // LCOV_EXCL_START 8 : dead code
+            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+#if (GPS_DEBUG == 1)  /* PastModel002_DR_VEHICLE  */
+            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
+                "VehicleSens_SetDataMaster VEHICLE_DID_GPS_UBLOX_NAV_TIMEUTC \r\n");
+#endif
+            uc_chg_type = VehicleSensSetNavTimeUtcG(pst_data);
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+            /* ++ PastModel002 support DR */
+            VehicleSensDeliveryProcDR(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+            /* -- PastModel002 support DR */
+            break;
+            // LCOV_EXCL_STOP
+        }
+        case VEHICLE_DID_GPS_UBLOX_NAV_TIMEGPS:
+        {
+            // LCOV_EXCL_START 8 : dead code
+            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+#if (GPS_DEBUG == 1)  /* PastModel002_DR_VEHICLE  */
+            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
+                "VehicleSens_SetDataMaster VEHICLE_DID_GPS_UBLOX_NAV_TIMEGPS \r\n");
+#endif
+            uc_chg_type = VehicleSensSetNavTimeGpsG(pst_data);
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+            break;
+            // LCOV_EXCL_STOP
+        }
+        case VEHICLE_DID_GPS_UBLOX_NAV_SVINFO:
+        {
+            // LCOV_EXCL_START 8 : dead code
+            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+#if (GPS_DEBUG == 1)  /* PastModel002_DR_VEHICLE  */
+            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
+                "VehicleSens_SetDataMaster VEHICLE_DID_GPS_UBLOX_NAV_SVINFO \r\n");
+#endif
+            uc_chg_type = VehicleSensSetNavSvInfoG(pst_data);
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+            /* ++ PastModel002 support DR */
+            VehicleSensDeliveryProcDR(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+            /* -- PastModel002 support DR */
+            break;
+            // LCOV_EXCL_STOP
+        }
+        case VEHICLE_DID_GPS_UBLOX_NAV_STATUS:
+        {
+            // LCOV_EXCL_START 8 : dead code
+            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+#if (GPS_DEBUG == 1)  /* PastModel002_DR_VEHICLE  */
+            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
+                "VehicleSens_SetDataMaster VEHICLE_DID_GPS_UBLOX_NAV_STATUS \r\n");
+#endif
+            uc_chg_type = VehicleSensSetNavStatusG(pst_data);
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+            /* ++ PastModel002 support DR */
+            VehicleSensDeliveryProcDR(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+            /* -- PastModel002 support DR */
+            break;
+            // LCOV_EXCL_STOP
+        }
+        case VEHICLE_DID_GPS_UBLOX_NAV_POSLLH:
+        {
+            // LCOV_EXCL_START 8 : dead code
+            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+#if (GPS_DEBUG == 1)  /* PastModel002_DR_VEHICLE  */
+            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
+                "VehicleSens_SetDataMaster VEHICLE_DID_GPS_UBLOX_NAV_POSLLH \r\n");
+#endif
+            uc_chg_type = VehicleSensSetNavPosllhG(pst_data);
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+            /* ++ PastModel002 support DR */
+            VehicleSensDeliveryProcDR(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+            /* -- PastModel002 support DR */
+            break;
+            // LCOV_EXCL_STOP
+        }
+        case VEHICLE_DID_GPS_UBLOX_NAV_CLOCK:
+        {
+            // LCOV_EXCL_START 8 : dead code
+            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+#if (GPS_DEBUG == 1)  /* PastModel002_DR_VEHICLE  */
+            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
+                "VehicleSens_SetDataMaster VEHICLE_DID_GPS_UBLOX_NAV_CLOCK \r\n");
+#endif
+            uc_chg_type = VehicleSensSetNavClockG(pst_data);
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+            /* ++ PastModel002 support DR */
+            VehicleSensDeliveryProcDR(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+            /* -- PastModel002 support DR */
+            break;
+            // LCOV_EXCL_STOP
+        }
+        case VEHICLE_DID_GPS_UBLOX_NAV_DOP:
+        {
+            // LCOV_EXCL_START 8 : dead code
+            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+#if (GPS_DEBUG == 1)  /* PastModel002_DR_VEHICLE  */
+            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
+                "VehicleSens_SetDataMaster VEHICLE_DID_GPS_UBLOX_NAV_DOP \r\n");
+#endif
+            uc_chg_type = VehicleSensSetNavDopG(pst_data);
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+            /* ++ PastModel002 support DR */
+            VehicleSensDeliveryProcDR(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+            /* -- PastModel002 support DR */
+            break;
+            // LCOV_EXCL_STOP
+        }
+        case VEHICLE_DID_GPS_UBLOX_MON_HW:
+        {
+            // LCOV_EXCL_START 8 : dead code
+            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+#if (GPS_DEBUG == 1)  /* PastModel002_DR_VEHICLE  */
+            FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "VehicleSens_SetDataMaster VEHICLE_DID_GPS_UBLOX_MON_HW \r\n");
+#endif
+            uc_chg_type = VehicleSensSetMonHwG(pst_data);
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+            break;
+            // LCOV_EXCL_STOP
+        }
+        case VEHICLE_DID_GPS_COUNTER:
+        {
+            // LCOV_EXCL_START 8 : dead code
+            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+            uc_chg_type = VehicleSensSetGpsCounterg(pst_data);
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+            break;
+            // LCOV_EXCL_STOP
+        }
+        /* GPS raw data(_CWORD82_ NMEA) */
+        case VEHICLE_DID_GPS__CWORD82__NMEA:
+        {
+            /* NMEA data */
+            FRAMEWORKUNIFIEDLOG(ZONE_27, __FUNCTION__, 
+                "VehicleSens_GpsDataDelivery VEHICLE_DID_GPS__CWORD82__NMEA -->");
+
+            /* Insert Antenna Connection Status and Sensor Counter */
+            pst_data->uc_data[1] = antennaState; /* Insert Antennas into 2byte Eyes */
+            /* Place counters at 3byte */
+            pst_data->uc_data[2] = static_cast<u_int8>(sensCount - (u_int8)(((GPS_NMEA_SZ * 10) / 1200) + 1));
+
+            uc_chg_type = VehicleSensSetGps_CWORD82_NmeaG(pst_data);  /* Ignore->MISRA-C++:2008 Rule 5-2-5 */
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+            FRAMEWORKUNIFIEDLOG(ZONE_27, __FUNCTION__, 
+                "VehicleSens_GpsDataDelivery VEHICLE_DID_GPS__CWORD82__NMEA <--");
+            break;
+        }
+        /* GPS raw data(FullBinary) */
+        case POSHAL_DID_GPS__CWORD82__FULLBINARY:
+        {
+            /* FullBin data */
+            FRAMEWORKUNIFIEDLOG(ZONE_27, __FUNCTION__, 
+                "VehicleSens_GpsDataDelivery POSHAL_DID_GPS__CWORD82__FULLBINARY -->");
+
+            /* Insert Antenna Connection Status and Sensor Counter */
+            pst_data->uc_data[0] = antennaState; /* Insert Antennas into 1byte Eyes */
+            /* Place counters at 2byte */
+            pst_data->uc_data[1] = static_cast<u_int8>(sensCount - (u_int8)(((GPS_CMD_FULLBIN_SZ * 10) / 1200) + 1));
+
+            uc_chg_type = VehicleSensSetGps_CWORD82_FullBinaryG(pst_data);
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+            FRAMEWORKUNIFIEDLOG(ZONE_27, __FUNCTION__, 
+                "VehicleSens_GpsDataDelivery POSHAL_DID_GPS__CWORD82__FULLBINARY <--");
+            break;
+        }
+        /* GPS raw data(Specific information) */
+        case POSHAL_DID_GPS__CWORD82___CWORD44_GP4:
+        {
+            /* GPS-specific information */
+            uc_chg_type = VehicleSensSetGps_CWORD82__CWORD44_Gp4G(pst_data);  /* Ignore->MISRA-C++:2008 Rule 5-2-5 */
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+            break;
+        }
+        case POSHAL_DID_GPS_CUSTOMDATA:
+        {
+            pstCustomData = reinterpret_cast<MDEV_GPS_CUSTOMDATA*>(pst_data->uc_data);
+            /* Latitude/LongitudeInformation */
+            (void)memcpy(&lstLonLat, &(pstCustomData->st_lonlat), sizeof(SENSORLOCATION_LONLATINFO_DAT));
+            lstLonLat.SyncCnt = VehicleSensGetSensorCnt(); /* Synchronization counter setting */
+            uc_chg_type = VehicleSensSetLocationLonLatG(&lstLonLat);
+            (*p_data_master_set_n)(VEHICLE_DID_LOCATION_LONLAT, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+
+            /* Altitude information */
+            (void)memcpy(&lstAltitude, &(pstCustomData->st_altitude), sizeof(SENSORLOCATION_ALTITUDEINFO_DAT));
+            lstAltitude.SyncCnt = VehicleSensGetSensorCnt(); /* Synchronization counter setting */
+            uc_chg_type = VehicleSensSetLocationAltitudeG(&lstAltitude);
+            (*p_data_master_set_n)(VEHICLE_DID_LOCATION_ALTITUDE, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+
+            /* Bearing information */
+            (void)memcpy(&lstHeading, &(pstCustomData->st_heading), sizeof(SENSORMOTION_HEADINGINFO_DAT));
+            lstHeading.SyncCnt = VehicleSensGetSensorCnt(); /* Synchronization counter setting */
+            uc_chg_type = VehicleSensSetMotionHeadingG(&lstHeading);
+            (*p_data_master_set_n)(VEHICLE_DID_MOTION_HEADING, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+
+            /* GPS time information */
+            uc_chg_type = VehicleSensSetGpsTimeG(&(pstCustomData->st_gps_time));
+            (*p_data_master_set_n)(POSHAL_DID_GPS_TIME, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+
+            /* Set GPS time to CLOCK */
+            eStatus = ClockIfDtimeSetGpsTime(&(pstCustomData->st_gps_time), &bIsAvailable);
+            if ((bIsAvailable == TRUE) && (eStatus != eFrameworkunifiedStatusOK)) {
+                ucResult = SENSLOG_RES_FAIL;
+                FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
+                    "ClockIfDtimeSetGpsTime ERROR!! [ret=%d, y=%d, m=%d, d=%d, h=%d, n=%d, s=%d, sts=%d]",
+                    eStatus, pstCustomData->st_gps_time.utc.year, pstCustomData->st_gps_time.utc.month,
+                    pstCustomData->st_gps_time.utc.date,
+                    pstCustomData->st_gps_time.utc.hour, pstCustomData->st_gps_time.utc.minute,
+                    pstCustomData->st_gps_time.utc.second, pstCustomData->st_gps_time.tdsts);
+            }
+            us_pno = _pb_CnvName2Pno(SENSLOG_PNAME_CLOCK);
+            SensLogWriteOutputData(SENSLOG_DATA_O_TIME_CS, 0, us_pno,
+                            reinterpret_cast<uint8_t *>(&(pstCustomData->st_gps_time)),
+                            sizeof(pstCustomData->st_gps_time), ucResult);
+
+            /* Diag Info */
+            uc_chg_type = VehicleSensSetNaviinfoDiagGPSg(&(pstCustomData->st_diag_gps));
+            (*p_data_master_set_n)(VEHICLE_DID_NAVIINFO_DIAG_GPS, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+            break;
+        }
+        /* GPS raw data(NMEA except _CWORD82_) */
+        case POSHAL_DID_GPS_NMEA:
+        {
+            /* NMEA data */
+            uc_chg_type = VehicleSensSetGpsNmeaG(pst_data);
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+            break;
+        }
+        /* GPS version(except _CWORD82_) */
+        case POSHAL_DID_GPS_VERSION:
+        {
+            VehicleSensSetGpsVersion(pst_data);
+            break;
+        }
+        /* Raw GPS time data */
+        case POSHAL_DID_GPS_TIME_RAW:
+        {
+            (void)VehicleSensSetGpsTimeRawG(reinterpret_cast<SENSOR_GPSTIME_RAW*>(pst_data->uc_data));
+            break;
+        }
+        case POSHAL_DID_GPS_TIME:
+        {
+            uc_chg_type = VehicleSensSetGpsTimeG(reinterpret_cast<SENSOR_MSG_GPSTIME*>(pst_data->uc_data));
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+            break;
+        }
+        case POSHAL_DID_GPS_WKNROLLOVER:
+        {
+            (void)VehicleSensSetWknRolloverG(reinterpret_cast<SENSOR_WKNROLLOVER*>(pst_data->uc_data));
+            break;
+        }
+        /* GPS clock drift */
+        case POSHAL_DID_GPS_CLOCK_DRIFT:
+        {
+            uc_chg_type = VehicleSensSetGpsClockDriftG(reinterpret_cast<int32_t*>(pst_data->uc_data));
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+            break;
+        }
+        /* GPS clock frequency */
+        case POSHAL_DID_GPS_CLOCK_FREQ:
+        {
+            uc_chg_type = VehicleSensSetGpsClockFreqG(reinterpret_cast<uint32_t*>(pst_data->uc_data));
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+            break;
+        }
+
+        default:
+            break;
+    }
+}
 
 /*******************************************************************************
  * MODULE    : VehicleSensSetDataMasterData
@@ -873,142 +992,134 @@ void  VehicleSensInitDataMaster(void) {
  * NOTE      :
  * RETURN    : void
  ******************************************************************************/
-//void  VehicleSensSetDataMasterData(const POS_MSGINFO *pstMsg,
-//                                        PFUNC_DMASTER_SET_N p_data_master_set_n) {
-//    u_int8              uc_chg_type = 0;
-//    const POS_POSDATA        *pstPosData = NULL;
-//    const u_int16          *pucSpeed = 0;
-//    SENSORLOCATION_LONLATINFO_DAT  stLonLat;
-//    SENSORLOCATION_ALTITUDEINFO_DAT  stAltitude;
-//    SENSORMOTION_SPEEDINFO_DAT    stSpeed;
-//    SENSORMOTION_HEADINGINFO_DAT  stHeading;
-//    const SENSOR_MSG_GPSTIME    *pstGpsTime;
-//
-////    RET_API   ret;
-//
-////    char* pEnvPositioning_CWORD86_ = NULL;
-////    BOOL sndFlg;
-//
-//
-//    EFrameworkunifiedStatus eStatus = eFrameworkunifiedStatusFail;
-//    BOOL bIsAvailable;
-//    u_int8 ucResult = SENSLOG_RES_SUCCESS;
-//    PNO us_pno;
-//
-//    /*------------------------------------------------------*/
-//    /*  Call the data set processing associated with the DID      */
-//    /*  Call the data master set notification process      */
-//    /*------------------------------------------------------*/
-//    switch (pstMsg->did) {
-//        case POSHAL_DID_GPS_CUSTOMDATA_NAVI:
-//        {
-//            pstPosData = (const POS_POSDATA *) & (pstMsg->data);
-//
-//            /* Latitude/LongitudeInformation */
-//            if (((pstPosData->status & POS_LOC_INFO_LAT) == POS_LOC_INFO_LAT) ||
-//                    ((pstPosData->status & POS_LOC_INFO_LON) == POS_LOC_INFO_LON)) {
-//                memset(&stLonLat, 0x00, sizeof(stLonLat));
-//                stLonLat.getMethod = SENSOR_GET_METHOD_NAVI;
-//                stLonLat.SyncCnt   = VehicleSensGetSensorCnt();
-//                stLonLat.isEnable  = SENSORLOCATION_STATUS_ENABLE;
-//                stLonLat.isExistDR = 0x00;
-//                stLonLat.DRStatus  = SENSORLOCATION_DRSTATUS_INVALID;
-//                stLonLat.posSts    = pstPosData->posSts;
-//                stLonLat.posAcc    = pstPosData->posAcc;
-//                stLonLat.Longitude = pstPosData->longitude;
-//                stLonLat.Latitude  = pstPosData->latitude;
-//                uc_chg_type = VehicleSensSetLocationLonLatN((const SENSORLOCATION_LONLATINFO_DAT *)&stLonLat);
-//                (*p_data_master_set_n)(VEHICLE_DID_LOCATION_LONLAT_NAVI, uc_chg_type, VEHICLESENS_GETMETHOD_NAVI);
-//            }
-//
-//            /* Altitude information */
-//            if ((pstPosData->status & POS_LOC_INFO_ALT) == POS_LOC_INFO_ALT) {
-//                memset(&stAltitude, 0x00, sizeof(stAltitude));
-//                stAltitude.getMethod = SENSOR_GET_METHOD_NAVI;
-//                stAltitude.SyncCnt   = VehicleSensGetSensorCnt();
-//                stAltitude.isEnable  = SENSORLOCATION_STATUS_ENABLE;
-//                stAltitude.isExistDR = 0x00;
-//                stAltitude.DRStatus  = SENSORLOCATION_DRSTATUS_INVALID;
-//                stAltitude.Altitude  = pstPosData->altitude;
-//                uc_chg_type = VehicleSensSetLocationAltitudeN((const SENSORLOCATION_ALTITUDEINFO_DAT *)&stAltitude);
-//                (*p_data_master_set_n)(VEHICLE_DID_LOCATION_ALTITUDE_NAVI, uc_chg_type, VEHICLESENS_GETMETHOD_NAVI);
-//            }
-//
-//            /* Bearing information */
-//            if ((pstPosData->status & POS_LOC_INFO_HEAD) == POS_LOC_INFO_HEAD) {
-//                memset(&stHeading, 0x00, sizeof(stHeading));
-//                stHeading.getMethod = SENSOR_GET_METHOD_NAVI;
-//                stHeading.SyncCnt   = VehicleSensGetSensorCnt();
-//                stHeading.isEnable  = SENSORMOTION_STATUS_ENABLE;
-//                stHeading.isExistDR = 0x00;
-//                stHeading.DRStatus  = SENSORMOTION_DRSTATUS_INVALID;
-//                stHeading.posSts    = pstPosData->posSts;
-//                stHeading.Heading   = pstPosData->heading;
-//                uc_chg_type = VehicleSensSetMotionHeadingN((const SENSORMOTION_HEADINGINFO_DAT *)&stHeading);
-//                (*p_data_master_set_n)(VEHICLE_DID_MOTION_HEADING_NAVI, uc_chg_type, VEHICLESENS_GETMETHOD_NAVI);
-//            }
-//
-//            ( *p_data_master_set_n )( POSHAL_DID_GPS_CUSTOMDATA_NAVI, VEHICLESENS_NEQ, VEHICLESENS_GETMETHOD_NAVI );
-//
-//            break;
-//        }
-//        case VEHICLE_DID_MOTION_SPEED_NAVI:
-//        {
-//            pucSpeed = (const u_int16 *) & (pstMsg->data);
-//
-//            /* Vehicle speed information */
-//            memset(&stSpeed, 0x00, sizeof(stSpeed));
-//            stSpeed.getMethod = SENSOR_GET_METHOD_NAVI;
-//            stSpeed.SyncCnt   = VehicleSensGetSensorCnt();
-//            stSpeed.isEnable  = SENSORMOTION_STATUS_ENABLE;
-//            stSpeed.isExistDR = 0x00;
-//            stSpeed.DRStatus  = SENSORMOTION_DRSTATUS_INVALID;
-//            stSpeed.Speed     = *pucSpeed;
-//            uc_chg_type = VehicleSensSetMotionSpeedN((const SENSORMOTION_SPEEDINFO_DAT *)&stSpeed);
-//            (*p_data_master_set_n)(VEHICLE_DID_MOTION_SPEED_NAVI, uc_chg_type, VEHICLESENS_GETMETHOD_NAVI);
-//            break;
-//        }
-//        case POSHAL_DID_GPS_TIME:
-//        {
-//            pstGpsTime = (const SENSOR_MSG_GPSTIME*)(pstMsg->data);
-//            uc_chg_type = VehicleSensSetGpsTimeG((const SENSOR_MSG_GPSTIME *)pstGpsTime);
-//            (*p_data_master_set_n)(POSHAL_DID_GPS_TIME, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
-//
-//            /* Set GPS time to CLOCK */
-//            eStatus = ClockIfDtimeSetGpsTime(pstGpsTime, &bIsAvailable);
-//            if ((bIsAvailable == TRUE) && (eStatus != eFrameworkunifiedStatusOK)) {
-//                ucResult = SENSLOG_RES_FAIL;
-//                FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, 
-//                            "ClockIfDtimeSetGpsTime ERROR!! [ret=%d, y=%d, m=%d, d=%d, h=%d, n=%d, s=%d, sts=%d]",
-//                            eStatus, pstGpsTime->utc.year, pstGpsTime->utc.month, pstGpsTime->utc.date,
-//                            pstGpsTime->utc.hour, pstGpsTime->utc.minute, pstGpsTime->utc.second, pstGpsTime->tdsts);
-//            }
-//            us_pno = _pb_CnvName2Pno(SENSLOG_PNAME_CLOCK);
-//            SensLogWriteOutputData(SENSLOG_DATA_O_TIME_CS, 0, us_pno,
-//                                (uint8_t *)(pstGpsTime),  // NOLINT(readability/casting)
-//                                    sizeof(SENSOR_MSG_GPSTIME), ucResult);
-//            break;
-//        }
-//        case VEHICLE_DID_SETTINGTIME:
-//        {
-//            /* GPS time information */
-//            uc_chg_type = VehicleSensSetSettingTimeclock((const POS_DATETIME *) & (pstMsg->data));
-//            (*p_data_master_set_n)(VEHICLE_DID_SETTINGTIME, uc_chg_type, VEHICLESENS_GETMETHOD_OTHER);
-//            break;
-//        }
-//
-//        case VEHICLE_DID_LOCATIONINFO_NMEA_NAVI:
-//        {
-//            uc_chg_type = VehicleSens_SetLocationInfoNmea_n((const POS_LOCATIONINFO_NMEA*)&(pstMsg->data));
-//            (*p_data_master_set_n)(VEHICLE_DID_LOCATIONINFO_NMEA_NAVI, uc_chg_type, VEHICLESENS_GETMETHOD_NAVI );
-//            break;
-//        }
-//
-//        default:
-//            break;
-//    }
-//    return;
-//}
+void  VehicleSensSetDataMasterData(const POS_MSGINFO *pstMsg,
+                                        PFUNC_DMASTER_SET_N p_data_master_set_n) {
+    u_int8              uc_chg_type = 0;
+    const POS_POSDATA        *pstPosData = NULL;
+    const u_int16          *pucSpeed = 0;
+    SENSORLOCATION_LONLATINFO_DAT  stLonLat;
+    SENSORLOCATION_ALTITUDEINFO_DAT  stAltitude;
+    SENSORMOTION_SPEEDINFO_DAT    stSpeed;
+    SENSORMOTION_HEADINGINFO_DAT  stHeading;
+    const SENSOR_MSG_GPSTIME    *pstGpsTime;
+
+//    RET_API   ret;
+
+//    char* pEnvPositioning_CWORD86_ = NULL;
+//    BOOL sndFlg;
+
+
+    EFrameworkunifiedStatus eStatus = eFrameworkunifiedStatusFail;
+    BOOL bIsAvailable;
+    u_int8 ucResult = SENSLOG_RES_SUCCESS;
+    PNO us_pno;
+
+    /*------------------------------------------------------*/
+    /*  Call the data set processing associated with the DID      */
+    /*  Call the data master set notification process      */
+    /*------------------------------------------------------*/
+    switch (pstMsg->did) {
+        case POSHAL_DID_GPS_CUSTOMDATA_NAVI:
+        {
+            pstPosData = (const POS_POSDATA *) & (pstMsg->data);
+
+            /* Latitude/LongitudeInformation */
+            if (((pstPosData->status & POS_LOC_INFO_LAT) == POS_LOC_INFO_LAT) ||
+                    ((pstPosData->status & POS_LOC_INFO_LON) == POS_LOC_INFO_LON)) {
+                memset(&stLonLat, 0x00, sizeof(stLonLat));
+                stLonLat.getMethod = SENSOR_GET_METHOD_NAVI;
+                stLonLat.SyncCnt   = VehicleSensGetSensorCnt();
+                stLonLat.isEnable  = SENSORLOCATION_STATUS_ENABLE;
+                stLonLat.posSts    = pstPosData->posSts;
+                stLonLat.posAcc    = pstPosData->posAcc;
+                stLonLat.Longitude = pstPosData->longitude;
+                stLonLat.Latitude  = pstPosData->latitude;
+                uc_chg_type = VehicleSensSetLocationLonLatN((const SENSORLOCATION_LONLATINFO_DAT *)&stLonLat);
+                (*p_data_master_set_n)(VEHICLE_DID_LOCATION_LONLAT_NAVI, uc_chg_type, VEHICLESENS_GETMETHOD_NAVI);
+            }
+
+            /* Altitude information */
+            if ((pstPosData->status & POS_LOC_INFO_ALT) == POS_LOC_INFO_ALT) {
+                memset(&stAltitude, 0x00, sizeof(stAltitude));
+                stAltitude.getMethod = SENSOR_GET_METHOD_NAVI;
+                stAltitude.SyncCnt   = VehicleSensGetSensorCnt();
+                stAltitude.isEnable  = SENSORLOCATION_STATUS_ENABLE;
+                stAltitude.Altitude  = pstPosData->altitude;
+                uc_chg_type = VehicleSensSetLocationAltitudeN((const SENSORLOCATION_ALTITUDEINFO_DAT *)&stAltitude);
+                (*p_data_master_set_n)(VEHICLE_DID_LOCATION_ALTITUDE_NAVI, uc_chg_type, VEHICLESENS_GETMETHOD_NAVI);
+            }
+
+            /* Bearing information */
+            if ((pstPosData->status & POS_LOC_INFO_HEAD) == POS_LOC_INFO_HEAD) {
+                memset(&stHeading, 0x00, sizeof(stHeading));
+                stHeading.getMethod = SENSOR_GET_METHOD_NAVI;
+                stHeading.SyncCnt   = VehicleSensGetSensorCnt();
+                stHeading.isEnable  = SENSORMOTION_STATUS_ENABLE;
+                stHeading.posSts    = pstPosData->posSts;
+                stHeading.Heading   = pstPosData->heading;
+                uc_chg_type = VehicleSensSetMotionHeadingN((const SENSORMOTION_HEADINGINFO_DAT *)&stHeading);
+                (*p_data_master_set_n)(VEHICLE_DID_MOTION_HEADING_NAVI, uc_chg_type, VEHICLESENS_GETMETHOD_NAVI);
+            }
+
+            ( *p_data_master_set_n )( POSHAL_DID_GPS_CUSTOMDATA_NAVI, VEHICLESENS_NEQ, VEHICLESENS_GETMETHOD_NAVI );
+
+            break;
+        }
+        case VEHICLE_DID_MOTION_SPEED_NAVI:
+        {
+            pucSpeed = (const u_int16 *) & (pstMsg->data);
+
+            /* Vehicle speed information */
+            memset(&stSpeed, 0x00, sizeof(stSpeed));
+            stSpeed.getMethod = SENSOR_GET_METHOD_NAVI;
+            stSpeed.SyncCnt   = VehicleSensGetSensorCnt();
+            stSpeed.isEnable  = SENSORMOTION_STATUS_ENABLE;
+            stSpeed.Speed     = *pucSpeed;
+            uc_chg_type = VehicleSensSetMotionSpeedN((const SENSORMOTION_SPEEDINFO_DAT *)&stSpeed);
+            (*p_data_master_set_n)(VEHICLE_DID_MOTION_SPEED_NAVI, uc_chg_type, VEHICLESENS_GETMETHOD_NAVI);
+            break;
+        }
+        case POSHAL_DID_GPS_TIME:
+        {
+            pstGpsTime = (const SENSOR_MSG_GPSTIME*)(pstMsg->data);
+            uc_chg_type = VehicleSensSetGpsTimeG((const SENSOR_MSG_GPSTIME *)pstGpsTime);
+            (*p_data_master_set_n)(POSHAL_DID_GPS_TIME, uc_chg_type, VEHICLESENS_GETMETHOD_GPS);
+
+            /* Set GPS time to CLOCK */
+            eStatus = ClockIfDtimeSetGpsTime(pstGpsTime, &bIsAvailable);
+            if ((bIsAvailable == TRUE) && (eStatus != eFrameworkunifiedStatusOK)) {
+                ucResult = SENSLOG_RES_FAIL;
+                FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, 
+                            "ClockIfDtimeSetGpsTime ERROR!! [ret=%d, y=%d, m=%d, d=%d, h=%d, n=%d, s=%d, sts=%d]",
+                            eStatus, pstGpsTime->utc.year, pstGpsTime->utc.month, pstGpsTime->utc.date,
+                            pstGpsTime->utc.hour, pstGpsTime->utc.minute, pstGpsTime->utc.second, pstGpsTime->tdsts);
+            }
+            us_pno = _pb_CnvName2Pno(SENSLOG_PNAME_CLOCK);
+            SensLogWriteOutputData(SENSLOG_DATA_O_TIME_CS, 0, us_pno,
+                                (uint8_t *)(pstGpsTime),  // NOLINT(readability/casting)
+                                    sizeof(SENSOR_MSG_GPSTIME), ucResult);
+            break;
+        }
+        case VEHICLE_DID_SETTINGTIME:
+        {
+            /* GPS time information */
+            uc_chg_type = VehicleSensSetSettingTimeclock((const POS_DATETIME *) & (pstMsg->data));
+            (*p_data_master_set_n)(VEHICLE_DID_SETTINGTIME, uc_chg_type, VEHICLESENS_GETMETHOD_OTHER);
+            break;
+        }
+
+        case VEHICLE_DID_LOCATIONINFO_NMEA_NAVI:
+        {
+            uc_chg_type = VehicleSens_SetLocationInfoNmea_n((const POS_LOCATIONINFO_NMEA*)&(pstMsg->data));
+            (*p_data_master_set_n)(VEHICLE_DID_LOCATIONINFO_NMEA_NAVI, uc_chg_type, VEHICLESENS_GETMETHOD_NAVI );
+            break;
+        }
+
+        default:
+            break;
+    }
+    return;
+}
 
 /*******************************************************************************
 * MODULE    : VehicleSensSetDataMasterGyroTrouble
@@ -1019,21 +1130,21 @@ void  VehicleSensInitDataMaster(void) {
 * NOTE      :
 * RETURN    : void
 ******************************************************************************/
-//void  VehicleSensSetDataMasterGyroTrouble(const LSDRV_MSG_LSDATA_DAT_GYRO_TROUBLE *pst_data, PFUNC_DMASTER_SET_N p_data_master_set_n) {  // LCOV_EXCL_START 8: dead code.  // NOLINT(whitespace/line_length)
-//    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//    u_int8  uc_chg_type;
-//
-//    if ((pst_data != NULL) && (p_data_master_set_n != NULL)) {
-//        if (pst_data->ul_did == VEHICLE_DID_GYRO_TROUBLE) {
-//            uc_chg_type = VehicleSensSetGyroTrouble(pst_data);
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//        } else {
-//            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "UNKNOWN DID(%x) \r\n", pst_data->ul_did);
-//        }
-//    } else {
-//        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "ARGUMENT is NULL\r\n");
-//    }
-//}
+void  VehicleSensSetDataMasterGyroTrouble(const LSDRV_MSG_LSDATA_DAT_GYRO_TROUBLE *pst_data, PFUNC_DMASTER_SET_N p_data_master_set_n) {  // LCOV_EXCL_START 8: dead code.  // NOLINT(whitespace/line_length)
+    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+    u_int8  uc_chg_type;
+
+    if ((pst_data != NULL) && (p_data_master_set_n != NULL)) {
+        if (pst_data->ul_did == VEHICLE_DID_GYRO_TROUBLE) {
+            uc_chg_type = VehicleSensSetGyroTrouble(pst_data);
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+        } else {
+            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "UNKNOWN DID(%x) \r\n", pst_data->ul_did);
+        }
+    } else {
+        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "ARGUMENT is NULL\r\n");
+    }
+}
 // LCOV_EXCL_STOP
 /*******************************************************************************
 * MODULE    : VehicleSensSetDataMasterSysGpsInterruptSignal
@@ -1044,22 +1155,22 @@ void  VehicleSensInitDataMaster(void) {
 * NOTE      :
 * RETURN    : void
 ******************************************************************************/
-//void  VehicleSensSetDataMasterSysGpsInterruptSignal(const LSDRV_MSG_LSDATA_DAT_GPS_INTERRUPT_SIGNAL *pst_data, PFUNC_DMASTER_SET_SHARED_MEMORY p_data_master_set_shared_memory) {  // LCOV_EXCL_START 8: dead code.  // NOLINT(whitespace/line_length)
-//    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//    u_int8  uc_chg_type;
-//    if ((pst_data != NULL) && (p_data_master_set_shared_memory != NULL)) {
-//        if (pst_data->ul_did == VEHICLE_DID_SYS_GPS_INTERRUPT_SIGNAL) {
-//            uc_chg_type = VehicleSensSetSysGpsInterruptSignal(pst_data);
-//            /* As SYS GPS interrupt signals are not registered for delivery,          */
-//            /* Disposal quantity,To avoid risks,DeliveryProc shall not be called.  */
-//            (*p_data_master_set_shared_memory)(pst_data->ul_did, uc_chg_type);
-//        } else {
-//            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "UNKNOWN DID(%x) \r\n", pst_data->ul_did);
-//        }
-//    } else {
-//        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "ARGUMENT is NULL\r\n");
-//    }
-//}
+void  VehicleSensSetDataMasterSysGpsInterruptSignal(const LSDRV_MSG_LSDATA_DAT_GPS_INTERRUPT_SIGNAL *pst_data, PFUNC_DMASTER_SET_SHARED_MEMORY p_data_master_set_shared_memory) {  // LCOV_EXCL_START 8: dead code.  // NOLINT(whitespace/line_length)
+    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+    u_int8  uc_chg_type;
+    if ((pst_data != NULL) && (p_data_master_set_shared_memory != NULL)) {
+        if (pst_data->ul_did == VEHICLE_DID_SYS_GPS_INTERRUPT_SIGNAL) {
+            uc_chg_type = VehicleSensSetSysGpsInterruptSignal(pst_data);
+            /* As SYS GPS interrupt signals are not registered for delivery,          */
+            /* Disposal quantity,To avoid risks,DeliveryProc shall not be called.  */
+            (*p_data_master_set_shared_memory)(pst_data->ul_did, uc_chg_type);
+        } else {
+            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "UNKNOWN DID(%x) \r\n", pst_data->ul_did);
+        }
+    } else {
+        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "ARGUMENT is NULL\r\n");
+    }
+}
 // LCOV_EXCL_STOP
 
 /*******************************************************************************
@@ -1071,24 +1182,24 @@ void  VehicleSensInitDataMaster(void) {
 * NOTE      :
 * RETURN    : void
 ******************************************************************************/
-//void  VehicleSensSetDataMasterMainGpsInterruptSignal(const SENSOR_MSG_GPSDATA_DAT *pst_data, PFUNC_DMASTER_SET_SHARED_MEMORY p_data_master_set_shared_memory) {  // LCOV_EXCL_START 8: dead code.  // NOLINT(whitespace/line_length)
-//    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//    u_int8  uc_chg_type;
-//
-//    if ((pst_data != NULL) &&
-//            (p_data_master_set_shared_memory != NULL)) {
-//        if (pst_data->ul_did == VEHICLE_DID_MAIN_GPS_INTERRUPT_SIGNAL) {
-//            uc_chg_type = VehicleSensSetMainGpsInterruptSignal(pst_data);
-//            /* As MAIN GPS interrupt signals are not registered for delivery,          */
-//            /* Disposal quantity,To avoid risks,DeliveryProc shall not be called.  */
-//            (*p_data_master_set_shared_memory)(pst_data->ul_did, uc_chg_type);
-//        } else {
-//            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "UNKNOWN DID(%x) \r\n", pst_data->ul_did);
-//        }
-//    } else {
-//        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "ARGUMENT is NULL\r\n");
-//    }
-//}
+void  VehicleSensSetDataMasterMainGpsInterruptSignal(const SENSOR_MSG_GPSDATA_DAT *pst_data, PFUNC_DMASTER_SET_SHARED_MEMORY p_data_master_set_shared_memory) {  // LCOV_EXCL_START 8: dead code.  // NOLINT(whitespace/line_length)
+    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+    u_int8  uc_chg_type;
+
+    if ((pst_data != NULL) &&
+            (p_data_master_set_shared_memory != NULL)) {
+        if (pst_data->ul_did == VEHICLE_DID_MAIN_GPS_INTERRUPT_SIGNAL) {
+            uc_chg_type = VehicleSensSetMainGpsInterruptSignal(pst_data);
+            /* As MAIN GPS interrupt signals are not registered for delivery,          */
+            /* Disposal quantity,To avoid risks,DeliveryProc shall not be called.  */
+            (*p_data_master_set_shared_memory)(pst_data->ul_did, uc_chg_type);
+        } else {
+            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "UNKNOWN DID(%x) \r\n", pst_data->ul_did);
+        }
+    } else {
+        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "ARGUMENT is NULL\r\n");
+    }
+}
 // LCOV_EXCL_STOP
 
 /*******************************************************************************
@@ -1100,24 +1211,24 @@ void  VehicleSensInitDataMaster(void) {
 * NOTE      :
 * RETURN    : void
 ******************************************************************************/
-//void  VehicleSensSetDataMasterGyroConnectStatus(const LSDRV_MSG_LSDATA_DAT_GYRO_CONNECT_STATUS *pst_data, PFUNC_DMASTER_SET_SHARED_MEMORY p_data_master_set_shared_memory) {  // LCOV_EXCL_START 8: dead code.  // NOLINT(whitespace/line_length)
-//    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//    u_int8  uc_chg_type;
-//
-//    if ((pst_data != NULL) &&
-//            (p_data_master_set_shared_memory != NULL)) {
-//        if (pst_data->ul_did == VEHICLE_DID_GYRO_CONNECT_STATUS) {
-//            uc_chg_type = VehicleSensSetGyroConnectStatus(pst_data);
-//            /* As MAIN GPS interrupt signals are not registered for delivery,          */
-//            /* Disposal quantity,To avoid risks,DeliveryProc shall not be called.  */
-//            (*p_data_master_set_shared_memory)(pst_data->ul_did, uc_chg_type);
-//        } else {
-//            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "UNKNOWN DID(%x) \r\n", pst_data->ul_did);
-//        }
-//    } else {
-//        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "ARGUMENT is NULL\r\n");
-//    }
-//}
+void  VehicleSensSetDataMasterGyroConnectStatus(const LSDRV_MSG_LSDATA_DAT_GYRO_CONNECT_STATUS *pst_data, PFUNC_DMASTER_SET_SHARED_MEMORY p_data_master_set_shared_memory) {  // LCOV_EXCL_START 8: dead code.  // NOLINT(whitespace/line_length)
+    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+    u_int8  uc_chg_type;
+
+    if ((pst_data != NULL) &&
+            (p_data_master_set_shared_memory != NULL)) {
+        if (pst_data->ul_did == VEHICLE_DID_GYRO_CONNECT_STATUS) {
+            uc_chg_type = VehicleSensSetGyroConnectStatus(pst_data);
+            /* As MAIN GPS interrupt signals are not registered for delivery,          */
+            /* Disposal quantity,To avoid risks,DeliveryProc shall not be called.  */
+            (*p_data_master_set_shared_memory)(pst_data->ul_did, uc_chg_type);
+        } else {
+            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "UNKNOWN DID(%x) \r\n", pst_data->ul_did);
+        }
+    } else {
+        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "ARGUMENT is NULL\r\n");
+    }
+}
 // LCOV_EXCL_STOP
 
 /*******************************************************************************
@@ -1129,21 +1240,21 @@ void  VehicleSensInitDataMaster(void) {
 * NOTE      :
 * RETURN    : void
 ******************************************************************************/
-//void  VehicleSensSetDataMasterGpsAntennaStatus(const LSDRV_MSG_LSDATA_DAT_GPS_ANTENNA_STATUS *pst_data, PFUNC_DMASTER_SET_N p_data_master_set_n) {  // LCOV_EXCL_START 8: dead code.  // NOLINT(whitespace/line_length)
-//    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//    u_int8  uc_chg_type;
-//
-//    if ((pst_data != NULL) && (p_data_master_set_n != NULL)) {
-//        if (pst_data->ul_did == POSHAL_DID_GPS_ANTENNA) {
-//            uc_chg_type = VehicleSensSetGpsAntennaStatus(pst_data);
-//            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
-//        } else {
-//            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "UNKNOWN DID(%x) \r\n", pst_data->ul_did);
-//        }
-//    } else {
-//        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "ARGUMENT is NULL\r\n");
-//    }
-//}
+void  VehicleSensSetDataMasterGpsAntennaStatus(const LSDRV_MSG_LSDATA_DAT_GPS_ANTENNA_STATUS *pst_data, PFUNC_DMASTER_SET_N p_data_master_set_n) {  // LCOV_EXCL_START 8: dead code.  // NOLINT(whitespace/line_length)
+    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+    u_int8  uc_chg_type;
+
+    if ((pst_data != NULL) && (p_data_master_set_n != NULL)) {
+        if (pst_data->ul_did == POSHAL_DID_GPS_ANTENNA) {
+            uc_chg_type = VehicleSensSetGpsAntennaStatus(pst_data);
+            (*p_data_master_set_n)(pst_data->ul_did, uc_chg_type, VEHICLESENS_GETMETHOD_LINE);
+        } else {
+            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "UNKNOWN DID(%x) \r\n", pst_data->ul_did);
+        }
+    } else {
+        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "ARGUMENT is NULL\r\n");
+    }
+}
 // LCOV_EXCL_STOP
 
 /*******************************************************************************
@@ -1161,116 +1272,132 @@ void  VehicleSensInitDataMaster(void) {
 void  VehicleSensGetDataMaster(DID ul_did,
                                     u_int8 uc_get_method,
                                     VEHICLESENS_DATA_MASTER *pst_data) {
-//    /*------------------------------------------------------*/
-//    /*  Call the data Get processing associated with the DID        */
-//    /*------------------------------------------------------*/
-//    switch (ul_did) {  // LCOV_EXCL_BR_LINE 6:some DID is not used
-//            /*------------------------------------------------------*/
-//            /*  Vehicle sensor data group                  */
-//            /*------------------------------------------------------*/
-//        case POSHAL_DID_SPEED_PULSE:
+    /*------------------------------------------------------*/
+    /*  Call the data Get processing associated with the DID        */
+    /*------------------------------------------------------*/
+    switch (ul_did) {  // LCOV_EXCL_BR_LINE 6:some DID is not used
+            /*------------------------------------------------------*/
+            /*  Vehicle sensor data group                  */
+            /*------------------------------------------------------*/
+        case POSHAL_DID_SPEED_PULSE:
+        {
+            VehicleSensGetSpeedPulse(pst_data, uc_get_method);
+            break;
+        }
+//        case POSHAL_DID_GYRO_X:
 //        {
-//            VehicleSensGetSpeedPulse(pst_data, uc_get_method);
+//            VehicleSensGetGyroX(pst_data, uc_get_method);
 //            break;
 //        }
-//        case POSHAL_DID_GYRO:
-//        {
-//            VehicleSensGetGyro(pst_data, uc_get_method);
-//            break;
-//        }
-//        case POSHAL_DID_GYRO_EXT:    /* 3 to 14bit A/D value,0bit:REV */
-//        {
-//            VehicleSensGetGyroRev(pst_data, uc_get_method);
-//            break;
-//        }
-//        case POSHAL_DID_GSNS_X:
-//        {
-//            VehicleSensGetGsnsX(pst_data, uc_get_method);
-//            break;
-//        }
-//        case POSHAL_DID_GSNS_Y:
-//        {
-//            VehicleSensGetGsnsY(pst_data, uc_get_method);
-//            break;
-//        }
-//        case POSHAL_DID_REV:
-//        {
-//            VehicleSensGetRev(pst_data, uc_get_method);
-//            break;
-//        }
-//        case POSHAL_DID_SPEED_PULSE_FLAG:
-//        {
-//            /* Data acquisition not selected */
-//            VehicleSensGetSpeedPulseFlag(pst_data);
-//            break;
-//        }
-//        case POSHAL_DID_GPS_ANTENNA:
-//        {
-//            VehicleSensGetGpsAntenna(pst_data, uc_get_method);
-//            break;
-//        }
-//        case POSHAL_DID_SNS_COUNTER:
-//        {
-//            VehicleSensGetSnsCounter(pst_data, uc_get_method);
-//            break;
-//        }
-//        case POSHAL_DID_GPS_INTERRUPT_FLAG:
-//        {
-//            // LCOV_EXCL_START 8 : dead code
-//            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//            /* Data acquisition not selected */
-//            VehicleSensGetGpsInterruptFlag(pst_data);
-//            break;
-//            // LCOV_EXCL_STOP
-//        }
-//        case POSHAL_DID_SPEED_KMPH:
-//        {
-//            VehicleSensGetSpeedKmph(pst_data, uc_get_method);
-//            break;
-//        }
-//        case POSHAL_DID_GYRO_TEMP:
-//        {
-//            VehicleSensGetGyroTemp(pst_data, uc_get_method);
-//            break;
-//        }
-//        case POSHAL_DID_PULSE_TIME:
-//        {
-//            VehicleSensGetPulseTime(pst_data, uc_get_method);
-//            break;
-//        }
-//        case VEHICLE_DID_LOCATION_LONLAT:
-//        case VEHICLE_DID_LOCATION_LONLAT_NAVI:
-//        {
-//            VehicleSensGetLocationLonLat(pst_data, uc_get_method);
-//            break;
-//        }
-//        case VEHICLE_DID_LOCATION_ALTITUDE:
-//        case VEHICLE_DID_LOCATION_ALTITUDE_NAVI:
-//        {
-//            VehicleSensGetLocationAltitude(pst_data, uc_get_method);
-//            break;
-//        }
-//        case VEHICLE_DID_MOTION_SPEED_NAVI:
-//        case VEHICLE_DID_MOTION_SPEED_INTERNAL:
-//        {
-//            VehicleSensGetMotionSpeed(pst_data, uc_get_method);
-//            break;
-//        }
-//        case VEHICLE_DID_MOTION_HEADING:
-//        case VEHICLE_DID_MOTION_HEADING_NAVI:
-//        {
-//            VehicleSensGetMotionHeading(pst_data, uc_get_method);
-//            break;
-//        }
-//        case VEHICLE_DID_SETTINGTIME:
-//        {
-//            VehicleSensGetSettingTime(pst_data, uc_get_method);
-//            break;
-//        }
-//
-//        default:
-//            break;
-//    }
+        case POSHAL_DID_GYRO_Y:
+        {
+            VehicleSensGetGyroY(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_GYRO_Z:
+        {
+            VehicleSensGetGyroZ(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_GYRO_X:
+        case POSHAL_DID_GYRO_EXT:    /* 3 to 14bit A/D value,0bit:REV */
+        {
+            VehicleSensGetGyroRev(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_GSNS_X:
+        {
+            VehicleSensGetGsnsX(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_GSNS_Y:
+        {
+            VehicleSensGetGsnsY(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_GSNS_Z:
+        {
+            VehicleSensGetGsnsZ(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_REV:
+        {
+            VehicleSensGetRev(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_SPEED_PULSE_FLAG:
+        {
+            /* Data acquisition not selected */
+            VehicleSensGetSpeedPulseFlag(pst_data);
+            break;
+        }
+        case POSHAL_DID_GPS_ANTENNA:
+        {
+            VehicleSensGetGpsAntenna(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_SNS_COUNTER:
+        {
+            VehicleSensGetSnsCounter(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_GPS_INTERRUPT_FLAG:
+        {
+            // LCOV_EXCL_START 8 : dead code
+            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+            /* Data acquisition not selected */
+            VehicleSensGetGpsInterruptFlag(pst_data);
+            break;
+            // LCOV_EXCL_STOP
+        }
+        case POSHAL_DID_SPEED_KMPH:
+        {
+            VehicleSensGetSpeedKmph(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_GYRO_TEMP:
+        {
+            VehicleSensGetGyroTemp(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_PULSE_TIME:
+        {
+            VehicleSensGetPulseTime(pst_data, uc_get_method);
+            break;
+        }
+        case VEHICLE_DID_LOCATION_LONLAT:
+        case VEHICLE_DID_LOCATION_LONLAT_NAVI:
+        {
+            VehicleSensGetLocationLonLat(pst_data, uc_get_method);
+            break;
+        }
+        case VEHICLE_DID_LOCATION_ALTITUDE:
+        case VEHICLE_DID_LOCATION_ALTITUDE_NAVI:
+        {
+            VehicleSensGetLocationAltitude(pst_data, uc_get_method);
+            break;
+        }
+        case VEHICLE_DID_MOTION_SPEED_NAVI:
+        case VEHICLE_DID_MOTION_SPEED_INTERNAL:
+        {
+            VehicleSensGetMotionSpeed(pst_data, uc_get_method);
+            break;
+        }
+        case VEHICLE_DID_MOTION_HEADING:
+        case VEHICLE_DID_MOTION_HEADING_NAVI:
+        {
+            VehicleSensGetMotionHeading(pst_data, uc_get_method);
+            break;
+        }
+        case VEHICLE_DID_SETTINGTIME:
+        {
+            VehicleSensGetSettingTime(pst_data, uc_get_method);
+            break;
+        }
+
+        default:
+            break;
+    }
 }
 
 #if CONFIG_SENSOR_EXT_VALID        /* Initial Sensor Support */
@@ -1294,53 +1421,69 @@ void  VehicleSensGetDataMasterExt(DID ul_did,
     /*------------------------------------------------------*/
     /*  Call the data Get processing associated with the DID        */
     /*------------------------------------------------------*/
-//    switch (ul_did) {
-//            /*------------------------------------------------------*/
-//            /*  Vehicle sensor data group                  */
-//            /*------------------------------------------------------*/
-//        case POSHAL_DID_SPEED_PULSE:
-//        {
-//            VehicleSensGetSpeedPulseExt(pst_data, uc_get_method);
-//            break;
-//        }
-//        case POSHAL_DID_GSNS_X:
-//        {
-//            VehicleSensGetGsnsXExt(pst_data, uc_get_method);
-//            break;
-//        }
-//        case POSHAL_DID_GSNS_Y:
-//        {
-//            VehicleSensGetGsnsYExt(pst_data, uc_get_method);
-//            break;
-//        }
-//        case POSHAL_DID_SNS_COUNTER:
-//        {
-//            VehicleSensGetSnsCounterExt(pst_data, uc_get_method);
-//            break;
-//        }
-//        case POSHAL_DID_GYRO_EXT:    /* 3 to 14bit A/D value,0bit:REV */
-//        {
-//            VehicleSensGetGyroExt(pst_data, uc_get_method);
-//            break;
-//        }
-//        case POSHAL_DID_REV:
-//        {
-//            VehicleSensGetRevExt(pst_data, uc_get_method);
-//            break;
-//        }
-//        case POSHAL_DID_GYRO_TEMP:
-//        {
-//            VehicleSensGetGyroTempExt(pst_data, uc_get_method);
-//            break;
-//        }
-//        case POSHAL_DID_PULSE_TIME:
-//        {
-//            VehicleSensGetPulseTimeExt(pst_data, uc_get_method);
-//            break;
-//        }
-//        default:  /* Ignore->MISRA-C++:2008 Rule 6-3-1, 6-4-1 */
-//            break;
-//    }
+    switch (ul_did) {
+            /*------------------------------------------------------*/
+            /*  Vehicle sensor data group                  */
+            /*------------------------------------------------------*/
+        case POSHAL_DID_SPEED_PULSE:
+        {
+            VehicleSensGetSpeedPulseExt(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_GSNS_X:
+        {
+            VehicleSensGetGsnsXExt(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_GSNS_Y:
+        {
+            VehicleSensGetGsnsYExt(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_GSNS_Z:
+        {
+            VehicleSensGetGsnsZExt(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_SNS_COUNTER:
+        {
+            VehicleSensGetSnsCounterExt(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_GYRO_X:
+        case POSHAL_DID_GYRO_EXT:    /* 3 to 14bit A/D value,0bit:REV */
+        {
+            VehicleSensGetGyroExt(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_GYRO_Y:
+        {
+            VehicleSensGetGyroYExt(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_GYRO_Z:
+        {
+            VehicleSensGetGyroZExt(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_REV:
+        {
+            VehicleSensGetRevExt(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_GYRO_TEMP:
+        {
+            VehicleSensGetGyroTempExt(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_PULSE_TIME:
+        {
+            VehicleSensGetPulseTimeExt(pst_data, uc_get_method);
+            break;
+        }
+        default:  /* Ignore->MISRA-C++:2008 Rule 6-3-1, 6-4-1 */
+            break;
+    }
 }
 
 /*******************************************************************************
@@ -1361,48 +1504,63 @@ void  VehicleSensGetDataMasterFst(DID ul_did,
     /*------------------------------------------------------*/
     /*  Call the data Get processing associated with the DID        */
     /*------------------------------------------------------*/
-//    switch (ul_did) {
-//            /*------------------------------------------------------*/
-//            /*  Vehicle sensor data group                  */
-//            /*------------------------------------------------------*/
-//        case POSHAL_DID_GYRO_FST:    /* 3 to 14bit A/D value,0bit:REV */
-//        {
-//            VehicleSensGetGyroFst(pst_data, uc_get_method);
-//            break;
-//        }
-//        case POSHAL_DID_SPEED_PULSE_FST:
-//        {
-//            VehicleSensGetSpeedPulseFst(pst_data, uc_get_method);
-//            break;
-//        }
-//        case POSHAL_DID_SPEED_PULSE_FLAG_FST:
-//        {
-//            VehicleSensGetSpeedPulseFlagFst(pst_data, uc_get_method);
-//            break;
-//        }
-//        case POSHAL_DID_REV_FST:
-//        {
-//            VehicleSensGetRevFst(pst_data, uc_get_method);
-//            break;
-//        }
-//        case POSHAL_DID_GYRO_TEMP_FST:
-//        {
-//            VehicleSensGetGyroTempFst(pst_data, uc_get_method);
-//            break;
-//        }
-//        case POSHAL_DID_GSNS_X_FST:
-//        {
-//            VehicleSensGetGsnsXFst(pst_data, uc_get_method);
-//            break;
-//        }
-//        case POSHAL_DID_GSNS_Y_FST:
-//        {
-//            VehicleSensGetGsnsYFst(pst_data, uc_get_method);
-//            break;
-//        }
-//        default:
-//            break;
-//    }
+    switch (ul_did) {
+            /*------------------------------------------------------*/
+            /*  Vehicle sensor data group                  */
+            /*------------------------------------------------------*/
+        case POSHAL_DID_GYRO_X_FST:    /* 3 to 14bit A/D value,0bit:REV */
+        {
+            VehicleSensGetGyroXFst(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_GYRO_Y_FST:    /* 3 to 14bit A/D value,0bit:REV */
+        {
+            VehicleSensGetGyroYFst(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_GYRO_Z_FST:    /* 3 to 14bit A/D value,0bit:REV */
+        {
+            VehicleSensGetGyroZFst(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_SPEED_PULSE_FST:
+        {
+            VehicleSensGetSpeedPulseFst(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_SPEED_PULSE_FLAG_FST:
+        {
+            VehicleSensGetSpeedPulseFlagFst(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_REV_FST:
+        {
+            VehicleSensGetRevFst(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_GYRO_TEMP_FST:
+        {
+            VehicleSensGetGyroTempFst(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_GSNS_X_FST:
+        {
+            VehicleSensGetGsnsXFst(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_GSNS_Y_FST:
+        {
+            VehicleSensGetGsnsYFst(pst_data, uc_get_method);
+            break;
+        }
+        case POSHAL_DID_GSNS_Z_FST:
+        {
+            VehicleSensGetGsnsZFst(pst_data, uc_get_method);
+            break;
+        }
+        default:
+            break;
+    }
 }
 #endif
 
@@ -1417,151 +1575,151 @@ void  VehicleSensGetDataMasterFst(DID ul_did,
 * NOTE      :
 * RETURN    : void
 ******************************************************************************/
-//void  VehicleSensGetGpsDataMaster(DID ul_did,
-//                                        u_int8 uc_get_method,
-//                                        SENSOR_MSG_GPSDATA_DAT *pst_data) {
-//    /*------------------------------------------------------*/
-//    /*  Call the data Get processing associated with the DID        */
-//    /*------------------------------------------------------*/
-//    switch (ul_did) {  // LCOV_EXCL_BR_LINE 6:some DID is not used
-//            /*------------------------------------------------------*/
-//            /*  GPS data group                      */
-//            /*------------------------------------------------------*/
-//
-//        case VEHICLE_DID_GPS_UBLOX_NAV_VELNED:
-//        {
-//            // LCOV_EXCL_START 8 : dead code
-//            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//            VehicleSensGetNavVelnedG(pst_data);
-//            break;
-//            // LCOV_EXCL_STOP
-//        }
-//        case VEHICLE_DID_GPS_UBLOX_NAV_TIMEUTC:
-//        {
-//            // LCOV_EXCL_START 8 : dead code
-//            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//            VehicleSensGetNavTimeUtcG(pst_data);
-//            break;
-//            // LCOV_EXCL_STOP
-//        }
-//        case VEHICLE_DID_GPS_UBLOX_NAV_TIMEGPS:
-//        {
-//            // LCOV_EXCL_START 8 : dead code
-//            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//            VehicleSensGetNavTimeGpsG(pst_data);
-//            break;
-//            // LCOV_EXCL_STOP
-//        }
-//        case VEHICLE_DID_GPS_UBLOX_NAV_SVINFO:
-//        {
-//            // LCOV_EXCL_START 8 : dead code
-//            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//            VehicleSensGetNavSvInfoG(pst_data);
-//            break;
-//            // LCOV_EXCL_STOP
-//        }
-//        case VEHICLE_DID_GPS_UBLOX_NAV_STATUS:
-//        {
-//            // LCOV_EXCL_START 8 : dead code
-//            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//            VehicleSensGetNavStatusG(pst_data);
-//            break;
-//            // LCOV_EXCL_STOP
-//        }
-//        case VEHICLE_DID_GPS_UBLOX_NAV_POSLLH:
-//        {
-//            // LCOV_EXCL_START 8 : dead code
-//            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//            VehicleSensGetNavPosllhG(pst_data);
-//            break;
-//            // LCOV_EXCL_STOP
-//        }
-//        case VEHICLE_DID_GPS_UBLOX_NAV_CLOCK:
-//        {
-//            // LCOV_EXCL_START 8 : dead code
-//            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//            VehicleSensGetNavClockG(pst_data);
-//            break;
-//            // LCOV_EXCL_STOP
-//        }
-//        case VEHICLE_DID_GPS_UBLOX_NAV_DOP:
-//        {
-//            // LCOV_EXCL_START 8 : dead code
-//            AGL_ASSERT_NOT_TESTED();
-//            VehicleSensGetNavDopG(pst_data);
-//            break;
-//            // LCOV_EXCL_STOP
-//        }
-//        case VEHICLE_DID_GPS_UBLOX_MON_HW:
-//        {
-//            // LCOV_EXCL_START 8 : dead code
-//            AGL_ASSERT_NOT_TESTED();
-//            VehicleSensGetMonHwG(pst_data);
-//            break;
-//            // LCOV_EXCL_STOP
-//        }
-//        case VEHICLE_DID_GPS_COUNTER:
-//        {
-//            // LCOV_EXCL_START 8 : dead code
-//            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//            VehicleSensGetGpsCounterg(pst_data);
-//            break;
-//            // LCOV_EXCL_STOP
-//        }
-//        case VEHICLE_DID_GPS__CWORD82__NMEA:
-//        {
-//            VehicleSensGetGps_CWORD82_NmeaG(pst_data);
-//            break;
-//        }
-//        case POSHAL_DID_GPS__CWORD82__FULLBINARY:
-//        {
-//            VehicleSensGetGps_CWORD82_FullBinaryG(pst_data);
-//            break;
-//        }
-//        case POSHAL_DID_GPS__CWORD82___CWORD44_GP4:
-//        {
-//            VehicleSensGetGps_CWORD82__CWORD44_Gp4G(pst_data);
-//            break;
-//        }
-//        case VEHICLE_DID_NAVIINFO_DIAG_GPS:
-//        {
-//            VehicleSensGetNaviinfoDiagGPSg(pst_data);
-//            break;
-//        }
-//        case POSHAL_DID_GPS_TIME:
-//        {
-//            VehicleSensGetGpsTimeG(pst_data);
-//            break;
-//        }
-//      case POSHAL_DID_GPS_TIME_RAW:
-//    {
-//            VehicleSensGetGpsTimeRawG(pst_data);
-//      break;
-//    }
-//        case POSHAL_DID_GPS_NMEA:
-//        {
-//            VehicleSensGetGpsNmeaG(pst_data);
-//            break;
-//        }
-//      case POSHAL_DID_GPS_WKNROLLOVER:
-//    {
-//            VehicleSensGetWknRolloverG(pst_data);
-//            break;
-//    }
-//        case POSHAL_DID_GPS_CLOCK_DRIFT:
-//        {
-//            VehicleSensGetGpsClockDriftG(pst_data);
-//            break;
-//        }
-//        case POSHAL_DID_GPS_CLOCK_FREQ:
-//        {
-//            VehicleSensGetGpsClockFreqG(pst_data);
-//            break;
-//        }
-//        default:
-//            break;
-//    }
-//}
+void  VehicleSensGetGpsDataMaster(DID ul_did,
+                                        u_int8 uc_get_method,
+                                        SENSOR_MSG_GPSDATA_DAT *pst_data) {
+    /*------------------------------------------------------*/
+    /*  Call the data Get processing associated with the DID        */
+    /*------------------------------------------------------*/
+    switch (ul_did) {  // LCOV_EXCL_BR_LINE 6:some DID is not used
+            /*------------------------------------------------------*/
+            /*  GPS data group                      */
+            /*------------------------------------------------------*/
+
+        case VEHICLE_DID_GPS_UBLOX_NAV_VELNED:
+        {
+            // LCOV_EXCL_START 8 : dead code
+            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+            VehicleSensGetNavVelnedG(pst_data);
+            break;
+            // LCOV_EXCL_STOP
+        }
+        case VEHICLE_DID_GPS_UBLOX_NAV_TIMEUTC:
+        {
+            // LCOV_EXCL_START 8 : dead code
+            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+            VehicleSensGetNavTimeUtcG(pst_data);
+            break;
+            // LCOV_EXCL_STOP
+        }
+        case VEHICLE_DID_GPS_UBLOX_NAV_TIMEGPS:
+        {
+            // LCOV_EXCL_START 8 : dead code
+            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+            VehicleSensGetNavTimeGpsG(pst_data);
+            break;
+            // LCOV_EXCL_STOP
+        }
+        case VEHICLE_DID_GPS_UBLOX_NAV_SVINFO:
+        {
+            // LCOV_EXCL_START 8 : dead code
+            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+            VehicleSensGetNavSvInfoG(pst_data);
+            break;
+            // LCOV_EXCL_STOP
+        }
+        case VEHICLE_DID_GPS_UBLOX_NAV_STATUS:
+        {
+            // LCOV_EXCL_START 8 : dead code
+            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+            VehicleSensGetNavStatusG(pst_data);
+            break;
+            // LCOV_EXCL_STOP
+        }
+        case VEHICLE_DID_GPS_UBLOX_NAV_POSLLH:
+        {
+            // LCOV_EXCL_START 8 : dead code
+            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+            VehicleSensGetNavPosllhG(pst_data);
+            break;
+            // LCOV_EXCL_STOP
+        }
+        case VEHICLE_DID_GPS_UBLOX_NAV_CLOCK:
+        {
+            // LCOV_EXCL_START 8 : dead code
+            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+            VehicleSensGetNavClockG(pst_data);
+            break;
+            // LCOV_EXCL_STOP
+        }
+        case VEHICLE_DID_GPS_UBLOX_NAV_DOP:
+        {
+            // LCOV_EXCL_START 8 : dead code
+            AGL_ASSERT_NOT_TESTED();
+            VehicleSensGetNavDopG(pst_data);
+            break;
+            // LCOV_EXCL_STOP
+        }
+        case VEHICLE_DID_GPS_UBLOX_MON_HW:
+        {
+            // LCOV_EXCL_START 8 : dead code
+            AGL_ASSERT_NOT_TESTED();
+            VehicleSensGetMonHwG(pst_data);
+            break;
+            // LCOV_EXCL_STOP
+        }
+        case VEHICLE_DID_GPS_COUNTER:
+        {
+            // LCOV_EXCL_START 8 : dead code
+            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+            VehicleSensGetGpsCounterg(pst_data);
+            break;
+            // LCOV_EXCL_STOP
+        }
+        case VEHICLE_DID_GPS__CWORD82__NMEA:
+        {
+            VehicleSensGetGps_CWORD82_NmeaG(pst_data);
+            break;
+        }
+        case POSHAL_DID_GPS__CWORD82__FULLBINARY:
+        {
+            VehicleSensGetGps_CWORD82_FullBinaryG(pst_data);
+            break;
+        }
+        case POSHAL_DID_GPS__CWORD82___CWORD44_GP4:
+        {
+            VehicleSensGetGps_CWORD82__CWORD44_Gp4G(pst_data);
+            break;
+        }
+        case VEHICLE_DID_NAVIINFO_DIAG_GPS:
+        {
+            VehicleSensGetNaviinfoDiagGPSg(pst_data);
+            break;
+        }
+        case POSHAL_DID_GPS_TIME:
+        {
+            VehicleSensGetGpsTimeG(pst_data);
+            break;
+        }
+        case POSHAL_DID_GPS_TIME_RAW:
+        {
+            VehicleSensGetGpsTimeRawG(pst_data);
+            break;
+        }
+        case POSHAL_DID_GPS_NMEA:
+        {
+            VehicleSensGetGpsNmeaG(pst_data);
+            break;
+        }
+        case POSHAL_DID_GPS_WKNROLLOVER:
+        {
+            VehicleSensGetWknRolloverG(pst_data);
+            break;
+        }
+        case POSHAL_DID_GPS_CLOCK_DRIFT:
+        {
+            VehicleSensGetGpsClockDriftG(pst_data);
+            break;
+        }
+        case POSHAL_DID_GPS_CLOCK_FREQ:
+        {
+            VehicleSensGetGpsClockFreqG(pst_data);
+            break;
+        }
+        default:
+            break;
+    }
+}
 
 /*******************************************************************************
 * MODULE    : VehicleSensGetDataMasterGyroTrouble
@@ -1691,11 +1849,11 @@ void  VehicleSensGetDataMasterGpsAntennaStatus(DID ul_did,
         VEHICLESENS_DATA_MASTER_GPS_ANTENNA_STATUS *pst_data) {
     AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
     if (pst_data != NULL) {
-//        if (ul_did == POSHAL_DID_GPS_ANTENNA) {
-//            VehicleSensGetGpsAntennaStatus(pst_data);
-//        } else {
-//            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "UNKNOWN DID(%x) \r\n", ul_did);
-//        }
+        if (ul_did == POSHAL_DID_GPS_ANTENNA) {
+            VehicleSensGetGpsAntennaStatus(pst_data);
+        } else {
+            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "UNKNOWN DID(%x) \r\n", ul_did);
+        }
     } else {
         FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "pst_data == NULL\r\n");
     }
@@ -1709,14 +1867,14 @@ void  VehicleSensGetDataMasterGpsAntennaStatus(DID ul_did,
  * @return  Sensor Counter
  *
  */
-//static uint8_t VehicleSensGetSensorCnt(void) {
-//    VEHICLESENS_DATA_MASTER      st_data;
-//    uint8_t sensCnt;
-//
-//    /* Synchronous counter acquisition */
-//    VehicleSensGetSnsCounterl(&st_data);
-//
-//    sensCnt = st_data.uc_data[0];
-//
-//    return sensCnt;
-//}
+static uint8_t VehicleSensGetSensorCnt(void) {
+    VEHICLESENS_DATA_MASTER      st_data;
+    uint8_t sensCnt;
+
+    /* Synchronous counter acquisition */
+    VehicleSensGetSnsCounterl(&st_data);
+
+    sensCnt = st_data.uc_data[0];
+
+    return sensCnt;
+}

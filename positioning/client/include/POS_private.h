@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@
 #include "POS_common_private.h"
 #include <asm/unistd.h>
 #include <other_service/VP_GetEnv.h>
+#include <other_service/env_vehicleparameterlibrary.h>
 #include "CommonDefine.h"
 /*---------------------------------------------------------------------------------*
  * Function Prototype                                                              *
@@ -42,8 +43,8 @@
 /* Shared Library Value Area Check Function */
 inline UNIT_TYPE GetEnvSupportInfo(void);
 inline BOOL ChkUnitType(UNIT_TYPE type);
-inline RET_API MunMapDeviceIo(HANDLE dev, u_int32 map_size);
-inline RET_API MilliSecSleep(u_int32 mill_time);
+inline RET_API MunMapDeviceIo(HANDLE dev, uint32_t map_size);
+inline RET_API MilliSecSleep(uint32_t mill_time);
 inline POS_RET_API PosChkParam8(int8_t data, int8_t min, int8_t max, const char* fn, int32_t line);
 inline POS_RET_API PosChkParam16(int16_t data, int16_t min, int16_t max, const char* fn, int32_t line);
 inline POS_RET_API PosChkParam32(int32_t data, int32_t min, int32_t max, const char* fn, int32_t line);
@@ -60,9 +61,9 @@ inline SENSOR_RET_API PosRegisterListenerProc(PCSTR notify_name,
 /* General Functions in Shared Libraries */
 inline EventID VehicleCreateEvent(PNO pno);
 inline RET_API VehicleDeleteEvent(EventID event_id);
-inline RET_API VehicleLinkShareData(void **share_top, u_int32 *share_size, u_int16 *offset);
-inline RET_API VehicleUnLinkShareData(VEHICLE_SHARE *share_top, u_int16 offset);
-inline RET_API VehicleSndMsg(PNO pno_src, PNO pno_dest, CID cid, u_int16 msg_len, const void *msg_data);
+inline RET_API VehicleLinkShareData(void **share_top, uint32_t *share_size, uint16_t *offset);
+inline RET_API VehicleUnLinkShareData(VEHICLE_SHARE *share_top, uint16_t offset);
+inline RET_API VehicleSndMsg(PNO pno_src, PNO pno_dest, CID cid, uint16_t msg_len, const void *msg_data);
 inline BOOL VehicleGetResource(void);
 inline void VehicleReleaseResource(void);
 inline uint32_t GetTid(void);
@@ -81,22 +82,34 @@ inline uint32_t GetTid(void);
  * Inline Functions                                                                *
  *---------------------------------------------------------------------------------*/
 UNIT_TYPE GetEnvSupportInfo(void) {
-    UNIT_TYPE  ret_type = UNIT_TYPE_UNKNOWN;
+    UNIT_TYPE  ret_type = UNIT_TYPE_GRADE1;
 
+    char       env_area[VP_MAX_LENGTH];
     char       env_grade[VP_MAX_LENGTH];
     char*      p_env_grade    = env_grade;
+    char*      p_env_area     = env_area;
 
-    VP_GetEnv(VEHICLEPARAMETERLIBRARY_GRADE, p_env_grade);
+    /*
+     *  Note.
+     *  This feature branches processing depending on the area and grade type.
+     */
 
-    if (0 == strcmp(p_env_grade, "GRADE1")) {
-        ret_type = UNIT_TYPE_GRADE1;
-    } else {
-      /*
-       *  Note.
-       *  This feature branches processing depending on the unit type.
-       */
+    VP_GetEnv(VP_VEHICLEPARAMETERLIBRARY_AREA, p_env_area);
+
+    if (0 == strcmp(p_env_area, "AREA1")) {
         ret_type = UNIT_TYPE_GRADE2;
+    } else if (0 == strcmp(p_env_area, "AREA2")) {
+        memset(&env_grade, 0x00, sizeof(env_grade));
+        VP_GetEnv(VP_VEHICLEPARAMETERLIBRARY_GRADE, p_env_grade);
+        if (0 == strcmp(p_env_grade, "_CWORD95_") ||
+            0 == strcmp(p_env_grade, "_CWORD101_") ||
+            0 == strcmp(p_env_grade, "_CWORD61_")) {
+            ret_type = UNIT_TYPE_GRADE2;
+        }
+    } else {
+        // NOP
     }
+
     return ret_type;
 }
 
@@ -114,11 +127,11 @@ BOOL ChkUnitType(UNIT_TYPE type) {
     return ret;
 }
 
-RET_API MunMapDeviceIo(HANDLE dev, u_int32 map_size) {
+RET_API MunMapDeviceIo(HANDLE dev, uint32_t map_size) {
     return RET_NORMAL;
 }
 
-RET_API MilliSecSleep(u_int32 mill_time) {
+RET_API MilliSecSleep(uint32_t mill_time) {
     switch (mill_time) {
         case 0:
         {
@@ -352,36 +365,36 @@ inline POS_RET_API PosChkParamU32(uint32_t data, uint32_t min, uint32_t max, con
 inline POS_RET_API PosSetProc(DID did, void *p_data, uint16_t size, uint8_t is_event) {
     POS_RET_API    ret = POS_RET_NORMAL;    /* Return value of this function */
     RET_API      ret_api = RET_NORMAL;    /* API return value */
-//    POS_MSGINFO    snd_msg;          /* Message */
+    POS_MSGINFO    snd_msg;          /* Message */
     EventID      event_id;          /* Event ID */
-//    int32_t      event_val;          /* Event value */
+    int32_t      event_val;          /* Event value */
     PNO        pno;            /* Calling thread PNO */
     uint32_t    pid;            /* Process ID */
     uint32_t    tid;            /* Thread ID */
     char      name[128];
 
     /* Data size check */
-//    if (POS_MSG_INFO_DSIZE < size) {
-//        ret = POS_RET_ERROR_PARAM;
-//    } else {
+    if (POS_MSG_INFO_DSIZE < size) {
+        ret = POS_RET_ERROR_PARAM;
+    } else {
         /* Resource acquisition */
         if (VehicleGetResource() == TRUE) {
             /* Message data */
             /* _CWORD71_ processing speed(Memset modification) */
             /* Initialization of areas that do not contain values */
-//            snd_msg.pno = 0;
-//            snd_msg.rcv_flag = 0;
-//            snd_msg.reserve = 0;
-//
-//            snd_msg.did  = did;
-//            snd_msg.size  = size;
-//            memcpy(snd_msg.data, p_data, size);
+            snd_msg.pno = 0;
+            snd_msg.rcv_flag = 0;
+            snd_msg.reserve = 0;
+
+            snd_msg.did  = did;
+            snd_msg.size  = size;
+            memcpy(snd_msg.data, p_data, size);
 
             if (TRUE == is_event) {
                 /* After requesting data setting,Wait for the setting completion(Event Wait) */
 
                 /* Event Generation */
-                pid = static_cast<u_int32>(getpid());
+                pid = static_cast<uint32_t>(getpid());
                 tid = GetTid();
 
                 snprintf(name, sizeof(name), "PS_p%u_t%u", pid, tid);
@@ -389,38 +402,37 @@ inline POS_RET_API PosSetProc(DID did, void *p_data, uint16_t size, uint8_t is_e
                 event_id = VehicleCreateEvent(pno);
 
                 /* Set the source Pno of message data */
-//                snd_msg.pno = pno;
+                snd_msg.pno = pno;
 
                 if (0 != event_id) {
                     /* Successful event generation */
 
                     /* Send NAVI Sensor Data Setting to Vehicle Sensor */
-//                    ret_api = VehicleSndMsg(pno,
-//                                            PNO_VEHICLE_SENSOR,
-//                                            CID_POSIF_SET_DATA,
-//
-////                                            (u_int16)sizeof(POS_MSGINFO), (const void *)&snd_msg);
-//                                            (u_int16)sizeof(POS_MSGINFO) - POS_MSG_INFO_DSIZE + snd_msg.size, /* variable length */
-//                                            (const void *)&snd_msg);
-//
-//                    if (RET_NORMAL == ret_api) {
-//                        /* If the data setup process is successful,Wait for a completion event */
-//                        ret_api = _pb_WaitEvent(event_id,
-//                                                SAPI_EVWAIT_VAL,
-//                                                VEHICLE_RET_ERROR_MIN,
-//                                                VEHICLE_RET_NORMAL, &event_val, POS_API_TIME_OUT_MS);
-//                        if (RET_NORMAL != ret_api) {
-//                            /* Return an internal error */
-//                            ret = POS_RET_ERROR_INNER;
-//                        } else {
-//                            /* Return from Event Wait */
-//                            /* Set event value (processing result) as return value */
-//                            ret = (POS_RET_API)event_val;
-//                        }
-//                    } else {
-//                        /* Message transmission processing failed */
-//                        ret = POS_RET_ERROR_INNER;
-//                    }
+                    ret_api = VehicleSndMsg(pno,
+                                            PNO_VEHICLE_SENSOR,
+                                            CID_POSIF_SET_DATA,
+
+                                            (uint16_t)sizeof(POS_MSGINFO) - POS_MSG_INFO_DSIZE + snd_msg.size, /* variable length */
+                                            (const void *)&snd_msg);
+
+                    if (RET_NORMAL == ret_api) {
+                        /* If the data setup process is successful,Wait for a completion event */
+                        ret_api = _pb_WaitEvent(event_id,
+                                                SAPI_EVWAIT_VAL,
+                                                VEHICLE_RET_ERROR_MIN,
+                                                VEHICLE_RET_NORMAL, &event_val, POS_API_TIME_OUT_MS);
+                        if (RET_NORMAL != ret_api) {
+                            /* Return an internal error */
+                            ret = POS_RET_ERROR_INNER;
+                        } else {
+                            /* Return from Event Wait */
+                            /* Set event value (processing result) as return value */
+                            ret = (POS_RET_API)event_val;
+                        }
+                    } else {
+                        /* Message transmission processing failed */
+                        ret = POS_RET_ERROR_INNER;
+                    }
                     /* Event deletion */
                     ret_api = VehicleDeleteEvent(event_id);
                 } else {
@@ -431,13 +443,13 @@ inline POS_RET_API PosSetProc(DID did, void *p_data, uint16_t size, uint8_t is_e
                 /* After setting data,Immediate termination */
 
                 /* Send NAVI Sensor Data Setting to Vehicle Sensor */
-//                ret_api = _pb_SndMsg_Ext(POS_THREAD_NAME,
-//                                         CID_POSIF_SET_DATA,
-//                                         sizeof(POS_MSGINFO), reinterpret_cast<void*>(&snd_msg), 0);
-//                if (ret_api != RET_NORMAL) {
-//                    /* Message transmission failure */
-//                    ret = POS_RET_ERROR_INNER;
-//                }
+                ret_api = _pb_SndMsg_Ext(POS_THREAD_NAME,
+                                         CID_POSIF_SET_DATA,
+                                         sizeof(POS_MSGINFO), reinterpret_cast<void*>(&snd_msg), 0);
+                if (ret_api != RET_NORMAL) {
+                    /* Message transmission failure */
+                    ret = POS_RET_ERROR_INNER;
+                }
             }
         } else {
             /* Insufficient resource */
@@ -445,7 +457,7 @@ inline POS_RET_API PosSetProc(DID did, void *p_data, uint16_t size, uint8_t is_e
         }
         /* Resource release */
         VehicleReleaseResource();
-//    }
+    }
 
     return ret;
 }
@@ -465,16 +477,16 @@ inline POS_RET_API PosSetProc(DID did, void *p_data, uint16_t size, uint8_t is_e
  *          POS_RET_ERROR_DID            Unregistered ID<br>
  */
 inline POS_RET_API PosGetProc(DID did, void *p_data, uint16_t dest_size) {
-    POS_RET_API  ret;                    /* Return value            */
-    RET_API           ret_api;                 /* System API return value        */
-    EventID          event_id;             /* Event ID           */
-    int32             event_val;          /* Event value           */
+    POS_RET_API       ret;              /* Return value            */
+    RET_API           ret_api;          /* System API return value        */
+    EventID           event_id;         /* Event ID           */
+    int32_t           event_val;        /* Event value           */
     void             *share_top;        /* Start address of shared memory       */
-    u_int32          share_size;       /* Size of shared memory area       */
-    u_int16           offset;                /* Offset to free shared memory area    */
+    uint32_t          share_size;       /* Size of shared memory area       */
+    uint16_t          offset;                /* Offset to free shared memory area    */
     VEHICLE_SHARE_BLOCK_DAT *share_dat; /* Address of free shared memory area  */
     VEHICLE_MSG_GET_VEHICLE_DATA_DAT data; /* Message data     */
-    PNO                  pno;              /* Calling thread PNO       */
+    PNO                  pno;           /* Calling thread PNO       */
     uint32_t    pid;          /* Process ID          */
     uint32_t    tid;          /* Thread ID            */
     char      name[128];
@@ -487,7 +499,7 @@ inline POS_RET_API PosGetProc(DID did, void *p_data, uint16_t dest_size) {
         memset(reinterpret_cast<void *>(&data), 0, sizeof(VEHICLE_MSG_GET_VEHICLE_DATA_DAT));
 
         /* Event Generation */
-        pid = static_cast<u_int32>(getpid());
+        pid = static_cast<uint32_t>(getpid());
         tid = GetTid();
 
         snprintf(name, sizeof(name), "PG_p%u_t%u", pid, tid);
@@ -637,7 +649,7 @@ inline SENSOR_RET_API PosRegisterListenerProc(PCSTR notify_name, DID did, u_int8
             ret_api = VehicleSndMsg(pno,
                                     PNO_VEHICLE_SENSOR,
                                     CID_VEHICLEIF_DELIVERY_ENTRY,
-                                    (u_int16)sizeof(VEHICLE_MSG_DELIVERY_ENTRY_DAT), (const void *)&data);
+                                    (uint16_t)sizeof(VEHICLE_MSG_DELIVERY_ENTRY_DAT), (const void *)&data);
 
             if (RET_NORMAL == ret_api) {
                 /* Message transmission processing is successful */
@@ -738,7 +750,7 @@ inline RET_API VehicleDeleteEvent(EventID event_id) {
  * RETURN    : RET_NORMAL  : Normal completion
  *           : RET_ERROR  : There is no shared memory area.
  ******************************************************************************/
-inline RET_API VehicleLinkShareData(void **share_top, u_int32 *share_size, u_int16 *offset) {
+inline RET_API VehicleLinkShareData(void **share_top, uint32_t *share_size, uint16_t *offset) {
     RET_API      ret_api;            /* System API return value */
     SemID      sem_id;              /* Semaphore ID */
     VEHICLE_SHARE  *share_top_tmp;
@@ -807,7 +819,7 @@ inline RET_API VehicleLinkShareData(void **share_top, u_int32 *share_size, u_int
  * RETURN    : RET_NORMAL  : Normal completion
  *           : RET_ERROR  : There is no shared memory area./semaphore error
  ******************************************************************************/
-inline RET_API VehicleUnLinkShareData(VEHICLE_SHARE *share_top, u_int16 offset) {
+inline RET_API VehicleUnLinkShareData(VEHICLE_SHARE *share_top, uint16_t offset) {
     RET_API      ret_api;            /* System API return value */
     SemID      sem_id;              /* Semaphore ID */
     int32      i;
@@ -857,7 +869,7 @@ inline RET_API VehicleUnLinkShareData(VEHICLE_SHARE *share_top, u_int16 offset) 
  *           : RET_ERRMSGFULL  : Message queue overflows
  *           : RET_ERRPARAM    : Buffer size error
  ******************************************************************************/
-inline RET_API VehicleSndMsg(PNO pno_src, PNO pno_dest, CID cid, u_int16 msg_len, const void *msg_data) {
+inline RET_API VehicleSndMsg(PNO pno_src, PNO pno_dest, CID cid, uint16_t msg_len, const void *msg_data) {
     VEHICLE_MSG_BUF      msg_buf;    /* message buffer */
     T_APIMSG_MSGBUF_HEADER  *msg_hdr;    /* Pointer to the message header */
     RET_API          ret_api;    /* Return value */
@@ -905,13 +917,13 @@ inline RET_API VehicleSndMsg(PNO pno_src, PNO pno_dest, CID cid, u_int16 msg_len
 
         /* Internal Process Transmission and Reception Messages */
         ret_api = _pb_SndMsg(pno_dest,
-                             (u_int16)(sizeof(T_APIMSG_MSGBUF_HEADER) + msg_len),
+                             (uint16_t)(sizeof(T_APIMSG_MSGBUF_HEADER) + msg_len),
                              reinterpret_cast<void *>(&msg_buf), 0);
     } else {
         /* External Process Transmission and Reception Messages */
         ret_api = _pb_SndMsg_Ext(thread_name,
                                  cid,
-                                 (u_int16)(msg_len),  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+                                 (uint16_t)(msg_len),  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
                                  reinterpret_cast<void *>(&(msg_buf.data)), 0);
     }
     FRAMEWORKUNIFIEDLOG(ZONE_26, __FUNCTION__, "-");

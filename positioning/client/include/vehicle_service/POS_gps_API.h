@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@
  * Incluce                                                                         *
  *---------------------------------------------------------------------------------*/
 #include <vehicle_service/POS_define.h>
-//#include <gps_hal.h>
+#include <gps_hal.h>
 
 /*---------------------------------------------------------------------------------*
  * Typedef declaration                                                             *
@@ -54,7 +54,7 @@ typedef int32_t NAVIINFO_RET_API;
  * \~english @brief  GPS time setting result delivery command ID
  * \~english @brief  If you want to catch above envents, use NSFW like below.
  * \~english @code  
- * l_eStatus = FrameworkunifiedAttachCallbackToDispatcher(test_params_->h_app,"POS_Main", CID_POSIF_REGISTER_LISTENER_GPS_TIME_SET_REQ, CBCallbackA);
+ * l_eStatus = FrameworkunifiedAttachCallbackToDispatcher(h_app,POS_NTFY_SEND_THREAD, CID_POSIF_REGISTER_LISTENER_GPS_TIME_SET_REQ, CBCallbackA);
  *            @endcode  
  */
 #define CID_POSIF_REGISTER_LISTENER_GPS_TIME_SET_REQ  0x0780
@@ -316,7 +316,7 @@ int32_t POS_ReqGPSSetting(HANDLE hApp, SENSOR_MSG_SEND_DAT *p_data);
 ///          related to data ID [NAVIINFO_RET_ERROR_RESOURCE]
 ///        - The count of message in message queue is reach to max [NAVIINFO_RET_ERROR_RESOURCE]
 ///        - The count of mutex is reach to max [NAVIINFO_RET_ERROR_RESOURCE]
-///        - The count of item in ProcessName-ProcessNo convert table is reach to max [SENSOR_RET_ERROR_RESOURCE]
+///        - The count of item in ProcessName-ProcessNo convert table is reach to max [NAVIINFO_RET_ERROR_RESOURCE]
 ///        - The message queue name has not been registered in control table. [NAVIINFO_RET_ERROR_INNER]
 ///        - Message transfer HANDLE create failed. [NAVIINFO_RET_ERROR_INNER]
 ///        - Message transfer HANDLE get failed from internal table. [NAVIINFO_RET_ERROR_INNER]
@@ -339,7 +339,7 @@ int32_t POS_ReqGPSSetting(HANDLE hApp, SENSOR_MSG_SEND_DAT *p_data);
 /// \~english @see
 ///        - POS_GetGPSInfo
 ////////////////////////////////////////////////////////////////////////////////////////////
-//NAVIINFO_RET_API POS_SetGPSInfo(HANDLE hApp, NAVIINFO_ALL *navilocinfo);
+NAVIINFO_RET_API POS_SetGPSInfo(HANDLE hApp, NAVIINFO_ALL *navilocinfo);
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 /// \ingroup tag_Positioning
@@ -520,7 +520,7 @@ int32_t POS_ReqGPSSetting(HANDLE hApp, SENSOR_MSG_SEND_DAT *p_data);
 /// \~english @see
 ///        - POS_SetGPSInfo
 ////////////////////////////////////////////////////////////////////////////////////////////
-//NAVIINFO_RET_API POS_GetGPSInfo(HANDLE hApp, NAVIINFO_DIAG_GPS *navidiaginfo);
+NAVIINFO_RET_API POS_GetGPSInfo(HANDLE hApp, NAVIINFO_DIAG_GPS *navidiaginfo);
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 /// \ingroup tag_Positioning
@@ -640,49 +640,6 @@ POS_RET_API POS_ReqGPSReset(HANDLE hApp, PCSTR ResName, uint8_t mode);
 ////////////////////////////////////////////////////////////////////////////////////////////
 /// \ingroup tag_Positioning
 /// \~english @par Brief
-///        - Get GPS device version
-///
-/// \~english @param [in] hApp
-///        - HANDLE - App Handle
-/// \~english @param [in] buf_size
-///        - uint8_t - size of the output buffer
-/// \~english @param [out] buf
-///        - int8_t* - output buffer of storing GPS version
-/// \~english @param [out] size
-///        - uint8_t* - the size of getting GPS version data
-///
-/// \~english @retval POS_RET_ERROR_NOSUPPORT unsupported
-///
-/// \~english @par Precondition
-///        - The creation/initialization(FrameworkunifiedCreateDispatcherWithoutLoop and etc.) \n
-///          of the Dispatcher for App are completed.
-///        - Availability of positioning service is TRUE.
-///
-/// \~english @par changes of internal status
-///        - There is no changes of internal status
-///
-/// \~english @par Detail
-///        - Call this API to get GPS device version from vehicle sensor.
-///
-/// \~english @par
-///        - Please note the following points when use this API.
-///        - Current enviroment does not support to get GPS version, and certainly return POS_RET_ERROR_NOSUPPORT.
-///
-///
-/// \~english @par Classification
-///        - Public
-///
-/// \~english @par Type
-///        - Fire and Forget
-///
-/// \~english @see
-///        - None
-////////////////////////////////////////////////////////////////////////////////////////////
-POS_RET_API POS_GetGPSVersion(HANDLE hApp, uint8_t buf_size, int8_t* buf, uint8_t* size);
-
-////////////////////////////////////////////////////////////////////////////////////////////
-/// \ingroup tag_Positioning
-/// \~english @par Brief
 ///        - Register GPS time setting request delivery
 ///
 /// \~english @param [in] hApp
@@ -777,7 +734,7 @@ POS_RET_API POS_GetGPSVersion(HANDLE hApp, uint8_t buf_size, int8_t* buf, uint8_
 ///          Notification of message
 ///        - After registered successfully, vehicle sensor information will be sent by system \n
 ///          API message with following format. \n
-///          Command ID : CID_POSIF_REGISTER_LISTENER_GPS_TIME_SET_REQ \n
+///          Command ID : @ref CID_POSIF_REGISTER_LISTENER_GPS_TIME_SET_REQ \n
 ///          time info structure \n
 ///          The year, month, date, hour, minute and second should be the format set to GPS
 /// \~english @code
@@ -877,7 +834,7 @@ POS_RET_API POS_RegisterListenerGPSTimeSetReq(HANDLE hApp, PCSTR notifyName, uin
 /// \~english @see
 ///        - POS_GetGPStime
 ////////////////////////////////////////////////////////////////////////////////////////////
-//POS_RET_API POS_SetGPStime(HANDLE hApp, POS_DATETIME* pstDateTime);
+POS_RET_API POS_SetGPStime(HANDLE hApp, POS_DATETIME* pstDateTime);
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 /// \ingroup tag_Positioning
@@ -984,7 +941,6 @@ POS_RET_API POS_RegisterListenerGPSTimeSetReq(HANDLE hApp, PCSTR notifyName, uin
 ///        - The same destination thread name has already been registered
 ///        - The registered delivery data updated and normal return.(first delivery)
 ///        - To one delivery destination, the same data will not be duplication deliveried at same timing.
-///        - Although registering can be finished, but the data will not be deliveried.
 ///        - After call this API, if the delivery destination thread name has changed, please call this API again.
 ///
 /// \~english @par
@@ -1168,7 +1124,7 @@ SENSOR_RET_API POS_RegisterListenerGPStime(HANDLE hApp, PCSTR notifyName, uint8_
 /// \~english @see
 ///        - POS_SetGPStime
 ////////////////////////////////////////////////////////////////////////////////////////////
-//POS_RET_API POS_GetGPStime(HANDLE hApp, SENSOR_GPSTIME* dat);
+POS_RET_API POS_GetGPStime(HANDLE hApp, SENSOR_GPSTIME* dat);
 
 #ifdef __cplusplus
 }
