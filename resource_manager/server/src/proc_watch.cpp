@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -24,11 +25,9 @@
 #include <sys/timerfd.h>
 #include <sys/vfs.h>    /* or <sys/statfs.h> */
 #include <dirent.h>
+#include <stdlib.h>
 
-//#include <soc_temperature_hal.h>
-#include <cstring>
-#include <cstdlib>
-//#include <stub/ss_diag.h>
+#include <soc_temperature_hal.h>
 
 #include "ss_resm_resourcemanagerlog.h"
 #include "proc_watch.h"
@@ -48,8 +47,6 @@ extern EFrameworkunifiedStatus resourcemanagerlog_flag_check(UI_8 *mode);
 
 #if defined(_SOC_TEMP_MONITOR_)
 
-extern void set_diag_ss_resourcemanager_err(uint16_t resourcemanager_code);
-
 /*********************************************************************************
  * Soc Temperature
  register THSSR : T = CTEMP[5-0] x 5 - 65 [Celsius]
@@ -58,62 +55,31 @@ extern void set_diag_ss_resourcemanager_err(uint16_t resourcemanager_code);
 // #define SOC_TEMP_WATCH_INTVAL_TIMESEC (1 * 5) // for debug
 #define THSSR_TEMP_MASK 0x0000003F
 #define TEMP_120 (120)
-#define TEMP_125 (125)
-#define TEMP_130 (130)
 
 static float last_temp;
-static int last_diag;
 
 static void soc_temp_init(void) {
   FRAMEWORKUNIFIEDLOG(ZONE_SOC_TEMP, __FUNCTION__, "start");
   last_temp = 0.0f;
-  last_diag = 0;
 }
 
 static void soc_temp(void) {
   float temp = 0.0f;
-//  EFrameworkunifiedStatus e_status = GetSoCTemperature(&temp);
-//  if (eFrameworkunifiedStatusOK != e_status) {
-//    FRAMEWORKUNIFIEDLOG(ZONE_SOC_TEMP, __FUNCTION__,
-//          "THSSR:GetSoCTemperature e_status(%d)", e_status);
-//    return;
-//  }
+  EFrameworkunifiedStatus e_status = GetSoCTemperature(&temp);
+  if (eFrameworkunifiedStatusOK != e_status) {
+    FRAMEWORKUNIFIEDLOG(ZONE_SOC_TEMP, __FUNCTION__,
+          "THSSR:GetSoCTemperature e_status(%d)", e_status);
+    return;
+  }
 
   if (TEMP_120 <= temp) {
     // FRAMEWORKUNIFIEDLOG
     FRAMEWORKUNIFIEDLOG(ZONE_SOC_TEMP, __FUNCTION__, "%f", temp);  // LCOV_EXCL_BR_LINE 15: marco defined in "native_service/ns_logger_if.h"  // NOLINT[whitespace/line_length]
-
-    // DIAGCODE
-    if (TEMP_130 <= temp) {
-      if (TEMP_130 != last_diag) {
-#if 0  // TODO(Workaround to avoid build errors for customization by suppliers. Planned to fix on MK.)
-        set_diag_ss_resourcemanager_err(DIAGCODE_VIDEOINHALEX_OVERTEMP_3); /* SoC Temperature anomaly(130 degree Or more) */
-#endif
-        last_diag = TEMP_130;
-      }
-    } else if (TEMP_125 <= temp) {
-      if (TEMP_125 != last_diag) {
-#if 0  // TODO(Workaround to avoid build errors for customization by suppliers. Planned to fix on MK.)
-        set_diag_ss_resourcemanager_err(DIAGCODE_VIDEOINHALEX_OVERTEMP_2); /* SoC Temperature anomaly(125 degree Or more) */
-#endif
-        last_diag = TEMP_125;
-      }
-    } else {
-      if (TEMP_120 != last_diag) {
-#if 0  // TODO(Workaround to avoid build errors for customization by suppliers. Planned to fix on MK.)
-        set_diag_ss_resourcemanager_err(DIAGCODE_VIDEOINHALEX_OVERTEMP_1); /* SoC Temperature anomaly(120 degree Or more) */
-#endif
-        last_diag = TEMP_120;
-      }
-    }
   } else {
     // FRAMEWORKUNIFIEDLOG
     if (TEMP_120 <= last_temp) {
       FRAMEWORKUNIFIEDLOG(ZONE_SOC_TEMP, __FUNCTION__, "%f", temp);  // LCOV_EXCL_BR_LINE 15: marco defined in "native_service/ns_logger_if.h"  // NOLINT[whitespace/line_length]
     }
-
-    // DIAGCODE
-    last_diag = 0;
   }
   last_temp = temp;
 }

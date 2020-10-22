@@ -1,5 +1,5 @@
 #
-# @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+# @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -46,12 +46,10 @@ LDLIBS += -Wl,--no-as-needed
 LDLIBS += -Wl,-Bdynamic -lstdc++
 LDLIBS += -Wl,-Bdynamic -lSS_SystemIfUnified
 LDLIBS += -Wl,-Bdynamic -lNS_FrameworkUnified
-#LDLIBS += -Wl,-Bdynamic -lsoc_temperature_hal
+LDLIBS += -Wl,-Bdynamic -lsoc_temperature_hal
 LDLIBS += -Wl,-Bdynamic -lcommon
-LDLIBS += -Wl,-Bdynamic -lvp
 LDLIBS += -Wl,-Bdynamic -lrpc
 
 LDLIBS += -Wl,-Bdynamic -lev
-#LDLIBS += -Wl,-Bdynamic -lDiagCodeAPI
 
 include ../../system_service.mk

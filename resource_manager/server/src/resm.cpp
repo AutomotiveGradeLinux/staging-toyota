@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,6 @@
 #include <sys/timerfd.h>
 #include <sys/wait.h>
 #include <sched.h>
-//#include <stub/ss_diag.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <signal.h>
@@ -45,7 +44,6 @@
 #include <system_service/ss_version.h>
 #include <native_service/cl_process.h>
 #include <system_service/ss_system_process.h>
-#include <other_service/VP_GetEnv.h>
 #include <other_service/rpc.h>
 #include "resmgr_srvr.h"
 #include "resm_internal.h"
@@ -419,28 +417,6 @@ EFrameworkunifiedStatus resourcemanagerlog_flag_check(UI_8 *mode) {
   return NsLogGetFrameworkunifiedLogFlag(RESOURCEMANAGERLOG_BASEPF_FLAG_ID, mode);
 }
 
-/**********************************************
- *  Set DIAGCODE
- **********************************************/
-void set_diag_ss_resourcemanager_err(uint16_t resourcemanager_code) {
-#if 0  // TODO(Workaround to avoid build errors for customization by suppliers. Planned to fix on MK.)
-  SVC_COMMON_t* p_ctx = &g_resmgr;
-  switch (resourcemanager_code) {
-    case DIAGCODE_VIDEOINHALEX_OVERTEMP_3:
-      SS_PUTDIAG(p_ctx->hApp, DIAGCODE_VIDEOINHALEX_OVERTEMP_3);
-      break;
-    case DIAGCODE_VIDEOINHALEX_OVERTEMP_2:
-      SS_PUTDIAG(p_ctx->hApp, DIAGCODE_VIDEOINHALEX_OVERTEMP_2);
-      break;
-    case DIAGCODE_VIDEOINHALEX_OVERTEMP_1:
-      SS_PUTDIAG(p_ctx->hApp, DIAGCODE_VIDEOINHALEX_OVERTEMP_1);
-      break;
-    default:
-      break;
-  }
-#endif
-}
-
 /* drop_caches Start update Task */
 static void start_drop_caches(void) {
   pid_t pid = fork();
@@ -474,56 +450,6 @@ static void start_drop_caches(void) {
     AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
     FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Failed to fork=-1, errno=%d", errno);
     // LCOV_EXCL_STOP
-  }
-}
-
-static unsigned long tick_msec_get(void) {
-  struct timespec tp;
-
-  if (clock_gettime(CLOCK_MONOTONIC, &tp) != 0) {
-    return 0; /* NG */
-  }
-  return ((tp.tv_sec * 1000) + (tp.tv_nsec / 1000000));
-}
-
-#define UNITAUTH_MONITOR "/tmp/UNITAUTH_MONITOR"
-#define CHECK_UNITAUTH_MONITOR_TIME (2 * 1000)  // 2sec
-
-static void check_unitauth(void) {
-  int fd;
-  int ret;
-  char buf[64];
-  pid_t pid_uauth;
-  unsigned long ctime_uauth;  // NOLINT
-  unsigned long ctime;  // NOLINT
-  ssize_t size;
-
-  fd = open(UNITAUTH_MONITOR, O_RDONLY);
-  if (fd == -1) {
-    return;
-  }
-
-  pid_uauth = 0;
-  ctime_uauth = 0;
-  size = read(fd, buf, sizeof(buf));
-  close(fd);
-  if (size != -1) {  // LCOV_EXCL_BR_LINE 5: read's error case
-    ret = sscanf(buf, "%u %lu", &pid_uauth, &ctime_uauth);
-    if ((ret == 0) || (ret == EOF)) {  // LCOV_EXCL_BR_LINE 5: C sscanf error
-      // LCOV_EXCL_START 5: C sscanf error
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      return;
-      // LCOV_EXCL_STOP
-    }
-  }
-  if (ctime_uauth) {   // 0:ignore
-    ctime = tick_msec_get();
-    if (ctime > ctime_uauth) {
-      if (((ctime - ctime_uauth) > CHECK_UNITAUTH_MONITOR_TIME)
-          && (getpid() != pid_uauth)) {
-//        print_backtrace_pid (pid_uauth); // backtrace in kernel.log
-      }
-    }
   }
 }
 
@@ -638,23 +564,17 @@ int32_t main(int32_t argc, char* argv[]) {
   }
 
   /* Create timer */
-  if ((timerFd = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC)) == -1) {  // LCOV_EXCL_BR_LINE 5: timerfd_create error case  // NOLINT[whitespace/line_length]
-    // LCOV_EXCL_START 5: timerfd_create error case
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+  if ((timerFd = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC)) == -1) {
     FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
            "[RESM_ERR]ResMgr Create timerFd Failed. errno[%d]", errno);
     exit(EXIT_FAILURE);
-    // LCOV_EXCL_STOP 5: timerfd_create error case
   }
   // for drop_caches
   {
-    if ((timerFd2 = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC)) == -1) {  // LCOV_EXCL_BR_LINE 5: timerfd_create error case  // NOLINT[whitespace/line_length]
-      // LCOV_EXCL_START 5: timerfd_create error case
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+    if ((timerFd2 = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC)) == -1) {
       FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
              "[RESM_ERR]ResMgr Create timerFd2 Failed. errno[%d]", errno);
       exit(EXIT_FAILURE);
-      // LCOV_EXCL_STOP 5: timerfd_create error case
     }
   }
 
@@ -676,28 +596,22 @@ int32_t main(int32_t argc, char* argv[]) {
   tm.it_value.tv_nsec = 0;
   tm.it_interval.tv_sec = 1;
   tm.it_interval.tv_nsec = 0;
-  if (timerfd_settime(timerFd, 0, &tm, NULL) == -1) {  // LCOV_EXCL_BR_LINE 5: timerfd_settime error case
-    // LCOV_EXCL_START 5: timerfd_settime error case
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+  if (timerfd_settime(timerFd, 0, &tm, NULL) == -1) {
     FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
            "[RESM_ERR]ResMgr Set timerFd Failed. errno[%d]", errno);
     exit(EXIT_FAILURE);
-    // LCOV_EXCL_STOP 5: timerfd_settime error case
   }
 
-  if (timerFd2 != -1) {  // LCOV_EXCL_BR_LINE 200: timerFd2 can't be -1
-    tm2.it_value.tv_sec = DROP_CACHES_START_DELAT_TIME;
-    tm2.it_value.tv_nsec = 0;
-    tm2.it_interval.tv_sec = 0;
-    tm2.it_interval.tv_nsec = 0;
-    if (timerfd_settime(timerFd2, 0, &tm2, NULL) == -1) {  // LCOV_EXCL_BR_LINE 5: timerfd_settime error case
-      // LCOV_EXCL_START 5: timerfd_settime error case
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-             "[RESM_ERR]ResMgr Set timerFd2 Failed. errno[%d]", errno);
-      exit(EXIT_FAILURE);
-      // LCOV_EXCL_STOP 5: timerfd_settime error case
-    }
+  tm2.it_value.tv_sec = DROP_CACHES_START_DELAT_TIME;
+  tm2.it_value.tv_nsec = 0;
+  tm2.it_interval.tv_sec = 0;
+  tm2.it_interval.tv_nsec = 0;
+  if (timerfd_settime(timerFd2, 0, &tm2, NULL) == -1) {  // LCOV_EXCL_BR_LINE 11:Gcov constraints (coverage measurement revision by DeathTest)
+    // LCOV_EXCL_START 11:Gcov constraints (coverage measurement revision by DeathTest)
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
+           "[RESM_ERR]ResMgr Set timerFd2 Failed. errno[%d]", errno);
+    exit(EXIT_FAILURE);
+    // LCOV_EXCL_END 11:Gcov constraints (coverage measurement revision by DeathTest)
   }
 
   /* API to Publish Service Availability Notification. */
@@ -775,8 +689,6 @@ int32_t main(int32_t argc, char* argv[]) {
       if ((sec % WTC_CPU_INTERVAL) == 0) {
         watchCPUStatus();
       }
-      /* UNITAUTH monitor */
-      check_unitauth();
 
       if (sec >= RESET_SEC) {
         sec = 0;
