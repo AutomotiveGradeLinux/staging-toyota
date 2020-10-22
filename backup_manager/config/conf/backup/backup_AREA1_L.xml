@@ -18,6 +18,7 @@
     <item name="D_BK_ID_MEDSRV_DISC_RESUME" id="0275" size="1024"/>
     <item name="D_BK_ID_MEDSRV__CWORD57__RESUME" id="0276" size="10656"/>
     <item name="D_BK_ID_MEDSRV_BTA_RESUME" id="0277" size="1024"/>
+    <item name="D_BK_ID_MEDSRV_CDRIP_RESUME" id="0278" size="1024"/>
     <item name="D_BK_ID_MEDSRV_SDVCOM_RESUME" id="0444" size="256"/>
   </category>
   <category name="D_BK_CA_REPROS_UPDATEPARAM" nand="true" backupDram="true" sync="true" encrypt="false">
@@ -50,14 +51,11 @@
   <category name="D_BK_CA__CWORD76__INFO_SYNC" nand="true" backupDram="true" sync="true" encrypt="false">
     <item name="D_BK_ID__CWORD76__INFO_SYNC_OFFSET" id="0242" size="256"/>
   </category>
-  <category name="D_BK_CA_DIAG_INFORMATION" nand="true" backupDram="true" sync="true" encrypt="false">
-    <item name="D_BK_ID_DIAG_INFORMATION" id="0244" size="2048"/>
-  </category>
-  <category name="D_BK_CA_DIAG_UTILIZATION" nand="true" backupDram="true" sync="false" encrypt="false">
-    <item name="D_BK_ID_DIAG_UTILIZATION" id="0245" size="515072"/>
+  <category name="D_BK_CA_DIAG_INFORMATION" nand="true" backupDram="true" sync="true" encrypt="true">
+    <item name="D_BK_ID_DIAG_INFORMATION" id="0244" size="2560"/>
   </category>
   <category name="D_BK_CA_VS_VSDSRV_PARAMETER" nand="true" backupDram="true" sync="true" encrypt="false">
-    <item name="D_BK_ID_VS_VSDSRV_PARAMETER" id="0246" size="2048"/>
+    <item name="D_BK_ID_VS_VSDSRV_PARAMETER" id="0246" size="4096"/>
   </category>
   <category name="D_BK_CA_VS_ACNSRV_PARAMETER" nand="true" backupDram="true" sync="true" encrypt="false">
     <item name="D_BK_ID_VS_ACNSRV_PARAMETER" id="0247" size="256"/>
@@ -71,17 +69,14 @@
   <category name="D_BK_CA_VINFOSRV_PARAMETER" nand="true" backupDram="true" sync="true" encrypt="false">
     <item name="D_BK_ID_VINFOSRV_PARAMETER" id="0250" size="256"/>
   </category>
-  <category name="D_BK_CA_POS_GPS_FIX_CNT" nand="true" cacheDram="true" sync="false" encrypt="false">
-    <item name="D_BK_ID_POS_GPS_FIX_CNT" id="0251" size="16"/>
-  </category>
-  <category name="D_BK_CA_POS_GPS_ROLLOVER_CNT" nand="true" cacheDram="true" sync="true" encrypt="false">
-    <item name="D_BK_ID_POS_GPS_ROLLOVER_CNT" id="0253" size="32"/>
-  </category>
   <category name="D_BK_CA_WLANM_INFO" nand="true" cacheDram="true" sync="true" encrypt="false">
     <item name="D_BK_ID_WLANM_INFO" id="0254" size="1024"/>
   </category>
   <category name="D_BK_CA_BTSTK_LINKKEY" nand="true" cacheDram="true" sync="true" encrypt="false">
     <item name="D_BK_ID_BTSTK_LINKKEY" id="0255" size="20480"/>
+  </category>
+  <category name="D_BK_CA_EOM_CONTENTS_STATUS" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_EOM_CONTENTS_STATUS" id="0256" size="4"/>
   </category>
   <category name="D_BK_CA_UPDSERVICE_PARAMETER" nand="true" backupDram="true" sync="true" encrypt="false">
     <item name="D_BK_ID_UPDSERVICE_PARAMETER" id="0257" size="4096"/>
@@ -89,10 +84,10 @@
   <category name="D_BK_CA_RS_WNG_RCV" nand="false" backupDram="true" sync="false" encrypt="false">
     <item name="D_BK_ID_RS_WNG_RCV" id="0259" size="1"/>
   </category>
-  <category name="D_BK_CA_INFS_GENERAL_GRP" nand="true" backupDram="true" sync="true" encrypt="false">
-    <item name="D_BK_ID_INFS_GENERAL_GRP" id="0260" size="128"/>
+  <category name="D_BK_CA_INFS_GENERAL_GRP" nand="true" backupDram="true" sync="true" encrypt="true">
+    <item name="D_BK_ID_INFS_GENERAL_GRP" id="0260" size="512"/>
   </category>
-  <category name="D_BK_CA_INFS_CLOCK_GRP" nand="true" backupDram="true" sync="true" encrypt="false">
+  <category name="D_BK_CA_INFS_CLOCK_GRP" nand="true" backupDram="true" sync="true" encrypt="true">
     <item name="D_BK_ID_INFS_CLOCK_GRP" id="0262" size="128"/>
   </category>
   <category name="D_BK_CA_INFS_HOME_GRP" nand="true" backupDram="true" sync="true" encrypt="false">
@@ -115,15 +110,16 @@
   </category>
   <category name="D_BK_CA_MEDSRV_SETTING" nand="true" backupDram="true" sync="true" encrypt="false">
     <item name="D_BK_ID_MEDSRV_DISC_SETTING" id="0279" size="1024"/>
+    <item name="D_BK_ID_MEDSRV_CDRIP_SETTING" id="0280" size="32"/>
     <item name="D_BK_ID_MEDSRV_COM_SETTING" id="420" size="32"/>
   </category>
   <category name="D_BK_CA_GNDB_UPDATE_HISTORY" nand="true" backupDram="true" sync="true" encrypt="false">
     <item name="D_BK_ID_GNDB_UPDATE_HISTORY" id="0281" size="400"/>
   </category>
-  <category name="D_BK_CA_DIAGCODE_MEM" nand="true" backupDram="true" sync="true" encrypt="false">
-    <item name="D_BK_ID_DIAGCODE_MEM" id="0282" size="441000"/>
+  <category name="D_BK_CA_DIAGCODE_MEM" nand="true" backupDram="true" sync="true" encrypt="true">
+    <item name="D_BK_ID_DIAGCODE_MEM" id="0282" size="9011200"/>
   </category>
-  <category name="D_BK_CA_DIAGCODE_EXTINFO" nand="true" backupDram="true" sync="true" encrypt="false">
+  <category name="D_BK_CA_DIAGCODE_EXTINFO" nand="true" backupDram="true" sync="true" encrypt="true">
     <item name="D_BK_ID_DIAGCODE_EXTINFO" id="0283" size="32"/>
   </category>
   <category name="D_BK_CA_DIAGCODE_TRIPCNT" nand="true" backupDram="true" sync="true" encrypt="false">
@@ -132,8 +128,8 @@
   <category name="D_BK_CA_PFDREC_FUNC" nand="false" backupDram="true" sync="false" encrypt="false">
     <item name="D_BK_ID_PFDREC_FUNC" id="0285" size="16"/>
   </category>
-  <category name="D_BK_CA_DIAGCODE_WORK_BUF" nand="false" backupDram="true" sync="false" encrypt="false">
-    <item name="D_BK_ID_DIAGCODE_WORK_BUF" id="0286" size="495000"/>
+  <category name="D_BK_CA_DIAGCODE_WORK_BUF" nand="false" backupDram="true" sync="false" encrypt="true">
+    <item name="D_BK_ID_DIAGCODE_WORK_BUF" id="0286" size="9068544"/>
   </category>
   <category name="D_BK_CA_AS__CWORD76_VOLUME" nand="true" backupDram="true" sync="false" encrypt="false">
     <item name="D_BK_ID_AS__CWORD76_VOLUME" id="0287" size="200"/>
@@ -141,35 +137,9 @@
   <category name="D_BK_CA_KEYBOARD_PARAMETER" nand="true" cacheDram="true" sync="false" backupCycle="60" encrypt="false">
     <item name="D_BK_ID_KEYBOARD_PARAMETER" id="0296" size="8"/>
   </category>
-  <category name="D_BK_CA_TOUCH" nand="true" backupDram="true" sync="true" encrypt="false">
-    <item name="D_BK_ID_TOUCH_CONFIG" id="0300" size="32"/>
-    <item name="D_BK_ID_TOUCH_PARAMETER" id="0301" size="4"/>
-  </category>
-  <category name="D_BK_CA_CUSERVICE_DCMFLAG" nand="true" backupDram="true" sync="true" encrypt="false">
-    <item name="D_BK_ID_CUSERVICE_DCMFLAG" id="0302" size="8"/>
-  </category>
-  <category name="D_BK_CA_CUSERVICE_SRVFLAG" nand="true" cacheDram="true" sync="false" backupCycle="60" encrypt="false">
-    <item name="D_BK_ID_CUSERVICE_SRVFLAG" id="0303" size="2048"/>
-  </category>
-  <category name="D_BK_CA_CUSERVICE_ACCON_CDF" nand="true" cacheDram="true" sync="false" backupCycle="60" encrypt="false">
-    <item name="D_BK_ID_CUSERVICE_ACCON_CDF" id="0304" size="2048"/>
-  </category>
-  <category name="D_BK_CA_CUSERVICE_SRVFLAG_CDF" nand="true" cacheDram="true" sync="false" backupCycle="60" encrypt="false">
-    <item name="D_BK_ID_CUSERVICE_SRVFLAG_CDF" id="0305" size="2048"/>
-  </category>
-  <category name="D_BK_CA_GRA_AMFMHD_CTRL" nand="false" backupDram="true" sync="false" encrypt="false">
-    <item name="D_BK_ID_NVM_ID_GRA_AMFMHD_STATION_LIST" id="0321" size="13168"/>
-  </category>
   <category name="D_BK_CA_GRA_MSTR_CTRL" nand="true" backupDram="true" sync="false" encrypt="false">
     <item name="D_BK_ID_NVM_ID_GRA_MSTR_LSM_DATA" id="0323" size="2048"/>
     <item name="D_BK_ID_NVM_ID_GRA_MSTR_SC_CONFIG_PARAMS" id="0324" size="64"/>
-  </category>
-  <category name="D_BK_CA_GRA_SDARS_CTRL" nand="true" backupDram="true" sync="false" encrypt="false">
-    <item name="D_BK_ID_NVM_ID_GRA_SDARS_STATION_LIST" id="0326" size="45056"/>
-    <item name="D_BK_ID_NVM_ID_GRA_SDARS_CATEGORY_LIST" id="0327" size="7168"/>
-    <item name="D_BK_ID_NVM_ID_GRA_SDARS_SMS_CFG" id="0365" size="65536"/>
-    <item name="D_BK_ID_NVM_ID_GRA_SDARS_RADIO_ID" id="0405" size="16"/>
-    <item name="D_BK_ID_NVM_ID_GRA_SDARS_SUBSCRIPTION_STATUS" id="0439" size="8"/>
   </category>
   <category name="D_BK_CA_DBG_FILTER_SET" nand="true" backupDram="true" sync="false" encrypt="false">
     <item name="D_BK_ID_NVM_ID_DBG_FILTER_SET" id="0346" size="240"/>
@@ -214,39 +184,24 @@
   <category name="D_BK_CA_CUSERVICE_MANAGEINFO" nand="true" backupDram="true" sync="true" encrypt="false">
     <item name="D_BK_ID_CUSERVICE_MANAGEINFO" id="0409" size="128"/>
   </category>
+  <category name="D_BK_CA_VS_FUCSRV__CWORD66__SYNC" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_VS_FUCSRV__CWORD66__SYNC_GRP" id="0419" size="19433"/>
+  </category>
   <category name="D_BK_CA_DIAG_DEVICEINFO" nand="true" backupDram="true" sync="true" encrypt="false">
     <item name="D_BK_ID_DIAG_DEVICEINFO" id="0434" size="10240"/>
   </category>
   <category name="D_BK_CA_BT_PAIRING" nand="true" backupDram="true" sync="true" encrypt="false">
     <item name="D_BK_ID_BT_PAIRING" id="0435" size="102400"/>
   </category>
-  <category name="D_BK_CA_DTSERVICE_WRITE_AT_SHUT_DOWN" nand="true" backupDram="true" sync="false" encrypt="false">
-    <item name="D_BK_ID_DTSERVICE_FORECAST" id="0221" size="153600"/>
-    <item name="D_BK_ID_DTSERVICE_COORDINATE" id="0223" size="128"/>
-    <item name="D_BK_ID_DTSERVICE_AFLIST" id="0224" size="1024"/>
-    <item name="D_BK_ID_DTSERVICE_DOPPLER" id="0225" size="73728"/>
-  </category>
-  <category name="D_BK_CA_DTSERVICE_WRITE_AT_IMMIEDIATELY" nand="true" cacheDram="true" sync="true" encrypt="false">
-    <item name="D_BK_ID_DTSERVICE_CITYDB" id="0220" size="113664"/>
-    <item name="D_BK_ID_DTSERVICE_SETUP" id="0222" size="64"/>
-    <item name="D_BK_ID_DTSERVICE_WEATHER_HISTORY" id="0226" size="1024"/>
-  </category>
   <category name="D_BK_CA_TCS_LEARN_DICTIONARY" nand="true" backupDram="true" sync="false" encrypt="false">
     <item name="D_BK_ID_TCS_LEARN_DICTIONARY" id="437" size="2097152"/>
-  </category>
-  <category name="D_BK_CA_POS_GPS_TIME_SET_INFO" nand="false" backupDram="true" sync="false" encrypt="false">
-    <item name="D_BK_ID_POS_GPS_TIME_SET_INFO" id="0442" size="8"/>
+    <item name="D_BK_ID_TCS_WNN_LEARN_DICTIONARY" id="438" size="1176004"/>
   </category>
   <category name="D_BK_CA_POS_GPS_TIME_SET_FLAG" nand="true" backupDram="true" sync="true" encrypt="false">
     <item name="D_BK_ID_POS_GPS_TIME_SET_FLAG" id="0443" size="4"/>
   </category>
   <category name="D_BK_CA_GRA_MSTR_CTRL_IMM" nand="true" backupDram="true" sync="true" encrypt="false">
     <item name="D_BK_ID_NVM_ID_GRA_MSTR_PRESET_LIST" id="0325" size="22896"/>
-    <item name="D_BK_ID_NVM_ID_GRA_MSTR_PRESET_USER1_LIST" id="0366" size="10240"/>
-    <item name="D_BK_ID_NVM_ID_GRA_MSTR_PRESET_USER2_LIST" id="0367" size="10240"/>
-    <item name="D_BK_ID_NVM_ID_GRA_MSTR_PRESET_USER3_LIST" id="0368" size="10240"/>
-    <item name="D_BK_ID_NVM_ID_GRA_MSTR_PRESET_USER4_LIST" id="0369" size="10240"/>
-    <item name="D_BK_ID_NVM_ID_GRA_MSTR_PRESET_USER5_LIST" id="0370" size="10240"/>
   </category>
   <category name="D_BK_CA_CON_CWORD57__INFO" nand="true" backupDram="true" sync="true" encrypt="false">
     <item name="D_BK_ID_CON_CWORD57__INFO" id="0445" size="256"/>
@@ -260,19 +215,34 @@
   <category name="D_BK_CA_DIAGCODE_MASK" nand="false" backupDram="true" sync="false" encrypt="false">
     <item name="D_BK_ID_DIAGCODE_MASK" id="0449" size="4"/>
   </category>
-  <category name="D_BK_CA__CWORD27__USER_DATA" nand="true" backupDram="true" sync="true" encrypt="false">
-    <item name="D_BK_ID__CWORD27__SETTING" id="0457" size="1024"/>
-  </category>
-  <category name="D_BK_CA__CWORD27__SHARED_RAM" nand="false" backupDram="true" sync="false" encrypt="false">
-    <item name="D_BK_ID__CWORD27__CONNECTION_MODE" id="0456" size="1024"/>
-  </category>
   <category name="D_BK_CA_INFS_VOICE_INTERRUPT_SETTING" nand="true" backupDram="true" sync="true" encrypt="false">
     <item name="D_BK_ID_INFS_VOICE_INTERRUPT_SETTING" id="0472" size="64"/>
   </category>
-  <category name="D_BK_CA_DIAGCODE_ODOMETER" nand="true" backupDram="true" sync="true" encrypt="false">
+  <category name="D_BK_CA_DIAGCODE_ODOMETER" nand="true" backupDram="true" sync="true" encrypt="true">
     <item name="D_BK_ID_DIAGCODE_ODOMETER" id="0473" size="8"/>
   </category>
   <category name="D_BK_CA_DIAGCODE_DIAGMODE" nand="true" backupDram="true" sync="true" encrypt="false">
     <item name="D_BK_ID_DIAGCODE_DIAGMODE" id="0474" size="4"/>
+  </category>
+  <category name="D_BK_CA_VS_FUCSRV__CWORD66__ASYNC" nand="true" backupDram="true" sync="false" backupCycle="60" encrypt="false">
+    <item name="D_BK_ID_VS_FUCSRV__CWORD66__ASYNC_GRP" id="0475" size="19334"/>
+  </category>
+  <category name="D_BK_CA_VS_FUCSRV__CWORD66__1TRIP_ASYNC" nand="true" backupDram="true" sync="false" backupCycle="60" encrypt="true">
+    <item name="D_BK_ID_VS_FUCSRV__CWORD66__1TRIP_ASYNC_GRP" id="0476" size="99"/>
+  </category>
+  <category name="D_BK_CA_VS_FUCSRV_HISTORY_ASYNC" nand="true" backupDram="true" sync="false" backupCycle="15" encrypt="true">
+    <item name="D_BK_ID_VS_FUCSRV_HISTORY_ASYNC_GRP" id="0480" size="1024"/>
+  </category>
+  <category name="D_BK_CA_VS_FUCSRV_HISTORY_SYNC" nand="true" backupDram="true" sync="true" encrypt="true">
+    <item name="D_BK_ID_VS_FUCSRV_HISTORY_SYNC_GRP" id="0481" size="1024"/>
+  </category>
+  <category name="D_BK_CA_VS_FUCSRV__CWORD66__TRIP_ASYNC" nand="true" backupDram="true" sync="false" backupCycle="60" encrypt="true">
+    <item name="D_BK_ID_VS_FUCSRV__CWORD66__TRIP_ASYNC_GRP" id="0482" size="19334"/>
+  </category>
+  <category name="D_BK_CA_VINFOSRV_METER_TYPE" nand="false" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_VINFOSRV_METER_TYPE" id="0483" size="1"/>
+  </category>
+  <category name="D_BK_CA_ADAS_SETTING" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_ADAS_SETTING" id="0484" size="512"/>
   </category>
 </backup>

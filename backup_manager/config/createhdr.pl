@@ -26,7 +26,7 @@ my @item_array = getlist($ARGV[0], '//item/@name');
 
 print<<'HEADER';
 /*
- * @copyright Copyright (c) 2017-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2017-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

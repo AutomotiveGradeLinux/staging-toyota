@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 #include <system_service/ss_system_manager_notifications.h>
 #include <native_service/frameworkunified_multithreading.h>
 
-//#include <nv_hal.h>
+#include <nv_hal.h>
 #include <signal.h>
 #include <cerrno>
 #include <cstdio>
@@ -114,10 +114,11 @@ EFrameworkunifiedStatus FrameworkunifiedOnInitialization(HANDLE h_app) {
     // LCOV_EXCL_STOP 5:pthread_create's error case.
   }
 
-//  if ((e_status = InitNv()) != eFrameworkunifiedStatusOK) {
-//    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "InitNv e_status:%d", e_status);
-//    exit(EXIT_FAILURE);
-//  }
+  e_status = InitNv();
+  if (e_status != eFrameworkunifiedStatusOK) {
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "InitNv e_status:%d", e_status);
+    exit(EXIT_FAILURE);
+  }
 
   if (BckupParamInit() < 0) {  // LCOV_EXCL_BR_LINE 5:C API's error case.
     AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert

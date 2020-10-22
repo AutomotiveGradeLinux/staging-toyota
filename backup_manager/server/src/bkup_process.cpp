@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@
 #include <unistd.h>
 #include <native_service/frameworkunified_framework_if.h>
 #include <system_service/ss_system_manager_if.h>
-//#include <nv_hal.h>
+#include <nv_hal.h>
 #include <aglpath.h>
 #include <cerrno>
 #include <cstdio>
@@ -129,8 +129,7 @@ static int g_bkup_delay_tid;
 /**
  * prototype declared
  */
-//static void BkupApilog(bkup_response_t *response, enum NvHalMedia current_media,
-static void BkupApilog(bkup_response_t *response,
+static void BkupApilog(bkup_response_t *response, enum NvHalMedia current_media,
                        bkup_protocol_header_t *hdr,
                        bkup_query_result_t *query_result, char *buf,
                        uint32_t crc32, EFrameworkunifiedStatus ret_value);
@@ -138,8 +137,7 @@ static void BkupApilog(bkup_response_t *response,
 /**
  * check status of file spicefied by path
  */
-//static int BkupCheckStatFromNv(enum NvHalMedia media, const char *path,
-static int BkupCheckStatFromNv(const char *path,
+static int BkupCheckStatFromNv(enum NvHalMedia media, const char *path,
                                int check_size);
 
 /**
@@ -180,11 +178,10 @@ static inline void BkupRwlockWrlock(pthread_rwlock_t *rwlock, const char *path);
  *      - Internal I/O handling errors (lstat).[eFrameworkunifiedStatusFileLoadError]
  *      - The size specified by the parameter does not correspond to the file size specified by the identifier.[eFrameworkunifiedStatusAccessError]
  */
-//static EFrameworkunifiedStatus CheckNv(enum NvHalMedia media, const char *filename, uint32_t size) {
-static EFrameworkunifiedStatus CheckNv(const char *filename, uint32_t size) {
+static EFrameworkunifiedStatus CheckNv(enum NvHalMedia media, const char *filename, uint32_t size) {
   uint32_t size_;
   EFrameworkunifiedStatus ret;
-//  ret = GetSizeNv(media, filename, &size_);  // Get size
+  ret = GetSizeNv(media, filename, &size_);  // Get size
   if (ret != eFrameworkunifiedStatusOK) {  // If the GetSizeNv fails, the error is returned unchanged.
     return ret;
   }
@@ -205,49 +202,57 @@ static EFrameworkunifiedStatus CheckNv(const char *filename, uint32_t size) {
  * \retval -2 read failed
  * \retval -3 invalid param
  */
-//static int32_t BkupBufferReadFromNv(enum NvHalMedia media, const char *path,
-static int32_t BkupBufferReadFromNv(const char *path,
+static int32_t BkupBufferReadFromNv(const enum NvHalMedia media, const char* path,
                                     char *buf, size_t size, uint32_t *crc32) {
-  int32_t ret = -1;
-  uint32_t size_all = static_cast<uint32_t>(size + sizeof(uint32_t));
-  char *buffer = reinterpret_cast<char *>(MAP_FAILED);
+  int32_t ret = 0;
+  EFrameworkunifiedStatus nv_ret = eFrameworkunifiedStatusFail;
+  const uint32_t size_all = static_cast<uint32_t>(size + sizeof(uint32_t));
+  void* buffer = MAP_FAILED;
+  uint8_t* read_buffer = NULL;
   uint32_t calc_crc32, get_crc32;
 
-  if (!path) {  // LCOV_EXCL_BR_LINE 6:double check
+  if (path == NULL) {  // LCOV_EXCL_BR_LINE 6:double check
     AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
     return -1;  // LCOV_EXCL_LINE 6:double check
   }
 
+  if (!buf) {
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "buf is NULL");
+    return -1;
+  }
   if ((buffer = BkupAnonMmap(size_all)) == MAP_FAILED) {  // LCOV_EXCL_BR_LINE 5:mmap's error case.
     // LCOV_EXCL_START 5:mmap's error case.
     AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "mmap:%s", strerror(errno));
-    ret = eFrameworkunifiedStatusFail;
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "mmap:map failed");
+    ret = -1;
     goto exit;
     // LCOV_EXCL_STOP 5:mmap's error case.
   }
 
-//  if ((ret = ReadNv(media, path, reinterpret_cast<uint8_t *>(buffer),
-//                    size_all)) == 0) {
-//    memcpy(&get_crc32, buffer + size, sizeof(uint32_t));
-//    calc_crc32 = BkupCrc32(buffer, size);  // LCOV_EXCL_BR_LINE 11:unexpected branch
-//    if (get_crc32 != calc_crc32) {
+  read_buffer = reinterpret_cast<uint8_t*>(buffer);
+  nv_ret = ReadNv(media, path, read_buffer, size_all);
+  if (nv_ret == eFrameworkunifiedStatusOK) {
+    const void* const src_buffer = reinterpret_cast<void *>(read_buffer + size);
+    void* dest_buffer = reinterpret_cast<void *>(&get_crc32);
+    memcpy(dest_buffer, src_buffer, sizeof(uint32_t));
+    calc_crc32 = BkupCrc32(read_buffer, size);  // LCOV_EXCL_BR_LINE 11:unexpected branch
+    if (get_crc32 != calc_crc32) {
       // LCOV_EXCL_BR_START 15:marco defined in "native_service/ns_logger_if.h"
-//      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "invalid crc(%s):%#x:%#x", path, get_crc32, calc_crc32);
+      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "invalid crc(%s):%#x:%#x", path, get_crc32, calc_crc32);
       // LCOV_EXCL_BR_STOP 15:marco defined in "native_service/ns_logger_if.h"
-//      ret = -1;
-//      goto exit;
-//    }
-//    if (crc32) {
-//      *crc32 = get_crc32;
-//    }
-//    memcpy(buf, buffer, size);
-//  } else if (ret == eFrameworkunifiedStatusInvldParam) {  // LCOV_EXCL_BR_LINE 6:double check
-//    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//    ret = -3;  // LCOV_EXCL_LINE 6:double check
-//  } else {
-//    ret = -2;
-//  }
+      ret = -1;
+      goto exit;
+    }
+    if (crc32 != NULL) {
+      *crc32 = get_crc32;
+    }
+    dest_buffer = reinterpret_cast<void *>(buf);
+    memcpy(dest_buffer, buffer, size);
+  } else if (nv_ret == eFrameworkunifiedStatusInvldParam) {  // LCOV_EXCL_BR_LINE 6:double check
+    ret = -3;
+  } else {
+    ret = -2;
+  }
 exit:
   if (buffer != MAP_FAILED) {  // LCOV_EXCL_BR_LINE 5:mmap's error case.
     munmap(buffer, size_all);
@@ -259,11 +264,15 @@ exit:
 /*
  * buffer -> file write
  */
-//static int32_t BkupBufferWriteToNv(enum NvHalMedia media, const char *path,
-static int32_t BkupBufferWriteToNv(const char *path,
+static int32_t BkupBufferWriteToNv(const enum NvHalMedia media, const char* path,
                                    char *buf, size_t size, uint32_t *crc32) {
-  int32_t ret;
-  uint32_t size_all = static_cast<uint32_t>(size + sizeof(uint32_t));
+  if (buf == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "buf is NULL");
+    return eFrameworkunifiedStatusNullPointer;
+  }
+  int32_t ret = 0;
+  EFrameworkunifiedStatus nv_ret = eFrameworkunifiedStatusFail;
+  const uint32_t size_all = static_cast<uint32_t>(size + sizeof(uint32_t));
   char *buffer = reinterpret_cast<char *>(MAP_FAILED);
   uint32_t calc_crc32;
 
@@ -271,7 +280,7 @@ static int32_t BkupBufferWriteToNv(const char *path,
     // LCOV_EXCL_START 5:mmap's error case.
     AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
     FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "mmap:%s", strerror(errno));
-    ret = eFrameworkunifiedStatusFail;
+    ret = -1;
     goto exit;
     // LCOV_EXCL_STOP 5:mmap's error case.
   }
@@ -284,13 +293,13 @@ static int32_t BkupBufferWriteToNv(const char *path,
   memcpy(buffer, buf, size);
   memcpy(buffer + size, &calc_crc32, sizeof(uint32_t));
 
-//  if ((ret = WriteNv(media, path, reinterpret_cast<uint8_t *>(buffer),
-//                     size_all)) != 0) {
+  nv_ret = WriteNv(media, path, reinterpret_cast<uint8_t *>(buffer), size_all);
+  if (nv_ret != eFrameworkunifiedStatusOK) {
     // LCOV_EXCL_BR_START 15:marco defined in "native_service/ns_logger_if.h"
-//    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "write to nv(%s):%s", path, strerror(ret));
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "write to nv(%s):%s", path, strerror(ret));
     // LCOV_EXCL_BR_STOP 15:marco defined in "native_service/ns_logger_if.h"
-//    ret = eFrameworkunifiedStatusFail;
-//  }
+    ret = -1;
+  }
 
 exit:
   if (buffer != MAP_FAILED) {  // LCOV_EXCL_BR_LINE 5:mmap's error case.
@@ -304,12 +313,21 @@ exit:
  * inter media copy
  */
 static int BkupMediaCopyFromNv(char *category_name, const char *item_name,
-//                               enum NvHalMedia src, enum NvHalMedia dst,
+                               enum NvHalMedia src, enum NvHalMedia dst,
                                pthread_rwlock_t *src_rwlock,
                                pthread_rwlock_t *dst_rwlock) {
+  if (category_name == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "category_name is NULL");
+    return eFrameworkunifiedStatusNullPointer;
+  }
+
+  if (item_name == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "item_name is NULL");
+    return eFrameworkunifiedStatusNullPointer;
+  }
   int ret = -1;
   uint32_t crc32;
-  char id_path[FILENAME_MAX];
+  char id_path[FILENAME_MAX] = {0};
   char *buffer = reinterpret_cast<char *>(MAP_FAILED);
 
   bkup_query_result_t query_result;
@@ -324,20 +342,18 @@ static int BkupMediaCopyFromNv(char *category_name, const char *item_name,
   if ((buffer = BkupAnonMmap(query_result.size)) == MAP_FAILED) {  // LCOV_EXCL_BR_LINE 5:mmap's error case.
     // LCOV_EXCL_START 5:mmap's error case.
     AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "mmap:%s", strerror(errno));
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "mmap:map failed");
     ret = eFrameworkunifiedStatusFail;
     goto exit;
     // LCOV_EXCL_STOP 5:mmap's error case.
   }
 
   BkupRwlockRdlock(src_rwlock, id_path);  // LCOV_EXCL_BR_LINE 11:unexpected branch
-//  if ((ret = BkupBufferReadFromNv(src, id_path, buffer, query_result.size,
-  if ((ret = BkupBufferReadFromNv(id_path, buffer, query_result.size,
+  if ((ret = BkupBufferReadFromNv(src, id_path, buffer, query_result.size,
                                   &crc32)) >= 0) {
     // LCOV_EXCL_BR_START 11:unexpected branch
     BkupRwlockWrlock(dst_rwlock, id_path);
-//    ret = BkupBufferWriteToNv(dst, id_path, buffer, query_result.size, &crc32);
-    ret = BkupBufferWriteToNv(id_path, buffer, query_result.size, &crc32);
+    ret = BkupBufferWriteToNv(dst, id_path, buffer, query_result.size, &crc32);
     BkupRwlockUnlock(dst_rwlock, id_path);
     // LCOV_EXCL_BR_STOP 11:unexpected branch
   }
@@ -389,8 +405,7 @@ exit:
 /**
  * delete data
  */
-//static int BkupDeleteDataFromNv(const enum NvHalMedia media, const char* const path) {
-static int BkupDeleteDataFromNv(const char* const path) {
+static int BkupDeleteDataFromNv(const enum NvHalMedia media, const char* const path) {
   int ret = 0;
   EFrameworkunifiedStatus e_status = eFrameworkunifiedStatusOK;
 
@@ -402,7 +417,7 @@ static int BkupDeleteDataFromNv(const char* const path) {
     return ret;
     // LCOV_EXCL_STOP 6:Excluded due to checking by upper-level function
   }
-  const size_t path_size = std::string(path).length();
+  const size_t path_size = static_cast<size_t>(std::string(path).length());
   if (path_size  > FILENAME_MAX) {  // LCOV_EXCL_BR_LINE 6:Excluded due to checking by upper-level function
     // LCOV_EXCL_START 6:Excluded due to checking by upper-level function
     AGL_ASSERT_NOT_TESTED();
@@ -412,10 +427,24 @@ static int BkupDeleteDataFromNv(const char* const path) {
     // LCOV_EXCL_STOP 6:Excluded due to checking by upper-level function
   }
 
-//  if ((e_status = DeleteNv(media, path)) != eFrameworkunifiedStatusOK) {
-//    ret = -1;
-//    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "DeleteNv e_status:%d\n", e_status);
-//  }
+  uint32_t size = 0;
+  e_status = GetSizeNv(media, path, &size);
+  if (e_status == eFrameworkunifiedStatusFileLoadError) {
+    // If the file does not exist, deleet it successfully
+    return ret;
+  } else if (e_status != eFrameworkunifiedStatusOK) {
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "GetSizeNv e_status:%d\n", e_status);
+    ret = -1;
+    return ret;
+  } else {
+    // no proc
+  }
+
+  e_status = DeleteNv(media, path);
+  if (e_status != eFrameworkunifiedStatusOK) {
+    ret = -1;
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "DeleteNv e_status:%d\n", e_status);
+  }
   return ret;
 }
 
@@ -423,14 +452,18 @@ static int BkupDeleteDataFromNv(const char* const path) {
  * get rwlock
  */
 static pthread_rwlock_t *BkupGetRwlock(const char *item_name,
-//                                       enum NvHalMedia media,
+                                       enum NvHalMedia media,
                                        bkup_query_result_t *query_result) {
   int ret;
   pthread_rwlock_t *rwlock, *org_rwlock;
   pthread_rwlockattr_t attr;
 
-//  if (media != NVHALMEDIA_BACKUPDRAM || query_result->backup_dram == false || query_result->nand == false) {
-  if (query_result->backup_dram == false || query_result->nand == false) {
+  if (query_result == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "query_result is NULL");
+    return NULL;
+  }
+
+  if (media != NVHALMEDIA_BACKUPDRAM || query_result->backup_dram == false || query_result->nand == false) {
     return NULL;
   }
   // backupDram && nand
@@ -547,6 +580,11 @@ static inline void BkupRwlockUnlock(pthread_rwlock_t *rwlock, const char *path) 
 static mqd_t BkupItcMqopen(const char *mq_name, int flags) {
   struct mq_attr attr;
 
+  if (mq_name == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "mq_name is NULL");
+    return -1;
+  }
+
   attr.mq_flags = 0;
   attr.mq_maxmsg = 256;
   attr.mq_msgsize = sizeof(bkup_itc_message_t);
@@ -558,8 +596,7 @@ static mqd_t BkupItcMqopen(const char *mq_name, int flags) {
  * write & rename
  */
 static int BkupWriteRename(const char *category_name, const char *item_name,
-//                           enum NvHalMedia media, char *buf, int size,
-                           char *buf, int size,
+                           enum NvHalMedia media, char *buf, int size,
                            pthread_rwlock_t *rwlock) {
   int ret = -1;
   char *full_path = reinterpret_cast<char *>(MAP_FAILED);
@@ -574,8 +611,7 @@ static int BkupWriteRename(const char *category_name, const char *item_name,
   }
 
   BkupRwlockWrlock(rwlock, full_path);  // LCOV_EXCL_BR_LINE 11:unexpected branch
-//  if (BkupBufferWriteToNv(media, full_path, buf, size, NULL) < 0) {
-  if (BkupBufferWriteToNv(full_path, buf, size, NULL) < 0) {
+  if (BkupBufferWriteToNv(media, full_path, buf, size, NULL) < 0) {
     BkupRwlockUnlock(rwlock, full_path);  // LCOV_EXCL_BR_LINE 11:unexpected branch
     goto exit;
   }
@@ -597,12 +633,15 @@ exit:
  * \retval -1 file not exists
  * \retval -2 size error
  */
-//static int BkupCheckStatFromNv(enum NvHalMedia media, const char *path,
-static int BkupCheckStatFromNv(const char *path,
+static int BkupCheckStatFromNv(enum NvHalMedia media, const char *path,
                                int check_size) {
   uint32_t size = check_size + static_cast<uint32_t>(sizeof(uint32_t));
-//  EFrameworkunifiedStatus ret = CheckNv(media, path, size);
-  EFrameworkunifiedStatus ret = CheckNv(path, size);
+  const EFrameworkunifiedStatus ret = CheckNv(media, path, size);
+
+  if (path == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "path is NULL");
+    return -1;
+  }
 
   if (eFrameworkunifiedStatusOK == ret) {
     return 0;
@@ -618,8 +657,7 @@ static int BkupCheckStatFromNv(const char *path,
 /**
  * media stat
  */
-//static int BkupMediaStat(const char *category_name, const char *item_name, enum NvHalMedia src, int size) {
-static int BkupMediaStat(const char *category_name, const char *item_name, int size) {
+static int BkupMediaStat(const char *category_name, const char *item_name, enum NvHalMedia src, int size) {
   int ret = -1;
   char *path = reinterpret_cast<char *>(MAP_FAILED);
 
@@ -631,8 +669,7 @@ static int BkupMediaStat(const char *category_name, const char *item_name, int s
     goto exit;
     // LCOV_EXCL_STOP 5:mmap's error case.
   }
-//  ret = BkupCheckStatFromNv(src, path, size);  // LCOV_EXCL_BR_LINE 11:unexpected branch
-  ret = BkupCheckStatFromNv(path, size);  // LCOV_EXCL_BR_LINE 11:unexpected branch
+  ret = BkupCheckStatFromNv(src, path, size);  // LCOV_EXCL_BR_LINE 11:unexpected branch
 
 exit:
   if (path != MAP_FAILED) {  // LCOV_EXCL_BR_LINE 5:mmap's error case.
@@ -647,21 +684,18 @@ exit:
  * \retval 0 file exists
  * \retval -1 file not exists
  */
-//static int BkupCheckStatRead(enum NvHalMedia current_media, const char *path,
-static int BkupCheckStatRead(const char *path,
+static int BkupCheckStatRead(enum NvHalMedia current_media, const char *path,
                              char *buf, int check_size, uint32_t *crc32,
                              pthread_rwlock_t *rwlock) {
   int ret;
 
-//  if ((ret = BkupCheckStatFromNv(current_media, path, check_size)) < 0) {
-  if ((ret = BkupCheckStatFromNv(path, check_size)) < 0) {
+  if ((ret = BkupCheckStatFromNv(current_media, path, check_size)) < 0) {
     return ret;
   }
 
   BkupRwlockRdlock(rwlock, path);
 
-//  if (BkupBufferReadFromNv(current_media, path, buf, check_size, crc32) < 0) {
-  if (BkupBufferReadFromNv(path, buf, check_size, crc32) < 0) {
+  if (BkupBufferReadFromNv(current_media, path, buf, check_size, crc32) < 0) {
     BkupRwlockUnlock(rwlock, path);
     return -1;
   }
@@ -677,28 +711,34 @@ static int BkupCheckStatRead(const char *path,
  * \retval -1 file invalid but create 0 fill file
  * \retval 1 file valid
  */
-//static int BkupCheckRead(const char *path, enum NvHalMedia current_media,
-static int BkupCheckRead(const char *path,
+static int BkupCheckRead(const char *path, enum NvHalMedia current_media,
                          bkup_protocol_command_t command, char *rcv_buf,
                          char *read_buf, uint32_t *crc32,
                          bkup_query_result_t *query_result,
                          pthread_rwlock_t *rwlock) {
   int ret = -1;
+
+  if (rcv_buf == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "rcv_buf is NULL");
+    return 0;
+  }
+  if (query_result == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "query_result is NULL");
+    return 0;
+  }
+
   bkup_protocol_header_t *hdr = reinterpret_cast<bkup_protocol_header_t *>(rcv_buf);
 
-//  if (BkupCheckStatRead(current_media, path, read_buf, query_result->size, crc32, rwlock) < 0) {
-  if (BkupCheckStatRead(path, read_buf, query_result->size, crc32, rwlock) < 0) {
+  if (BkupCheckStatRead(current_media, path, read_buf, query_result->size, crc32, rwlock) < 0) {
     // file not exists
-//    if (current_media == NVHALMEDIA_NAND || query_result->nand == false) {
-    if (query_result->nand == false) {
+    if (current_media == NVHALMEDIA_NAND || query_result->nand == false) {
       goto exit;
     } else {
       if (command == BKUP_CMD_READ) {
         /*
          * Read
          */
-//        if (BkupCheckStatFromNv(NVHALMEDIA_NAND, path, query_result->size) == 0) {
-        if (BkupCheckStatFromNv(path, query_result->size) == 0) {
+        if (BkupCheckStatFromNv(NVHALMEDIA_NAND, path, query_result->size) == 0) {
           // do nothing
           ret = 0;
         } else {
@@ -709,14 +749,11 @@ static int BkupCheckRead(const char *path,
         /*
          * Write/Fill
          */
-//        pthread_rwlock_t *nand_rwlock = BkupGetRwlock(hdr->item_name, NVHALMEDIA_NAND, query_result);
-        pthread_rwlock_t *nand_rwlock = BkupGetRwlock(hdr->item_name, query_result);
-//        if (BkupCheckStatRead(NVHALMEDIA_NAND, path, read_buf, query_result->size, NULL, nand_rwlock) == 0) {
-        if (BkupCheckStatRead(path, read_buf, query_result->size, NULL, nand_rwlock) == 0) {
+        pthread_rwlock_t *nand_rwlock = BkupGetRwlock(hdr->item_name, NVHALMEDIA_NAND, query_result);
+        if (BkupCheckStatRead(NVHALMEDIA_NAND, path, read_buf, query_result->size, NULL, nand_rwlock) == 0) {
           // write back cache
           if (BkupWriteRename(query_result->category_name, hdr->item_name,
-//                              current_media, read_buf, query_result->size,
-                              read_buf, query_result->size,
+                              current_media, read_buf, query_result->size,
                               rwlock) >= 0) {
             ret = 1;
           } else {
@@ -739,14 +776,24 @@ exit:
 /**
  * read command
  */
-//static int BkupCmdRead(bkup_response_t *response, enum NvHalMedia current_media,
-static int BkupCmdRead(bkup_response_t *response,
+static int BkupCmdRead(bkup_response_t *response, enum NvHalMedia current_media,
                        char *rcv_buf, bkup_query_result_t *query_result) {
   int ret = -1;
+  if (response == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "response is NULL");
+    return -1;
+  }
+  if (rcv_buf == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "rcv_buf is NULL");
+    return -1;
+  }
+  if (query_result == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "query_result is NULL");
+    return -1;
+  }
   bkup_protocol_header_t *hdr = reinterpret_cast<bkup_protocol_header_t *>(rcv_buf);
   // LCOV_EXCL_BR_START 11:unexpected branch
-//  pthread_rwlock_t *rwlock = BkupGetRwlock(hdr->item_name, current_media, query_result);
-  pthread_rwlock_t *rwlock = BkupGetRwlock(hdr->item_name, query_result);
+  pthread_rwlock_t *rwlock = BkupGetRwlock(hdr->item_name, current_media, query_result);
   // LCOV_EXCL_BR_STOP 11:unexpected branch
   char *full_path = reinterpret_cast<char *>(MAP_FAILED);
   char *buf = reinterpret_cast<char *>(MAP_FAILED);
@@ -774,8 +821,7 @@ static int BkupCmdRead(bkup_response_t *response,
   }
   buf_size = query_result->size;
 
-//  ret = BkupCheckRead(full_path, current_media, hdr->command, rcv_buf, buf,
-  ret = BkupCheckRead(full_path, hdr->command, rcv_buf, buf,
+  ret = BkupCheckRead(full_path, current_media, hdr->command, rcv_buf, buf,
                       &crc32, query_result, rwlock);  // LCOV_EXCL_BR_LINE 11:unexpected branch
   if (ret == -1) {
     // return all 0
@@ -790,44 +836,37 @@ static int BkupCmdRead(bkup_response_t *response,
   ret = hdr->size;
 
   // caching to memory
-//  if (current_media == NVHALMEDIA_NAND) {
+  if (current_media == NVHALMEDIA_NAND) {
     if (query_result->cache_dram) {
       if (BkupMediaStat(query_result->category_name, hdr->item_name,
-//                        NVHALMEDIA_CACHEDRAM, query_result->size) < 0) {
-                        query_result->size) < 0) {
+                        NVHALMEDIA_CACHEDRAM, query_result->size) < 0) {
         // LCOV_EXCL_BR_START 11:unexpected branch
         pthread_rwlock_t *dst_rwlock =
-//            BkupGetRwlock(hdr->item_name, NVHALMEDIA_CACHEDRAM, query_result);
-            BkupGetRwlock(hdr->item_name, query_result);
+            BkupGetRwlock(hdr->item_name, NVHALMEDIA_CACHEDRAM, query_result);
         // LCOV_EXCL_BR_STOP 11:unexpected branch
         BkupWriteRename(query_result->category_name, hdr->item_name,
-//                        NVHALMEDIA_CACHEDRAM, buf, query_result->size,
-                        buf, query_result->size,
+                        NVHALMEDIA_CACHEDRAM, buf, query_result->size,
                         dst_rwlock);  // LCOV_EXCL_BR_LINE 11:unexpected branch
       }
     }
     if (query_result->backup_dram) {
       if (BkupMediaStat(query_result->category_name, hdr->item_name,
-//                        NVHALMEDIA_BACKUPDRAM, query_result->size) < 0) {
-                        query_result->size) < 0) {
+                        NVHALMEDIA_BACKUPDRAM, query_result->size) < 0) {
         // LCOV_EXCL_BR_START 11:unexpected branch
         pthread_rwlock_t *dst_rwlock =
-//            BkupGetRwlock(hdr->item_name, NVHALMEDIA_BACKUPDRAM, query_result);
-            BkupGetRwlock(hdr->item_name, query_result);
+            BkupGetRwlock(hdr->item_name, NVHALMEDIA_BACKUPDRAM, query_result);
         // LCOV_EXCL_BR_STOP 11:unexpected branch
         BkupWriteRename(query_result->category_name, hdr->item_name,
-//                        NVHALMEDIA_BACKUPDRAM, buf, query_result->size,
-                        buf, query_result->size,
+                        NVHALMEDIA_BACKUPDRAM, buf, query_result->size,
                         dst_rwlock);  // LCOV_EXCL_BR_LINE 11:unexpected branch
       }
     }
-//  }
+  }
 
 exit:
   if (ret != 0 && buf != MAP_FAILED) {  // LCOV_EXCL_BR_LINE 5: mmap's error case.
     // LCOV_EXCL_BR_START 11:unexpected branch
-//    BkupApilog(response, current_media, hdr, query_result, buf, crc32, e_status);
-    BkupApilog(response, hdr, query_result, buf, crc32, e_status);
+    BkupApilog(response, current_media, hdr, query_result, buf, crc32, e_status);
     // LCOV_EXCL_BR_STOP 11:unexpected branch
     // LCOV_EXCL_BR_START 4: NSFW error case
     if ((*response->set_response)(response->opt, buf + hdr->offset, hdr->size, e_status) < 0) {
@@ -850,17 +889,27 @@ exit:
  * write command
  */
 static int BkupCmdWrite(bkup_response_t *response,
-//                        enum NvHalMedia current_media, char *rcv_buf,
-                        char *rcv_buf,
+                        enum NvHalMedia current_media, char *rcv_buf,
                         bkup_query_result_t *query_result) {
   int ret = -1;
+
+  if (response == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "response is NULL");
+    return -1;
+  }
+  if (rcv_buf == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "rcv_buf is NULL");
+    return -1;
+  }
+  if (query_result == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "query_result is NULL");
+    return -1;
+  }
   bkup_protocol_header_t *hdr = reinterpret_cast<bkup_protocol_header_t *>(rcv_buf);
   // LCOV_EXCL_BR_START 11:unexpected branch
-//  pthread_rwlock_t *rwlock = BkupGetRwlock(hdr->item_name, current_media, query_result);
-  pthread_rwlock_t *rwlock = BkupGetRwlock(hdr->item_name, query_result);
+  pthread_rwlock_t *rwlock = BkupGetRwlock(hdr->item_name, current_media, query_result);
   // LCOV_EXCL_BR_STOP 11:unexpected branch
   char *full_path = reinterpret_cast<char *>(MAP_FAILED);
-  char *tmp_path = reinterpret_cast<char *>(MAP_FAILED);
   char *buf = reinterpret_cast<char *>(MAP_FAILED);
   char *header = NULL;
   uint32_t crc32 = 0;
@@ -887,8 +936,7 @@ static int BkupCmdWrite(bkup_response_t *response,
     buf_size = query_result->size;
 
     // LCOV_EXCL_BR_START 11:unexpected branch
-//    ret = BkupCheckRead(full_path, current_media, hdr->command, rcv_buf, buf, NULL, query_result, rwlock);
-    ret = BkupCheckRead(full_path, hdr->command, rcv_buf, buf, NULL, query_result, rwlock);
+    ret = BkupCheckRead(full_path, current_media, hdr->command, rcv_buf, buf, NULL, query_result, rwlock);
     // LCOV_EXCL_BR_STOP 11:unexpected branch
     if (ret == 0) {
       // do nothing
@@ -898,8 +946,7 @@ static int BkupCmdWrite(bkup_response_t *response,
     header = buf;
     memcpy(buf + hdr->offset, rcv_buf + sizeof(bkup_protocol_header_t), hdr->size);
     BkupRwlockWrlock(rwlock, full_path);  // LCOV_EXCL_BR_LINE 11:unexpected branch
-//    if (BkupBufferWriteToNv(current_media, full_path, buf, query_result->size, &crc32) < 0) {
-    if (BkupBufferWriteToNv(full_path, buf, query_result->size, &crc32) < 0) {
+    if (BkupBufferWriteToNv(current_media, full_path, buf, query_result->size, &crc32) < 0) {
       BkupRwlockUnlock(rwlock, full_path);  // LCOV_EXCL_BR_LINE 11:unexpected branch
       goto exit;
     }
@@ -910,8 +957,7 @@ static int BkupCmdWrite(bkup_response_t *response,
      */
     header = rcv_buf + sizeof(bkup_protocol_header_t);
     BkupRwlockWrlock(rwlock, full_path);  // LCOV_EXCL_BR_LINE 11:unexpected branch
-//    if (BkupBufferWriteToNv(current_media, full_path,
-    if (BkupBufferWriteToNv(full_path,
+    if (BkupBufferWriteToNv(current_media, full_path,
                 rcv_buf + sizeof(bkup_protocol_header_t), hdr->size, &crc32) < 0) {
       BkupRwlockUnlock(rwlock, full_path);  // LCOV_EXCL_BR_LINE 11:unexpected branch
       goto exit;
@@ -924,22 +970,21 @@ static int BkupCmdWrite(bkup_response_t *response,
 
 exit:
   EFrameworkunifiedStatus e_status = ret < 0 ? eFrameworkunifiedStatusFail : eFrameworkunifiedStatusOK;
-//  if (current_media == NVHALMEDIA_NAND) {
-//    if (query_result->cache_dram == false && query_result->backup_dram == false) {
+  if (current_media == NVHALMEDIA_NAND) {
+    if (query_result->cache_dram == false && query_result->backup_dram == false) {
       // LCOV_EXCL_BR_START 11:unexpected branch
-//      BkupApilog(response, current_media, hdr, query_result, header, crc32, e_status);
+      BkupApilog(response, current_media, hdr, query_result, header, crc32, e_status);
       // LCOV_EXCL_BR_STOP 11:unexpected branch
-//    }
-//    if ((*response->set_response)(response->opt, NULL, 0, e_status) < 0) {  // LCOV_EXCL_BR_LINE 4: NSFW error case
-//      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//      ret = -1;  // LCOV_EXCL_LINE 4: NSFW error case
-//    }
-//  } else {
+    }
+    if ((*response->set_response)(response->opt, NULL, 0, e_status) < 0) {  // LCOV_EXCL_BR_LINE 4: NSFW error case
+      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+      ret = -1;  // LCOV_EXCL_LINE 4: NSFW error case
+    }
+  } else {
     // LCOV_EXCL_BR_START 11:unexpected branch
-//    BkupApilog(response, current_media, hdr, query_result, header, crc32, e_status);
-    BkupApilog(response, hdr, query_result, header, crc32, e_status);
+    BkupApilog(response, current_media, hdr, query_result, header, crc32, e_status);
     // LCOV_EXCL_BR_STOP 11:unexpected branch
-//  }
+  }
 
   if (buf != MAP_FAILED) {  // LCOV_EXCL_BR_LINE 5: mmap's error case.
     munmap(buf, buf_size);
@@ -947,29 +992,35 @@ exit:
   if (full_path != MAP_FAILED) {  // LCOV_EXCL_BR_LINE 5: mmap's error case.
     munmap(full_path, FILENAME_MAX);
   }
-  if (tmp_path != MAP_FAILED) {  // LCOV_EXCL_BR_LINE 8: dead code
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    munmap(tmp_path, FILENAME_MAX);  // LCOV_EXCL_LINE 8: dead code
-  }
   return ret;
 }
 
 /**
  * fill command
  */
-//static int BkupCmdFill(bkup_response_t *response, enum NvHalMedia current_media,
-static int BkupCmdFill(bkup_response_t *response,
+static int BkupCmdFill(bkup_response_t *response, enum NvHalMedia current_media,
                        char *rcv_buf, bkup_query_result_t *query_result) {
   int ret = -1;
   bkup_protocol_header_t *hdr = reinterpret_cast<bkup_protocol_header_t *>(rcv_buf);
   // LCOV_EXCL_BR_START 11:unexpected branch
-//  pthread_rwlock_t *rwlock = BkupGetRwlock(hdr->item_name, current_media, query_result);
-  pthread_rwlock_t *rwlock = BkupGetRwlock(hdr->item_name, query_result);
+  pthread_rwlock_t *rwlock = BkupGetRwlock(hdr->item_name, current_media, query_result);
   // LCOV_EXCL_BR_STOP 11:unexpected branch
   char *full_path = reinterpret_cast<char *>(MAP_FAILED);
   char *buf = reinterpret_cast<char *>(MAP_FAILED);
   uint32_t crc32 = 0;
 
+  if (response == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "response is NULL");
+    return -1;
+  }
+  if (rcv_buf == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "rcv_buf is NULL");
+    return -1;
+  }
+  if (query_result == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "query_result is NULL");
+    return -1;
+  }
   // LCOV_EXCL_BR_START 5: mmap's error case.
   if (BkupMakeBkupPathToNvId(query_result->category_name, hdr->item_name, &full_path, FILENAME_MAX) < 0) {
   // LCOV_EXCL_BR_STOP 5: mmap's error case.
@@ -992,8 +1043,7 @@ static int BkupCmdFill(bkup_response_t *response,
      * partial fill
      */
     // LCOV_EXCL_BR_START 11:unexpected branch
-//    ret = BkupCheckRead(full_path, current_media, hdr->command, rcv_buf, buf, NULL, query_result, rwlock);
-    ret = BkupCheckRead(full_path, hdr->command, rcv_buf, buf, NULL, query_result, rwlock);
+    ret = BkupCheckRead(full_path, current_media, hdr->command, rcv_buf, buf, NULL, query_result, rwlock);
     // LCOV_EXCL_BR_STOP 11:unexpected branch
     if (ret == 0) {
       // do nothing
@@ -1003,8 +1053,7 @@ static int BkupCmdFill(bkup_response_t *response,
 
   memset(buf + hdr->offset, hdr->fill_patern, hdr->size);
   BkupRwlockWrlock(rwlock, full_path);  // LCOV_EXCL_BR_LINE 11:unexpected branch
-//  if (BkupBufferWriteToNv(current_media, full_path, buf, query_result->size, &crc32) < 0) {
-  if (BkupBufferWriteToNv(full_path, buf, query_result->size, &crc32) < 0) {
+  if (BkupBufferWriteToNv(current_media, full_path, buf, query_result->size, &crc32) < 0) {
     BkupRwlockUnlock(rwlock, full_path);  // LCOV_EXCL_BR_LINE 11:unexpected branch
     goto exit;
   }
@@ -1015,22 +1064,21 @@ static int BkupCmdFill(bkup_response_t *response,
 
 exit:
   EFrameworkunifiedStatus e_status = ret < 0 ? eFrameworkunifiedStatusFail : eFrameworkunifiedStatusOK;
-//  if (current_media == NVHALMEDIA_NAND) {
+  if (current_media == NVHALMEDIA_NAND) {
     if (query_result->cache_dram == false && query_result->backup_dram == false) {
       // LCOV_EXCL_BR_START 11:unexpected branch
-//      BkupApilog(response, current_media, hdr, query_result, buf, crc32, e_status);
-      BkupApilog(response, hdr, query_result, buf, crc32, e_status);
+      BkupApilog(response, current_media, hdr, query_result, buf, crc32, e_status);
       // LCOV_EXCL_BR_STOP 11:unexpected branch
     }
     if ((*response->set_response)(response->opt, NULL, 0, e_status) < 0) {  // LCOV_EXCL_BR_LINE 4: NSFW error case
       AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
       ret = -1;  // LCOV_EXCL_LINE 4: NSFW error case
     }
-//  } else {
+  } else {
     // LCOV_EXCL_BR_START 11:unexpected branch
-//    BkupApilog(response, current_media, hdr, query_result, buf, crc32, e_status);
+    BkupApilog(response, current_media, hdr, query_result, buf, crc32, e_status);
     // LCOV_EXCL_BR_STOP 11:unexpected branch
-//  }
+  }
 
   if (buf != MAP_FAILED) {  // LCOV_EXCL_BR_LINE 5: mmap's error case.
     munmap(buf, query_result->size);
@@ -1044,30 +1092,39 @@ exit:
 /**
  * copy command
  */
-//static int BkupCmdCopy(bkup_response_t *response, enum NvHalMedia current_media,
-static int BkupCmdCopy(bkup_response_t *response,
+static int BkupCmdCopy(bkup_response_t *response, enum NvHalMedia current_media,
                        char *rcv_buf, bkup_query_result_t *query_result) {
+  if (rcv_buf == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "rcv_buf is NULL");
+    return -1;
+  }
+  if (query_result == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "query_result is NULL");
+    return -1;
+  }
   bkup_protocol_header_t *hdr =
       reinterpret_cast<bkup_protocol_header_t *>(rcv_buf);
   pthread_rwlock_t *src_rwlock =
-//      BkupGetRwlock(hdr->item_name, hdr->src_media, query_result);
-      BkupGetRwlock(hdr->item_name, query_result);
+      BkupGetRwlock(hdr->item_name, hdr->src_media, query_result);
   pthread_rwlock_t *dst_rwlock =
-//      BkupGetRwlock(hdr->item_name, current_media, query_result);
-      BkupGetRwlock(hdr->item_name, query_result);
+      BkupGetRwlock(hdr->item_name, current_media, query_result);
 
-//  int ret = BkupMediaCopyFromNv(query_result->category_name, hdr->item_name, hdr->src_media, current_media, src_rwlock,
-  int ret = BkupMediaCopyFromNv(query_result->category_name, hdr->item_name, src_rwlock,
+  int ret = BkupMediaCopyFromNv(query_result->category_name, hdr->item_name, hdr->src_media, current_media, src_rwlock,
                         dst_rwlock);
 
-//  if (current_media == NVHALMEDIA_NAND) {
+  if (response == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "response is NULL");
+    return -1;
+  }
+
+  if (current_media == NVHALMEDIA_NAND) {
     // LCOV_EXCL_BR_START 4: NSFW error case
     if ((*response->set_response)(response->opt, NULL, 0, ret < 0 ? eFrameworkunifiedStatusFail : eFrameworkunifiedStatusOK) < 0) {
     // LCOV_EXCL_BR_STOP 4: NSFW error case
       AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
       ret = -1;  // LCOV_EXCL_LINE 4: NSFW error case
     }
-//  }
+  }
   return ret;
 }
 
@@ -1075,13 +1132,20 @@ static int BkupCmdCopy(bkup_response_t *response,
  * check command
  */
 static int BkupCmdCheck(bkup_response_t *response,
-//                        enum NvHalMedia current_media, char *rcv_buf,
-                        char *rcv_buf,
+                        enum NvHalMedia current_media, char *rcv_buf,
                         bkup_query_result_t *query_result) {
   int ret = 0;
   bkup_protocol_header_t *hdr = reinterpret_cast<bkup_protocol_header_t *>(rcv_buf);
   char *full_path = reinterpret_cast<char *>(MAP_FAILED);
 
+  if (rcv_buf == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "rcv_buf is NULL");
+    return -1;
+  }
+  if (query_result == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "query_result is NULL");
+    return -1;
+  }
   // LCOV_EXCL_BR_START 5: mmap's error case.
   if (BkupMakeBkupPathToNvId(query_result->category_name, hdr->item_name, &full_path, FILENAME_MAX) < 0) {
   // LCOV_EXCL_BR_STOP 5: mmap's error case.
@@ -1091,8 +1155,7 @@ static int BkupCmdCheck(bkup_response_t *response,
     goto exit;
     // LCOV_EXCL_STOP 5: mmap's error case.
   }
-//  ret = BkupCheckStatFromNv(current_media, full_path, query_result->size);  // LCOV_EXCL_BR_LINE 11:unexpected branch
-  ret = BkupCheckStatFromNv(full_path, query_result->size);  // LCOV_EXCL_BR_LINE 11:unexpected branch
+  ret = BkupCheckStatFromNv(current_media, full_path, query_result->size);  // LCOV_EXCL_BR_LINE 11:unexpected branch
 
 exit:
   if (full_path != MAP_FAILED) {  // LCOV_EXCL_BR_LINE 5: mmap's error case.
@@ -1105,14 +1168,14 @@ exit:
  * delete command
  */
 static int BkupCmdDeleteData(bkup_response_t* const response,
-//                             const enum NvHalMedia current_media,
+                             const enum NvHalMedia current_media,
                              char* const rcv_buf,
                              bkup_query_result_t* const query_result) {
   int ret = -1;
   char *full_path = NULL;
-  bkup_protocol_header_t* hdr = nullptr;
-  pthread_rwlock_t* rwlock = nullptr;
-  if ((response == nullptr) || (rcv_buf == nullptr) || (query_result == nullptr)) {  // LCOV_EXCL_BR_LINE 6:Excluded as no NULL is currently passed
+  bkup_protocol_header_t* hdr = reinterpret_cast<bkup_protocol_header_t*>(NULL);
+  pthread_rwlock_t* rwlock = reinterpret_cast<pthread_rwlock_t*>(NULL);
+  if ((response == NULL) || (rcv_buf == NULL) || (query_result == NULL)) {  // LCOV_EXCL_BR_LINE 6:Excluded as no NULL is currently passed
     // LCOV_EXCL_START 6:Excluded as no NULL is currently passed
     AGL_ASSERT_NOT_TESTED();
     FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "Resp or Buf or Query is NULL");
@@ -1120,8 +1183,7 @@ static int BkupCmdDeleteData(bkup_response_t* const response,
     // LCOV_EXCL_STOP 6:Excluded as no NULL is currently passed
   }
   hdr = reinterpret_cast<bkup_protocol_header_t *>(rcv_buf);
-//  rwlock = BkupGetRwlock(hdr->item_name, current_media, query_result);
-  rwlock = BkupGetRwlock(hdr->item_name, query_result);
+  rwlock = BkupGetRwlock(hdr->item_name, current_media, query_result);
   if (BkupMakeBkupPathToNvId(query_result->category_name, hdr->item_name, &full_path, FILENAME_MAX) < 0) {  // LCOV_EXCL_BR_LINE 6:Excluded due to checking by upper-level function
     // LCOV_EXCL_START 6:Excluded due to checking by upper-level function
     AGL_ASSERT_NOT_TESTED();
@@ -1129,28 +1191,26 @@ static int BkupCmdDeleteData(bkup_response_t* const response,
     // LCOV_EXCL_STOP 6:Excluded due to checking by upper-level function
   }
   BkupRwlockWrlock(rwlock, full_path);
-//  ret = BkupDeleteDataFromNv(current_media, full_path);
-  ret = BkupDeleteDataFromNv(full_path);
+  ret = BkupDeleteDataFromNv(current_media, full_path);
   if (ret != 0) {
     FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "BkupDeleteDataFromNv Error");
   }
   BkupRwlockUnlock(rwlock, full_path);
 
 exit:
-  if ((response != nullptr) && (query_result != nullptr)) {  // LCOV_EXCL_BR_LINE 6:Excluded as no NULL is currently passed
+  if ((response != NULL) && (query_result != NULL)  && (hdr != NULL)) {  // LCOV_EXCL_BR_LINE 6:Excluded as no NULL is currently passed
     EFrameworkunifiedStatus e_status = (ret < 0) ? eFrameworkunifiedStatusFail : eFrameworkunifiedStatusOK;
-//    if (current_media == NVHALMEDIA_NAND) {
+    if (current_media == NVHALMEDIA_NAND) {
       if ((query_result->cache_dram == false) && (query_result->backup_dram == false)) {
-//        BkupApilog(response, current_media, hdr, query_result, nullptr, 0, e_status);
-        BkupApilog(response, hdr, query_result, nullptr, 0, e_status);
+        BkupApilog(response, current_media, hdr, query_result, NULL, 0, e_status);
       }
-      if ((*response->set_response)(response->opt, nullptr, 0, e_status) < 0) {
+      if ((*response->set_response)(response->opt, NULL, 0, e_status) < 0) {
         FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "Response Error");
         ret = -1;
       }
-//    } else {
-//      BkupApilog(response, current_media, hdr, query_result, NULL, 0, e_status);
-//    }
+    } else {
+      BkupApilog(response, current_media, hdr, query_result, NULL, 0, e_status);
+    }
   }
 
   if (full_path != NULL) {  // LCOV_EXCL_BR_LINE 6:Excluded because checked by BkupMakeBkupPathToNvId()
@@ -1163,36 +1223,35 @@ exit:
  * common file handler
  */
 static int BkupHandlerFile(bkup_response_t *response,
-//                           enum NvHalMedia current_media, char *rcv_buf,
-                           char *rcv_buf,
+                           enum NvHalMedia current_media, char *rcv_buf,
                            bkup_query_result_t *query_result) {
   int ret = 0;
   bkup_protocol_header_t *hdr = reinterpret_cast<bkup_protocol_header_t *>(rcv_buf);
 
+  if (rcv_buf == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "rcv_buf is NULL");
+    return -1;
+  }
+
   switch (hdr->command) {  // LCOV_EXCL_BR_LINE 6:double check
     case BKUP_CMD_READ:
-//      ret = BkupCmdRead(response, current_media, rcv_buf, query_result);
-      ret = BkupCmdRead(response, rcv_buf, query_result);
+      ret = BkupCmdRead(response, current_media, rcv_buf, query_result);
       break;
 
     case BKUP_CMD_WRITE:
-//      ret = BkupCmdWrite(response, current_media, rcv_buf, query_result);
-      ret = BkupCmdWrite(response, rcv_buf, query_result);
+      ret = BkupCmdWrite(response, current_media, rcv_buf, query_result);
       break;
 
     case BKUP_CMD_FILL:
-//      ret = BkupCmdFill(response, current_media, rcv_buf, query_result);
-      ret = BkupCmdFill(response, rcv_buf, query_result);
+      ret = BkupCmdFill(response, current_media, rcv_buf, query_result);
       break;
 
     case BKUP_CMD_COPY_INNER:
-//      ret = BkupCmdCopy(response, current_media, rcv_buf, query_result);
-      ret = BkupCmdCopy(response, rcv_buf, query_result);
+      ret = BkupCmdCopy(response, current_media, rcv_buf, query_result);
       break;
 
     case BKUP_CMD_DELETE:
-//      ret = BkupCmdDeleteData(response, current_media, rcv_buf, query_result);
-      ret = BkupCmdDeleteData(response, rcv_buf, query_result);
+      ret = BkupCmdDeleteData(response, current_media, rcv_buf, query_result);
       break;
 
     default:
@@ -1225,8 +1284,7 @@ static int BkupSetResponseNsfw(void *opt, void *buf, int size, EFrameworkunified
 /**
  * write apilog
  */
-//static void BkupApilog(bkup_response_t *response, enum NvHalMedia current_media,
-static void BkupApilog(bkup_response_t *response,
+static void BkupApilog(bkup_response_t *response, enum NvHalMedia current_media,
                        bkup_protocol_header_t *hdr,
                        bkup_query_result_t *query_result, char *buf,
                        uint32_t crc32, EFrameworkunifiedStatus ret_value) {
@@ -1235,6 +1293,18 @@ static void BkupApilog(bkup_response_t *response,
   char header[12] = "-- -- -- --";
   const char c[] = "0123456789abcdef";
 
+  if (response == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "response is NULL");
+    return;
+  }
+  if (hdr == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "hdr is NULL");
+    return;
+  }
+  if (query_result == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "query_result is NULL");
+    return;
+  }
   if (response->set_response == BkupSetResponseNsfw) {
     src = FrameworkunifiedGetMsgSrc((HANDLE)response->opt);  // LCOV_EXCL_BR_LINE 11:unexpected branch
   } else {
@@ -1295,30 +1365,36 @@ static void BkupApilog(bkup_response_t *response,
 /**
  * Tweak command
  */
-//static int BkupTweakCommand(enum NvHalMedia current_media, char **rcv_buf,
-static int BkupTweakCommand(char **rcv_buf,
+static int BkupTweakCommand(enum NvHalMedia current_media, char **rcv_buf,
                             int *rcv_size, bkup_query_result_t *query_result) {
   int ret = -1;
   bkup_protocol_header_t update_hdr;
   bkup_protocol_header_t *hdr = reinterpret_cast<bkup_protocol_header_t *>(*rcv_buf);
 
-//  if (current_media == NVHALMEDIA_NAND) {  // LCOV_EXCL_BR_LINE 6:current_media never will be NVHALMEDIA_NAND
-//    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//    ret = 0;  // LCOV_EXCL_LINE 6:current_media never will be NVHALMEDIA_NAND
-//    goto exit;  // LCOV_EXCL_LINE 6:current_media never will be NVHALMEDIA_NAND
-//  }
+  if (current_media == NVHALMEDIA_NAND) {  // LCOV_EXCL_BR_LINE 6:current_media never will be NVHALMEDIA_NAND
+    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+    ret = 0;  // LCOV_EXCL_LINE 6:current_media never will be NVHALMEDIA_NAND
+    goto exit;  // LCOV_EXCL_LINE 6:current_media never will be NVHALMEDIA_NAND
+  }
+  if (rcv_size == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "rcv_size is NULL");
+    return -1;
+  }
+  if (query_result == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "query_resul is NULL");
+    return -1;
+  }
 
   if ((hdr->command == BKUP_CMD_WRITE || hdr->command == BKUP_CMD_FILL) &&
       (hdr->offset != 0 || hdr->size != (uint32_t)query_result->size)) {
     // partial request
-//    if ((current_media == NVHALMEDIA_CACHEDRAM &&
-//         (query_result->nand || query_result->backup_dram)) ||
-//        (current_media == NVHALMEDIA_BACKUPDRAM && query_result->nand)) {
-    if (query_result->nand || query_result->backup_dram) {
+    if ((current_media == NVHALMEDIA_CACHEDRAM &&
+         (query_result->nand || query_result->backup_dram)) ||
+        (current_media == NVHALMEDIA_BACKUPDRAM && query_result->nand)) {
       memset(&update_hdr, 0, sizeof(update_hdr));
       BkupStrlcpy(update_hdr.item_name, hdr->item_name, sizeof(update_hdr.item_name));
       update_hdr.command = BKUP_CMD_COPY_INNER;
-//      update_hdr.src_media = current_media;
+      update_hdr.src_media = current_media;
       munmap(*rcv_buf, *rcv_size);
       *rcv_size = 0;
       // LCOV_EXCL_BR_START 5: mmap's error case.
@@ -1457,18 +1533,15 @@ EFrameworkunifiedStatus BkupHandler(HANDLE h_app) {
   } else if (hdr->command == BKUP_CMD_CHECK) {
     if (query_result.nand) {
       // LCOV_EXCL_BR_START 11:unexpected branch
-//      ret = BkupCmdCheck(&response_nsfw, NVHALMEDIA_NAND, rcv_buf, &query_result);
-      ret = BkupCmdCheck(&response_nsfw, rcv_buf, &query_result);
+      ret = BkupCmdCheck(&response_nsfw, NVHALMEDIA_NAND, rcv_buf, &query_result);
       // LCOV_EXCL_BR_STOP 11:unexpected branch
     } else if (query_result.backup_dram) {
       // LCOV_EXCL_BR_START 11:unexpected branch
-//      ret = BkupCmdCheck(&response_nsfw, NVHALMEDIA_BACKUPDRAM, rcv_buf, &query_result);
-      ret = BkupCmdCheck(&response_nsfw, rcv_buf, &query_result);
+      ret = BkupCmdCheck(&response_nsfw, NVHALMEDIA_BACKUPDRAM, rcv_buf, &query_result);
       // LCOV_EXCL_BR_STOP 11:unexpected branch
     } else if (query_result.cache_dram) {
       // LCOV_EXCL_BR_START 11:unexpected branch
-//      ret = BkupCmdCheck(&response_nsfw, NVHALMEDIA_CACHEDRAM, rcv_buf, &query_result);
-      ret = BkupCmdCheck(&response_nsfw, rcv_buf, &query_result);
+      ret = BkupCmdCheck(&response_nsfw, NVHALMEDIA_CACHEDRAM, rcv_buf, &query_result);
       // LCOV_EXCL_BR_STOP 11:unexpected branch
     } else {
       ret = -3;
@@ -1492,16 +1565,14 @@ EFrameworkunifiedStatus BkupHandler(HANDLE h_app) {
      */
     if (query_result.cache_dram) {
       // LCOV_EXCL_BR_START 11:unexpected branch
-//      ret = BkupHandlerFile(&response_nsfw, NVHALMEDIA_CACHEDRAM, rcv_buf, &query_result);
-      ret = BkupHandlerFile(&response_nsfw, rcv_buf, &query_result);
+      ret = BkupHandlerFile(&response_nsfw, NVHALMEDIA_CACHEDRAM, rcv_buf, &query_result);
       // LCOV_EXCL_BR_STOP 11:unexpected branch
       if (ret > 0) {
         if (hdr->command == BKUP_CMD_READ) {
           goto exit;
         }
         // LCOV_EXCL_BR_START 5: mmap's error case.
-//        if (BkupTweakCommand(NVHALMEDIA_CACHEDRAM, &rcv_buf,
-        if (BkupTweakCommand(&rcv_buf,
+        if (BkupTweakCommand(NVHALMEDIA_CACHEDRAM, &rcv_buf,
                              reinterpret_cast<int *>(&rcv_size),
                              &query_result) < 0) {
         // LCOV_EXCL_BR_STOP 5: mmap's error case.
@@ -1520,16 +1591,14 @@ EFrameworkunifiedStatus BkupHandler(HANDLE h_app) {
      */
     if (query_result.backup_dram) {
       // LCOV_EXCL_BR_START 11:unexpected branch
-//      ret = BkupHandlerFile(&response_nsfw, NVHALMEDIA_BACKUPDRAM, rcv_buf, &query_result);
-      ret = BkupHandlerFile(&response_nsfw, rcv_buf, &query_result);
+      ret = BkupHandlerFile(&response_nsfw, NVHALMEDIA_BACKUPDRAM, rcv_buf, &query_result);
       // LCOV_EXCL_BR_STOP 11:unexpected branch
       if (ret > 0) {
         if (hdr->command == BKUP_CMD_READ) {
           goto exit;
         }
         // LCOV_EXCL_BR_START 5: mmap's error case.
-//        if (BkupTweakCommand(NVHALMEDIA_BACKUPDRAM, &rcv_buf,
-        if (BkupTweakCommand(&rcv_buf,
+        if (BkupTweakCommand(NVHALMEDIA_BACKUPDRAM, &rcv_buf,
                              reinterpret_cast<int *>(&rcv_size),
                              &query_result) < 0) {
         // LCOV_EXCL_BR_STOP 5: mmap's error case.
@@ -1558,7 +1627,7 @@ EFrameworkunifiedStatus BkupHandler(HANDLE h_app) {
 
         if (g_bkup_nand_mqd == -1) {
           // LCOV_EXCL_BR_START 5: mq_open's error case.
-          if ((g_bkup_nand_mqd = BkupItcMqopen("/" BKUP_THREAD_NAND, O_WRONLY | O_CREAT | O_NONBLOCK)) < 0) {
+          if ((g_bkup_nand_mqd = BkupItcMqopen("/" BKUP_THREAD_NAND, O_WRONLY | O_CREAT | O_NONBLOCK | O_CLOEXEC)) < 0) {
           // LCOV_EXCL_BR_STOP 5: mq_open's error case.
             // LCOV_EXCL_START 5: mq_open's error case.
             AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
@@ -1606,7 +1675,7 @@ EFrameworkunifiedStatus BkupHandler(HANDLE h_app) {
          */
         if (g_bkup_delay_mqd == -1) {
           // LCOV_EXCL_BR_START 5: mq_open's error case.
-          if ((g_bkup_delay_mqd = BkupItcMqopen("/" BKUP_THREAD_DELAY, O_WRONLY | O_CREAT | O_NONBLOCK)) < 0) {
+          if ((g_bkup_delay_mqd = BkupItcMqopen("/" BKUP_THREAD_DELAY, O_WRONLY | O_CREAT | O_NONBLOCK | O_CLOEXEC)) < 0) {
           // LCOV_EXCL_BR_STOP 5: mq_open's error case.
             // LCOV_EXCL_START 5: mq_open's error case.
             AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
@@ -1689,7 +1758,7 @@ EFrameworkunifiedStatus bkup_power_handler(HANDLE hApp) {
 
     if (g_bkup_delay_mqd == -1) {
       // LCOV_EXCL_BR_START 5: mq_open's error case.
-      if ((g_bkup_delay_mqd = BkupItcMqopen("/" BKUP_THREAD_DELAY, O_WRONLY|O_CREAT|O_NONBLOCK)) < 0) {
+      if ((g_bkup_delay_mqd = BkupItcMqopen("/" BKUP_THREAD_DELAY, O_WRONLY|O_CREAT|O_NONBLOCK|O_CLOEXEC)) < 0) {
       // LCOV_EXCL_BR_STOP 5: mq_open's error case.
         AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
         // LCOV_EXCL_START 5: mq_open's error case.
@@ -1726,6 +1795,10 @@ exit:
 static int BkupSetResponseThread(void *opt, void *buf, int size, EFrameworkunifiedStatus ret_value) {
   HANDLE response_mq;
   char invoker_name[MAX_QUEUE_NAME_SIZE];
+  if (opt == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "opt is NULL");
+    return -1;
+  }
   bkup_itc_message_t *msg = reinterpret_cast<bkup_itc_message_t *>(opt);
   EFrameworkunifiedStatus e_status;
   // LCOV_EXCL_BR_START 11:unexpected branch.
@@ -1779,7 +1852,7 @@ void *BkupNandThread(void *arg) {
   }
 
   // LCOV_EXCL_BR_START 5: mq_open's error case.
-  if ((mqd = BkupItcMqopen("/" BKUP_THREAD_NAND, O_RDONLY | O_CREAT)) < -1) {
+  if ((mqd = BkupItcMqopen("/" BKUP_THREAD_NAND, O_RDONLY | O_CREAT | O_CLOEXEC)) < -1) {
   // LCOV_EXCL_BR_STOP 5: mq_open's error case.
     // LCOV_EXCL_START 5: mq_open's error case.
     AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
@@ -1819,8 +1892,7 @@ void *BkupNandThread(void *arg) {
         BkupParamGet(hdr->item_name, &query_result);  // LCOV_EXCL_BR_LINE 11:unexpected branch
         response_thread.opt = &rcv_msg;
         // LCOV_EXCL_BR_START 11:unexpected branch
-//        ret = BkupHandlerFile(&response_thread, NVHALMEDIA_NAND, rcv_msg.nand.rcv_buf, &query_result);
-        ret = BkupHandlerFile(&response_thread, rcv_msg.nand.rcv_buf, &query_result);
+        ret = BkupHandlerFile(&response_thread, NVHALMEDIA_NAND, rcv_msg.nand.rcv_buf, &query_result);
         // LCOV_EXCL_BR_STOP 11:unexpected branch
 
         munmap(rcv_msg.nand.rcv_buf, rcv_msg.nand.rcv_size);
@@ -1915,8 +1987,7 @@ static int BkupSyncreqInit(void) {
   memset(g_bkup_syncreq, 0, BKUP_SYNCREQ_SIZE);
 
   pthread_rwlock_wrlock(&g_syncreq_rwlock);
-//  BkupBufferWriteToNv(NVHALMEDIA_BACKUPDRAM, BKUP_SYNCREQ_NAME,
-  BkupBufferWriteToNv(BKUP_SYNCREQ_NAME,
+  BkupBufferWriteToNv(NVHALMEDIA_BACKUPDRAM, BKUP_SYNCREQ_NAME,
                       reinterpret_cast<char *>(g_bkup_syncreq),
                       BKUP_SYNCREQ_SIZE, NULL);
   pthread_rwlock_unlock(&g_syncreq_rwlock);
@@ -1944,8 +2015,7 @@ static int BkupSyncreqSet(int id) {
   if (!(*(g_bkup_syncreq + id / 64) & (1ULL << (id % 64)))) {
     *(g_bkup_syncreq + id / 64) |= (1ULL << (id % 64));
     pthread_rwlock_wrlock(&g_syncreq_rwlock);
-//    BkupBufferWriteToNv(NVHALMEDIA_BACKUPDRAM, BKUP_SYNCREQ_NAME,
-    BkupBufferWriteToNv(BKUP_SYNCREQ_NAME,
+    BkupBufferWriteToNv(NVHALMEDIA_BACKUPDRAM, BKUP_SYNCREQ_NAME,
                         reinterpret_cast<char *>(g_bkup_syncreq),
                         BKUP_SYNCREQ_SIZE, NULL);
     pthread_rwlock_unlock(&g_syncreq_rwlock);
@@ -1964,8 +2034,7 @@ static int BkupSyncreqClear(int id) {
   if (*(g_bkup_syncreq + id / 64) & (1ULL << (id % 64))) {
     *(g_bkup_syncreq + id / 64) &= ~(1ULL << (id % 64));
     pthread_rwlock_wrlock(&g_syncreq_rwlock);
-//    BkupBufferWriteToNv(NVHALMEDIA_BACKUPDRAM, BKUP_SYNCREQ_NAME,
-    BkupBufferWriteToNv(BKUP_SYNCREQ_NAME,
+    BkupBufferWriteToNv(NVHALMEDIA_BACKUPDRAM, BKUP_SYNCREQ_NAME,
                         reinterpret_cast<char *>(g_bkup_syncreq),
                         BKUP_SYNCREQ_SIZE, NULL);
     pthread_rwlock_unlock(&g_syncreq_rwlock);
@@ -2026,15 +2095,13 @@ static void BkupSyncreqDone(bool skip_cache) {
       if (query_result.cache_dram) {
         if (!skip_cache) {
           BkupMediaCopyFromNv(query_result.category_name, item_name,
-//                              NVHALMEDIA_CACHEDRAM, NVHALMEDIA_NAND, NULL,
-                              NULL,
+                              NVHALMEDIA_CACHEDRAM, NVHALMEDIA_NAND, NULL,
                               NULL);
         }
       } else if (query_result.backup_dram) {
         // LCOV_EXCL_BR_START 11:unexpected branch
         BkupMediaCopyFromNv(query_result.category_name, item_name,
-//                            NVHALMEDIA_BACKUPDRAM, NVHALMEDIA_NAND, NULL, NULL);
-                            NULL, NULL);
+                            NVHALMEDIA_BACKUPDRAM, NVHALMEDIA_NAND, NULL, NULL);
         // LCOV_EXCL_BR_STOP 11:unexpected branch
       }
     }
@@ -2064,8 +2131,7 @@ void BkupSyncreqRestart(void) {
   }
   g_bkup_syncreq = reinterpret_cast<uint64_t *>(map);
 
-//  if (BkupBufferReadFromNv(NVHALMEDIA_BACKUPDRAM, BKUP_SYNCREQ_NAME,
-  if (BkupBufferReadFromNv(BKUP_SYNCREQ_NAME,
+  if (BkupBufferReadFromNv(NVHALMEDIA_BACKUPDRAM, BKUP_SYNCREQ_NAME,
                            reinterpret_cast<char *>(g_bkup_syncreq),
                            BKUP_SYNCREQ_SIZE, NULL) < 0) {
     goto exit;
@@ -2099,7 +2165,7 @@ void *BkupDelayThread(void *arg) {
   }
 
   // LCOV_EXCL_BR_START 5: mq_open's error case.
-  if ((mqd = BkupItcMqopen("/" BKUP_THREAD_DELAY, O_RDONLY | O_CREAT)) < 0) {
+  if ((mqd = BkupItcMqopen("/" BKUP_THREAD_DELAY, O_RDONLY | O_CREAT | O_CLOEXEC)) < 0) {
   // LCOV_EXCL_BR_STOP 5: mq_open's error case.
     // LCOV_EXCL_START 5: mq_open's error case.
     AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
@@ -2300,35 +2366,25 @@ void *BkupDelayThread(void *arg) {
           if (query_result.cache_dram) {
             // LCOV_EXCL_BR_START 11:unexpected branch
             pthread_rwlock_t *src_rwlock = BkupGetRwlock(
-//                cur_ev->name.c_str(), NVHALMEDIA_CACHEDRAM, &query_result);
-                cur_ev->name.c_str(), &query_result);
+                cur_ev->name.c_str(), NVHALMEDIA_CACHEDRAM, &query_result);
             pthread_rwlock_t *dst_rwlock = BkupGetRwlock(
-//                cur_ev->name.c_str(), NVHALMEDIA_NAND, &query_result);
-                cur_ev->name.c_str(), &query_result);
+                cur_ev->name.c_str(), NVHALMEDIA_NAND, &query_result);
             BkupMediaCopyFromNv(query_result.category_name,
-//                                cur_ev->name.c_str(), NVHALMEDIA_CACHEDRAM,
-//                                NVHALMEDIA_NAND, src_rwlock, dst_rwlock);
-                                cur_ev->name.c_str(),
-                                src_rwlock, dst_rwlock);
+                                cur_ev->name.c_str(), NVHALMEDIA_CACHEDRAM,
+                                NVHALMEDIA_NAND, src_rwlock, dst_rwlock);
             BkupMediaCopyFromNv(query_result.category_name,
-//                                cur_ev->name.c_str(), NVHALMEDIA_CACHEDRAM,
-//                                NVHALMEDIA_NAND, NULL, NULL);
-                                cur_ev->name.c_str(),
-                                NULL, NULL);
+                                cur_ev->name.c_str(), NVHALMEDIA_CACHEDRAM,
+                                NVHALMEDIA_NAND, NULL, NULL);
             // LCOV_EXCL_BR_STOP 11:unexpected branch
           } else if (query_result.backup_dram) {
             // LCOV_EXCL_BR_START 11:unexpected branch
             pthread_rwlock_t *src_rwlock = BkupGetRwlock(
-//                cur_ev->name.c_str(), NVHALMEDIA_BACKUPDRAM, &query_result);
-                cur_ev->name.c_str(), &query_result);
+                cur_ev->name.c_str(), NVHALMEDIA_BACKUPDRAM, &query_result);
             pthread_rwlock_t *dst_rwlock = BkupGetRwlock(
-//                cur_ev->name.c_str(), NVHALMEDIA_NAND, &query_result);
-                cur_ev->name.c_str(), &query_result);
+                cur_ev->name.c_str(), NVHALMEDIA_NAND, &query_result);
             BkupMediaCopyFromNv(query_result.category_name,
-//                                cur_ev->name.c_str(), NVHALMEDIA_BACKUPDRAM,
-//                                NVHALMEDIA_NAND, src_rwlock, dst_rwlock);
-                                cur_ev->name.c_str(),
-                                src_rwlock, dst_rwlock);
+                                cur_ev->name.c_str(), NVHALMEDIA_BACKUPDRAM,
+                                NVHALMEDIA_NAND, src_rwlock, dst_rwlock);
             // LCOV_EXCL_BR_STOP 11:unexpected branch
           }
           delay_req[cur_ev->name] = 0;  // LCOV_EXCL_BR_LINE 11:unexpected branch
@@ -2371,7 +2427,7 @@ EFrameworkunifiedStatus BkupTerminateHandler(HANDLE h_app) {
 
   if (g_bkup_delay_mqd == -1) {
     // LCOV_EXCL_BR_START 5: mq_open's error case.
-    if ((g_bkup_delay_mqd = BkupItcMqopen("/" BKUP_THREAD_DELAY, O_WRONLY | O_CREAT | O_NONBLOCK)) < 0) {
+    if ((g_bkup_delay_mqd = BkupItcMqopen("/" BKUP_THREAD_DELAY, O_WRONLY | O_CREAT | O_NONBLOCK | O_CLOEXEC)) < 0) {
     // LCOV_EXCL_BR_STOP 5: mq_open's error case.
       // LCOV_EXCL_START 5: mq_open's error case.
       AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert

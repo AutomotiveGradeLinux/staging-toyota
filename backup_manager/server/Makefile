@@ -1,5 +1,5 @@
 #
-# @copyright Copyright (c) 2017-2019 TOYOTA MOTOR CORPORATION.
+# @copyright Copyright (c) 2017-2020 TOYOTA MOTOR CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -44,7 +44,8 @@ LDLIBS += -Wl,-Bdynamic \
           -lNS_FrameworkUnified \
           -lxml2 \
           -lrt \
-#          -lnv_hal
+          -lnv_hal \
+          -lvp
 
 ######### other unit specific options    #############
 LINK_CXX=Y
@@ -57,5 +58,10 @@ CPPFLAGS += -Wint-to-pointer-cast
 CPPFLAGS += -Wpointer-arith
 CPPFLAGS += -Wformat
 CPPFLAGS += -DIMPL_AGL_APPLICATION_CALLBACKS_PRE_BACKGROUND
+
+install-data: install_data
+
+install_data:
+	install -d -m 755 $(DESTDIR)/nv/BS/ns/backup_manager/rwdata
 
 include ../../native_service.mk

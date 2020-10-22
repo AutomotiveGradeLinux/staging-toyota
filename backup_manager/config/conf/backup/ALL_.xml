@@ -714,7 +714,7 @@
   <category name="D_BK_CA__CWORD76__INFO_ASYNC" nand="true" cacheDram="true" sync="false" backupCycle="15" encrypt="false">
     <item name="D_BK_ID__CWORD76__INFO_ASYNC_OFFSET" id="0243" size="1"/>
   </category>
-  <category name="D_BK_CA_DIAG_INFORMATION" nand="true" backupDram="true" sync="true" encrypt="false">
+  <category name="D_BK_CA_DIAG_INFORMATION" nand="true" backupDram="true" sync="true" encrypt="true">
     <item name="D_BK_ID_DIAG_INFORMATION" id="0244" size="1"/>
   </category>
   <category name="D_BK_CA_DIAG_UTILIZATION" nand="true" backupDram="true" sync="false" encrypt="false">
@@ -759,13 +759,13 @@
   <category name="D_BK_CA_RS_WNG_RCV" nand="false" backupDram="true" sync="false" encrypt="false">
     <item name="D_BK_ID_RS_WNG_RCV" id="0259" size="1"/>
   </category>
-  <category name="D_BK_CA_INFS_GENERAL_GRP" nand="true" backupDram="true" sync="true" encrypt="false">
+  <category name="D_BK_CA_INFS_GENERAL_GRP" nand="true" backupDram="true" sync="true" encrypt="true">
     <item name="D_BK_ID_INFS_GENERAL_GRP" id="0260" size="1"/>
   </category>
   <category name="D_BK_CA_INFS_GENERAL_STARTUPBGM" nand="true" backupDram="true" sync="true" encrypt="false">
     <item name="D_BK_ID_INFS_GENERAL_STARTUPBGM" id="0261" size="1"/>
   </category>
-  <category name="D_BK_CA_INFS_CLOCK_GRP" nand="true" backupDram="true" sync="true" encrypt="false">
+  <category name="D_BK_CA_INFS_CLOCK_GRP" nand="true" backupDram="true" sync="true" encrypt="true">
     <item name="D_BK_ID_INFS_CLOCK_GRP" id="0262" size="1"/>
   </category>
   <category name="D_BK_CA_INFS_HOME_GRP" nand="true" backupDram="true" sync="true" encrypt="false">
@@ -806,10 +806,10 @@
   <category name="D_BK_CA_GNDB_UPDATE_HISTORY" nand="true" backupDram="true" sync="true" encrypt="false">
     <item name="D_BK_ID_GNDB_UPDATE_HISTORY" id="0281" size="1"/>
   </category>
-  <category name="D_BK_CA_DIAGCODE_MEM" nand="true" backupDram="true" sync="true" encrypt="false">
+  <category name="D_BK_CA_DIAGCODE_MEM" nand="true" backupDram="true" sync="true" encrypt="true">
     <item name="D_BK_ID_DIAGCODE_MEM" id="0282" size="1"/>
   </category>
-  <category name="D_BK_CA_DIAGCODE_EXTINFO" nand="true" backupDram="true" sync="true" encrypt="false">
+  <category name="D_BK_CA_DIAGCODE_EXTINFO" nand="true" backupDram="true" sync="true" encrypt="true">
     <item name="D_BK_ID_DIAGCODE_EXTINFO" id="0283" size="1"/>
   </category>
   <category name="D_BK_CA_DIAGCODE_TRIPCNT" nand="true" backupDram="true" sync="true" encrypt="false">
@@ -818,7 +818,7 @@
   <category name="D_BK_CA_PFDREC_FUNC" nand="false" backupDram="true" sync="false" encrypt="false">
     <item name="D_BK_ID_PFDREC_FUNC" id="0285" size="1"/>
   </category>
-  <category name="D_BK_CA_DIAGCODE_WORK_BUF" nand="false" backupDram="true" sync="false" encrypt="false">
+  <category name="D_BK_CA_DIAGCODE_WORK_BUF" nand="false" backupDram="true" sync="false" encrypt="true">
     <item name="D_BK_ID_DIAGCODE_WORK_BUF" id="0286" size="1"/>
   </category>
   <category name="D_BK_CA_AS__CWORD76_VOLUME" nand="true" backupDram="true" sync="false" encrypt="false">
@@ -1177,7 +1177,7 @@
   <category name="D_BK_CA_INFS_VOICE_INTERRUPT_SETTING" nand="true" backupDram="true" sync="true" encrypt="false">
     <item name="D_BK_ID_INFS_VOICE_INTERRUPT_SETTING" id="0472" size="1"/>
   </category>
-  <category name="D_BK_CA_DIAGCODE_ODOMETER" nand="true" backupDram="true" sync="true" encrypt="false">
+  <category name="D_BK_CA_DIAGCODE_ODOMETER" nand="true" backupDram="true" sync="true" encrypt="true">
     <item name="D_BK_ID_DIAGCODE_ODOMETER" id="0473" size="1"/>
   </category>
   <category name="D_BK_CA_DIAGCODE_DIAGMODE" nand="true" backupDram="true" sync="true" encrypt="false">
@@ -1186,7 +1186,7 @@
   <category name="D_BK_CA_VS_FUCSRV__CWORD66__ASYNC" nand="true" backupDram="true" sync="false" backupCycle="60" encrypt="false">
     <item name="D_BK_ID_VS_FUCSRV__CWORD66__ASYNC_GRP" id="0475" size="1"/>
   </category>
-  <category name="D_BK_CA_VS_FUCSRV__CWORD66__1TRIP_ASYNC" nand="true" backupDram="true" sync="false" backupCycle="60" encrypt="false">
+  <category name="D_BK_CA_VS_FUCSRV__CWORD66__1TRIP_ASYNC" nand="true" backupDram="true" sync="false" backupCycle="60" encrypt="true">
     <item name="D_BK_ID_VS_FUCSRV__CWORD66__1TRIP_ASYNC_GRP" id="0476" size="1"/>
   </category>
   <category name="D_BK_CA__CWORD28_AUTO_SHARED_RAM" nand="false" backupDram="true" sync="false" encrypt="false">
@@ -1197,5 +1197,20 @@
   </category>
   <category name="D_BK_CA__CWORD24_" nand="true" backupDram="true" sync="true" encrypt="false">
     <item name="D_BK_ID__CWORD24_" id="0479" size="1"/>
+  </category>
+  <category name="D_BK_CA_VS_FUCSRV_HISTORY_ASYNC" nand="true" backupDram="true" sync="false" backupCycle="15" encrypt="true">
+    <item name="D_BK_ID_VS_FUCSRV_HISTORY_ASYNC_GRP" id="0480" size="1"/>
+  </category>
+  <category name="D_BK_CA_VS_FUCSRV_HISTORY_SYNC" nand="true" backupDram="true" sync="true" encrypt="true">
+    <item name="D_BK_ID_VS_FUCSRV_HISTORY_SYNC_GRP" id="0481" size="1"/>
+  </category>
+  <category name="D_BK_CA_VS_FUCSRV__CWORD66__TRIP_ASYNC" nand="true" backupDram="true" sync="false" backupCycle="60" encrypt="true">
+    <item name="D_BK_ID_VS_FUCSRV__CWORD66__TRIP_ASYNC_GRP" id="0482" size="1"/>
+  </category>
+  <category name="D_BK_CA_VINFOSRV_METER_TYPE" nand="false" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_VINFOSRV_METER_TYPE" id="0483" size="1"/>
+  </category>
+  <category name="D_BK_CA_ADAS_SETTING" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_ADAS_SETTING" id="0484" size="1"/>
   </category>
 </backup>

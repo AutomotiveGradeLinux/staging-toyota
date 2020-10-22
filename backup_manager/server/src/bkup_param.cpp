@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <other_service/VP_GetEnv.h>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -33,7 +34,42 @@
 #include "bkup_backupmanagerlog.h"
 #include "bkup_util.h"
 
-#define BKUP_XML_PATH "/usr/agl/conf/backup_manager/backup.xml"
+#define BKUP_XML_PATH_MAX 100
+#define BKUP_XML_PATH "/usr/agl/conf/BS/ns/backup_manager/rodata/"
+#define BKUP_XML_PREFIX "backup_"
+#define BKUP_XML_EXTENSION ".xml"
+
+#define BKUP_AREA_1  "AREA1"
+#define BKUP_AREA_2  "AREA2"
+#define BKUP_BRAND_1 "BRAND1"
+#define BKUP_BRAND_2 "BRAND2"
+#define BKUP_GRADE_1 "GRADE1"
+#define BKUP_GRADE_2 "GRADE2"
+#define BKUP_DESTINATION_TYPE_AREA1_TE "AREA1_TE"
+#define BKUP_DESTINATION_TYPE_AREA1_L  "AREA1_L"
+#define BKUP_DESTINATION_TYPE_AREA2_T  "AREA2_T"
+#define BKUP_DESTINATION_TYPE_AREA2_TE "AREA2_TE"
+
+#define BKUP_DESTINATION_STR_MAX 10
+typedef struct {
+  char area[VP_MAX_LENGTH];
+  char brand[VP_MAX_LENGTH];
+  char grade[VP_MAX_LENGTH];
+  char destination[BKUP_DESTINATION_STR_MAX];
+} BkupDestinationTbl;
+
+const BkupDestinationTbl kDestinationTbl[] = {
+    // Destination:Area1
+    {BKUP_AREA_1, BKUP_BRAND_1, BKUP_GRADE_1, BKUP_DESTINATION_TYPE_AREA1_TE},
+    {BKUP_AREA_1, BKUP_BRAND_1, BKUP_GRADE_2, BKUP_DESTINATION_TYPE_AREA1_TE},
+    {BKUP_AREA_1, BKUP_BRAND_2, BKUP_GRADE_1, BKUP_DESTINATION_TYPE_AREA1_L},
+    {BKUP_AREA_1, BKUP_BRAND_2, BKUP_GRADE_2, BKUP_DESTINATION_TYPE_AREA1_L},
+    // Destination:Area2
+    {BKUP_AREA_2, BKUP_BRAND_1, BKUP_GRADE_1,   BKUP_DESTINATION_TYPE_AREA2_TE},
+    {BKUP_AREA_2, BKUP_BRAND_1, BKUP_GRADE_2,   BKUP_DESTINATION_TYPE_AREA2_TE},
+    {BKUP_AREA_2, BKUP_BRAND_2, BKUP_GRADE_1,   BKUP_DESTINATION_TYPE_AREA2_T},
+    {BKUP_AREA_2, BKUP_BRAND_2, BKUP_GRADE_2,   BKUP_DESTINATION_TYPE_AREA2_T},
+};
 
 typedef std::string Category;
 typedef struct {
@@ -70,13 +106,20 @@ static void StartElementNs(void *ctx, const xmlChar *localname,
                            int nb_namespaces, const xmlChar **namespaces,
                            int nb_attributes, int nb_defaulted,
                            const xmlChar **attributes) {
+  if (ctx == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "ctx is NULL");
+    return;
+  }
+  if (localname == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "localname is NULL");
+    return;
+  }
   BackupParams *p_backup_params = static_cast<BackupParams *>(ctx);
   std::string tag = (const char *)localname;  // LCOV_EXCL_BR_LINE 11:except,C++ STL
-
   if (tag.compare("backup") == 0) {  // LCOV_EXCL_BR_LINE 11:except,C++ STL
     // do nothing
   } else if (tag.compare("category") == 0) {  // LCOV_EXCL_BR_LINE 11:except,C++ STL
-    CategoryProperty category_property = {false, false, false, false, false, 0};
+    CategoryProperty category_attr = {false, false, false, false, false, 0};
     std::string category_name;  // LCOV_EXCL_BR_LINE 11:except,C++ STL
 
     for (int i = 0; i < nb_attributes; i++) {
@@ -87,26 +130,26 @@ static void StartElementNs(void *ctx, const xmlChar *localname,
         category_name = value;
       } else if (localname.compare("nand") == 0) {
         if (value.compare("true") == 0) {
-          category_property.nand = true;
+          category_attr.nand = true;
         }
       } else if (localname.compare("backupDram") == 0) {
         if (value.compare("true") == 0) {
-          category_property.backup_dram = true;
+          category_attr.backup_dram = true;
         }
       } else if (localname.compare("cacheDram") == 0) {
         if (value.compare("true") == 0) {
-          category_property.cache_dram = true;
+          category_attr.cache_dram = true;
         }
       } else if (localname.compare("sync") == 0) {
         if (value.compare("true") == 0) {
-          category_property.sync = true;
+          category_attr.sync = true;
         }
       } else if (localname.compare("encrypt") == 0) {
         if (value.compare("true") == 0) {
-          category_property.encrypt = true;
+          category_attr.encrypt = true;
         }
       } else if (localname.compare("backupCycle") == 0) {
-        category_property.backup_cycle = atoi(value.c_str());
+        category_attr.backup_cycle = atoi(value.c_str());
       // LCOV_EXCL_BR_STOP 11:except,C++ STL
       } else {
         // LCOV_EXCL_BR_START 15:marco defined in "native_service/ns_logger_if.h"
@@ -126,7 +169,7 @@ static void StartElementNs(void *ctx, const xmlChar *localname,
       // LCOV_EXCL_STOP 200:Execute in server start period
     }
     // LCOV_EXCL_BR_START 11:except,C++ STL
-    p_backup_params->category_table.insert(std::make_pair(category_name, category_property));
+    p_backup_params->category_table.insert(std::make_pair(category_name, category_attr));
     // LCOV_EXCL_BR_STOP 11:except,C++ STL
     p_backup_params->current = category_name;  // LCOV_EXCL_BR_LINE 11:except,C++ STL
   } else if (tag.compare("item") == 0) {  // LCOV_EXCL_BR_LINE 11:except,C++ STL
@@ -189,6 +232,45 @@ static void StartElementNs(void *ctx, const xmlChar *localname,
   }
 }
 
+static int BkupGetXmlPath(char* path) {
+  if (path == NULL) {  // LCOV_EXCL_BR_LINE 6:Excluded as no NULL is currently passed
+    // LCOV_EXCL_START 6:Excluded as no NULL is currently passed
+    AGL_ASSERT_NOT_TESTED();
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "path is NULL");
+    return -1;
+    // LCOV_EXCL_STOP 6:Excluded as no NULL is currently passed
+  }
+  memset(path, 0, BKUP_XML_PATH_MAX);
+  char param_area[VP_MAX_LENGTH] = "";
+  VP_GetEnv(VP_VEHICLEPARAMETERLIBRARY_AREA, param_area);
+  char param_brand[VP_MAX_LENGTH] = "";
+  VP_GetEnv(VEHICLEPARAMETERLIBRARY_BRAND, param_brand);
+  char param_grade[VP_MAX_LENGTH] = "";
+  VP_GetEnv(VP_VEHICLEPARAMETERLIBRARY_GRADE, param_grade);
+
+  bool is_match = false;
+  for (uint16_t i = 0; i < _countof(kDestinationTbl); i++) {
+    size_t area_size = static_cast<size_t>(std::string(kDestinationTbl[i].area).size());
+    // Check vehicle parameter settings (For VP_VEHICLEPARAMETERLIBRALY_AREA only, check the area size of tbl to check the character strings common to each area)
+    if ((strncmp(param_area, kDestinationTbl[i].area, area_size) == 0) &&
+        (strncmp(param_brand, kDestinationTbl[i].brand, sizeof(param_area)) == 0) &&
+        (strncmp(param_grade, kDestinationTbl[i].grade, sizeof(param_area)) == 0)) {
+      is_match = true;
+      snprintf(path, BKUP_XML_PATH_MAX, "%s%s%s%s", BKUP_XML_PATH, BKUP_XML_PREFIX,
+               kDestinationTbl[i].destination, BKUP_XML_EXTENSION);
+      break;
+    }
+  }
+  if (is_match == false) {
+    // If the destination settings do not match, set the AREA2_T path as failsafe
+    snprintf(path, BKUP_XML_PATH_MAX, "%s%s%s%s", BKUP_XML_PATH, BKUP_XML_PREFIX,
+             BKUP_DESTINATION_TYPE_AREA2_T, BKUP_XML_EXTENSION);
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "Unexpected VP area[%s] brand[%s] grade[%s]",
+           param_area, param_brand, param_grade);
+  }
+  return 0;
+}
+
 int BckupParamInit(void) {
   int ret = -1;
   xmlParserCtxtPtr xmlctx;
@@ -212,7 +294,17 @@ int BckupParamInit(void) {
 
   xmlctx = xmlCreatePushParserCtxt(&saxh, g_backup_params, NULL, 0, NULL);  // LCOV_EXCL_BR_LINE 11:unexpected branch
 
-  if ((fd = open(BKUP_XML_PATH, O_RDONLY)) < 0) {  // LCOV_EXCL_BR_LINE 5:open's error case.
+  char xml_path[BKUP_XML_PATH_MAX] = {0};
+  ret = BkupGetXmlPath(xml_path);
+  if (ret != 0) {  // LCOV_EXCL_BR_LINE 6:Excluded because the return value does not cause an error
+    // LCOV_EXCL_START 6:Excluded because the return value does not cause an error
+    AGL_ASSERT_NOT_TESTED();
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "BkupGetXmlPath Error");
+    goto exit;
+    // LCOV_EXCL_STOP 6:Excluded because the return value does not cause an error
+  }
+
+  if ((fd = open(xml_path, O_RDONLY)) < 0) {  // LCOV_EXCL_BR_LINE 5:open's error case.
     // LCOV_EXCL_START 5:open's error case.
     AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
     FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "open:%s", strerror(errno));
@@ -280,7 +372,10 @@ int BkupParamGet(const char *item_name, bkup_query_result_t *result) {
     return -1;
     // LCOV_EXCL_STOP 6:g_backup_params will not be NULL
   }
-
+  if (result == NULL) {
+    FRAMEWORKUNIFIEDLOG(ZONE_NS_ERR, __func__, "result is NULL");
+    return -1;
+  }
   ItemTable::iterator item_it = g_backup_params->item_table.find(item_name);  // LCOV_EXCL_BR_LINE 11:except,C++ STL
   if (item_it == g_backup_params->item_table.end()) {  // LCOV_EXCL_BR_LINE 11:except,C++ STL
     return -1;

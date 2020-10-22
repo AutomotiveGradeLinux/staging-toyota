@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@
 /**
  * media
  */
-//#include <nv_hal.h>
+#include <nv_hal.h>
 
 /**
  * command
@@ -52,7 +52,7 @@ typedef struct {
   uint32_t offset;
   uint32_t size;
   char fill_patern;
-//  enum NvHalMedia src_media;
+  enum NvHalMedia src_media;
 } bkup_protocol_header_t;
 
 #define SERVICE_BACKUP_MANAGER_MSG_HANDLE_THREAD "bkupmanagerthr"

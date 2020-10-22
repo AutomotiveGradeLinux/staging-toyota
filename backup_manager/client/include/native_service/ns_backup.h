@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -122,7 +122,9 @@ extern  "C" {
  *          - If the return value is other value [BKUP_RET_ERROR]
  *        - If the size specified by the argument does not match the actual read size [BKUP_RET_ERROR]
  * \~english @par Detail
-          - Judge the type and access destination according to specified area ID and then read data.
+          Judge the type and access destination according to specified area ID and then read data.
+ *        - If appointed size is less than registered size, read data of appointed size. [BKUP_RET_NORMAL]
+ *        - If the backup data does not exist, buffer is filled 0. [BKUP_RET_NORMAL]
  *
  * \~english @par Classification
  *        Public
@@ -452,7 +454,6 @@ int32_t Backup_DataChk(PCSTR tag_id);
  * \~english @retval BKUP_RET_ERRPARAM   Parameter error(Sync message transmission or reception(@ref McInvokeSync) error[eFrameworkunifiedStatusInvldParam])
  * \~english @retval BKUP_RET_ERRINIT    Initializing(Sync message send or receive(@ref McInvokeSync) error [eFrameworkunifiedStatusErrOther])
  * \~english @retval BKUP_RET_ERRTERM    Terminating(Sync message transmission or reception(@ref McInvokeSync) error [eFrameworkunifiedStatusExit])
- * \~english @retval BKUP_RET_ERRNOENT   Data dose not exist(Sync message transmission or reception(@ref McInvokeSync) fails [eFrameworkunifiedStatusFileLoadError])
  * \~english @retval BKUP_RET_ERRSIZE    Data size error(Sync message transmission or reception(@ref McInvokeSync) error [eFrameworkunifiedStatusAccessError])
  * \~english @retval BKUP_RET_ERROR      Abnormal termination(@ref McOpenSender failed, or sync message transmission or reception(@ref McInvokeSync) error other than the above)
  * \~english @par Prerequisite
@@ -470,13 +471,13 @@ int32_t Backup_DataChk(PCSTR tag_id);
  *          - If the return value is eFrameworkunifiedStatusInvldParam [BKUP_RET_ERRPARAM]
  *          - If the return value is eFrameworkunifiedStatusErrOther [BKUP_RET_ERRINIT]
  *          - If the return value is eFrameworkunifiedStatusExit [BKUP_RET_ERRTERM]
- *          - If the return value is eFrameworkunifiedStatusFileLoadError [BKUP_RET_ERRNOENT]
  *          - If the return value is eFrameworkunifiedStatusAccessError [BKUP_RET_ERRSIZE]
  *          - If the return value is eFrameworkunifiedStatusFail, it call will synchronization message transmission(@ref McInvokeSync) again after 100 milliseconds later
  *            If the return value is eFrameworkunifiedStatusFail, it will retry BKUP_RETRY_MAX(10) times
  *          - If the return value is other value [BKUP_RET_ERROR]
  * \~english @par Detail
  *        Judge the type and access destination according to specified area ID and delete the target data.
+ *        - If the target data does not exist, return value is terminated normally. [BKUP_RET_NORMAL]
  * \~english @par Classification
  *        Public
  * \~english @par Type

@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +41,9 @@ uint32_t BkupCrc32(const void *data, size_t length) {
   uint32_t crc = 0xFFFFFFFF;
   const uint32_t *current = (const uint32_t *)data;
 
+  if (data == NULL) {
+    return -1;
+  }
   while (length >= 4) {
     uint32_t one = *current++ ^ crc;
     crc = kBkupCrc32Lookup[0][(one >> 24) & 0xFF] ^

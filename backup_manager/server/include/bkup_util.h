@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,12 @@
 
 static inline size_t BkupStrlcpy(char *dst, const char *src, size_t siz) {
   size_t ret = strlen(src);
-
+  if (dst == NULL) {
+    return -1;
+  }
+  if (src == NULL) {
+    return -1;
+  }
   if (siz) {  // LCOV_EXCL_BR_LINE 6:double check
     size_t len = (ret >= siz) ? siz - 1 : ret;  // LCOV_EXCL_BR_LINE 11:unexpected branch
     memcpy(dst, src, len);

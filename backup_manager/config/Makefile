@@ -1,5 +1,5 @@
 #
-# @copyright Copyright (c) 2017-2019 TOYOTA MOTOR CORPORATION.
+# @copyright Copyright (c) 2017-2020 TOYOTA MOTOR CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ XML_PATH := ./conf/backup
 RNG_FILE := backup.rng
 ALL_XML := ALL_.xml
 ID_HEADER := ns_backup_id.h
-BACKUP_XML := backup.xml
+BACKUP_XML := backup*.xml
 
 ######### headers to be installed(*.h)   #############
 INST_HEADERS := $(ID_HEADER)
@@ -37,7 +37,6 @@ $(ID_HEADER): $(XML_PATH)/$(ALL_XML)
 CLEAN_FILES := $(ID_HEADER)
 
 install: $(XML_PATH)/$(BACKUP_XML)
-	install -m 0755 -d $(DESTDIR)/usr/agl/conf/backup_manager
-	install -m 0644 $(XML_PATH)/$(BACKUP_XML) $(DESTDIR)/usr/agl/conf/backup_manager/$(BACKUP_XML)
-
+	install -m 0755 -d $(DESTDIR)/usr/agl/conf/BS/ns/backup_manager/rodata
+	install -m 0644 $(XML_PATH)/$(BACKUP_XML) $(DESTDIR)/usr/agl/conf/BS/ns/backup_manager/rodata/
 include ../../native_service.mk
