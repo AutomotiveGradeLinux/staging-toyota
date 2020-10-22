@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -435,68 +435,6 @@ void GetEnv(const char* p_env_str, char* p_env_buff) {  // LCOV_EXCL_START 8:dea
     FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "VP_GetEnv:%s=%s", p_env_str, p_env_buff);
 
     return;
-}
-// LCOV_EXCL_STOP
-
-
-/**
- * @brief
- *   Get hardware configuration
- *
- *    Get hardware configuration information from environment variables
- *
- * @param  None
- *
- * @return UNIT_TYPE_NONE           Not set
- *         UNIT_TYPE_GRADE1
- *         UNIT_TYPE_GRADE2
- */
-UNIT_TYPE PbGetEnvSupportInfo(void) {  // LCOV_EXCL_START 8:dead code
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    static UNIT_TYPE  ret_type = UNIT_TYPE_UNKNOWN;
-
-    char       c_env_positioningbaselibrary_grade[VP_MAX_LENGTH];
-    char*      p_env_positioningbaselibrary_grade     = c_env_positioningbaselibrary_grade;
-
-    VP_GetEnv(VEHICLEPARAMETERLIBRARY_GRADE, p_env_positioningbaselibrary_grade);
-
-    if (0 == strcmp(p_env_positioningbaselibrary_grade, "GRADE1")) {
-        ret_type = UNIT_TYPE_GRADE1;
-    } else {
-      /*
-       *  Note.
-       *  This feature branches processing depending on the unit type.
-       */
-        ret_type = UNIT_TYPE_GRADE2;
-    }
-
-    return ret_type;
-}
-// LCOV_EXCL_STOP
-
-/**
- * @brief
- *    Determination of unit type
- *
- * @param  Unit type<br>
- *           Specify the value that is logical OR of UNIT_TYPE_GRADE1
- *
- * @return TRUE: Same as the unit type specified in the arguments<br>
- *         FALSE: Different from the unit type specified in the arguments
- */
-BOOL ChkUnitType(UNIT_TYPE type) {  // LCOV_EXCL_START 8:dead code
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    UNIT_TYPE ltype;
-    BOOL bret;
-
-    ltype = PbGetEnvSupportInfo();
-    if ((ltype & type) != 0) {
-        bret = TRUE;
-    } else {
-        bret = FALSE;
-    }
-
-    return bret;
 }
 // LCOV_EXCL_STOP
 

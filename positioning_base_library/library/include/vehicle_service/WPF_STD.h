@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -142,9 +142,15 @@
 #define    CID_COM_SERIAL6   (CID)0x0006
 //!< \~english serial command ID 6
 
+#define    CID_COM_SERIAL7   (CID)0x0007
+//!< \~english serial command ID 7
+
 /* initial CID definition */
 #define  CID_INI_SYSTEMERR        (CID)(CID_INITIAL_BASE | CID_COM_SERIAL6)
 //!< \~english system abnormality notify
+
+#define CID_INI_INTERNAL_ACCOFF_START  (CID)(CID_INITIAL_BASE | CID_COM_SERIAL7)
+//!< \~english internal ACC-OFF start Indication
 
 /* timer control CID definition */
 #define  CID_TIMER_TOUT        (CID)(CID_TIMER_BASE | CID_COM_SERIAL4)

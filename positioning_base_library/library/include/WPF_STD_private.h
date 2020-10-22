@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2019-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -242,7 +242,6 @@ typedef struct {
 /*---------------------------------------------------------------------------------*
  * Prototype Declaration                                                           *
  *---------------------------------------------------------------------------------*/
-UNIT_TYPE PbGetEnvSupportInfo(void);
 /* Configuration Functions  (_pbCommon.cpp)  */
 void    PbReset(void);                                      /* Soft reset process */
 

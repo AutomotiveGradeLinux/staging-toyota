@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -525,7 +525,7 @@ DWORD PbDeleteMutex(HANDLE h_mutex) {
                     ref_cnt = MutexGetRefCntLocalOfCtrlTbl(idx);
                     if ((ref_cnt - 1) <= 0) {  // LCOV_EXCL_BR_LINE 200: ref_cnt can not bigger than 1
                         // LCOV_EXCL_START 200: ref_cnt can not bigger than 1
-                        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
+                        //AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
                         /* Lock information unmapping (CLS) */
                         ret = CL_LockUnmap(reinterpret_cast<void*>(h_mutex));
                         /* When an error occurs */

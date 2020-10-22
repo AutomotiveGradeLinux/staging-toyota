@@ -1,5 +1,5 @@
 #
-# @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+# @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -78,5 +78,10 @@ LDLIBS += -Wl,-Bdynamic -lev
 
 ######### add library path #############
 LDFLAGS += -shared
+
+INSTALL = install
+CREATE_DIR = $(DESTDIR)/nv/BS/vs/positioning_base_library/rwdata
+install-data:
+	$(INSTALL) -d -m 775 $(CREATE_DIR)
 
 include  ../../vehicle_service.mk
