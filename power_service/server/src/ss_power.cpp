@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -135,7 +135,7 @@ EFrameworkunifiedStatus Power::Initialize(HANDLE h_app) {
   pthread_mutex_init(&pwr_hist_mutex, NULL);
 
   /// Open and parse the configuration data for Power
-  const CHAR configFileName[] = "/agl/scfg/gpf_ss_ps_config.cfg";
+  const CHAR configFileName[] = "/usr/agl/conf/BS/ss/power_service/rodata/gpf_ss_ps_config.cfg";
 
   PowerConfiguration config(configFileName);
   l_SpecifiedCfgLoaded = config.LoadParameters(m_tConfigData);
