@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,6 @@
 #endif
 
 /* Environment variable name */
-const CHAR BoardEnvVariable[] = "VEHICLEPARAMETERLIBRARY_BOARD";
 const CHAR LaunchConfigFileNameEnvVariable[] = "APPS_CONFIG_FILENAME";
 const CHAR AreaTypeEnvVariable[] = "VEHICLEPARAMETERLIBRARY_AREA";
 const CHAR BrandTypeEnvVariable[] = "VEHICLEPARAMETERLIBRARY_BRAND";
@@ -131,7 +130,7 @@ static EFrameworkunifiedStatus setEvnVariableForLaunchConfigFile(std::string f_s
         l_pLaunchConfigFile = LaunchConfigFileName2;
       }
 
-      std::string cnfPath = "/usr/agl/conf/systemmanager/";
+      std::string cnfPath = "/usr/agl/conf/BS/ss/system_manager/rwdata/";
       cnfPath += l_pLaunchConfigFile;
       if (access(cnfPath.c_str(), F_OK) != 0) {
         l_pLaunchConfigFile = LaunchConfigFileName1;
@@ -142,94 +141,6 @@ static EFrameworkunifiedStatus setEvnVariableForLaunchConfigFile(std::string f_s
       SS_ASERT_ERRNO(0);
       l_eStatus = eFrameworkunifiedStatusFail;
     }
-  }
-
-  return l_eStatus;
-}
-
-/***********************************************************************
- *  setEvnVariableForLaunchRadioHDArbiter
- ***********************************************************************/
-static EFrameworkunifiedStatus setEvnVariableForLaunchRadioHDArbiter(
-  std::string & f_sEnvBoard, std::string f_sEnvArea) {
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  const CHAR LaunchRadioHDArbiterEnvVariable[] = "SM_CONF_LAUNCH_RADIOHDARBITER";
-  const CHAR Board1[] = "Gen1Board1";
-  const CHAR Board2[] = "Gen1Board2";
-
-  const CHAR *l_pSetValue = EnvValueNo;
-
-  BOOL l_bArea1 = (f_sEnvArea == EnvValueArea1) ? TRUE : FALSE;
-
-  if (f_sEnvBoard.empty()) {
-    // Set "n" if not set
-    SS_ASERT_ERRNO(0);
-  } else if ((Board1 == f_sEnvBoard) || (Board2 == f_sEnvBoard)) {
-    l_pSetValue = (TRUE == l_bArea1) ? EnvValueYes : EnvValueNo;
-  }
-
-  if (0 != setenv(LaunchRadioHDArbiterEnvVariable, l_pSetValue, 1)) {
-    SS_ASERT_ERRNO(0);
-    l_eStatus = eFrameworkunifiedStatusFail;
-  }
-
-  return l_eStatus;
-}
-
-/***********************************************************************
- *  setEvnVariableForLaunchDtvService
- ***********************************************************************/
-static EFrameworkunifiedStatus setEvnVariableForLaunchDtvService(std::string f_sEnvBrand,
-    std::string f_sEnvArea,
-    std::string f_sEnvGrade) {
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  const CHAR LaunchDtvServiceEnvVariable[] = "SM_CONF_LAUNCH_DTVSERVICE";
-
-  const CHAR *l_pSetValue = EnvValueNo;
-
-  BOOL l_bBrand1 = (f_sEnvBrand == EnvValueBrand1) ? TRUE : FALSE;
-  BOOL l_bArea2 = (f_sEnvArea == EnvValueArea2) ? TRUE : FALSE;
-  BOOL l_bGrade1 =
-    ((f_sEnvBrand == EnvValueBrand2) && (f_sEnvGrade == EnvValueGrade1)) ?
-    TRUE : FALSE;
-
-  if ((l_bBrand1 | l_bGrade1) && l_bArea2 ) {
-    l_pSetValue = EnvValueYes;
-  } else {
-    l_pSetValue = EnvValueNo;
-  }
-
-  if (0 != setenv(LaunchDtvServiceEnvVariable, l_pSetValue, 1)) {
-    SS_ASERT_ERRNO(0);
-    l_eStatus = eFrameworkunifiedStatusFail;
-  }
-
-  return l_eStatus;
-}
-
-/***********************************************************************
- *  setEvnVariableForLaunchHandWriting
- ***********************************************************************/
-static EFrameworkunifiedStatus setEvnVariableForLaunchHandWriting(std::string f_sEnvBrand,
-    std::string f_sEnvArea) {
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  const CHAR LaunchHandWritingEnvVariable[] = "SM_CONF_LAUNCH_HANDWRITING";
-
-  const CHAR *l_pSetValue = EnvValueNo;
-
-  BOOL l_bBrand1 = (f_sEnvBrand == EnvValueBrand1) ? TRUE : FALSE;
-  BOOL l_bArea1 = (f_sEnvArea == EnvValueArea1) ? TRUE : FALSE;
-  BOOL l_bArea3 = (f_sEnvArea == EnvValueArea3) ? TRUE : FALSE;
-
-  if ((l_bBrand1 && l_bArea1) || (l_bBrand1 && l_bArea3)) {
-    l_pSetValue = EnvValueYes;
-  } else {
-    l_pSetValue = EnvValueNo;
-  }
-
-  if (0 != setenv(LaunchHandWritingEnvVariable, l_pSetValue, 1)) {
-    SS_ASERT_ERRNO(0);
-    l_eStatus = eFrameworkunifiedStatusFail;
   }
 
   return l_eStatus;
@@ -247,37 +158,6 @@ static EFrameworkunifiedStatus setEvnVariableForLaunchCus(std::string f_sEnvArea
     EnvValueYes : EnvValueNo;
 
   if (0 != setenv(LaunchCusEnvVariable, l_pSetValue, 1)) {
-    SS_ASERT_ERRNO(0);
-    l_eStatus = eFrameworkunifiedStatusFail;
-  }
-
-  return l_eStatus;
-}
-
-/***********************************************************************
- *  setEvnVariableForLaunchLSP
- ***********************************************************************/
-static EFrameworkunifiedStatus setEvnVariableForLaunchLSP(std::string f_sEnvBrand, std::string f_sEnvArea, std::string f_sEnvGrade){
-
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  const CHAR LaunchLSPEnvVariable[] = "SM_CONF_LAUNCH_LSP";
-
-  const CHAR *l_pSetValue = EnvValueNo;
-
-  BOOL l_bBrand2 = (f_sEnvBrand == EnvValueBrand2) ? TRUE : FALSE;
-  BOOL l_bArea1 = (f_sEnvArea == EnvValueArea1) ? TRUE : FALSE;
-  BOOL l_bGrade2 = (f_sEnvGrade == EnvValueGrade2) ? TRUE : FALSE;
-
-  if(l_bBrand2 && l_bArea1) {
-    l_pSetValue = EnvValueYes;
-  } else if(l_bGrade2) {
-    l_pSetValue = EnvValueYes;
-  } else {
-    l_pSetValue = EnvValueNo;
-  }
-
-
-  if (0 != setenv(LaunchLSPEnvVariable, l_pSetValue, 1)) {
     SS_ASERT_ERRNO(0);
     l_eStatus = eFrameworkunifiedStatusFail;
   }
@@ -304,60 +184,6 @@ static EFrameworkunifiedStatus setEvnVariableForLaunchTFF(std::string f_sEnvArea
   }
 
   if (0 != setenv(LaunchTFFEnvVariable, l_pSetValue, 1)) {
-    SS_ASERT_ERRNO(0);
-    l_eStatus = eFrameworkunifiedStatusFail;
-  }
-
-  return l_eStatus;
-}
-
-/***********************************************************************
- *  setEvnVariableForLaunchAwtPrimary
- ***********************************************************************/
-static EFrameworkunifiedStatus
-setEvnVariableForLaunchAwtPrimary(std::string f_sEnvGrade, std::string f_sEnvArea){
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  const CHAR LaunchAwtPrimaryEnvVariable[] = "SM_CONF_LAUNCH_AWTPRIMARY";
-
-  const CHAR *l_pSetValue = EnvValueNo;
-
-  BOOL l_bArea1 = (f_sEnvArea == EnvValueArea1) ? TRUE : FALSE;
-  BOOL l_bArea2 = (f_sEnvArea == EnvValueArea2) ? TRUE : FALSE;
-  BOOL l_bGrade2 = (f_sEnvGrade == EnvValueGrade2) ? TRUE : FALSE;
-
-  if (l_bArea1) {
-    try {
-      EFrameworkunifiedStatus ret = eFrameworkunifiedStatusOK;
-      SSVER_PkgInfo PhaseInfo = { 0 };
-      CSSVer cVersion;
-      if (true != cVersion.empty()) {
-        ret = cVersion.getPkgInfo(SS_PKG_PHASE_INFO, &PhaseInfo);
-        if (ret == eFrameworkunifiedStatusOK) {
-          if ('3' == PhaseInfo.version[0]) {
-            l_pSetValue = EnvValueYes;
-          } else {
-            l_pSetValue = EnvValueNo;
-          }
-        } else {
-          l_pSetValue = EnvValueNo;
-        }
-      } else {
-        l_pSetValue = EnvValueNo;
-      }
-    } catch (EFrameworkunifiedStatus ee) {
-      l_pSetValue = EnvValueNo;
-    }
-  } else if (l_bArea2) {
-    if( l_bGrade2 ) {
-        l_pSetValue = EnvValueNo;
-    } else {
-        l_pSetValue = EnvValueYes;
-    }
-  } else {
-    l_pSetValue = EnvValueNo;
-  }
-
-  if (0 != setenv(LaunchAwtPrimaryEnvVariable, l_pSetValue, 1)) {
     SS_ASERT_ERRNO(0);
     l_eStatus = eFrameworkunifiedStatusFail;
   }
@@ -405,293 +231,6 @@ getPkgInfoWithDefault(const CHAR *f_pPkgName, const CHAR *f_pDefault){
   }
 
   return l_sReturnValue;
-}
-
-
-/***********************************************************************
- *  setEvnVariableForLaunchVrService
- ***********************************************************************/
-static EFrameworkunifiedStatus setEvnVariableForLaunchVrService(std::string f_sEnvBrand,
-    std::string f_sEnvArea) {
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  const CHAR LaunchVrArea1Phase1EnvVariable[] = "SM_CONF_LAUNCH_VR_AREA1_PHASE1";
-  const CHAR LaunchVrArea1Phase2EnvVariable[] = "SM_CONF_LAUNCH_VR_AREA1_PHASE2";
-  const CHAR LaunchVrArea2Phase1EnvVariable[] = "SM_CONF_LAUNCH_VR_AREA2_PHASE1";
-  const CHAR LaunchVrArea2Phase2EnvVariable[] = "SM_CONF_LAUNCH_VR_AREA2_PHASE2";
-
-  const CHAR *l_pSetValueArea1Phase1 = EnvValueNo;
-  const CHAR *l_pSetValueArea1Phase2 = EnvValueNo;
-  const CHAR *l_pSetValueArea2Phase1 = EnvValueNo;
-  const CHAR *l_pSetValueArea2Phase2 = EnvValueNo;
-
-  BOOL l_bArea1 = (f_sEnvArea == EnvValueArea1) ? TRUE : FALSE;
-  BOOL l_bArea2 = (f_sEnvArea == EnvValueArea2) ? TRUE : FALSE;
-
-  char buf[VP_MAX_LENGTH] = { 0 };
-
-  if (l_bArea1) {
-    VP_GetEnv(VP_VEHICLEPARAMETERLIBRARY__CWORD6_, buf);
-    if (strcmp(buf, "unavailable") == 0) {
-      l_pSetValueArea1Phase1 = EnvValueYes;
-    } else {
-      l_pSetValueArea1Phase2 = EnvValueYes;
-    }
-  } else if (l_bArea2) {
-    VP_GetEnv(VP_VEHICLEPARAMETERLIBRARY__CWORD6_, buf);
-    if (strcmp(buf, "unavailable") == 0) {
-      l_pSetValueArea2Phase1 = EnvValueYes;
-    } else {
-      l_pSetValueArea2Phase2 = EnvValueYes;
-    }
-  }
-
-  if (0 != setenv(LaunchVrArea1Phase1EnvVariable, l_pSetValueArea1Phase1, 1)) {
-    SS_ASERT_ERRNO(0);
-    l_eStatus = eFrameworkunifiedStatusFail;
-  }
-  if (0 != setenv(LaunchVrArea1Phase2EnvVariable, l_pSetValueArea1Phase2, 1)) {
-    SS_ASERT_ERRNO(0);
-    l_eStatus = eFrameworkunifiedStatusFail;
-  }
-  if (0 != setenv(LaunchVrArea2Phase1EnvVariable, l_pSetValueArea2Phase1, 1)) {
-    SS_ASERT_ERRNO(0);
-    l_eStatus = eFrameworkunifiedStatusFail;
-  }
-  if (0 != setenv(LaunchVrArea2Phase2EnvVariable, l_pSetValueArea2Phase2, 1)) {
-    SS_ASERT_ERRNO(0);
-    l_eStatus = eFrameworkunifiedStatusFail;
-  }
-
-  return l_eStatus;
-}
-
-/***********************************************************************
- *  setEvnVariableForLaunchMirrorLink
- ***********************************************************************/
-static EFrameworkunifiedStatus setEvnVariableForLaunchMirrorLink(std::string f_sEnvBrand, std::string f_sEnvArea, std::string f_sSeriesInfo){
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  const CHAR LaunchMirrorLinkEnvVariable[] = "SM_CONF_LAUNCH_MIRRORLINK";
-
-  const CHAR *l_pSetValue = EnvValueNo;
-
-  BOOL l_bBrand2 = (f_sEnvBrand == EnvValueBrand2) ? TRUE : FALSE;
-  BOOL l_bArea3 = (f_sEnvArea == EnvValueArea3) ? TRUE : FALSE;
-  BOOL l_bArea4 = (f_sEnvArea == EnvValueArea4) ? TRUE : FALSE;
-  BOOL l_bGen2 = (f_sSeriesInfo == PkgInfoGen2) ? TRUE : FALSE;
-
-  if(l_bGen2){
-    l_pSetValue = EnvValueNo;
-  } else {
-    if((l_bBrand2 && l_bArea3) || (l_bBrand2 && l_bArea4)) {
-      l_pSetValue = EnvValueYes;
-    } else {
-      l_pSetValue = EnvValueNo;
-    }
-  }
-
-
-  if (0 != setenv(LaunchMirrorLinkEnvVariable, l_pSetValue, 1)) {
-    SS_ASERT_ERRNO(0);
-    l_eStatus = eFrameworkunifiedStatusFail;
-  }
-
-  return l_eStatus;
-}
-
-/***********************************************************************
- *  setEvnVariableForLaunchRadioService
- ***********************************************************************/
-static EFrameworkunifiedStatus setEvnVariableForLaunchRadioService(std::string f_sEnvArea) {
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  const CHAR LaunchRadioServiceEnvVariable[] = "SM_CONF_LAUNCH_RADIOSERVICE";
-
-  const CHAR *l_pSetValue = EnvValueNo;
-
-  BOOL l_bArea1 = (f_sEnvArea == EnvValueArea1) ? TRUE : FALSE;
-
-  if (l_bArea1) {
-    l_pSetValue = EnvValueYes;
-  } else {
-    l_pSetValue = EnvValueNo;
-  }
-
-  if (0 != setenv(LaunchRadioServiceEnvVariable, l_pSetValue, 1)) {
-    SS_ASERT_ERRNO(0);
-    l_eStatus = eFrameworkunifiedStatusFail;
-  }
-
-  return l_eStatus;
-}
-
-/***********************************************************************
- *  setEvnVariableForLaunchPLAYSRV
- ***********************************************************************/
-static EFrameworkunifiedStatus
-setEvnVariableForLaunchPLAYSRV(std::string f_sEnvArea, std::string f_sEnvBrand, std::string f_sEnvGrade, std::string f_sSeriesInfo){
-  EFrameworkunifiedStatus   l_eStatus   = eFrameworkunifiedStatusOK;
-  const CHAR LaunchPLAYSRVEnvVariable[] = "SM_CONF_LAUNCH_PLAYSRV";
-
-  const CHAR  *l_pSetValue = EnvValueNo;
-  BOOL l_bPhase1 = FALSE;
-  BOOL l_bPhase2 = FALSE;
-  BOOL l_bPhase3 = FALSE;
-
-  BOOL l_bArea2 = (f_sEnvArea == EnvValueArea2) ? TRUE : FALSE;
-  BOOL l_bArea1 = (f_sEnvArea == EnvValueArea1) ? TRUE : FALSE;
-  BOOL l_bBrand2 = (f_sEnvBrand == EnvValueBrand2) ? TRUE : FALSE;
-  BOOL l_bBrand1 = (f_sEnvBrand == EnvValueBrand1) ? TRUE : FALSE;
-  BOOL l_bGrade1 = (f_sEnvGrade == EnvValueGrade1) ? TRUE : FALSE;
-  BOOL l_bGrade2 = (f_sEnvGrade == EnvValueGrade2) ? TRUE : FALSE;
-  BOOL l_bGrade3 = (f_sEnvGrade == EnvValueGrade3) ? TRUE : FALSE;
-  BOOL l_bGen2 = (f_sSeriesInfo == PkgInfoGen2) ? TRUE : FALSE;
-
-  //VEHICLEPARAMETERLIBRARY_PHASE
-  EFrameworkunifiedStatus ret = eFrameworkunifiedStatusOK;
-  SSVER_PkgInfo PhaseInfo = {0};
-  CSSVer cVersion;
-  if ( true != cVersion.empty() ) {
-    ret = cVersion.getPkgInfo( SS_PKG_PHASE_INFO, &PhaseInfo );
-    if ( ret == eFrameworkunifiedStatusOK ) {
-      l_bPhase1 = ('1' == PhaseInfo.version[0]) ? TRUE : FALSE;
-      l_bPhase2 = ('2' == PhaseInfo.version[0]) ? TRUE : FALSE;
-      l_bPhase3 = ('3' == PhaseInfo.version[0]) ? TRUE : FALSE;
-    }
-  }
-
-  FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " Gen2[%d] Area1[%d] Area2[%d] Brand1[%d] Brand2[%d] Grade1[%d] Grade2[%d] Grade3[%d] P1[%d] P2[%d] P3[%d] " ,
-         l_bGen2, l_bArea1, l_bArea2, l_bBrand1, l_bBrand2, l_bGrade1, l_bGrade2, l_bGrade3,
-         l_bPhase1, l_bPhase2, l_bPhase3);
-
-  // Gen2
-  if ( l_bGen2 ) {
-    // Grade2
-    if ( l_bGrade2 )
-    {
-      l_pSetValue = EnvValueNo;
-    } else {
-      l_pSetValue = EnvValueYes;
-    }
-  } else {
-    // Brand1
-    if ( l_bBrand1 ) {
-      l_pSetValue = EnvValueYes;
-    }
-    // Brand2
-    else if ( l_bBrand2 ) {
-      // Area2
-      if ( l_bArea2 ) {
-        l_pSetValue = EnvValueYes;
-      }
-      // Area1
-      else if ( l_bArea1 ) {
-        //_CWORD95_
-        if ( l_bGrade3 ) {
-          // Phase3
-          if ( l_bPhase3 ) {
-            l_pSetValue = EnvValueYes;
-          } else {
-            l_pSetValue = EnvValueNo;
-          }
-        } else {
-          l_pSetValue = EnvValueNo;
-        }
-      // Other
-      } else {
-        l_pSetValue = EnvValueNo;
-      }
-    // Other
-    } else {
-      l_pSetValue = EnvValueNo;
-    }
-  }
-    
-  FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "SetValue : %s" , l_pSetValue);
-    
-  if (0 != setenv(LaunchPLAYSRVEnvVariable, l_pSetValue, 1)) {
-    SS_ASERT_ERRNO(0);
-    l_eStatus = eFrameworkunifiedStatusFail;
-  }
-
-  return l_eStatus;
-}
-
-/***********************************************************************
- *  setEvnVariableForLaunch_CWORD27_
- ***********************************************************************/
-static EFrameworkunifiedStatus
-setEvnVariableForLaunch_CWORD27_(std::string f_sEnvArea, std::string f_sSeriesInfo){
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  const CHAR Launch_CWORD27_EnvVariable[] = "SM_CONF_LAUNCH__CWORD27_";
-  const CHAR *l_pSetValue = EnvValueNo;
-
-  BOOL l_bArea1  = (f_sEnvArea == EnvValueArea1)  ? TRUE : FALSE;
-  BOOL l_bGen2  = (f_sSeriesInfo == PkgInfoGen2) ? TRUE : FALSE;
-
-  if (l_bGen2) {
-    l_pSetValue = EnvValueYes;
-  } else {
-    if (l_bArea1) {
-      try {
-        EFrameworkunifiedStatus ret = eFrameworkunifiedStatusOK;
-        SSVER_PkgInfo PhaseInfo = {0};
-        CSSVer cVersion;
-        if ( true != cVersion.empty() ) {
-          ret = cVersion.getPkgInfo( SS_PKG_PHASE_INFO, &PhaseInfo );
-          if ( ret == eFrameworkunifiedStatusOK ) {
-            if ( '3' == PhaseInfo.version[0] ) {
-              l_pSetValue = EnvValueYes;
-            } else {
-              l_pSetValue = EnvValueNo;
-            }
-          } else {
-            l_pSetValue = EnvValueNo;
-          }
-        } else {
-          l_pSetValue = EnvValueNo;
-        }
-      } catch ( EFrameworkunifiedStatus ee) {
-        l_pSetValue = EnvValueNo;
-      }
-    } else {
-      l_pSetValue = EnvValueNo;
-    }
-  }
-
-  if (0 != setenv(Launch_CWORD27_EnvVariable, l_pSetValue, 1)) {
-    SS_ASERT_ERRNO(0);
-    l_eStatus = eFrameworkunifiedStatusFail;
-  }
-
-  return l_eStatus;
-}
-
-
-
-/***********************************************************************
- *  setEvnVariableForLaunchVRBodyCtrl
- ***********************************************************************/
-static EFrameworkunifiedStatus
-setEvnVariableForLaunchVRBodyCtrl(std::string f_sEnvArea, std::string f_sSeriesInfo){
-  EFrameworkunifiedStatus   l_eStatus   = eFrameworkunifiedStatusOK;
-  const CHAR LaunchVRBodyCtrlEnvVariable[] = "SM_CONF_LAUNCH_VRBODYCTRL";
-
-  const CHAR  *l_pSetValue = EnvValueNo;
-
-  BOOL l_bArea2 = (f_sEnvArea == EnvValueArea2) ? TRUE : FALSE;
-  BOOL l_bGen2 = (f_sSeriesInfo == PkgInfoGen2) ? TRUE : FALSE;
-
-  if(l_bArea2 && l_bGen2) { 
-    l_pSetValue = EnvValueYes;
-  } else {
-    l_pSetValue = EnvValueNo;
-  }
-
-  if(0 != setenv(LaunchVRBodyCtrlEnvVariable, l_pSetValue, 1)) {
-    SS_ASERT_ERRNO(0);
-    l_eStatus = eFrameworkunifiedStatusFail;
-  }
-
-  return l_eStatus;
 }
 
 /***********************************************************************
@@ -743,32 +282,6 @@ static EFrameworkunifiedStatus setVerInfo_version_date(const char* VerPath) {
   return configRet;
 }
 
-
-/***********************************************************************
- *  setVersionInfo subfunction(version settings)
- ***********************************************************************/
-static EFrameworkunifiedStatus setVerInfo_version(const char* VerPath) {
-  EFrameworkunifiedStatus configRet = eFrameworkunifiedStatusOK;
-  CSSVer ver;
-  SSVER_PkgInfo pkgInfo;
-
-  std::string line;
-  std::ifstream verFin(VerPath);
-  if (verFin) {
-    bzero(&pkgInfo, sizeof(pkgInfo));
-    if (std::getline(verFin, line)) {
-      snprintf(pkgInfo.version, sizeof(pkgInfo.version), "%s",
-               line.c_str());
-    }
-    configRet = ver.setPkgInfo(SS_PKG_SPI_LOADER, pkgInfo);
-    SS_ASERT(configRet == eFrameworkunifiedStatusOK);
-  } else {
-    SS_ASERT_ERRNO(0);
-  }
-  return configRet;
-}
-
-
 /***********************************************************************
  *  Set version information
  ***********************************************************************/
@@ -787,20 +300,8 @@ static EFrameworkunifiedStatus setVersionInfo(void) {
     configRet = ver.setPkgInfo(SS_PKG_TARGETBOARD, pkgInfo);
     SS_ASERT(configRet == eFrameworkunifiedStatusOK);
 
-    // Set LPF version information
-    const char pfVersion[] = "/version/pf/version.txt";
-    {
-      configRet = setVerInfo_version_date(pfVersion);
-    }
-
-    // Set COMP SI version information
-    const char csiVersion[] = "/version/si/version.txt";
-    {
-      configRet = setVerInfo_version_date(csiVersion);
-    }
-
     // Set PRODUCT version information
-    const char prdVersion[] = "/version/product/version.txt";
+    const char prdVersion[] = "/usr/agl/share/BS/ss/system_manager/rodata/version.txt";
     {
       std::string line;
       std::ifstream prdFin(prdVersion);
@@ -825,60 +326,12 @@ static EFrameworkunifiedStatus setVersionInfo(void) {
       }
     }
 
-    // Set SPI_LOADER version information
-    const char spiVersion[] = "/proc/device-tree/bootinfo/ver_spiloader";
-    {
-      configRet = setVerInfo_version(spiVersion);
-    }
-
-    // Set UBOOT version information
-    const char ubootVersion[] = "/proc/device-tree/bootinfo/ver_uboot";
-    {
-      configRet = setVerInfo_version(ubootVersion);
-    }
-
-    // Set SECURE_LOADER version information
-    const char secureVersion[] = "/proc/device-tree/bootinfo/ver_secureloader";
-    {
-      configRet = setVerInfo_version(secureVersion);
-    }
-
     // PHASE_INFO
-    const char phaseVersion[] = "/version/PhaseInfo/PhaseInfo.txt";
+    const char phaseVersion[] = "/usr/agl/share/BS/ss/system_manager/rodata/PhaseInfo.txt";
     {
       configRet = setVerInfo_version_date(phaseVersion);
     }
 
-    // VP_VEHICLEPARAMETERLIBRARY
-    {
-      std::string l_sEnvVpConfigVer = getEnvValiavleWithDefault(VP_VEHICLEPARAMETERLIBRARY_VERSION,
-                                    NULL);
-      if (!l_sEnvVpConfigVer.empty()) {
-        bzero(&pkgInfo, sizeof(pkgInfo));
-        snprintf(pkgInfo.version, sizeof(pkgInfo.version), "%s",
-                 l_sEnvVpConfigVer.c_str());
-
-        configRet = ver.setPkgInfo(SS_PKG_VP_CONFIG, pkgInfo);
-        SS_ASERT(configRet == eFrameworkunifiedStatusOK);
-      } else {
-        SS_ASERT(0);
-      }
-    }
-
-    // VP__CWORD31_
-    {
-      std::string l_sEnvVp_CWORD31_Ver = getEnvValiavleWithDefault(
-                                        VP__CWORD31__VERSION, NULL);
-      if (!l_sEnvVp_CWORD31_Ver.empty()) {
-        bzero(&pkgInfo, sizeof(pkgInfo));
-        snprintf(pkgInfo.version, sizeof(pkgInfo.version), "%s",
-                 l_sEnvVp_CWORD31_Ver.c_str());
-
-        configRet = ver.setPkgInfo(SS_PKG_VP__CWORD31_, pkgInfo);
-        SS_ASERT(configRet == eFrameworkunifiedStatusOK);
-      }
-        SS_ASERT(0);
-    }
   } catch (EFrameworkunifiedStatus ee) {
     SS_ASERT(0);
     configRet = ee;
@@ -952,7 +405,6 @@ EFrameworkunifiedStatus ss_sm_initHook(HANDLE hApp, const T_SS_SM_INIT_HOOK_IN_P
                           T_SS_SM_INIT_HOOK_OUT_PARAM *outPrm) {
   EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
   std::string l_sEnvFile;
-  std::string l_sEnvBoard;
   std::string l_sEnvArea;
   std::string l_sEnvBrand;
   std::string l_sEnvGrade;
@@ -980,9 +432,6 @@ EFrameworkunifiedStatus ss_sm_initHook(HANDLE hApp, const T_SS_SM_INIT_HOOK_IN_P
 
   // APPS_CONFIG_FILENAME (not set by default)
   l_sEnvFile = getEnvValiavleWithDefault(LaunchConfigFileNameEnvVariable, NULL);
-
-  // VEHICLEPARAMETERLIBRARY_BOARD
-  l_sEnvBoard = getEnvValiavleWithDefault(BoardEnvVariable, NULL);
 
   // VEHICLEPARAMETERLIBRARY_AREA
   l_sEnvArea = getEnvValiavleWithDefault(AreaTypeEnvVariable, EnvValueArea1);
@@ -1013,42 +462,9 @@ EFrameworkunifiedStatus ss_sm_initHook(HANDLE hApp, const T_SS_SM_INIT_HOOK_IN_P
     SS_ASERT(0);
   }
 
-  // SM_CONF_LAUNCH_RadioHDArbiter
-  if (eFrameworkunifiedStatusOK
-      != setEvnVariableForLaunchRadioHDArbiter(l_sEnvBoard, l_sEnvArea)) {
-    SS_ASERT(0);
-  }
-
-  // SM_CONF_LAUNCH_DTVSERVICE
-  if (eFrameworkunifiedStatusOK
-      != setEvnVariableForLaunchDtvService(l_sEnvBrand, l_sEnvArea, l_sEnvGrade)) {
-    SS_ASERT(0);
-  }
-
-  // SM_CONF_LAUNCH_HANDWRITING
-  if (eFrameworkunifiedStatusOK
-      != setEvnVariableForLaunchHandWriting(l_sEnvBrand, l_sEnvArea)) {
-    SS_ASERT(0);
-  }
 
   // SM_CONF_LAUNCH_CUS
   if (eFrameworkunifiedStatusOK != setEvnVariableForLaunchCus(l_sEnvArea)) {
-    SS_ASERT(0);
-  }
-
-  // SM_CONF_LAUNCH_VR
-  if (eFrameworkunifiedStatusOK
-      != setEvnVariableForLaunchVrService(l_sEnvBrand, l_sEnvArea)) {
-    SS_ASERT(0);
-  }
-
-  // SM_CONF_LAUNCH_LSP
-  if(eFrameworkunifiedStatusOK != setEvnVariableForLaunchLSP(l_sEnvBrand, l_sEnvArea, l_sEnvGrade)) {
-    SS_ASERT(0);
-  }
-
-  // SM_CONF_LAUNCH_MIRRORLINK
-  if(eFrameworkunifiedStatusOK != setEvnVariableForLaunchMirrorLink(l_sEnvBrand, l_sEnvArea, l_sPkgSeriesInfo)) {
     SS_ASERT(0);
   }
 
@@ -1057,33 +473,6 @@ EFrameworkunifiedStatus ss_sm_initHook(HANDLE hApp, const T_SS_SM_INIT_HOOK_IN_P
       != setEvnVariableForLaunchTFF(l_sEnvArea)) {
     SS_ASERT(0);
   }
-
-  // SM_CONF_LAUNCH_AWTPRIMARY
-  if(eFrameworkunifiedStatusOK != setEvnVariableForLaunchAwtPrimary(l_sEnvGrade, l_sEnvArea)) {
-    SS_ASERT(0);
-  }
-
-  // SM_CONF_LAUNCH_RADIOSERVICE
-  if (eFrameworkunifiedStatusOK
-      != setEvnVariableForLaunchRadioService(l_sEnvArea)) {
-    SS_ASERT(0);
-  }
-
-  // SM_CONF_LAUNCH_PLAYSRV
-  if (eFrameworkunifiedStatusOK != setEvnVariableForLaunchPLAYSRV(l_sEnvArea, l_sEnvBrand, l_sEnvGrade, l_sPkgSeriesInfo)) {
-    SS_ASERT(0);
-  }
-
-  // SM_CONF_LAUNCH__CWORD27_
-  if (eFrameworkunifiedStatusOK != setEvnVariableForLaunch_CWORD27_(l_sEnvArea, l_sPkgSeriesInfo)) {
-    SS_ASERT(0);
-  }
-
-  // SM_CONF_LAUNCH_VRBODYCTRL
-  if(eFrameworkunifiedStatusOK != setEvnVariableForLaunchVRBodyCtrl(l_sEnvArea, l_sPkgSeriesInfo)) {
-    SS_ASERT(0);
-  }
-
 
   if (eFrameworkunifiedStatusOK
       != (l_eStatus = FrameworkunifiedSubscribeNotificationWithCallback(
