@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -102,7 +102,8 @@ class Process {
   /// \ingroup Process
   /// \~english @par Summary
   ///           - Default Constructor, called when the class is instantiated.
-  /// \~english @param  None
+  /// \~english @param [in]  - cpu_assign
+  ///           - Assignment information of CPU.
   /// \~english @retval  None
   /// \~english @par Preconditions
   ///           -no preconditions
@@ -118,7 +119,7 @@ class Process {
   ///           - initialize all var in class as default value
   /// \~english @see  ~Process
   ////////////////////////////////////////////////////////////////////////////////////
-  Process();
+  Process(int cpu_assign = 0x0);
 
   /////////////////////////////////////////////////////////////////////////////////////
   /// \ingroup Process
@@ -1021,6 +1022,7 @@ class Process {
   long m_lValidationTag;  // Used to check if this is a valid  // NOLINT (runtime/int)
   // object or not.
 
+  int m_cpu_assign;
   pid_t m_tProcessId;  // This is the process ID for this process. All command, control,
   // and status gathering will use this ID.
   eProcessLoadMode m_eProcessLoadMode;  // This is the process load mode provided by the caller when this

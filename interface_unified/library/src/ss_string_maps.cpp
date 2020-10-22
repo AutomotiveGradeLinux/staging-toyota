@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -327,8 +327,6 @@ void Init_SS_SystemManagerProtocol_StrMap(std::map<SS_SystemManagerProtocol, SS_
   MAP_ENTRY(m_strMap, SS_SM_SYSTEM_MODE_INFO_REQ);
   MAP_ENTRY(m_strMap, SS_SM_SYSTEM_MODE_INFO_RSPN);
   MAP_ENTRY(m_strMap, SS_SM_INITCOMP_REP);
-  MAP_ENTRY(m_strMap, SS_SM_BOOT_MODE_SET_REQ);
-  MAP_ENTRY(m_strMap, SS_SM_BOOT_MODE_SET_RESP);
   MAP_ENTRY(m_strMap, SS_SM_DATA_RESET_MODE_SET_REQ);
   MAP_ENTRY(m_strMap, SS_SM_PROG_UPDATE_STATE_SET_REQ);
   MAP_ENTRY(m_strMap, SS_SM_CPU_RESET_REQ);
@@ -338,10 +336,6 @@ void Init_SS_SystemManagerProtocol_StrMap(std::map<SS_SystemManagerProtocol, SS_
   MAP_ENTRY(m_strMap, SS_SM_POWER_REQUEST_MSG);
   MAP_ENTRY(m_strMap, SS_SM_POWER_REQUEST_MSG_RESP);
   MAP_ENTRY(m_strMap, SS_SM_USER_MODE_SET_RESP);
-  MAP_ENTRY(m_strMap, SS_SM_DEBUG_VAR_CODE_DATA_SET_REQ);
-  MAP_ENTRY(m_strMap, SS_SM_SET_BOOTLOADER_INFO);
-
-  MAP_ENTRY(m_strMap, SS_SM_GET_BOOTLOADER_INFO);
 
   MAP_ENTRY(m_strMap, SS_SM_EVENT_ERROR);
   MAP_ENTRY(m_strMap, SS_SM_EVENT_ERROR_TO_SSL);
@@ -373,7 +367,6 @@ void Init_SS_SystemManagerProtocol_StrMap(std::map<SS_SystemManagerProtocol, SS_
   MAP_ENTRY(m_strMap, SS_SM_BOOT_MICRO_RESET_NTF);
   MAP_ENTRY(m_strMap, SS_SM_BOOT_MICRO_LOG_REQ);
   MAP_ENTRY(m_strMap, SS_SM_BOOT_MICRO_LOG_RSP);
-  MAP_ENTRY(m_strMap, SS_SM_WAKEUP_ORDER_SET_REQ);
   MAP_ENTRY(m_strMap, SS_SM_NEXT_WAKEUP_TYPE_SET_REQ);
   // LCOV_EXCL_BR_STOP 11:Excluded due to gcov restrictions(other)
 }  // End of void Init_SS_SystemManagerProtocol_StrMap(std::map<SS_SystemManagerProtocol, SS_String> &m_strMap)

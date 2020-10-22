@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -150,9 +150,9 @@ void TimerCtrl::Initialize(HANDLE hApp) {
 void TimerCtrl::Shutdown() {
   m_aTimers.clear();
   while (m_rTimers.begin() != m_rTimers.end()) {
-    Timer& timer = m_rTimers.begin()->second;
-    timer.Shutdown();
-    delete &timer;
+    Timer* p_timer = m_rTimers.begin()->second;
+    p_timer->Shutdown();
+    delete p_timer;
     m_rTimers.erase(m_rTimers.begin());
   }
 }
@@ -161,8 +161,8 @@ UI_32 TimerCtrl::CreateTimer(CbFuncPtr CbFn) {
   if (!m_aTimers.empty()) {
     UI_32 id = m_aTimers.front();
     m_aTimers.pop_front();
-    Timer& timer = *new Timer(m_hApp, id, CbFn);
-    m_rTimers.insert(std::pair<UI_32, Timer&>(id, timer));
+    Timer* p_timer = new Timer(m_hApp, id, CbFn);
+    m_rTimers.insert(std::pair<UI_32, Timer*>(id, p_timer));
     return id;
   }
   return 0;
@@ -170,9 +170,9 @@ UI_32 TimerCtrl::CreateTimer(CbFuncPtr CbFn) {
 
 UI_32 TimerCtrl::DeleteTimer(UI_32 id) {
   if (m_rTimers.find(id) != m_rTimers.end()) {
-    Timer& timer = m_rTimers.find(id)->second;
-    timer.Shutdown();
-    delete &timer;
+    Timer* p_timer = m_rTimers.find(id)->second;
+    p_timer->Shutdown();
+    delete p_timer;
     m_rTimers.erase(m_rTimers.find(id));
     m_aTimers.push_back(id);
     return id;
@@ -182,16 +182,16 @@ UI_32 TimerCtrl::DeleteTimer(UI_32 id) {
 
 UI_32 TimerCtrl::SetTimer(UI_32 id, UI_32 ss, UI_32 sms, UI_32 rs, UI_32 rms) {
   if (m_rTimers.find(id) != m_rTimers.end()) {
-    Timer& timer = m_rTimers.find(id)->second;
-    timer.SetTime(ss, sms, rs, rms);
+    Timer* p_timer = m_rTimers.find(id)->second;
+    p_timer->SetTime(ss, sms, rs, rms);
     return id;
   }
   return 0;
 }
 UI_32 TimerCtrl::StartTimer(UI_32 id, UI_32 ss, UI_32 sms, UI_32 rs, UI_32 rms) {
   if (m_rTimers.find(id) != m_rTimers.end()) {
-    Timer& timer = m_rTimers.find(id)->second;
-    timer.Start(ss, sms, rs, rms);
+    Timer* p_timer = m_rTimers.find(id)->second;
+    p_timer->Start(ss, sms, rs, rms);
     return id;
   }
   return 0;
@@ -199,10 +199,10 @@ UI_32 TimerCtrl::StartTimer(UI_32 id, UI_32 ss, UI_32 sms, UI_32 rs, UI_32 rms) 
 
 UI_32 TimerCtrl::StartTimerMulti(UI_32 id, UI_32 ss, UI_32 sms, UI_32 rs, UI_32 rms, UI_32 subId) {
   if (m_rTimers.find(id) != m_rTimers.end()) {
-    Timer& timer = m_rTimers.find(id)->second;
-    timer.Shutdown();
-    timer.Reinitialize(id + subId);
-    timer.Start(ss, sms, rs, rms);
+    Timer* p_timer = m_rTimers.find(id)->second;
+    p_timer->Shutdown();
+    p_timer->Reinitialize(id + subId);
+    p_timer->Start(ss, sms, rs, rms);
     return id;
   }
   return 0;
@@ -210,8 +210,8 @@ UI_32 TimerCtrl::StartTimerMulti(UI_32 id, UI_32 ss, UI_32 sms, UI_32 rs, UI_32 
 
 UI_32 TimerCtrl::StartTimer(UI_32 id) {
   if (m_rTimers.find(id) != m_rTimers.end()) {
-    Timer& timer = m_rTimers.find(id)->second;
-    timer.Start();
+    Timer* p_timer = m_rTimers.find(id)->second;
+    p_timer->Start();
     return id;
   }
   return 0;
@@ -219,8 +219,8 @@ UI_32 TimerCtrl::StartTimer(UI_32 id) {
 
 UI_32 TimerCtrl::StopTimer(UI_32 id) {
   if (m_rTimers.find(id) != m_rTimers.end()) {
-    Timer& timer = m_rTimers.find(id)->second;
-    timer.Stop();
+    Timer* p_timer = m_rTimers.find(id)->second;
+    p_timer->Stop();
     return id;
   }
   return 0;

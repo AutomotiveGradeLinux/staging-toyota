@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,6 @@
 #define NTFY_SSSystemMgrPowerOnOff    SERVICE_SYSMANAGER"/PowerOnOffState"    ///< Power ON notification for
                                                                               // Audio & Display
 #define NTFY_SSSystemMgrStartUpType   SERVICE_SYSMANAGER"/StartUpType"           ///< Notification for start up type
-#define NTFY_SSHUBootModes               SERVICE_SYSMANAGER"/HeadUnitBootModes"     ///< Notification for boot modes
 #define NTFY_SSServiceWakeupStatus    SERVICE_SYSMANAGER"/ServiceWakeupStatus"   ///< Service Wakeup state
 #define NTFY_SSNeedAplRestart      SERVICE_SYSMANAGER"/NeedAplRestart"        ///< Notification for Need APL Restart
 

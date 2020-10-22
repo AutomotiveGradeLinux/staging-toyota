@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -130,35 +130,11 @@ typedef enum {
 }ESMServiceWakeupStatus;
 
 /// \ingroup system_manager
-typedef struct T_SystemManagerBootModeRequestResponse {
-  ESMBootModeInfo hostBootMode;
-  EFrameworkunifiedStatus      eFrameworkunifiedStatus;
-}TSystemManagerBootModeRequestResponse;
-
-typedef enum {
-    e_SS_SM_BOOT_INFO_MDUPDATE,
-
-//    e_SS_SM_BOOT_INFO_SDUPDATE
-    e_SS_SM_BOOT_INFO_SDUPDATE,
-    e_SS_SM_BOOT_INFO_OPDTUPDATE
-
-}ESMBootInfoType;
-
-typedef struct {
-    ESMBootInfoType type;
-    UI_32           value;
-}TSystemManagerBootInfoStruct;
-
-/// \ingroup system_manager
 /// \brief Data Reset Reason
 typedef struct T_SS_BootModeListStruct {
   ESMBootModeInfo             hostBootMode;
   EPWR_SC__CWORD56__BOOT_MODE_TYPE _CWORD56_BootMode;
 } TSS_BootModeListStruct;
-
-typedef struct T_SystemManagerWakeupOrderInfo {
-    char order_name[SS_SM_ORDER_NAME_MAX];
-} TSystemManagerWakeupOrderInfo;
 
 //****************************************************************************
 /// \ingroup system_manager                                                   *

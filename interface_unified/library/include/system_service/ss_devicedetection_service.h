@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -94,6 +94,18 @@ typedef struct _UsbInfo {
    * \~english reserved area
    */
   uint8_t  reserved[2];
+  /**
+   * \~english Manufacturer Name
+   */
+  CHAR  manufacturerName[SS_DEV_NAME_SIZE];  // Manufacturer Name
+  /**
+   * \~english Product Name
+   */
+  CHAR  productName[SS_DEV_NAME_SIZE];  //  Product Name
+  /**
+   * \~english Serial Number
+   */
+  CHAR  serial_no[SS_DEV_NAME_SIZE];  // Serial Number
   /**
    * \~english Device file path
    */
@@ -485,6 +497,33 @@ typedef struct _VehicleCtrlDetectInfo {
    */
   int8_t        deviceFile[FILEPATH_SIZE];      // Vehicle control device file
 }SS_VehicleCtrlDetectInfo;
+
+// Structure for audio detect info.
+/**
+ * \~english Structure for audio detect info.
+ */
+typedef struct _AudioDetectInfo {
+  /**
+   * \~english Insert:TURE, Remove:FALSE
+   */
+  BOOL bIsDeviceAvailable;
+  /**
+   * \~english USB Infomation
+   */
+  SS_UsbInfo usb_info;
+  /**
+   * \~english Audio control device file
+   */
+  int8_t audio_ctrl[FILEPATH_SIZE];
+  /**
+   * \~english Audio Playback device file
+   */
+  int8_t audio_play[FILEPATH_SIZE];
+  /**
+   * \~english Audio Capture device file
+   */
+  int8_t audio_capture[FILEPATH_SIZE];
+}SS_AudioDetectInfo; 
 
 // Structure that is available when SS_DEV_DETECT_USB_DSRC_APP_EV is published.
 /**

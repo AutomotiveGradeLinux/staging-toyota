@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -392,6 +392,7 @@ class DeviceDetectionServiceIf {
   ///       - SS_DEV_INFO_SD_FORMAT_COMP_EV         : Notify the SD format results
   ///       - SS_DEV_DETECT_ANY_USB_DCM_NCM_EV      : Notify the insertion and removal and network IF name of the USB
   ///       NCM class device(for DCM)
+  ///       - SS_DEV_INFO_ANY_USB_DVDP_EV           : Notify the insertion and removal of the DVD-P device
   /// \~english @par
   ///       For SS_DEV_INFO_ANY_USB_NOTIFY_EV, it is also notified in the event the following conditions.
   ///       - When the enumeration failed.
@@ -489,6 +490,7 @@ class DeviceDetectionServiceIf {
   ///       - SS_DEV_DETECT_FILEPATHNAME_EV         : Notify the specified file access in pfilepath
   ///       - SS_DEV_DETECT_ANY_USB_DCM_NCM_EV      : Notify the insertion and removal and network IF name of the USB
   ///       NCM class device(for DCM)
+  ///       - SS_DEV_INFO_ANY_USB_DVDP_EV           : Notify the insertion and removal of the DVD-P device
   /// \~english @par
   ///       For SS_DEV_INFO_ANY_USB_NOTIFY_EV, it is also notified in the event the following conditions.
   ///       - When the enumeration failed.
@@ -879,10 +881,6 @@ class DeviceDetectionServiceIf {
   ///        uint8_t   - USB port number
   /// \~english @param  [in] inteval
   ///        uint8_t   - interval (interval * 100 [msec])
-  /// \~english @par
-  ///       - USB0  : SS_DEV_USB_PORT0
-  ///       - USB1  : SS_DEV_USB_PORT1
-  ///       - USB2  : SS_DEV_USB_PORT2
   /// \~english @retval eFrameworkunifiedStatusOK Success
   /// \~english @retval eFrameworkunifiedStatusInvldParam Invalid parameter
   /// \~english @retval eFrameworkunifiedStatusInvldHandle Invalid handle
@@ -898,12 +896,12 @@ class DeviceDetectionServiceIf {
   ///       - SS_DeviceDetectionService process has been started.
   ///       - Generation/initialization of Dispatcher for the Application (FrameworkunifiedCreateDispatcherWithoutLoop etc) \n
   ///         has been done, and Availability of Device Detection Service is TRUE.
+  ///       - Checking USB port number should be done before calling this API.
   /// \~english @par Change of the internal state
   ///       - The internal state is not changed.
   /// \~english @par Causes of failures
   ///       - HANDLES in the class member variables (m_hSession) is NULL. [eFrameworkunifiedStatusInvldHandle]
   ///       - Environment variable (TARGET_BOARD) is not defined. [eFrameworkunifiedStatusFail]
-  ///       - Port number of USB, which is specified by the argument (port) is not correct(Not USB0/USB1/USB2).
   ///       [eFrameworkunifiedStatusInvldParam]
   ///       - Name of the target board in the environment variable (TARGET_BOARD) is not correct. [eFrameworkunifiedStatusInvldParam]
   ///       - HANDLE (m_hSession) in the class member variables are not appropriate(which is invalid).
@@ -938,7 +936,7 @@ class DeviceDetectionServiceIf {
   ///       Environment variable (TARGET_BOARD) is defined in the configure options \n
   ///       specified at the time of build. \n
   ///        (Example.  TARGET_BOARD:_CWORD71__CWORD91__e2_na_t__CWORD84_2__CWORD71_) \n
-  ///       Before reset SS_DEV_USB_PORT1(for DCM), the device files(dcm_acm, dcm_vc, dcm_wdm)\n
+  ///       Before reset USB port for DCM, the device files(dcm_acm, dcm_vc, dcm_wdm) \n
   ///       related to DCM-related must be closed. \n
   ///       *) Device file may not be created correctly when the process of Disconnect/Connect \n
   ///          without closing to work.

@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -895,77 +895,6 @@ EFrameworkunifiedStatus SendWakeUpToSystemManager(wakeInfo *pData) {
 }  // End of EFrameworkunifiedStatus SendWakeUpToSystemManager(wakeInfo *pData)
 // LCOV_EXCL_STOP
 
-///////////////////////////////////////////////////////////
-/// Function: SetBootLoaderInfoRequestToSystemManager
-///
-///////////////////////////////////////////////////////////
-EFrameworkunifiedStatus SetBootLoaderInfoRequestToSystemManager(ESMBootInfoType f_type,
-    UI_32 f_value) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-
-  EFrameworkunifiedStatus l_eStatus;
-  EFrameworkunifiedStatus l_resData;
-  TSystemManagerBootInfoStruct l_bootInfo;
-
-  switch (f_type) {
-  case e_SS_SM_BOOT_INFO_MDUPDATE:
-  case e_SS_SM_BOOT_INFO_SDUPDATE:
-
-  case e_SS_SM_BOOT_INFO_OPDTUPDATE:
-    break;
-  default:
-    return eFrameworkunifiedStatusInvldParam;
-  }
-
-  l_bootInfo.type = f_type;
-  l_bootInfo.value = f_value;
-
-  l_eStatus = InvokeSyncRequestToSystemManager(
-                SS_SM_SET_BOOTLOADER_INFO, "SS_SM_SET_BOOTLOADER_INFO",
-                sizeof(TSystemManagerBootInfoStruct), (PVOID) & l_bootInfo,
-                sizeof(l_resData), (PVOID) & l_resData);  // LCOV_EXCL_BR_LINE 11:Unexpected branch
-  LOG_STATUS_IF_ERRORED(l_eStatus, "InvokeSyncRequestToSystemManager()");
-
-  if (eFrameworkunifiedStatusOK == l_eStatus) {
-    if (eFrameworkunifiedStatusOK != l_resData)
-      l_eStatus = l_resData;
-  }
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-
-//}  // End of EFrameworkunifiedStatus SetBootLoaderInfoRequestToSystemManager(wakeInfo *pData)
-}  // End of EFrameworkunifiedStatus SetBootLoaderInfoRequestToSystemManager(ESMBootInfoType f_type, UI_32 f_value)
-
-
-
-///////////////////////////////////////////////////////////
-/// Function: GetBootLoaderInfoRequestToSystemManager
-///
-///////////////////////////////////////////////////////////
-EFrameworkunifiedStatus GetBootLoaderInfoRequestToSystemManager(void *p_info)
-{
-  EFrameworkunifiedStatus l_eStatus;
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-
-  if (NULL == p_info) {
-    l_eStatus = eFrameworkunifiedStatusInvldParam;
-    LOG_ERROR("p_info = NULL");
-  } else {
-    l_eStatus = InvokeSyncRequestToSystemManager(SS_SM_GET_BOOTLOADER_INFO,
-                                                 "SS_SM_GET_BOOTLOADER_INFO",
-                                                 0,
-                                                 NULL,
-                                                 sizeof(LBM_RAM_t),
-                                                 (PVOID)p_info);
-    LOG_STATUS_IF_ERRORED(l_eStatus, "InvokeSyncRequestToSystemManager()");
-  }
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-} // End of EFrameworkunifiedStatus GetBootLoaderInfoRequestToSystemManager(void *p_info)
-
-
 // LCOV_EXCL_START 6:Because the condition cannot be set
 ///////////////////////////////////////////////////////////
 /// Function: SendShutdownToSystemManager
@@ -1031,53 +960,6 @@ EFrameworkunifiedStatus AttachCallbackToSystemManager(HANDLE hApp, UI_32 iCmd,
            hApp, g_tSystemManagerSession.szServiceName.c_str(), iCmd, fpOnCmd);
 }  // End of EFrameworkunifiedStatus AttachCallbackToSystemManager( HANDLE hApp, UI_32 iCmd, CbFuncPtr fpOnCmd )
 // LCOV_EXCL_STOP
-
-///////////////////////////////////////////////////////////
-/// Function: SendBootModeSetRequestToSystemManager
-///
-///////////////////////////////////////////////////////////
-EFrameworkunifiedStatus SendBootModeSetRequestToSystemManager(ESMBootModeInfo hostBootMode) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus;
-  PCSTR p_sBootModeName;
-
-  if (e_SS_SM_BOOT_MODE_INVALID == hostBootMode) {
-    l_eStatus = eFrameworkunifiedStatusInvldParam;
-    LOG_ERROR("e_SS_SM_BOOT_MODE_INVALID == hostBootMode");
-  } else if (e_SS_SM_BOOT_MODE_APPLICATION == hostBootMode) {
-//      , e_SS_SM_BOOT_MODE_PROGRAMMING
-    l_eStatus = eFrameworkunifiedStatusOK;
-    p_sBootModeName = "BOOT_MODE_APPLICATION";
-  } else if (e_SS_SM_BOOT_MODE_PROGRAMMING == hostBootMode) {
-    l_eStatus = eFrameworkunifiedStatusOK;
-    p_sBootModeName = "BOOT_MODE_PROGRAMMING";
-  } else {
-    l_eStatus = eFrameworkunifiedStatusInvldParam;
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-           " Error: Unknown hostBootMode value '0x%x', %s", hostBootMode,
-           GetStr(l_eStatus).c_str());
-  }
-
-  /*      ( SS_SM_BOOT_MODE_GET_REQ == protocolID ) ||
-   ( SS_SM_BOOT_MODE_SET_REQ == protocolID ) )
-   */
-  if (eFrameworkunifiedStatusOK == l_eStatus) {
-    TSystemManagerBootModeRequestResponse l_Data;
-    l_Data.hostBootMode = hostBootMode;
-    l_Data.eFrameworkunifiedStatus = eFrameworkunifiedStatusOK;
-    FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
-           "%s: Sending SS_SM_BOOT_MODE_SET_REQ(%s) to %s.",
-           g_tSystemManagerSession.strIAm.c_str(), p_sBootModeName,
-           g_tSystemManagerSession.szServiceName.c_str());
-
-    l_eStatus = SendMsgToSystemManager(
-                  SS_SM_BOOT_MODE_SET_REQ, sizeof(TSystemManagerBootModeRequestResponse),
-                  (PCVOID) & l_Data);  // LCOV_EXCL_BR_LINE 11:Unexpected branch
-    LOG_STATUS_IF_ERRORED(l_eStatus, "SendMsgToSystemManager()");
-  }
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of EFrameworkunifiedStatus SendBootModeSetRequestToSystemManager(ESMBootModeInfo hostBootMode)
 
 ///////////////////////////////////////////////////////////
 /// Function: SetDataResetModeToSystemManager
@@ -1151,41 +1033,6 @@ EFrameworkunifiedStatus SetProgUpdateStateToSystemManager(
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
   return l_eStatus;
 }  // End of EFrameworkunifiedStatus SetProgUpdateStateToSystemManager(SMProgUpdateState progUpdateState)
-
-///////////////////////////////////////////////////////////
-/// Function: SetWakeupOrderToSystemManager
-///
-///////////////////////////////////////////////////////////
-EFrameworkunifiedStatus SetWakeupOrderToSystemManager(std::string f_orderName) {
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  EFrameworkunifiedStatus l_resData;
-  TSystemManagerWakeupOrderInfo orderName;
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-
-  if (SS_SM_ORDER_NAME_MAX <= f_orderName.size()) {  // LCOV_EXCL_BR_LINE 11:Unexpected branch
-    return eFrameworkunifiedStatusInvldParam;
-  }
-
-  snprintf(orderName.order_name, sizeof(orderName.order_name), "%s",
-           f_orderName.c_str());  // LCOV_EXCL_BR_LINE 11:Unexpected branch
-  l_eStatus = InvokeSyncRequestToSystemManager(SS_SM_WAKEUP_ORDER_SET_REQ,
-              "SS_SM_WAKEUP_ORDER_SET_REQ",
-              sizeof(orderName),
-              (PVOID) & orderName,
-              sizeof(l_resData),
-              (PVOID) & l_resData);  // LCOV_EXCL_BR_LINE 11:Unexpected branch
-  LOG_STATUS_IF_ERRORED(l_eStatus, "InvokeSyncRequestToSystemManager()");
-
-  if (eFrameworkunifiedStatusOK == l_eStatus) {
-    if (eFrameworkunifiedStatusOK != l_resData) {
-      l_eStatus = l_resData;
-      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " l_eStatus %d", l_eStatus);
-    }
-  }
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of EFrameworkunifiedStatus SetWakeupOrderToSystemManager(std::string f_orderName)
 
 ///////////////////////////////////////////////////////////
 /// Function: SetNextWakeupTypeToSystemManager
@@ -1274,16 +1121,6 @@ EFrameworkunifiedStatus SendStartupConfirmationToSystemManager(
   return l_eStatus;
 }  // End of EFrameworkunifiedStatus SendStartupConfirmationToSystemManager(
 // LCOV_EXCL_STOP
-
-EFrameworkunifiedStatus SendVarCodeDataToSystemManager(UI_32 f_uiLength, void *f_data) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus;
-  l_eStatus = SendMsgToSystemManager(SS_SM_DEBUG_VAR_CODE_DATA_SET_REQ,
-                                     f_uiLength, f_data);
-  LOG_STATUS_IF_ERRORED(l_eStatus, "SendMsgToSystemManager()");
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}
 
 // LCOV_EXCL_START 6:Because the condition cannot be set
 EFrameworkunifiedStatus SendSystemErrorToSystemManager(EFrameworkunifiedSystemError f_systemError) {

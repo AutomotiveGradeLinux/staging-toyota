@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,23 +74,6 @@ typedef enum _SS_SystemManagerProtocol {
   , SS_SM_GET_STOP_EXT_INFO               //!< FrameworkunifiedOnStop Extended Parameter
     // End of Get Extended Parameter Protocol                                 *
     //*************************************************************************
-
-  //*************************************************************************
-  // Boot Mode Protocol:                                                    *
-  //                                                                        *
-  // Request by Privileged clients to set the system boot mode:             *
-  //     Application, or                                                    *
-  //      Programming                                                        *
-  //                                                                        *
-  // The Set Request message carries the requested Boot Mode.               *
-  // The Set Response message carries the pass/fail of the Set request,     *
-  // and if the Set request succeeded, the Boot Mode at the time the        *
-  // Response message was generated.                                        *
-  , SS_SM_BOOT_MODE_SET_REQ               //!< Client to Service (Sys Mgr)
-  , SS_SM_BOOT_MODE_SET_RESP              //!< Service (Sys Mgr) to Client
-  //                                                                        *
-  // End of Boot Mode Protocol                                              *
-  //*************************************************************************
 
   //*************************************************************************
   // Reset Mode Protocol:                                                   *
@@ -208,12 +191,6 @@ typedef enum _SS_SystemManagerProtocol {
   // End of User Mode Protocol                                              *
   //*************************************************************************
 
-  , SS_SM_DEBUG_VAR_CODE_DATA_SET_REQ     //!< \~english
-  , SS_SM_SET_BOOTLOADER_INFO             //!< \~english
-
-  , SS_SM_GET_BOOTLOADER_INFO             //!< \~english
-
-  , SS_SM_WAKEUP_ORDER_SET_REQ            //!< \~english
   , SS_SM_NEXT_WAKEUP_TYPE_SET_REQ        //!< \~english
 
     //*************************************************************************

@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@
 #include <native_service/frameworkunified_framework_if.h>
 #include <native_service/frameworkunified_types.h>
 #include <native_service/frameworkunified_framework_types.h>
-#include <other_service/VP_GetEnv.h>
 #include <string.h>
 
 #ifdef AGL_STUB
@@ -409,6 +408,7 @@ BOOL DeviceDetectionServiceIf::CheckDetectEvent(
     case SS_DEV_INFO_ANY_USB_NOTIFY_EV:
     case SS_DEV_DETECT_ANY_USB__CWORD57__ROLE_EV:
     case SS_DEV_INFO_SD_FORMAT_COMP_EV:
+    case SS_DEV_INFO_ANY_USB_DVDP_EV:
       chkevt = TRUE;
       break;
     default:
@@ -582,70 +582,15 @@ EFrameworkunifiedStatus DeviceDetectionServiceIf::UmountSD(uint8_t part_num,
   return eStatus;
 }
 
-static EFrameworkunifiedStatus UsbVBusResetParamChk(int8_t port) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  char* env;
-  env = getenv("TARGET_BOARD");
-  if (env == NULL) {
-    return eFrameworkunifiedStatusFail;
-  }
-
-  switch (port) {
-    case SS_DEV_USB_PORT0:
-    case SS_DEV_USB_PORT1:
-    case SS_DEV_USB_PORT2:
-      break;
-    default:
-      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Invalid Port Value[%d].", port);
-      return eFrameworkunifiedStatusInvldParam;
-  }
-
-  /*
-   *  Note.
-   *  Check the support status of the target board and port.
-   */
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return eFrameworkunifiedStatusOK;
-}
-
 static const uint8_t VBUS_RESET_INTERVAL_MIN = 11;
 
-static EFrameworkunifiedStatus UsbVBusResetIntervalChk(int8_t port, uint8_t interval)
-{
-  if (port == SS_DEV_USB_PORT1 || port == SS_DEV_USB_PORT2) {
-    goto invalidParam;
-  }
-  if (interval < VBUS_RESET_INTERVAL_MIN) {
-    goto invalidParam;
-  }
-  return eFrameworkunifiedStatusOK;
-
-invalidParam:
-  FRAMEWORKUNIFIEDLOG(ZONE_WARN, __func__, "Invalid Param port:%d interval:%d.", port, interval);
-  return eFrameworkunifiedStatusInvldParam;
-}
-
-static EFrameworkunifiedStatus SendUsbVBusResetMsg(HANDLE handle, int8_t port, uint8_t interval, bool check_interval)
-{
+static EFrameworkunifiedStatus SendUsbVBusResetMsg(HANDLE handle, int8_t port, uint8_t interval) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __func__, "+");
   EFrameworkunifiedStatus eStatus = eFrameworkunifiedStatusOK;
 
   if (NULL == handle) {
     FRAMEWORKUNIFIEDLOG(ZONE_WARN, __func__, "Invalid Handle.");
     return eFrameworkunifiedStatusInvldHandle;
-  }
-
-  eStatus = UsbVBusResetParamChk(port);
-  if (eStatus != eFrameworkunifiedStatusOK) {
-    return eStatus;
-  }
-
-  if (check_interval) {
-    eStatus = UsbVBusResetIntervalChk(port, interval);
-    if (eStatus != eFrameworkunifiedStatusOK) {
-      return eStatus;
-    }
   }
 
   int16_t data[] = {port, interval};
@@ -659,14 +604,12 @@ static EFrameworkunifiedStatus SendUsbVBusResetMsg(HANDLE handle, int8_t port, u
   return eStatus;
 }
 
-EFrameworkunifiedStatus DeviceDetectionServiceIf::UsbVBusReset(int8_t port, uint8_t interval)
-{
-  return SendUsbVBusResetMsg(m_hSession, port, interval, true);
+EFrameworkunifiedStatus DeviceDetectionServiceIf::UsbVBusReset(int8_t port, uint8_t interval) {
+  return SendUsbVBusResetMsg(m_hSession, port, interval);
 }
 
-EFrameworkunifiedStatus DeviceDetectionServiceIf::UsbVBusReset(int8_t port)
-{
-  return SendUsbVBusResetMsg(m_hSession, port, VBUS_RESET_INTERVAL_MIN, false);
+EFrameworkunifiedStatus DeviceDetectionServiceIf::UsbVBusReset(int8_t port) {
+  return SendUsbVBusResetMsg(m_hSession, port, VBUS_RESET_INTERVAL_MIN);
 }
 
 EFrameworkunifiedStatus DeviceDetectionServiceIf::RoleSwStateNotify(

@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -276,7 +276,7 @@ typedef enum {                                                            // *
 }ePowerSrvStartupStageType, EPWR_STARTUP_STAGE_TYPE;                      // *
                                                                           // *
 typedef struct _SystemModeInfo {                                          // *
-  EPWR_USER_MODE_TYPE      lastUserMode;                                  // *
+  EPWR_USER_MODE_TYPE      lastUserMode; // NOTE: Don't use this. just only remained for backward compatibility.
   EPWR_LHC_TYPE            limpHomeCutoff;                                // *
   EPWR_PROD_MODE_TYPE      productionMode;                                // *
   EPWR_TRANSPORT_MODE_TYPE transportMode;                                 // *

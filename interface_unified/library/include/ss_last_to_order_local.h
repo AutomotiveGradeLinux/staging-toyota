@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@
 
 #include <string>
 
-#define SS_LAST_TO_ORDER_CONF_PATH "/usr/agl/conf/systemmanager/sm_last2order.cfo"
+#define SS_LAST_TO_ORDER_CONF_PATH "/usr/agl/conf/BS/ss/system_manager/rodata/sm_last2order.cfo"
 
 #endif  // INTERFACE_UNIFIED_LIBRARY_INCLUDE_SS_LAST_TO_ORDER_LOCAL_H_
 /** @}*/

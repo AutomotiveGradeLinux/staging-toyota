@@ -1,5 +1,5 @@
 #
-# @copyright Copyright (c) 2017-2019 TOYOTA MOTOR CORPORATION.
+# @copyright Copyright (c) 2017-2020 TOYOTA MOTOR CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,12 +19,14 @@ SUBDIRS := library
 install:install_cfg install_cfg_pram
 
 install_cfg_pram:
-	install -d -m 775  $(DESTDIR)/usr/agl/conf/systemmanager
-	install -m 644 -t  $(DESTDIR)/usr/agl/conf/systemmanager scfg_pram/*.cfg
+	install -d -m 775  $(DESTDIR)/usr/agl/conf/BS/ss/system_manager/rwdata
+	install -m 644 -t  $(DESTDIR)/usr/agl/conf/BS/ss/system_manager/rwdata scfg_pram/gpf_ss_sm_config_data.cfg
 
 install_cfg:
-	install -d -m 775  $(DESTDIR)/usr/agl/share/systemmanager/scfg
-	install -m 644 -t  $(DESTDIR)/usr/agl/share/systemmanager/scfg scfg/*.cfg
+	install -d -m 775  $(DESTDIR)/usr/agl/conf/BS/ss/power_service/rodata
+	install -m 644 -t  $(DESTDIR)/usr/agl/conf/BS/ss/power_service/rodata scfg/gpf_ss_ps_config.cfg
+	install -d -m 775  $(DESTDIR)/usr/agl/conf/BS/ss/logger_service/rodata
+	install -m 644 -t  $(DESTDIR)/usr/agl/conf/BS/ss/logger_service/rodata scfg/ss_logger.cfg
 
 include ../system_service.mk
 

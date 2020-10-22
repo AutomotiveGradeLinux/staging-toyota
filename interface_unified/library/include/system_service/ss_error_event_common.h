@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -88,21 +88,14 @@ enum EArtifactId {
     eArtifactIdCmsLogs,
     eArtifactIDInternalDTC,
     eArtifactIdComDebugLog,             // << ID 15
-    eArtifactIdRadioDebugLog,
-    eArtifactIdConnectivityDebugLog,
     eArtifactIdKernelBootLog,
-    eArtifactIdGraphicsDebugLog,
-    eArtifactIdSysLog,
     eArtifactIdPstoreLog,
     eArtifactIdClearAllLog,
     eArtifactIdNaviLog,
-    eArtifactIdWinSysLog,
-    eArtifactIdAppFwLog,
-    eArtifactIdTomoyoLog,
     eArtifactIdScreenShot,              // These three Log entries have to remain
     eArtifactIdDebugFolder2Content,     // at the end of the list
     eArtifactIdDebugFolderContent,
-    eArtifactIdMaxValue                 // << 30
+    eArtifactIdMaxValue                 // << 23
 };
 
 struct ARTIFACT_RESPONSE {

@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@
 #ifdef _cplusplus
 extern "C" {
 #endif
-#define SS_LOGGER_SAVE_INTERFACEUNIFIEDLOG_FLAG "/ramd/log/frameworkunifiedlog/SS_LOGGER_SAVE_INTERFACEUNIFIEDLOG_FLAG"
+#define SS_LOGGER_SAVE_INTERFACEUNIFIEDLOG_FLAG "/ramd/BS/ss/logger_service/rwdata/frameworkunifiedlog/SS_LOGGER_SAVE_INTERFACEUNIFIEDLOG_FLAG"
 
 typedef enum {
   SS_STORELOGS_INTERFACEUNIFIEDLOG = 0,

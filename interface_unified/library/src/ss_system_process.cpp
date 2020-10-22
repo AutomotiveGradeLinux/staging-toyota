@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,8 +50,9 @@ gid_t iPrpocess_DEFAULT_PROCESS_GROUP = 4999;
  *
  * @return 
  */
-Process::Process() :
+Process::Process(int cpu_assign) :
   m_lValidationTag(lProcess_VALIDATION_VALUE),
+  m_cpu_assign(cpu_assign),
   m_tProcessId(-1),
   m_eProcessLoadMode(NOWAIT),
   m_strFile(""),
@@ -328,6 +329,9 @@ void Process::CreateProcess(
       throw "CL_ProcessCreateAttrInit()";
     }
 
+    if (0 != CL_ProcessCreateAttrSetCpuAssign(&clAttr, m_cpu_assign)) {
+      throw "CL_ProcessCreateAttrSetCpuAssign()";
+    }
 
     switch (p_eSchedulingPolicy_i) {
       case FIFO:

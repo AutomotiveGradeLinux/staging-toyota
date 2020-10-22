@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -126,6 +126,10 @@ typedef enum _DeviceDetectionServerEvents {
    * \~english Notify whenever a USB NCM device is connected/removed (for DCM)
    */
   SS_DEV_DETECT_ANY_USB_DCM_NCM_EV = 140,
+  /**
+   * \~english Notify whenever a DVD-P device is connected/removed
+   */
+  SS_DEV_INFO_ANY_USB_DVDP_EV = 141,
 } SS_DeviceDetectionServerEvents;
 
 #ifdef __cplusplus

@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -92,7 +92,7 @@ template <typename T> EFrameworkunifiedStatus ReadMsg(
     l_eStatus = eFrameworkunifiedStatusInvldHandle;
   } else if (sizeof(Data) != FrameworkunifiedGetMsgLength(hApp)) {
     FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__
-       , " Error: message buffer sizes mismatch: expected %d, received %d"
+       , " Error: message buffer sizes mismatch: expected %ld, received %d"
        , sizeof(Data), FrameworkunifiedGetMsgLength(hApp));
     l_eStatus = eFrameworkunifiedStatusInvldParam;
   } else if ( eFrameworkunifiedStatusOK != (l_eStatus =
