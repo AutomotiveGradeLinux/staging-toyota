@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -409,6 +409,7 @@ int CL_ProcessCreate(const char *file, char *const argv[], char *const envp[], c
   char **new_env;
   int ret;
   int retry;
+  int i = 0;
 
   if (file == NULL || argv == NULL || attr == NULL) {
     errno = EINVAL;
@@ -436,7 +437,11 @@ int CL_ProcessCreate(const char *file, char *const argv[], char *const envp[], c
   if (ia->cpu_assign != 0) {
     cpu_set_t set;
     CPU_ZERO(&set);
-    CPU_SET((size_t)ia->cpu_assign - 1, &set); // LCOV_EXCL_BR_LINE 15:CPU_SET define at sched.h
+    for (i = 0; i < (sizeof(ia->cpu_assign) * 8); i++) {
+      if ((ia->cpu_assign >> i) & 0x1) {
+        CPU_SET(i, &set);
+      }
+    }
     // LCOV_EXCL_BR_START 5: fail safe for libc sched_setaffinity
     if (sched_setaffinity(childpid, sizeof(set), &set) < 0) {
       // LCOV_EXCL_BR_STOP
@@ -607,6 +612,18 @@ int CL_ProcessCreateAttrSetGroup(CL_ProcessAttr_t *attr, int create) {
   return 0;
 }
 
+static int32_t CL_CpuAssignMsbCpu(int cpu_assign) {
+  int32_t i;
+  int32_t ret = 0;
+
+  for (i = 0; i < (sizeof(cpu_assign) * 8); i++) {
+    if ((cpu_assign >> i) & 0x1)
+      ret = i;
+  }
+
+  return ret;
+}
+
 /**
  * Set process attribute (CPU Assign)
  */
@@ -618,7 +635,12 @@ int CL_ProcessCreateAttrSetCpuAssign(CL_ProcessAttr_t *attr, int cpu_assign) {
     return -1;
   }
 
-  if (cpu_assign < 0 || cpu_assign > 2) {
+  if (cpu_assign < 0) {
+    errno = EINVAL;
+    return -1;
+  }
+
+  if (CL_CpuAssignMsbCpu(cpu_assign) >= sysconf(_SC_NPROCESSORS_CONF)) {
     errno = EINVAL;
     return -1;
   }

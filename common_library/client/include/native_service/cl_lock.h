@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -252,4 +252,8 @@ int CL_LockRelease(void *addr);  // NOLINT(readability/nolint)
 /** @}*/  // end of common_library
 /** @}*/  // end of NativeService
 /** @}*/  // end of BaseSystem
+#define LOCK_POS_MTX_RSV          40
+#define LOCK_HRDS_RSV             15
+#define LOCK_NSLOG_ACCES_IF_RSV   50
+#define LID_NUM                  140
 #endif  // #ifndef _cl_lock_h_  // NOLINT(build/header_guard)

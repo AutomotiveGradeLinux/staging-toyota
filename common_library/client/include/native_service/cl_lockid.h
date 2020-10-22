@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,8 @@
 
 #ifndef _cl_lockid_h_  // NOLINT(build/header_guard)
 #define _cl_lockid_h_  // NOLINT(build/header_guard)
+#include <native_service/cl_lock.h>
+#include <assert.h>
 
 /**
  * @file cl_lockid.h
@@ -43,6 +45,14 @@
  * Numbering rules
  * Assign LID corresponding to the Lock name specified when requesting shared memories.
  */
+
+/////////////////////////////////////////////////////////////////////////////////////
+/// \ingroup ENUM_LOCK_ID
+/// \~english @par Brief
+///        ID for Exclusive Control\n
+///        When AGL users add their own definitions, add "_**" to the definitions.\n
+///        ("**" is an aribitrary character string indicating the organization that uses AGL.)
+/////////////////////////////////////////////////////////////////////////////////////
 
 typedef enum {
 //  LID_TEST_1 = 0,
@@ -80,7 +90,8 @@ typedef enum {
   LOCK_POS_MTX_30,    /* Exclusive Control between POSITIONING and others */
   LOCK_POS_MTX_31,    /* Exclusive Control between POSITIONING and others */
   LOCK_POS_MTX_32,    /* Exclusive Control between POSITIONING and others */
-  LOCK_CLOCK_SEM_TZ,    /* Access control to shared memory for TimeZone */
+  LOCK_POS_MTX_MAX,   /* Exclusive Control between POSITIONING and others MAX */
+  LOCK_CLOCK_SEM_TZ = (LOCK_POS_MTX_1+LOCK_POS_MTX_RSV),    /* Access control to shared memory for TimeZone */
   LOCK_SEC_DATA_PROTECT,  /* Exclusive control to shared memory for the application that use the security chip. */
   LOCK_OS_SEM_ID__CWORD68_,  /* Exclusive Control for SSL library. */
   LOCK_ROM_ACCESS_IF,   /* Exclusive access control for system manager nv area */
@@ -94,7 +105,8 @@ typedef enum {
   LOCK_HRDS_6,      /* Exclusive Control between DataService and others */
   LOCK_HRDS_7,      /* Exclusive Control between DataService and others */
   LOCK_HRDS_8,      /* Exclusive Control between DataService and others */
-  LOCK_LOGG_ACCESS_IF,          /* Exclusive access control for NsLoggerService nv area */
+  LOCK_HRDS_MAX,    /* Exclusive Control between DataService and others MAX */
+  LOCK_LOGG_ACCESS_IF = (LOCK_HRDS_1+LOCK_HRDS_RSV),          /* Exclusive access control for NsLoggerService nv area */
   LOCK__CWORD76__HMI,     /* Exclusive Control between _CWORD76_Service and HMI's */
   LOCK__CWORD76___CWORD58_,      /* Exclusive Control between _CWORD76_Service and _CWORD58_Service */
   LOCK_DIAGCODE_MEM,    /* Exclusive Control to diag code memory area */
@@ -148,12 +160,18 @@ typedef enum {
   LOCK_NSLOG_ACCES_IF_42,         /* Exclusive Control between writing to log file */
 
   LOCK_NSLOG_ACCES_IF_43,         /* Exclusive Control between writing to log file */
-  LOCK_INFOSETTING_REV,   /* Exclusive control revision information for managing the settings */
+  LOCK_NSLOG_ACCES_IF_MAX,        /* Exclusive Control between writing to log file MAX */
+  LOCK_INFOSETTING_REV = (LOCK_NSLOG_ACCES_IF_1+LOCK_NSLOG_ACCES_IF_RSV),   /* Exclusive control revision information for managing the settings */
   LOCK_SUBMENU_SELECT,    /* Exclusive control between writing the selection information of the sub-menu*/
   LOCK_DIAG_SEM1,     /* Exclusive Control between DiagService and others */
   LOCK_DIAG_SEM2,     /* Exclusive Control between Collect thread and Upload thread */
-  LID_NUM         /* Number of LockID */
+  LID_NUM_MAX         /* Number of LockID */
 } ENUM_LOCK_ID;
+
+static_assert(LOCK_POS_MTX_MAX <= (LOCK_POS_MTX_1+LOCK_POS_MTX_RSV), "LOCK_POS_MTX_RSV resource empty. Please change limit and build AGL.");
+static_assert(LOCK_HRDS_MAX <= (LOCK_HRDS_1+LOCK_HRDS_RSV), "LOCK_HRDS_RSV resource empty. Please change limit and build AGL.");
+static_assert(LOCK_NSLOG_ACCES_IF_MAX <= (LOCK_NSLOG_ACCES_IF_1+LOCK_NSLOG_ACCES_IF_RSV), "LOCK_NSLOG_ACCES_IF_RSV resource empty. Please change limit and build AGL.");
+static_assert(LID_NUM_MAX <= LID_NUM, "LOCK_ID resource empty. Please change limit and build AGL.");
 
 /** @}*/  // end of common_library
 /** @}*/  // end of NativeService
