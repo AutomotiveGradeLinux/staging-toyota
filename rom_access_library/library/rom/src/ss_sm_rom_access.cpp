@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@
 #include <native_service/frameworkunified_types.h>
 #include <native_service/frameworkunified_framework_types.h>
 
-//#include <stub/el_mem.h>
+#include <stub/el_mem.h>
 #include <native_service/cl_lock.h>
 #include <native_service/cl_lockid.h>
 
@@ -38,7 +38,7 @@
 #include "ss_sm_checksum.h"
 #include "ss_rom_access_define.h"
 
-#define ROM_ACCESS_DIR  "/nv/romaccess"
+#define ROM_ACCESS_DIR  "/nv/BS/ss/rom_access_library/rwdata"
 #define ROM_ACCESS_FILE "romdata.dat"
 const CHAR kDefaultRomDevice[] = ROM_ACCESS_DIR"/"ROM_ACCESS_FILE;
 const CHAR kRecoveryRomDevice[] = ROM_ACCESS_DIR"/"ROM_ACCESS_FILE".old";
@@ -259,11 +259,11 @@ EFrameworkunifiedStatus ROM_AccessIf::SystemInitialize(DRAM_BACKUP_STATE bkupSta
   // LCOV_EXCL_BR_START 6:impossible to confirm because g_m_bakup_map can not be changed
   if (g_m_bakup_map == MAP_FAILED) {
   // LCOV_EXCL_BR_STOP
-//    g_m_bakup_map = EL_mem_exram_mmap(
-//        EL_MEM_TYPE_REGION_SYS,
-//        EL_mem_getOffset(EL_MEM_ID_SYS_BOOT) + SS_SYS_AREA_ROM_OFFSET,
-//        SS_SYS_AREA_ROM_MAX_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
-//        EL_MEM_CACHE_INVALID);
+    g_m_bakup_map = EL_mem_exram_mmap(
+        EL_MEM_TYPE_REGION_SYS,
+        EL_mem_getOffset(EL_MEM_ID_SYS_BOOT) + SS_SYS_AREA_ROM_OFFSET,
+        SS_SYS_AREA_ROM_MAX_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
+        EL_MEM_CACHE_INVALID);
     if (g_m_bakup_map == MAP_FAILED) {
       ROM_ACCESS_ERRNO(0);
       return eFrameworkunifiedStatusFail;
@@ -292,11 +292,11 @@ EFrameworkunifiedStatus ROM_AccessIf::Initialize() {
   CSMChecksum l_checksum;
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   if (g_m_bakup_map == MAP_FAILED) {
-//    g_m_bakup_map = EL_mem_exram_mmap(  // LCOV_EXCL_BR_LINE 11:unexpected branch
-//        EL_MEM_TYPE_REGION_SYS,
-//        EL_mem_getOffset(EL_MEM_ID_SYS_BOOT) + SS_SYS_AREA_ROM_OFFSET,  // LCOV_EXCL_BR_LINE 11:unexpected branch
-//        SS_SYS_AREA_ROM_MAX_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
-//        EL_MEM_CACHE_INVALID);
+    g_m_bakup_map = EL_mem_exram_mmap(  // LCOV_EXCL_BR_LINE 11:unexpected branch
+        EL_MEM_TYPE_REGION_SYS,
+        EL_mem_getOffset(EL_MEM_ID_SYS_BOOT) + SS_SYS_AREA_ROM_OFFSET,  // LCOV_EXCL_BR_LINE 11:unexpected branch
+        SS_SYS_AREA_ROM_MAX_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
+        EL_MEM_CACHE_INVALID);
     // LCOV_EXCL_BR_START 6:impossible to confirm because g_m_bakup_map can not be changed
     if (g_m_bakup_map == MAP_FAILED) {
     // LCOV_EXCL_BR_STOP
@@ -663,14 +663,14 @@ EFrameworkunifiedStatus ROM_AccessIf::GetDataResetModeFast(EDATARESET_MODE* pDat
     LBM_RAM_t* p_lbm = NULL;
     mapSize = SS_SYS_AREA_BOOT_MAX_SIZE;
 
-//    if (EL_mem_getLength(EL_MEM_ID_SYS_BOOT) < SS_SYS_AREA_BOOT_MAX_SIZE) {  // LCOV_EXCL_BR_LINE 11:unexpected branch
-//      mapSize = EL_mem_getLength(EL_MEM_ID_SYS_BOOT);  // LCOV_EXCL_BR_LINE 11:unexpected branch
-//    }
+    if (EL_mem_getLength(EL_MEM_ID_SYS_BOOT) < SS_SYS_AREA_BOOT_MAX_SIZE) {  // LCOV_EXCL_BR_LINE 11:unexpected branch
+      mapSize = EL_mem_getLength(EL_MEM_ID_SYS_BOOT);  // LCOV_EXCL_BR_LINE 11:unexpected branch
+    }
     // LCOV_EXCL_BR_START 11:unexpected branch
-//    p_map = reinterpret_cast<LBM_RAM_t*>(EL_mem_exram_mmap(EL_MEM_TYPE_REGION_SYS,
-//                                           EL_mem_getOffset(EL_MEM_ID_SYS_BOOT),
-//                                           mapSize, PROT_READ | PROT_WRITE,
-//                                           MAP_SHARED, EL_MEM_CACHE_INVALID));
+    p_map = reinterpret_cast<LBM_RAM_t*>(EL_mem_exram_mmap(EL_MEM_TYPE_REGION_SYS,
+                                           EL_mem_getOffset(EL_MEM_ID_SYS_BOOT),
+                                           mapSize, PROT_READ | PROT_WRITE,
+                                           MAP_SHARED, EL_MEM_CACHE_INVALID));
     // LCOV_EXCL_BR_STOP
     if (p_map == MAP_FAILED) {  // LCOV_EXCL_BR_LINE 6:impossible to confirm because p_map can not be changed
       ROM_ACCESS_ERRNO(0);  // LCOV_EXCL_BR_LINE 6:impossible to confirm because p_map can not be changed
@@ -692,8 +692,8 @@ EFrameworkunifiedStatus ROM_AccessIf::GetDataResetModeFast(EDATARESET_MODE* pDat
   }  // LCOV_EXCL_STOP
 
   if (p_map != MAP_FAILED) {  // LCOV_EXCL_BR_LINE 6:impossible to confirm because p_map can not be changed
-//    ROM_ACCESS_ERRNO(0 == EL_mem_exram_munmap(p_map,  // LCOV_EXCL_BR_LINE 11:unexpected branch
-//                        mapSize));
+    ROM_ACCESS_ERRNO(0 == EL_mem_exram_munmap(p_map,  // LCOV_EXCL_BR_LINE 11:unexpected branch
+                        mapSize));
   }
   return eStatus;  // LCOV_EXCL_BR_LINE 11:unexpected branch
 }

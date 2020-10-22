@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -86,9 +86,7 @@ class RAM_AccessIf{
   RAM_SM_INFO_t        m_buf;
   bool                 m_dirty;
   void initRamBackupEnable(RAM_WAKEUP_STATE wup_state);
-  void initRamBackupDisable(RAM_WAKEUP_STATE wup_state);
   void finalRamBackupEnable(void);
-  void finalRamBackupDisable(void);
 
  public:
 /**
@@ -173,7 +171,7 @@ explicit RAM_AccessIf(RAM_WAKEUP_STATE wup_state = RAM_WAKEUP_STATE_DONT_CARE);
  *       - The change in the internal status does not occur by this API.
  * \~english @par Conditions of processing failure
  *       - If p_boot_info is NULL  [eFrameworkunifiedStatusFail]
- *       - If read data from secondary storage area or /nv/romaccess/ramdata.dat
+ *       - If read data from secondary storage area or /nv/BS/ss/rom_access_library/rwdata/ramdata.dat
  *         failed [eFrameworkunifiedStatusFail]
  * \~english @par Classification:
  *       Public
@@ -181,7 +179,7 @@ explicit RAM_AccessIf(RAM_WAKEUP_STATE wup_state = RAM_WAKEUP_STATE_DONT_CARE);
  *       Sync only(None communication)
  * \~english @par Detail:
  *       Copy the system information stored in the secondary storage area or
- *       in /nv/romaccess/ramdata.dat to p_boot_info.  \n
+ *       in /nv/BS/ss/rom_access_library/rwdata/ramdata.dat to p_boot_info.  \n
  * \~english @see  setRamInfo
  */
   EFrameworkunifiedStatus getRamInfo(RAM_SM_INFO_t* p_boot_info);
@@ -216,7 +214,7 @@ explicit RAM_AccessIf(RAM_WAKEUP_STATE wup_state = RAM_WAKEUP_STATE_DONT_CARE);
  *       - The change in the internal status does not occur by this API.
  * \~english @par Conditions of processing failure
  *       - If p_boot_info is NULL  [eFrameworkunifiedStatusFail]
- *       - If write data to secondary storage area or /nv/romaccess/ramdata.dat
+ *       - If write data to secondary storage area or /nv/BS/ss/rom_access_library/rwdata/ramdata.dat
  *         failed [eFrameworkunifiedStatusFail]
  * \~english @par Classification:
  *       Public
@@ -224,7 +222,7 @@ explicit RAM_AccessIf(RAM_WAKEUP_STATE wup_state = RAM_WAKEUP_STATE_DONT_CARE);
  *       Sync only(None communication)
  * \~english @par Detail:
  *       Write the system manegement information stored in p_boot_info to the
- *       secondary storage area or /nv/romaccess/ramdata.dat. \n
+ *       secondary storage area or /nv/BS/ss/rom_access_library/rwdata/ramdata.dat. \n
  * \~english @see  getRamInfo
  */
   EFrameworkunifiedStatus setRamInfo(RAM_SM_INFO_t* p_boot_info);

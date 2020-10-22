@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 #include <fcntl.h>
 #include <native_service/cl_lock.h>
 #include <native_service/cl_lockid.h>
-//#include <stub/el_mem.h>
+#include <stub/el_mem.h>
 #include "system_service/ss_sm_boot_access.h"
 #include "ss_rom_access_if_romaccesslibrarylog.h"
 #include "ss_sm_checksum.h"
@@ -29,7 +29,7 @@
 
 
 
-#define RAM_PATH     "/nv/romaccess/ramdata.dat"
+#define RAM_PATH     "/nv/BS/ss/rom_access_library/rwdata/ramdata.dat"
 #define RAM_OLD_PATH RAM_PATH".old"
 static const uint8_t kSigNature[] = { 0xDE, 0xAD, 0xBE, 0xEF };
 static const uint8_t kMagic[] = { 0xDE, 0xAD, 0xBE, 0xEF };
@@ -56,11 +56,11 @@ void RAM_AccessIf::initRamBackupEnable(RAM_WAKEUP_STATE wupState) {
   ROM_ACCESS_STATIC_ASERT((sizeof(RAM_SM_DRAM_INFO_t) % sizeof(UI_32)) == 0);
 
   if (g_m_bakup_map == MAP_FAILED) {
-//    g_m_bakup_map = EL_mem_exram_mmap(  // LCOV_EXCL_BR_LINE 11:unexpected branch
-//        EL_MEM_TYPE_REGION_SYS,
-//        EL_mem_getOffset(EL_MEM_ID_SYS_BOOT) + SS_SYS_AREA_RAM_OFFSET,  // LCOV_EXCL_BR_LINE 11:unexpected branch
-//        SS_SYS_AREA_RAM_MAX_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
-//        EL_MEM_CACHE_INVALID);
+    g_m_bakup_map = EL_mem_exram_mmap(  // LCOV_EXCL_BR_LINE 11:unexpected branch
+        EL_MEM_TYPE_REGION_SYS,
+        EL_mem_getOffset(EL_MEM_ID_SYS_BOOT) + SS_SYS_AREA_RAM_OFFSET,  // LCOV_EXCL_BR_LINE 11:unexpected branch
+        SS_SYS_AREA_RAM_MAX_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
+        EL_MEM_CACHE_INVALID);
     // LCOV_EXCL_BR_START 6:impossible to confirm because g_m_bakup_map can not be changed
     if (g_m_bakup_map == MAP_FAILED) {
     // LCOV_EXCL_BR_STOP
