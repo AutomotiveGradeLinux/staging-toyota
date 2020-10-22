@@ -331,7 +331,7 @@ endif
 
 #################################################################################
 
-RPATH := /usr/lib:/lib:/usr/agl/lib
+RPATHLINK := $(SYSROOT)/usr/lib:$(SYSROOT)/lib:$(SYSROOT)/usr/agl/lib
 
 #################################################################################
 SUBDIRS := $(filter-out mock,$(SUBDIRS))

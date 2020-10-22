@@ -42,11 +42,7 @@ RDEPENDS_${PN} += " \
     bash \
 "
 do_compile[depends] += "agl-basefiles:do_populate_sysroot"
-do_compile() {
-	cd ${WORKDIR}/usr/agl/conf/systemmanager
-	cpp -P -include ${STAGING_DIR_HOST}/usr/agl/include/sm_launch_conf.h ./sm_launch__CWORD84_.xml ./sm_launch.tmp.xml
-	${STAGING_DIR_HOST}/usr/agl/share/launch_xml2cfg.sh ./sm_launch.tmp.xml > ./sm_launch.cfg
-}
+
 do_install() {
 	install -d ${D}${systemd_unitdir}/system
 	install -m 644 ${WORKDIR}/setup_refhw.service ${D}/${systemd_unitdir}/system
@@ -60,8 +56,6 @@ do_install() {
 	install -d ${D}/usr/target 
 	install -m 644 ${WORKDIR}/usr/target/*.lst ${D}/usr/target
 	install -d ${D}/etc/systemd/system
-	install -d -m 775 ${D}/usr/agl/conf/systemmanager
-	install -m 644 ${WORKDIR}/usr/agl/conf/systemmanager/sm_launch.cfg ${D}/usr/agl/conf/systemmanager  
         install -d ${D}/lib/udev/rules.d
 	install -m 644 ${WORKDIR}/99-agl.rules ${D}/lib/udev/rules.d
 	install -d -m 777 ${D}/nv/export
@@ -76,9 +70,6 @@ sysroot_stage_all_append(){
 	sysroot_stage_dir ${D}/tool_9E_SI ${SYSROOT_DESTDIR}/tool_9E_SI
 	sysroot_stage_dir ${D}/usr/target ${SYSROOT_DESTDIR}/usr/target
 	sysroot_stage_dir ${D}/usr/agl ${SYSROOT_DESTDIR}/usr/agl
-	sysroot_stage_dir ${D}/usr/agl/conf/systemmanager ${SYSROOT_DESTDIR}/usr/agl/conf/systemmanager
-	sysroot_stage_dir ${D}/usr/agl/conf/backup_manager ${SYSROOT_DESTDIR}/usr/agl/conf/backup_manager
-	sysroot_stage_dir ${D}/nv/npp ${SYSROOT_DESTDIR}/nv/npp
-	sysroot_stage_dir ${D}/usr/agl/share ${SYSROOT_DESTDIR}/usr/agl/share
+	sysroot_stage_dir ${D}/nv/BS/ns/npp/rwdata ${SYSROOT_DESTDIR}/nv/BS/ns/npp/rwdata
 	sysroot_stage_dir ${D}/etc/systemd/system/tmp.mount.d ${SYSROOT_DESTDIR}/etc/systemd/system/tmp.mount.d
 }

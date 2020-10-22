@@ -2,6 +2,12 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/linux:"
 
 DEPENDS += "kern-tools-native"
 
+# canbus qdisc pfifo change
+SRC_URI_append = " file://net-sch_generic-Use-pfifo_fast-as-fallback-scheduler.patch"
+
+# bbe target has this upstream patch already
+SRC_URI_remove_bbe = " file://net-sch_generic-Use-pfifo_fast-as-fallback-scheduler.patch"
+
 # returns all the elements from the src uri that are .cfg files
 def find_cfgs(d):
     sources=src_patches(d, True)
@@ -92,3 +98,6 @@ KERNEL_CONFIG_FRAGMENTS_append = " ${WORKDIR}/iiodevice.cfg"
 SRC_URI_append = " file://rtc.cfg"
 KERNEL_CONFIG_FRAGMENTS_append = " ${WORKDIR}/rtc.cfg"
 
+# netfilter options
+SRC_URI_append = " file://netfilter.cfg"
+KERNEL_CONFIG_FRAGMENTS_append = " ${WORKDIR}/netfilter.cfg"

@@ -9,11 +9,9 @@ CAPABILITY = "cap_dac_override+ep:/usr/agl/bin/SS_LoggerService"
 
 FILES_${PN} += " \
     /usr/agl/bin/* \
-    /usr/agl/conf/* \
-    /usr/agl/conf/syslogd/* \
-    /usr/agl/share/logrotate/* \
 "
 FILES_${PN}-staticdev += " /usr/agl/lib/*.a "
+FILES_${PN} += "/nv/BS/ss/logger_service/rwdata/frameworkunifiedlog"
 
 SRC_URI = "git://gerrit.automotivelinux.org/gerrit/staging/toyota.git;protocol=https;branch=sandbox/ToshikazuOhiwa/ss-loggerservice"
 SRCREV = "${AUTOREV}"
@@ -32,6 +30,9 @@ DEPENDS += " libtar \
     os-vehicleparameterlibrary \
     os-posixbasedos001legacylibrary \
     logrotate \
+    ns-memorygpioaccesslibrary \
+    vs-clock \
+    vs-diagrecord \
 "
 RDEPENDS_${PN} += " \
     ss-config \
@@ -43,6 +44,9 @@ RDEPENDS_${PN} += " \
     ns-backupmanager \
     os-vehicleparameterlibrary \
     os-posixbasedos001legacylibrary \
+    ns-memorygpioaccesslibrary \
+    vs-clock \
+    vs-diagrecord \
 "
 EXTRA_MAKEFILE = " -f Makefile.server"
 EXTRA_OEMAKE += "${EXTRA_MAKEFILE}"

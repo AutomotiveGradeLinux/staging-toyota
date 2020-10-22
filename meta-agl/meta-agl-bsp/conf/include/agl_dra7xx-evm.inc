@@ -2,7 +2,7 @@
 #-------------------------------------------------
 ## Graphics section ##
 #-------------------------------------------------
-PACKAGES_GFX_${MACHINE} = "omapdrm-pvr"
+PACKAGES_GFX_${MACHINE} = "ti-sgx-ddk-km"
 
 # Enable Gfx Pkgs
 MACHINE_FEATURES_append = " sgx"
@@ -14,11 +14,8 @@ DEPENDS_remove = "virtual/libgl"
 PREFERRED_PROVIDER_virtual/libgles1 = ""
 PREFERRED_PROVIDER_virtual/libgles2 = "ti-sgx-ddk-um"
 PREFERRED_PROVIDER_virtual/egl      = "ti-sgx-ddk-um"
+PREFERRED_PROVIDER_virtual/libgbm   = "ti-sgx-ddk-um"
 PREFERRED_PROVIDER_virtual/mesa     = "mesa-gl"
-PREFERRED_PROVIDER_libgbm           = "libgbm"
-
-#Preferred versions
-PREFERRED_VERSION_libgbm            = "10.0.0"
 
 #-------------------------------------------------
 ## Multimedia section ##

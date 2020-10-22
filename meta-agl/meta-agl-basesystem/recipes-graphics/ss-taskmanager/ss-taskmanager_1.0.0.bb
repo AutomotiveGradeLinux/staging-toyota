@@ -7,8 +7,7 @@ inherit agl-basesystem-common
 
 FILES_${PN} += " \
     /usr/agl/lib/* \
-    /usr/agl/conf/tm_launch/* \
-    /usr/agl/conf/thread/* \
+    /usr/agl/conf/BS/ss/task_manager/rodata/* \
 "
 FILES_${PN}-dev += "/usr/agl/include/*"
 

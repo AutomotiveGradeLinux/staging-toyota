@@ -11,13 +11,13 @@ DEPENDS = "ti-cgt6x-native \
            ti-xdctools-native"
 
 PV = "5_0_8"
-PR = "r2"
+PR = "r3"
 S = "${WORKDIR}/git"
 
 SWTOOLS_GIT_BRANCH = "master"
 SWTOOLS_GIT_PROTOCOL = "git"
 SWTOOLS_GIT_URI = "git://git.ti.com/ep-processor-libraries/swtools.git"
-SWTOOLS_SRCREV = "d0c1022954b489d5f3d8d2f5c81d8c6a392f4af4"
+SWTOOLS_SRCREV = "7d1c85e686b1466cd2d535fc9cac5baf1aae24a4"
 
 SRC_URI = "${SWTOOLS_GIT_URI};protocol=${SWTOOLS_GIT_PROTOCOL};branch=${SWTOOLS_GIT_BRANCH}"
 SRCREV = "${SWTOOLS_SRCREV}"
@@ -41,7 +41,7 @@ do_compile() {
 do_install() {
 	CP_ARGS="-Prf --preserve=mode,timestamps --no-preserve=ownership"
 	install -d ${D}${SWTOOLS_INSTALL_DIR_RECIPE}
-	cp -pPrf ${S}/* ${D}${SWTOOLS_INSTALL_DIR_RECIPE}
+	cp ${CP_ARGS} ${S}/* ${D}${SWTOOLS_INSTALL_DIR_RECIPE}
 }
 
 FILES_${PN}-dev += "${SWTOOLS_INSTALL_DIR_RECIPE}"

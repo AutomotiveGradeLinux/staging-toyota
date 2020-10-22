@@ -3,35 +3,36 @@ DESCRIPTION = "SOTA Client application written in C++"
 HOMEPAGE = "https://github.com/advancedtelematic/aktualizr"
 SECTION = "base"
 LICENSE = "MPL-2.0"
-LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=9741c346eef56131163e13b9db1241b3"
+LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=815ca599c9df247a0c7f619bab123dad"
 
 DEPENDS = "boost curl openssl libarchive libsodium sqlite3 asn1c-native"
 DEPENDS_append = "${@bb.utils.contains('PTEST_ENABLED', '1', ' coreutils-native net-tools-native ostree-native aktualizr-native ', '', d)}"
-RDEPENDS_${PN}_class-target = "aktualizr-configs lshw"
-RDEPENDS_${PN}-host-tools = "aktualizr aktualizr-repo aktualizr-cert-provider ${@bb.utils.contains('PACKAGECONFIG', 'sota-tools', 'garage-deploy garage-push', '', d)}"
+RDEPENDS_${PN}_class-target = "${PN}-configs ${PN}-hwid lshw"
+RDEPENDS_${PN}-host-tools = "aktualizr aktualizr-cert-provider ${@bb.utils.contains('PACKAGECONFIG', 'sota-tools', 'garage-deploy garage-push', '', d)}"
 
 RDEPENDS_${PN}-ptest += "bash cmake curl python3-misc python3-modules openssl-bin sqlite3 valgrind"
+
+PRIVATE_LIBS_${PN}-ptest = "libaktualizr.so libaktualizr_secondary.so"
 
 PV = "1.0+git${SRCPV}"
 PR = "7"
 
-GARAGE_SIGN_PV = "0.7.0-3-gf5ba640"
+GARAGE_SIGN_PV = "0.7.0-87-g905dc3c"
 
 SRC_URI = " \
-  gitsm://github.com/advancedtelematic/aktualizr;branch=${BRANCH} \
+  gitsm://github.com/advancedtelematic/aktualizr;branch=${BRANCH};name=aktualizr \
   file://run-ptest \
   file://aktualizr.service \
   file://aktualizr-secondary.service \
   file://aktualizr-serialcan.service \
   file://10-resource-control.conf \
-  ${@ d.expand("https://ats-tuf-cli-releases.s3-eu-central-1.amazonaws.com/cli-${GARAGE_SIGN_PV}.tgz;unpack=0") if d.getVar('GARAGE_SIGN_AUTOVERSION') != '1' else ''} \
+  ${@ d.expand("https://ats-tuf-cli-releases.s3-eu-central-1.amazonaws.com/cli-${GARAGE_SIGN_PV}.tgz;unpack=0;name=garagesign") if d.getVar('GARAGE_SIGN_AUTOVERSION') != '1' else ''} \
   "
 
-# for garage-sign archive
-SRC_URI[md5sum] = "e104ccd4f32e52571a5fc0e5042db050"
-SRC_URI[sha256sum] = "c590be1a57523bfe097af82279eda5c97cf40ae47fb27162cf33c469702c8a9b"
+SRC_URI[garagesign.md5sum] = "064b408c60676dcf282aa9209bff7dac"
+SRC_URI[garagesign.sha256sum] = "75c9b3cf24eb31dacb127d3b3d073359082e2b4ee4eeb27d75e792664800ba82"
 
-SRCREV = "9c592cf9d8dfcd995d47753f2be7bd1a2b56c7da"
+SRCREV = "f90e8996e826d130976a7b7f1835947b7e631025"
 BRANCH ?= "master"
 
 S = "${WORKDIR}/git"
@@ -46,17 +47,17 @@ SYSTEMD_PACKAGES = "${PN} ${PN}-secondary"
 SYSTEMD_SERVICE_${PN} = "aktualizr.service"
 SYSTEMD_SERVICE_${PN}-secondary = "aktualizr-secondary.service"
 
-EXTRA_OECMAKE = "-DCMAKE_BUILD_TYPE=Release -DAKTUALIZR_VERSION=${PV} ${@bb.utils.contains('PTEST_ENABLED', '1', '-DTESTSUITE_VALGRIND=on', '', d)}"
+EXTRA_OECMAKE = "-DCMAKE_BUILD_TYPE=Release ${@bb.utils.contains('PTEST_ENABLED', '1', '-DTESTSUITE_VALGRIND=on', '', d)}"
 
 GARAGE_SIGN_OPS = "${@ d.expand('-DGARAGE_SIGN_ARCHIVE=${WORKDIR}/cli-${GARAGE_SIGN_PV}.tgz') if d.getVar('GARAGE_SIGN_AUTOVERSION') != '1' else ''}"
+PKCS11_ENGINE_PATH = "${libdir}/engines-1.1/pkcs11.so"
 
-PACKAGECONFIG ?= "ostree ${@bb.utils.filter('DISTRO_FEATURES', 'systemd', d)} ${@bb.utils.filter('SOTA_CLIENT_FEATURES', 'hsm serialcan ubootenv', d)}"
+PACKAGECONFIG ?= "ostree ${@bb.utils.filter('SOTA_CLIENT_FEATURES', 'hsm serialcan ubootenv', d)}"
 PACKAGECONFIG_class-native = "sota-tools"
 PACKAGECONFIG[warning-as-error] = "-DWARNING_AS_ERROR=ON,-DWARNING_AS_ERROR=OFF,"
 PACKAGECONFIG[ostree] = "-DBUILD_OSTREE=ON,-DBUILD_OSTREE=OFF,ostree,"
-PACKAGECONFIG[hsm] = "-DBUILD_P11=ON,-DBUILD_P11=OFF,libp11,"
+PACKAGECONFIG[hsm] = "-DBUILD_P11=ON -DPKCS11_ENGINE_PATH=${PKCS11_ENGINE_PATH},-DBUILD_P11=OFF,libp11,"
 PACKAGECONFIG[sota-tools] = "-DBUILD_SOTA_TOOLS=ON ${GARAGE_SIGN_OPS},-DBUILD_SOTA_TOOLS=OFF,glib-2.0,"
-PACKAGECONFIG[systemd] = "-DBUILD_SYSTEMD=ON,-DBUILD_SYSTEMD=OFF,systemd,"
 PACKAGECONFIG[load-tests] = "-DBUILD_LOAD_TESTS=ON,-DBUILD_LOAD_TESTS=OFF,"
 PACKAGECONFIG[serialcan] = ",,,slcand-start"
 PACKAGECONFIG[ubootenv] = ",,,u-boot-fw-utils aktualizr-uboot-env-rollback"
@@ -70,6 +71,14 @@ RESOURCE_CPU_WEIGHT = "100"
 RESOURCE_MEMORY_HIGH = "100M"
 RESOURCE_MEMORY_MAX = "80%"
 
+do_configure_prepend() {
+    # CMake has trouble finding yocto's git when cross-compiling, let's do this step manually
+    cd ${S}
+    if [ ! -f VERSION ]; then
+        ./scripts/get_version.sh > VERSION
+    fi
+}
+
 do_compile_ptest() {
     cmake_runcmake_build --target build_tests "${PARALLEL_MAKE}"
 }
@@ -78,9 +87,6 @@ do_install_ptest() {
     # copy the complete source directory (contains build)
     cp -r ${B}/ ${D}/${PTEST_PATH}/build
     cp -r ${S}/ ${D}/${PTEST_PATH}/src
-
-    # remove huge external unused repository
-    rm -rf ${D}/${PTEST_PATH}/src/partial/extern/RIOT
 
     # remove huge build artifacts
     find ${D}/${PTEST_PATH}/build/src -name "*.a" -delete
@@ -101,10 +107,6 @@ do_install_append () {
     install -m 0644 ${WORKDIR}/aktualizr-secondary.service ${D}${systemd_unitdir}/system/aktualizr-secondary.service
     install -m 0700 -d ${D}${libdir}/sota/conf.d
     install -m 0700 -d ${D}${sysconfdir}/sota/conf.d
-
-    if [ -n "${SOTA_HARDWARE_ID}" ]; then
-        printf "[provision]\nprimary_ecu_hardware_id = ${SOTA_HARDWARE_ID}\n" > ${D}${libdir}/sota/conf.d/40-hardware-id.toml
-    fi
 
     install -m 0755 -d ${D}${systemd_unitdir}/system
     aktualizr_service=${@bb.utils.contains('SOTA_CLIENT_FEATURES', 'serialcan', '${WORKDIR}/aktualizr-serialcan.service', '${WORKDIR}/aktualizr.service', d)}
@@ -137,7 +139,7 @@ python split_hosttools_packages () {
 
 PACKAGES_DYNAMIC = "^aktualizr-.* ^garage-.*"
 
-PACKAGES =+ "${PN}-resource-control ${PN}-examples ${PN}-secondary ${PN}-configs ${PN}-host-tools"
+PACKAGES =+ "${PN}-host-tools ${PN}-lib ${PN}-resource-control ${PN}-configs ${PN}-secondary ${PN}-secondary-lib ${PN}-sotatools-lib"
 
 ALLOW_EMPTY_${PN}-host-tools = "1"
 
@@ -145,6 +147,10 @@ FILES_${PN} = " \
                 ${bindir}/aktualizr \
                 ${bindir}/aktualizr-info \
                 ${systemd_unitdir}/system/aktualizr.service \
+                "
+
+FILES_${PN}-lib = " \
+                ${libdir}/libaktualizr.so \
                 "
 
 FILES_${PN}-resource-control = " \
@@ -156,15 +162,21 @@ FILES_${PN}-configs = " \
                 ${libdir}/sota/* \
                 "
 
-FILES_${PN}-examples = " \
-                ${bindir}/hmi-stub \
-                "
-
 FILES_${PN}-secondary = " \
                 ${bindir}/aktualizr-secondary \
                 ${libdir}/sota/sota-secondary.toml \
                 ${systemd_unitdir}/system/aktualizr-secondary.service \
                 "
+
+FILES_${PN}-secondary-lib = " \
+                ${libdir}/libaktualizr_secondary.so \
+                "
+
+FILES_${PN}-sotatools-lib = " \
+                ${libdir}/libsota_tools.so \
+                "
+
+FILES_${PN}-dev = ""
 
 BBCLASSEXTEND = "native"
 

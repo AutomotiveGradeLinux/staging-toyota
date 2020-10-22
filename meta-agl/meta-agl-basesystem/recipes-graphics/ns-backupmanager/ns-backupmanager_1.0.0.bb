@@ -6,8 +6,8 @@ LIC_FILES_CHKSUM = "file://${S}/${MAKE_DIR}/LICENSE;md5=2ee41112a44fe7014dce33e2
 inherit agl-basesystem-common
 
 FILES_${PN} += " \
-    /usr/agl/conf/backup_manager/* \
     /usr/agl/lib/* \
+    /usr/agl/conf/BS/ns/backup_manager/rodata/* \
 "
 FILES_${PN}-dev += "/usr/agl/include/*"
 
@@ -20,9 +20,11 @@ S = "${WORKDIR}/git"
 DEPENDS += " \
     libxml2-native \
     ns-frameworkunified \
+    libnv-hal \
 "
 RDEPENDS_${PN} += " \
     ns-frameworkunified \
+    libnv-hal \
 "
 EXTRA_MAKEFILE=" -f Makefile.client"
 EXTRA_OEMAKE += "${EXTRA_MAKEFILE}"

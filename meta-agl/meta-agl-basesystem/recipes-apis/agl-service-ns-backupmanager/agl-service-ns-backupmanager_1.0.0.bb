@@ -8,8 +8,8 @@ inherit agl-basesystem-common agl-basesystem-capability
 CAPABILITY = "cap_dac_override+ep:/usr/agl/bin/NS_BackupMgr"
 
 FILES_${PN} += " \
-    /usr/agl/conf/backup_manager/* \
     /usr/agl/bin/* \
+    /nv/BS/ns/backup_manager/* \
 "
 
 SRC_URI = "git://gerrit.automotivelinux.org/gerrit/staging/toyota.git;protocol=https;branch=sandbox/ToshikazuOhiwa/ns-backupmanager"
@@ -21,15 +21,19 @@ S = "${WORKDIR}/git"
 DEPENDS += " \
     libxml2-native \
     ns-frameworkunified \
+    libnv-hal \
     ns-backupmanager \
     ss-interfaceunified \
     ss-romaccesslibrary \
+    os-vehicleparameterlibrary \
 "
 RDEPENDS_${PN} += " \
     ns-frameworkunified \
+    libnv-hal \
     ns-backupmanager \
     ss-interfaceunified \
     ss-romaccesslibrary \
+    os-vehicleparameterlibrary \
 "
 EXTRA_MAKEFILE = " -f Makefile.server"
 EXTRA_OEMAKE += "${EXTRA_MAKEFILE}"

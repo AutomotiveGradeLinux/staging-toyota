@@ -13,6 +13,9 @@ FILES_${PN} += " \
 FILES_${PN}-staticdev += " \
     /usr/agl/lib/*.a \
 "
+
+FILES_${PN} += "/nv/BS/vs/positioning/*"
+
 SRC_URI = "git://gerrit.automotivelinux.org/gerrit/staging/toyota.git;protocol=https;branch=sandbox/ToshikazuOhiwa/vs-positioning"
 SRCREV = "${AUTOREV}"
 
@@ -30,8 +33,12 @@ DEPENDS += " \
     os-vehicleparameterlibrary \
     os-eventlibrary \
     ps-communication \
+    libpositioning-hal \
     vs-positioningbaselibrary \
     vs-positioning \
+    ps-communicationusb \
+    vs-clock \
+    vs-vehicle \
 "
 RDEPENDS_${PN} += " \
     ss-config \
@@ -43,8 +50,11 @@ RDEPENDS_${PN} += " \
     os-vehicleparameterlibrary \
     os-eventlibrary \
     ps-communication \
+    libpositioning-hal \
     vs-positioningbaselibrary \
     vs-positioning \
+    vs-clock \
+    vs-vehicle \
 "
 EXTRA_MAKEFILE=" -f Makefile.server"
 EXTRA_OEMAKE += " ${EXTRA_MAKEFILE} -j 1 'CXX=${CXX} -Wl,--warn-unresolved-symbols' 'CC=${CC} -Wl,--warn-unresolved-symbols' "

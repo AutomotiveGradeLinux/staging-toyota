@@ -6,24 +6,16 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 LLDNAME="hyplnk"
 
-LIC_FILES_CHKSUM = "file://${WORKDIR}/${HYPLNK_GIT_DESTSUFFIX}/COPYING.txt;md5=623325cc19e613a4e770fbb749922592"
+LIC_FILES_CHKSUM = "file://COPYING.txt;md5=623325cc19e613a4e770fbb749922592"
 
-HYPLNK_GIT_URI = "git://git.ti.com/keystone-rtos/hyplnk-lld.git"
-HYPLNK_GIT_PROTOCOL = "git"
-HYPLNK_GIT_BRANCH = "master"
-HYPLNK_GIT_DESTSUFFIX = "git/ti/drv/${LLDNAME}"
+inherit ti-pdk-fetch
 
-# Following commit corresponds to tag DEV.HYPLNK_LLD.02.01.00.08
-HYPLNK_SRCREV = "2f54bb32fbf08bd2e20446497341e29498702931"
+TI_PDK_COMP = "ti.drv.hyplnk"
 
-BRANCH="${HYPLNK_GIT_BRANCH}"
-SRC_URI = "${HYPLNK_GIT_URI};destsuffix=${HYPLNK_GIT_DESTSUFFIX};protocol=${HYPLNK_GIT_PROTOCOL};branch=${BRANCH}"
-SRCREV = "${HYPLNK_SRCREV}"
+PE = "1"
 
-PV = "2.1.0.8"
 INC_PR = "r0"
 
 DEVICELIST_k2hk = "k2h k2k"
 DEVICELIST_k2e  = "k2e"
 
-S = "${WORKDIR}/${HYPLNK_GIT_DESTSUFFIX}"

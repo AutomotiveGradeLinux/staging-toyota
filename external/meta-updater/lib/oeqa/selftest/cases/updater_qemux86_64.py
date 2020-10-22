@@ -85,6 +85,7 @@ class SharedCredProvTests(OESelftestTestCase):
         self.append_config('MACHINE = "qemux86-64"')
         self.append_config('SOTA_CLIENT_PROV = " aktualizr-shared-prov "')
         self.append_config('IMAGE_FSTYPES_remove = "ostreepush garagesign garagecheck"')
+        self.append_config('SOTA_HARDWARE_ID = "plain_reibekuchen_314"')
         self.qemu, self.s = qemu_launch(machine='qemux86-64')
 
     def tearDownLocal(self):
@@ -107,7 +108,34 @@ class SharedCredProvTests(OESelftestTestCase):
         self.assertEqual(value, machine,
                          'MACHINE does not match hostname: ' + machine + ', ' + value)
 
-        verifyProvisioned(self, machine)
+        hwid = get_bb_var('SOTA_HARDWARE_ID')
+        verifyProvisioned(self, machine, hwid)
+
+
+class SharedCredProvTestsNonOSTree(SharedCredProvTests):
+
+    def setUpLocal(self):
+        layer = "meta-updater-qemux86-64"
+        result = runCmd('bitbake-layers show-layers')
+        if re.search(layer, result.output) is None:
+            self.meta_qemu = metadir() + layer
+            runCmd('bitbake-layers add-layer "%s"' % self.meta_qemu)
+        else:
+            self.meta_qemu = None
+        self.append_config('MACHINE = "qemux86-64"')
+        self.append_config('SOTA_CLIENT_PROV = ""')
+        self.append_config('IMAGE_FSTYPES_remove = "ostreepush garagesign garagecheck"')
+        self.append_config('SOTA_HARDWARE_ID = "plain_reibekuchen_314"')
+
+        self.append_config('DISTRO = "poky"')
+        self.append_config('DISTRO_FEATURES_append = " systemd"')
+        self.append_config('VIRTUAL-RUNTIME_init_manager = "systemd"')
+        self.append_config('PREFERRED_RPROVIDER_virtual/network-configuration ??= "networkd-dhcp-conf"')
+        self.append_config('PACKAGECONFIG_pn-aktualizr = ""')
+        self.append_config('SOTA_DEPLOY_CREDENTIALS = "1"')
+        self.append_config('IMAGE_INSTALL_append += "aktualizr"')
+        self.append_config('IMAGE_INSTALL_append += " aktualizr-shared-prov"')
+        self.qemu, self.s = qemu_launch(machine='qemux86-64', uboot_enable='no')
 
 
 class ManualControlTests(OESelftestTestCase):
@@ -358,17 +386,7 @@ class IpSecondaryTests(OESelftestTestCase):
             self._test_ctx.append_config('SOTA_CLIENT_PROV = " aktualizr-shared-prov "')
 
         def is_ecu_registered(self, ecu_id):
-            max_number_of_tries = 40
-            try_counter = 0
-
-            # aktualizr-info is not always able to load ECU serials from DB
-            # so, let's run it a few times until it actually succeeds
-            while try_counter < max_number_of_tries:
-                device_status = self.get_info()
-                try_counter += 1
-                if device_status.find("load ECU serials") == -1:
-                    break
-                sleep(1)
+            device_status = self.get_info()
 
             if not ((device_status.find(ecu_id[0]) != -1) and (device_status.find(ecu_id[1]) != -1)):
                 return False
@@ -377,7 +395,7 @@ class IpSecondaryTests(OESelftestTestCase):
             return not_reg_start == -1 or (device_status.find(ecu_id[1], not_reg_start) == -1)
 
         def get_info(self):
-            stdout, stderr, retcode = self.send_command('aktualizr-info')
+            stdout, stderr, retcode = self.send_command('aktualizr-info --wait-until-provisioned', timeout=620)
             self._test_ctx.assertEqual(retcode, 0, 'Unable to run aktualizr-info: {}'.format(stderr))
             return stdout
 
@@ -472,5 +490,41 @@ class ResourceControlTests(OESelftestTestCase):
 
         stdout, stderr, retcode = self.qemu_command('systemctl --no-pager show --property=ExecMainStatus aktualizr')
         self.assertIn(b'ExecMainStatus=0', stdout, 'Aktualizr did not restart')
+
+
+class NonSystemdTests(OESelftestTestCase):
+    def setUpLocal(self):
+        layer = "meta-updater-qemux86-64"
+        result = runCmd('bitbake-layers show-layers')
+        if re.search(layer, result.output) is None:
+            self.meta_qemu = metadir() + layer
+            runCmd('bitbake-layers add-layer "%s"' % self.meta_qemu)
+        else:
+            self.meta_qemu = None
+        self.append_config('MACHINE = "qemux86-64"')
+        self.append_config('SOTA_CLIENT_PROV = " aktualizr-shared-prov "')
+        self.append_config('IMAGE_FSTYPES_remove = "ostreepush garagesign garagecheck"')
+        self.append_config('DISTRO = "poky-sota"')
+        self.append_config('IMAGE_INSTALL_remove += " aktualizr-resource-control"')
+        self.qemu, self.s = qemu_launch(machine='qemux86-64')
+
+    def tearDownLocal(self):
+        qemu_terminate(self.s)
+        if self.meta_qemu:
+            runCmd('bitbake-layers remove-layer "%s"' % self.meta_qemu, ignore_status=True)
+
+    def qemu_command(self, command):
+        return qemu_send_command(self.qemu.ssh_port, command)
+
+    def test_provisioning(self):
+        print('Checking if systemd is not installed...')
+        stdout, stderr, retcode = self.qemu_command('systemctl')
+        self.assertTrue(retcode != 0, 'systemd is installed while it is not supposed to: ' + str(stdout))
+
+        stdout, stderr, retcode = self.qemu_command('aktualizr --run-mode once')
+        self.assertEqual(retcode, 0, 'Failed to run aktualizr: ' + str(stdout) + str(stderr))
+
+        machine = get_bb_var('MACHINE', 'core-image-minimal')
+        verifyProvisioned(self, machine)
 
 # vim:set ts=4 sw=4 sts=4 expandtab:

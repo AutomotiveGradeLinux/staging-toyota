@@ -15,7 +15,6 @@ RDEPENDS_${PN} = "\
         perf \
         htop \
         powertop \
-        systemtap \
         screen \
         usbutils \
         rsync \
@@ -25,4 +24,5 @@ RDEPENDS_${PN} = "\
         jq \
         libxslt-bin \
         agl-service-network-tools \
+        gcc-sanitizers \
         "

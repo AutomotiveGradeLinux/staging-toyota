@@ -5,7 +5,7 @@ LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/Apache-2.0;md5=89aea4e17d99a7cacdbeed46a0096b10"
 
 SRC_URI = "git://gerrit.automotivelinux.org/gerrit/src/libappcontroller;protocol=https;branch=${AGL_BRANCH}"
-SRCREV = "baaa5116b2299b2b01b9fa3199ba95786c2d8a77"
+SRCREV = "1bef31c8bbad27f4914484c5007b2e199fb073d4"
 
 PV = "${AGLVERSION}"
 S  = "${WORKDIR}/git"

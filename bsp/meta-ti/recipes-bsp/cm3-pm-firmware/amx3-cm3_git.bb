@@ -24,5 +24,6 @@ do_install() {
 }
 
 FILES_${PN} += "${base_libdir}/firmware"
-COMPATIBLE_HOST ?= "null"
-COMPATIBLE_HOST_ti-soc = "(.*)"
+
+COMPATIBLE_MACHINE = "(ti-soc)"
+TOOLCHAIN = "gcc"

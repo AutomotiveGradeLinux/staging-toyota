@@ -9,7 +9,7 @@ SRC_URI += " \
     file://LICENSE \
     file://bin \
     file://share \
-    file://npp \
+    file://BS \
     file://include \
     file://agldd \
 "
@@ -18,11 +18,11 @@ FILES_${PN} += " \
     /bin/* \
     /agldd/* \
     /include/* \
-    /npp/* \
+    /BS/ns/npp/rwdata/* \
     /share/* \
     /usr/agl/conf/backup_manager/* \
     /usr/agl/conf/systemmanager/* \
-    /nv/npp/* \
+    /nv/BS/ns/npp/rwdata/* \
 "
 #ALLOW_EMPTY_${PN} = "1"
 
@@ -43,16 +43,16 @@ do_package_qa[noexec] = "1"
 do_install[depends] += "virtual/kernel:do_shared_workdir"
 
 do_install() {
-	install -C -d ${D}/nv/npp/
         install -C -d ${D}/usr/agl/share/
         install -C -d ${D}/usr/agl/include/agldd/
-	install -C -d ${D}/usr/include/linux/
+        install -C -d ${D}/usr/include/linux/
+        install -C -d ${D}/nv/BS/ns/npp/rwdata/
         install -m 644 ${WORKDIR}/agldd/* ${D}/usr/agl/include/agldd/
         install -m 644 ${WORKDIR}/include/* ${D}/usr/agl/include/
         install -m 644 ${WORKDIR}/share/* ${D}/usr/agl/share/
-	install -m 644 ${WORKDIR}/npp/* ${D}/nv/npp/
-	install -m 775 ${WORKDIR}/bin/launch_xml2cfg.sh ${D}/usr/agl/share/
-	install -D -m 0644 ${TMPDIR}/work-shared/${MACHINE}/kernel-build-artifacts/include/generated/autoconf.h ${D}/usr/include/linux/
+        install -m 644 ${WORKDIR}/BS/ns/npp/rwdata/* ${D}/nv/BS/ns/npp/rwdata
+        install -m 775 ${WORKDIR}/bin/launch_xml2cfg.sh ${D}/usr/agl/share/
+        install -D -m 0644 ${TMPDIR}/work-shared/${MACHINE}/kernel-build-artifacts/include/generated/autoconf.h ${D}/usr/include/linux/
 }
 
 sysroot_stage_all_append(){

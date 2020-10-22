@@ -6,6 +6,7 @@ LIC_FILES_CHKSUM = "file://${S}/${MAKE_DIR}/LICENSE;md5=2ee41112a44fe7014dce33e2
 inherit agl-basesystem-common
 FILES_${PN} += " \
     /usr/agl/lib/* \
+    /nv/BS/vs/positioning_base_library/* \
 "
 FILES_${PN}-dev += "/usr/agl/include/*"
 
@@ -19,10 +20,12 @@ S = "${WORKDIR}/git"
 DEPENDS += " \
     ns-frameworkunified \
     os-eventlibrary \
+    os-vehicleparameterlibrary \
 "
 RDEPENDS_${PN} += " \
     ns-frameworkunified \
     os-eventlibrary \
+    os-vehicleparameterlibrary \
 "
 
 EXTRA_MAKEFILE=" -f Makefile.client"

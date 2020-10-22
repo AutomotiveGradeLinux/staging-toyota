@@ -6,8 +6,9 @@ SECTION     = "apps"
 LICENSE          = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING;md5=947b2d60ca3872e172034438e9801200"
 
-DEPENDS += "qtbase json-c libnaviapi-agl \
+DEPENDS += "qtbase json-c \
             qlibwindowmanager libhomescreen \
+            libqtappfw \
            "
 
 SRC_URI = "git://gerrit.automotivelinux.org/gerrit/apps/poi-yelp;protocol=https;branch=${AGL_BRANCH}"
@@ -17,4 +18,4 @@ S = "${WORKDIR}/git"
 
 inherit cmake_qt5 pkgconfig aglwgt
 
-RDEPENDS_${PN} =  "qtbase"
+RDEPENDS_${PN} =  "qtbase libqtappfw"

@@ -1,6 +1,10 @@
 SUMMARY = "TI RTOS low level driver for SCICLIENT"
 
-inherit ti-pdk
+inherit ti-pdk ti-pdk-fetch
+
+TI_PDK_COMP = "ti.drv.sciclient"
+
+PE = "1"
 
 LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://sciclient.h;beginline=1;endline=31;md5=7224b2eeca1444815f1737bfcdfa892a"
@@ -8,37 +12,21 @@ LIC_FILES_CHKSUM = "file://sciclient.h;beginline=1;endline=31;md5=7224b2eeca1444
 COMPATIBLE_MACHINE = "k3"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-SCICLIENT_GIT_URI = "git://git.ti.com/keystone-rtos/sciclient.git"
-SCICLIENT_GIT_PROTOCOL = "git"
-SCICLIENT_GIT_BRANCH = "master"
-
-# Below commit ID corresponds to "DEV.SCICLIENT.01.00.00.02B"
-SCICLIENT_SRCREV = "3b88caad398d2eeca7acf4f02c24aaa993c6b545"
-
-BRANCH = "${SCICLIENT_GIT_BRANCH}"
-SRC_URI = "${SCICLIENT_GIT_URI};protocol=${SCICLIENT_GIT_PROTOCOL};branch=${BRANCH}"
-
-SRCREV = "${SCICLIENT_SRCREV}"
-PV = "01.00.00.02B"
 PR = "r0"
 
-DEPENDS_append = " osal-rtos common-csl-ip-rtos"
+DEPENDS_append = " osal-rtos common-csl-ip-rtos openssl-native"
 
 # Build with make instead of XDC
 TI_PDK_XDCMAKE = "0"
 
-SCICLIENT_PACKAGE_BASE   = "${S}/../sciclient_base"
+SCICLIENT_PACKAGE_BASE = "${WORKDIR}/sciclient_base"
 SCICLIENT_ROOTPATH = "${SCICLIENT_PACKAGE_BASE}/package/all/pdk_/packages/ti/drv/sciclient"
 
 export PDK_INSTALL_PATH = "${PDK_INSTALL_DIR}/packages"
 export PDK_SCICLIENT_ROOT_PATH = "${SCICLIENT_PACKAGE_BASE}/package/all/pdk_/packages"
 
-#export PDK_SCICLIENT_ROOT_PATH ="${WORKDIR}/build"
-#export DEST_ROOT="${S}"
-
-LIMSOCS_am65xx = "am65xx"
-LIMBOARDS_am65xx = "am65xx_evm"
-BOARD_PACKAGE_am65xx = "am65xx_evm"
+# Sciclient for am65x supports mcu1_1 in addition to the default cores in TI_PDK_LIMIT_CORES
+TI_PDK_LIMIT_CORES_append_am65xx = " mcu1_1"
 
 # HTML doc link params
 PDK_COMP_LINK_TEXT = "SCICLIENT"
@@ -52,7 +40,7 @@ do_configure() {
     rm -f ${SCICLIENT_PACKAGE_BASE}
 
     # make the release package before building it
-    make package BOARD=${BOARD_PACKAGE} DEST_ROOT=${SCICLIENT_PACKAGE_BASE} PDK_SCICLIENT_COMP_PATH=${S}
+    make package BOARD="${TI_PDK_LIMIT_BOARDS}" DEST_ROOT=${SCICLIENT_PACKAGE_BASE} PDK_SCICLIENT_COMP_PATH=${S}
 
    # This is to ensure the make package completed successfully
     cat  ${SCICLIENT_ROOTPATH}/makefile
@@ -66,10 +54,45 @@ do_compile() {
     # make clean LIMIT_SOCS="${LIMSOCS}" LIMIT_BOARDS="${LIMBOARDS}"
 
     # Build am65xx libraries
-    make lib xdc_meta doxygen LIMIT_SOCS="${LIMSOCS}" LIMIT_BOARDS="${LIMBOARDS}"
+    make lib xdc_meta doxygen LIMIT_SOCS="${TI_PDK_LIMIT_SOCS}" LIMIT_BOARDS="${TI_PDK_LIMIT_BOARDS}" LIMIT_CORES="${TI_PDK_LIMIT_CORES}"
 
     #archive
     tar -cf sciclient.tar --exclude='*.tar' ./*
+}
+
+
+do_compile_prepend_am65xx-hs-evm() {
+
+    cd ${SCICLIENT_ROOTPATH}
+
+    # Saving the GP firmware to a different GP name
+    cp ${CP_ARGS} ./soc/V0/sysfw.bin ./soc/V0/sysfw-gp.bin
+    
+    cd ${SCICLIENT_ROOTPATH}/tools
+    # Create the .bin file for HS
+    ${SCICLIENT_ROOTPATH}/tools/firmwareHeaderGen.sh am65x-hs ${PDK_INSTALL_DIR}/packages
+    cd -
+}
+
+do_compile_prepend_am65xx-evm() {
+
+    cd ${SCICLIENT_ROOTPATH}/tools
+
+    # Create the .bin file for GP, PG1
+    ${SCICLIENT_ROOTPATH}/tools/firmwareHeaderGen.sh am65x ${PDK_INSTALL_DIR}/packages
+    # Create the .bin file for GP, PG2
+    ${SCICLIENT_ROOTPATH}/tools/firmwareHeaderGen.sh am65x_pg2 ${PDK_INSTALL_DIR}/packages
+    
+    cd -
+}
+
+
+do_compile_prepend_j7-evm() {
+
+    cd ${SCICLIENT_ROOTPATH}/tools
+    # Create the .bin file for GP
+    ${SCICLIENT_ROOTPATH}/tools/firmwareHeaderGen.sh j721e ${PDK_INSTALL_DIR}/packages
+    cd -
 }
 
 do_install() {
@@ -83,3 +106,6 @@ FILES_${PN} += "${PDK_INSTALL_DIR_RECIPE}/packages"
 INSANE_SKIP_${PN} = "arch ldflags file-rdeps"
 
 INSANE_SKIP_${PN}-dbg = "arch"
+INHIBIT_PACKAGE_STRIP = "1"
+INHIBIT_SYSROOT_STRIP = "1"
+INHIBIT_PACKAGE_DEBUG_SPLIT = "1"

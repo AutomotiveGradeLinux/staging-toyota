@@ -58,53 +58,53 @@
 
 //======= exec from system manager =============
 #define MN_NS_SHAREDMEM       "NS_SharedMem"
-#define PR_NS_SHAREDMEM_S     "25"
-#define PR_NS_SHAREDMEM       (25)
+#define PR_NS_SHAREDMEM_S     "0"
+#define PR_NS_SHAREDMEM       (0)
 
 
 #define MN_NS_NPPSERVICE      "NS_NPPService"
-#define PR_NS_NPPSERVICE_S    "25"
-#define PR_NS_NPPSERVICE      (25)
+#define PR_NS_NPPSERVICE_S    "0"
+#define PR_NS_NPPSERVICE      (0)
 
   #define TN_NS_NPPREADWKR    "NS_NPPReadWkr"
-  #define PR_NS_NPPREADWKR_S  "25"
-  #define PR_NS_NPPREADWKR    (25)
+  #define PR_NS_NPPREADWKR_S  "0"
+  #define PR_NS_NPPREADWKR    (0)
 
   #define TN_NS_NPPWRITEWKR   "NS_NPPWriteWkr"
-  #define PR_NS_NPPWRITEWKR_S "25"
-  #define PR_NS_NPPWRITEWKR   (25)
+  #define PR_NS_NPPWRITEWKR_S "0"
+  #define PR_NS_NPPWRITEWKR   (0)
 
   #define TN_NS_NPPIPWKR      "NS_NPPIPWkr"
-  #define PR_NS_NPPIPWKR_S    "25"
-  #define PR_NS_NPPIPWKR      (25)
+  #define PR_NS_NPPIPWKR_S    "0"
+  #define PR_NS_NPPIPWKR      (0)
 
 #define MN_NS_BACKUPMGR       "NS_BackupMgr"
-#define PR_NS_BACKUPMGR_S     "25"
-#define PR_NS_BACKUPMGR       (25)
+#define PR_NS_BACKUPMGR_S     "0"
+#define PR_NS_BACKUPMGR       (0)
 
   #define TN_NS_BKUPNAND      "NS_BkupNAND"
-  #define PR_NS_BKUPNAND_S    "25"
-  #define PR_NS_BKUPNAND      (25)
+  #define PR_NS_BKUPNAND_S    "0"
+  #define PR_NS_BKUPNAND      (0)
 
   #define TN_NS_BKUPDELAY     "NS_BkupDelay"
-  #define PR_NS_BKUPDELAY_S   "25"
-  #define PR_NS_BKUPDELAY     (25)
+  #define PR_NS_BKUPDELAY_S   "0"
+  #define PR_NS_BKUPDELAY     (0)
 
 #define MN_SS_DEVDETECTSRV    "SS_DevDetectSrv"
-#define PR_SS_DEVDETECTSRV_S  "20"
-#define PR_SS_DEVDETECTSRV    (20)
+#define PR_SS_DEVDETECTSRV_S  "0"
+#define PR_SS_DEVDETECTSRV    (0)
 
   #define TN_SS_DETECT_USB    "SS_Detect_USB"
-  #define PR_SS_DETECT_USB_S  "20"
-  #define PR_SS_DETECT_USB    (20)
+  #define PR_SS_DETECT_USB_S  "0"
+  #define PR_SS_DETECT_USB    (0)
 
   #define TN_SS_DETECT_SD     "SS_Detect_SD"
-  #define PR_SS_DETECT_SD_S   "20"
-  #define PR_SS_DETECT_SD     (20)
+  #define PR_SS_DETECT_SD_S   "0"
+  #define PR_SS_DETECT_SD     (0)
 
   #define TN_SS_MONITOR_OVC     "SS_Monitor_OVC"
-  #define PR_SS_MONITOR_OVC_S   "20"
-  #define PR_SS_MONITOR_OVC     (20)
+  #define PR_SS_MONITOR_OVC_S   "0"
+  #define PR_SS_MONITOR_OVC     (0)
 
 #define MN_SS_LOGGERSRV       "SS_LoggerSrv"
 #define PR_SS_LOGGERSRV_S     PR_TSS_S
@@ -139,64 +139,64 @@
 #define PR_UDEVD              (1)
 
 #define MN_COMMUNICATION      "Communication"
-#define PR_COMMUNICATION_S    "30"
-#define PR_COMMUNICATION      (30)
+#define PR_COMMUNICATION_S    "0"
+#define PR_COMMUNICATION      (0)
 
   #define TN_DEV_SYSCOM_TMR   "DEV_SYSCOM_TMR"
-  #define PR_DEV_SYSCOM_TMR_S "30"
-  #define PR_DEV_SYSCOM_TMR   (30)
+  #define PR_DEV_SYSCOM_TMR_S "0"
+  #define PR_DEV_SYSCOM_TMR   (0)
 
   #define TN_DEV_SYSCOM_RCV   "DEV_SYSCOM_RCV"
-  #define PR_DEV_SYSCOM_RCV_S "30"
-  #define PR_DEV_SYSCOM_RCV   (30)
+  #define PR_DEV_SYSCOM_RCV_S "0"
+  #define PR_DEV_SYSCOM_RCV   (0)
 
   #define TN_DEV_SYSCOM_MAIN    "DEV_SYSCOM_MAIN"
-  #define PR_DEV_SYSCOM_MAIN_S  "30"
-  #define PR_DEV_SYSCOM_MAIN    (30)
+  #define PR_DEV_SYSCOM_MAIN_S  "0"
+  #define PR_DEV_SYSCOM_MAIN    (0)
 
   #define TN_TGWCOM           "TGWCOM"
-  #define PR_TGWCOM_S         "30"
-  #define PR_TGWCOM           (30)
+  #define PR_TGWCOM_S         "0"
+  #define PR_TGWCOM           (0)
 
   #define TN__CWORD83_              "_CWORD83_"
-  #define PR__CWORD83__S            "30"
-  #define PR__CWORD83_              (30)
+  #define PR__CWORD83__S            "0"
+  #define PR__CWORD83_              (0)
 
   #define TN_CAN_COM_PROT     "CAN_COM_PROT"
-  #define PR_CAN_COM_PROT_S   "30"
-  #define PR_CAN_COM_PROT     (30)
+  #define PR_CAN_COM_PROT_S   "0"
+  #define PR_CAN_COM_PROT     (0)
 
 #define MN_PS_PSMSHADOW       "PS_PSMShadow"
-#define PR_PS_PSMSHADOW_S     "30"
-#define PR_PS_PSMSHADOW       (30)
+#define PR_PS_PSMSHADOW_S     "0"
+#define PR_PS_PSMSHADOW       (0)
 
 #define MN_COMMSH4A           "CommSH4A"
-#define PR_COMMSH4A_S         "30"
-#define PR_COMMSH4A           (30)
+#define PR_COMMSH4A_S         "0"
+#define PR_COMMSH4A           (0)
 
   #define TN_DEV_SH4A_SND     "DEV_SH4ACOM_SND"
-  #define PR_DEV_SH4A_SND_S   "30"
-  #define PR_DEV_SH4A_SND     (30)
+  #define PR_DEV_SH4A_SND_S   "0"
+  #define PR_DEV_SH4A_SND     (0)
 
   #define TN_DEV_SH4A_RCV     "DEV_SH4ACOM_RCV"
-  #define PR_DEV_SH4A_RCV_S   "30"
-  #define PR_DEV_SH4A_RCV     (30)
+  #define PR_DEV_SH4A_RCV_S   "0"
+  #define PR_DEV_SH4A_RCV     (0)
 
   #define TN_DEV_SH4A_MON     "DEV_SH4ACOM_MON"
-  #define PR_DEV_SH4A_MON_S   "30"
-  #define PR_DEV_SH4A_MON     (30)
+  #define PR_DEV_SH4A_MON_S   "0"
+  #define PR_DEV_SH4A_MON     (0)
 
 #define MN_PS_COMMUSB         "PS_CommUSB"
-#define PR_PS_COMMUSB_S       "30"
-#define PR_PS_COMMUSB         (30)
+#define PR_PS_COMMUSB_S       "0"
+#define PR_PS_COMMUSB         (0)
 
   #define TN_COMMUSB_RCV      "COMMUSB_RCV"
-  #define PR_COMMUSB_RCV_S    "30"
-  #define PR_COMMUSB_RCV      (30)
+  #define PR_COMMUSB_RCV_S    "0"
+  #define PR_COMMUSB_RCV      (0)
 
   #define TN_COMMUSB_DIAG    "COMMUSB_DIAG"
-  #define PR_COMMUSB_DIAG_S  "30"
-  #define PR_COMMUSB_DIAG    (30)
+  #define PR_COMMUSB_DIAG_S  "0"
+  #define PR_COMMUSB_DIAG    (0)
 
 #define MN_PS_CANGW_M        "CANGW_M"
 #define PR_PS_CANGW_M_S       PR_TSS_S
@@ -223,8 +223,8 @@
   #define PR_CANGW_S_DIAG      PR_TSS
 
 #define MN_LANSERVER          "LanServer"
-#define PR_LANSERVER_S        "20"
-#define PR_LANSERVER          (20)
+#define PR_LANSERVER_S        "0"
+#define PR_LANSERVER          (0)
 
 #define MN_PS_CDR             "ps_cdr"
 #define PR_PS_CDR_S           PR_TSS_S
@@ -267,248 +267,248 @@
   #define PR_POSITIONING_GPS_ROLOVR     PR_TSS
 
 #define MN_CLOCK              "clock"
-#define PR_CLOCK_S            "20"
-#define PR_CLOCK              (20)
+#define PR_CLOCK_S            "0"
+#define PR_CLOCK              (0)
 
   #define TN_CLOCK_MNG        "ClockMng"
-  #define PR_CLOCK_MNG_S      "20"
-  #define PR_CLOCK_MNG        (20)
+  #define PR_CLOCK_MNG_S      "0"
+  #define PR_CLOCK_MNG        (0)
 
 #define MN_VEHICLE            "vehicle"
-#define PR_VEHICLE_S          "20"
-#define PR_VEHICLE            (20)
+#define PR_VEHICLE_S          "0"
+#define PR_VEHICLE            (0)
 
   #define TN_VEHICLE_SENS     "VehicleSens"
-  #define PR_VEHICLE_SENS_S   "20"
-  #define PR_VEHICLE_SENS     (20)
+  #define PR_VEHICLE_SENS_S   "0"
+  #define PR_VEHICLE_SENS     (0)
 
   #define TN_LINE_SENS_DRV    "LineSensDrv"
-  #define PR_LINE_SENS_DRV_S  "20"
-  #define PR_LINE_SENS_DRV    (20)
+  #define PR_LINE_SENS_DRV_S  "0"
+  #define PR_LINE_SENS_DRV    (0)
 
 #define MN_SS_POWERSERVICE    "SS_PowerService"
-#define PR_SS_POWERSERVICE_S  "30"
-#define PR_SS_POWERSERVICE    (30)
+#define PR_SS_POWERSERVICE_S  "0"
+#define PR_SS_POWERSERVICE    (0)
 
 #define MN_SS_TASKMANAGER     "SS_TaskManager"
-#define PR_SS_TASKMANAGER_S   "20"
-#define PR_SS_TASKMANAGER     (20)
+#define PR_SS_TASKMANAGER_S   "0"
+#define PR_SS_TASKMANAGER     (0)
 
   #define TN_SS_TSKMTIMER     "SS_TskmTimer"
-  #define PR_SS_TSKMTIMER_S   "20"
-  #define PR_SS_TSKMTIMER     (20)
+  #define PR_SS_TSKMTIMER_S   "0"
+  #define PR_SS_TSKMTIMER     (0)
 
 #define MN_SOUND              "Sound"
-#define PR_SOUND_S            "45"
-#define PR_SOUND              (45)
+#define PR_SOUND_S            "0"
+#define PR_SOUND              (0)
 
   #define TN_VG_SNDSRCMGR     "VG_SNDSRCMGR"
-  #define PR_VG_SNDSRCMGR_S   "40"
-  #define PR_VG_SNDSRCMGR     (40)
+  #define PR_VG_SNDSRCMGR_S   "0"
+  #define PR_VG_SNDSRCMGR     (0)
   
   #define TN_SND_INPUTCTRL    "SND_INPUTCTRL"
-  #define PR_SND_INPUTCTRL_S  "40"
-  #define PR_SND_INPUTCTRL    (40)
+  #define PR_SND_INPUTCTRL_S  "0"
+  #define PR_SND_INPUTCTRL    (0)
   
   #define TN_SND_DEVCTRL      "SND_DEVCTRL"
-  #define PR_SND_DEVCTRL_S    "40"
-  #define PR_SND_DEVCTRL      (40)
+  #define PR_SND_DEVCTRL_S    "0"
+  #define PR_SND_DEVCTRL      (0)
   
   #define TN_SND_VCETRFCTRL   "SND_VCETRFCTRL"
-  #define PR_SND_VCETRFCTRL_S "45"
-  #define PR_SND_VCETRFCTRL   (45)
+  #define PR_SND_VCETRFCTRL_S "0"
+  #define PR_SND_VCETRFCTRL   (0)
 
   #define TN_SND_VCETRFWRT1   "SND_VCETRFWRT1"
-  #define PR_SND_VCETRFWRT1_S "45"
-  #define PR_SND_VCETRFWRT1   (45)
+  #define PR_SND_VCETRFWRT1_S "0"
+  #define PR_SND_VCETRFWRT1   (0)
 
   #define TN_SND_VCETRFWRT2   "SND_VCETRFWRT2"
-  #define PR_SND_VCETRFWRT2_S "45"
-  #define PR_SND_VCETRFWRT2   (45)
+  #define PR_SND_VCETRFWRT2_S "0"
+  #define PR_SND_VCETRFWRT2   (0)
   
   #define TN_VG_SNDCTRL_BSCF    "VG_SNDCTRL_BSCF"
-  #define PR_VG_SNDCTRL_BSCF_S  "25"
-  #define PR_VG_SNDCTRL_BSCF    (25)
+  #define PR_VG_SNDCTRL_BSCF_S  "0"
+  #define PR_VG_SNDCTRL_BSCF    (0)
   
   #define TN_VG_SNDCTRL_BSCR    "VG_SNDCTRL_BSCR"
-  #define PR_VG_SNDCTRL_BSCR_S  "25"
-  #define PR_VG_SNDCTRL_BSCR    (25)
+  #define PR_VG_SNDCTRL_BSCR_S  "0"
+  #define PR_VG_SNDCTRL_BSCR    (0)
   
   #define TN_VG_SNDCTRL_ITRT    "VG_SNDCTRL_ITRT"
-  #define PR_VG_SNDCTRL_ITRT_S  "25"
-  #define PR_VG_SNDCTRL_ITRT    (25)
+  #define PR_VG_SNDCTRL_ITRT_S  "0"
+  #define PR_VG_SNDCTRL_ITRT    (0)
   
   #define TN_CVRS_OPRT_OUT_1    "CVRS_OPRT_OUT_1"
-  #define PR_CVRS_OPRT_OUT_1_S  "45"
-  #define PR_CVRS_OPRT_OUT_1    (45)
+  #define PR_CVRS_OPRT_OUT_1_S  "0"
+  #define PR_CVRS_OPRT_OUT_1    (0)
   
   #define TN_CVRS_OPRT_OUT_2    "CVRS_OPRT_OUT_2"
-  #define PR_CVRS_OPRT_OUT_2_S  "45"
-  #define PR_CVRS_OPRT_OUT_2    (45)
+  #define PR_CVRS_OPRT_OUT_2_S  "0"
+  #define PR_CVRS_OPRT_OUT_2    (0)
   
   #define TN_CVRS_OPRT_OUT_3    "CVRS_OPRT_OUT_3"
-  #define PR_CVRS_OPRT_OUT_3_S  "45"
-  #define PR_CVRS_OPRT_OUT_3    (45)
+  #define PR_CVRS_OPRT_OUT_3_S  "0"
+  #define PR_CVRS_OPRT_OUT_3    (0)
 
   #define TN_CVRS_OPRT_OUT_4    "CVRS_OPRT_OUT_4"
-  #define PR_CVRS_OPRT_OUT_4_S  "45"
-  #define PR_CVRS_OPRT_OUT_4    (45)
+  #define PR_CVRS_OPRT_OUT_4_S  "0"
+  #define PR_CVRS_OPRT_OUT_4    (0)
   
   #define TN_CVRS_OPRT_IN_1    "CVRS_OPRT_IN_1"
-  #define PR_CVRS_OPRT_IN_1_S  "45"
-  #define PR_CVRS_OPRT_IN_1    (45)
+  #define PR_CVRS_OPRT_IN_1_S  "0"
+  #define PR_CVRS_OPRT_IN_1    (0)
 
   #define TN_CVRS_OPRT_IN_2    "CVRS_OPRT_IN_2"
-  #define PR_CVRS_OPRT_IN_2_S  "45"
-  #define PR_CVRS_OPRT_IN_2    (45)
+  #define PR_CVRS_OPRT_IN_2_S  "0"
+  #define PR_CVRS_OPRT_IN_2    (0)
 
   #define TN_CVRS_OPRT_IN_3    "CVRS_OPRT_IN_3"
-  #define PR_CVRS_OPRT_IN_3_S  "45"
-  #define PR_CVRS_OPRT_IN_3    (45)
+  #define PR_CVRS_OPRT_IN_3_S  "0"
+  #define PR_CVRS_OPRT_IN_3    (0)
 
   #define TN_CVRS_OPRT_IN_4    "CVRS_OPRT_IN_4"
-  #define PR_CVRS_OPRT_IN_4_S  "45"
-  #define PR_CVRS_OPRT_IN_4    (45)
+  #define PR_CVRS_OPRT_IN_4_S  "0"
+  #define PR_CVRS_OPRT_IN_4    (0)
 
   #define TN_CVRS_OPRT_IN_5    "CVRS_OPRT_IN_5"
-  #define PR_CVRS_OPRT_IN_5_S  "45"
-  #define PR_CVRS_OPRT_IN_5    (45)
+  #define PR_CVRS_OPRT_IN_5_S  "0"
+  #define PR_CVRS_OPRT_IN_5    (0)
 
   #define TN_CVRS_OPRT_IN_6    "CVRS_OPRT_IN_6"
-  #define PR_CVRS_OPRT_IN_6_S  "45"
-  #define PR_CVRS_OPRT_IN_6    (45)
+  #define PR_CVRS_OPRT_IN_6_S  "0"
+  #define PR_CVRS_OPRT_IN_6    (0)
 
   #define TN_CVRS_OPRT_IN_7    "CVRS_OPRT_IN_7"
-  #define PR_CVRS_OPRT_IN_7_S  "45"
-  #define PR_CVRS_OPRT_IN_7    (45)
+  #define PR_CVRS_OPRT_IN_7_S  "0"
+  #define PR_CVRS_OPRT_IN_7    (0)
 
   #define TN_CVRS_OPRT_IN_8    "CVRS_OPRT_IN_8"
-  #define PR_CVRS_OPRT_IN_8_S  "45"
-  #define PR_CVRS_OPRT_IN_8    (45)
+  #define PR_CVRS_OPRT_IN_8_S  "0"
+  #define PR_CVRS_OPRT_IN_8    (0)
 
   #define TN_CVRS_OPRT_BS_I     "CVRS_OPRT_BS_I"
-  #define PR_CVRS_OPRT_BS_I_S   "45"
-  #define PR_CVRS_OPRT_BS_I     (45)
+  #define PR_CVRS_OPRT_BS_I_S   "0"
+  #define PR_CVRS_OPRT_BS_I     (0)
   
   #define TN_VR_NVR_RECO        "VR_NVR_RECO"
-  #define PR_VR_NVR_RECO_S      "20"
-  #define PR_VR_NVR_RECO        (20)
+  #define PR_VR_NVR_RECO_S      "0"
+  #define PR_VR_NVR_RECO        (0)
   
   #define TN_SND_ECNR       "SND_ECNR"
-  #define PR_SND_ECNR_S     "40"
-  #define PR_SND_ECNR       (40)
+  #define PR_SND_ECNR_S     "0"
+  #define PR_SND_ECNR       (0)
 
   #define TN_SNDAGENT_000       "SNDAGENT_000"
-  #define PR_SNDAGENT_000_S     "45"
-  #define PR_SNDAGENT_000       (45)
+  #define PR_SNDAGENT_000_S     "0"
+  #define PR_SNDAGENT_000       (0)
 
   #define TN_SNDAGENT_001       "SNDAGENT_001"
-  #define PR_SNDAGENT_001_S     "45"
-  #define PR_SNDAGENT_001       (45)
+  #define PR_SNDAGENT_001_S     "0"
+  #define PR_SNDAGENT_001       (0)
 
   #define TN_SNDAGENT_002       "SNDAGENT_002"
-  #define PR_SNDAGENT_002_S     "45"
-  #define PR_SNDAGENT_002       (45)
+  #define PR_SNDAGENT_002_S     "0"
+  #define PR_SNDAGENT_002       (0)
 
   #define TN_SNDAGENT_003       "SNDAGENT_003"
-  #define PR_SNDAGENT_003_S     "45"
-  #define PR_SNDAGENT_003       (45)
+  #define PR_SNDAGENT_003_S     "0"
+  #define PR_SNDAGENT_003       (0)
 
   #define TN_SNDAGENT_004       "SNDAGENT_004"
-  #define PR_SNDAGENT_004_S     "45"
-  #define PR_SNDAGENT_004       (45)
+  #define PR_SNDAGENT_004_S     "0"
+  #define PR_SNDAGENT_004       (0)
 
   #define TN_SNDAGENT_005       "SNDAGENT_005"
-  #define PR_SNDAGENT_005_S     "45"
-  #define PR_SNDAGENT_005       (45)
+  #define PR_SNDAGENT_005_S     "0"
+  #define PR_SNDAGENT_005       (0)
 
   #define TN_SNDAGENT_006       "SNDAGENT_006"
-  #define PR_SNDAGENT_006_S     "45"
-  #define PR_SNDAGENT_006       (45)
+  #define PR_SNDAGENT_006_S     "0"
+  #define PR_SNDAGENT_006       (0)
 
   #define TN_SNDAGENT_007       "SNDAGENT_007"
-  #define PR_SNDAGENT_007_S     "45"
-  #define PR_SNDAGENT_007       (45)
+  #define PR_SNDAGENT_007_S     "0"
+  #define PR_SNDAGENT_007       (0)
 
   #define TN_SNDAGENT_008       "SNDAGENT_008"
-  #define PR_SNDAGENT_008_S     "45"
-  #define PR_SNDAGENT_008       (45)
+  #define PR_SNDAGENT_008_S     "0"
+  #define PR_SNDAGENT_008       (0)
 
   #define TN_SNDAGENT_009       "SNDAGENT_009"
-  #define PR_SNDAGENT_009_S     "45"
-  #define PR_SNDAGENT_009       (45)
+  #define PR_SNDAGENT_009_S     "0"
+  #define PR_SNDAGENT_009       (0)
 
   #define TN_SNDAGENT_010       "SNDAGENT_010"
-  #define PR_SNDAGENT_010_S     "45"
-  #define PR_SNDAGENT_010       (45)
+  #define PR_SNDAGENT_010_S     "0"
+  #define PR_SNDAGENT_010       (0)
 
   #define TN_SNDAGENT_011       "SNDAGENT_011"
-  #define PR_SNDAGENT_011_S     "45"
-  #define PR_SNDAGENT_011       (45)
+  #define PR_SNDAGENT_011_S     "0"
+  #define PR_SNDAGENT_011       (0)
 
   #define TN_SNDAGENT_012       "SNDAGENT_012"
-  #define PR_SNDAGENT_012_S     "45"
-  #define PR_SNDAGENT_012       (45)
+  #define PR_SNDAGENT_012_S     "0"
+  #define PR_SNDAGENT_012       (0)
 
   #define TN_SNDAGENT_013       "SNDAGENT_013"
-  #define PR_SNDAGENT_013_S     "45"
-  #define PR_SNDAGENT_013       (45)
+  #define PR_SNDAGENT_013_S     "0"
+  #define PR_SNDAGENT_013       (0)
 
   #define TN_SNDAGENT_014       "SNDAGENT_014"
-  #define PR_SNDAGENT_014_S     "45"
-  #define PR_SNDAGENT_014       (45)
+  #define PR_SNDAGENT_014_S     "0"
+  #define PR_SNDAGENT_014       (0)
 
   #define TN_SNDAGENT_015       "SNDAGENT_015"
-  #define PR_SNDAGENT_015_S     "45"
-  #define PR_SNDAGENT_015       (45)
+  #define PR_SNDAGENT_015_S     "0"
+  #define PR_SNDAGENT_015       (0)
 
   #define TN_SNDAGENT_016       "SNDAGENT_016"
-  #define PR_SNDAGENT_016_S     "45"
-  #define PR_SNDAGENT_016       (45)
+  #define PR_SNDAGENT_016_S     "0"
+  #define PR_SNDAGENT_016       (0)
 
   #define TN_SNDAGENT_017       "SNDAGENT_017"
-  #define PR_SNDAGENT_017_S     "45"
-  #define PR_SNDAGENT_017       (45)
+  #define PR_SNDAGENT_017_S     "0"
+  #define PR_SNDAGENT_017       (0)
 
   #define TN_SNDAGENT_018       "SNDAGENT_018"
-  #define PR_SNDAGENT_018_S     "45"
-  #define PR_SNDAGENT_018       (45)
+  #define PR_SNDAGENT_018_S     "0"
+  #define PR_SNDAGENT_018       (0)
 
   #define TN_SNDAGENT_019       "SNDAGENT_019"
-  #define PR_SNDAGENT_019_S     "45"
-  #define PR_SNDAGENT_019       (45)
+  #define PR_SNDAGENT_019_S     "0"
+  #define PR_SNDAGENT_019       (0)
 
   #define TN_SNDAGENT_020       "SNDAGENT_020"
-  #define PR_SNDAGENT_020_S     "45"
-  #define PR_SNDAGENT_020       (45)
+  #define PR_SNDAGENT_020_S     "0"
+  #define PR_SNDAGENT_020       (0)
 
   #define TN_SNDAGENT_021       "SNDAGENT_021"
-  #define PR_SNDAGENT_021_S     "45"
-  #define PR_SNDAGENT_021       (45)
+  #define PR_SNDAGENT_021_S     "0"
+  #define PR_SNDAGENT_021       (0)
 
   #define TN_SNDAGENT_022       "SNDAGENT_022"
-  #define PR_SNDAGENT_022_S     "45"
-  #define PR_SNDAGENT_022       (45)
+  #define PR_SNDAGENT_022_S     "0"
+  #define PR_SNDAGENT_022       (0)
 
   #define TN_SNDAGENT_023       "SNDAGENT_023"
-  #define PR_SNDAGENT_023_S     "45"
-  #define PR_SNDAGENT_023       (45)
+  #define PR_SNDAGENT_023_S     "0"
+  #define PR_SNDAGENT_023       (0)
 
   #define TN_SNDAGENT_024       "SNDAGENT_024"
-  #define PR_SNDAGENT_024_S     "45"
-  #define PR_SNDAGENT_024       (45)
+  #define PR_SNDAGENT_024_S     "0"
+  #define PR_SNDAGENT_024       (0)
 
   #define TN_SNDAGENT_025       "SNDAGENT_025"
-  #define PR_SNDAGENT_025_S     "45"
-  #define PR_SNDAGENT_025       (45)
+  #define PR_SNDAGENT_025_S     "0"
+  #define PR_SNDAGENT_025       (0)
 
 #define MN_SS_RESOURCEMGR     "SS_ResourceMgr"
-#define PR_SS_RESOURCEMGR_S   "49"
-#define PR_SS_RESOURCEMGR     (49)
+#define PR_SS_RESOURCEMGR_S   "0"
+#define PR_SS_RESOURCEMGR     (0)
 
   #define TN_RESOURCEHWDT     "ResourceHWDT"
-  #define PR_RESOURCEHWDT_S   "1"
-  #define PR_RESOURCEHWDT     (1)
+  #define PR_RESOURCEHWDT_S   "0"
+  #define PR_RESOURCEHWDT     (0)
 
 #define MN_AS_AUDIOMANAGER    "AS_AudioManager"
 #define PR_AS_AUDIOMANAGER_S  PR_TSS_S
@@ -519,8 +519,8 @@
   #define PR_AS_SOUNDBEEP	PR_TSS
 
 #define MN_GRAPHICS           "Graphics"
-#define PR_GRAPHICS_S         "4"
-#define PR_GRAPHICS           (4)
+#define PR_GRAPHICS_S         "0"
+#define PR_GRAPHICS           (0)
 
   #define TN_GR_MAIN_CTRL     "Graphics_main"
   #define PR_GR_MAIN_CTRL_S   PR_TSS_S
@@ -535,12 +535,12 @@
   #define PR_GR_DEV_RCV_CTRL     PR_TSS
 
   #define TN_GR_VCAP1_CTRL    "Graphics_cap1"
-  #define PR_GR_VCAP1_CTRL_S   "4"
-  #define PR_GR_VCAP1_CTRL     (4)
+  #define PR_GR_VCAP1_CTRL_S   "0"
+  #define PR_GR_VCAP1_CTRL     (0)
 
   #define TN_GR_VCAP2_CTRL    "Graphics_cap2"
-  #define PR_GR_VCAP2_CTRL_S   "4"
-  #define PR_GR_VCAP2_CTRL     (4)
+  #define PR_GR_VCAP2_CTRL_S   "0"
+  #define PR_GR_VCAP2_CTRL     (0)
 
 #define MN_VUPSERVICE         "vupservice"
 #define PR_VUPSERVICE_S       PR_TSS_S
@@ -563,8 +563,8 @@
 #define PR_NS_LOCKMGR         PR_TSS
 
 #define MN_PS_SWITCHHANDLER      "SwitchHandler"
-#define PR_PS_SWITCHHANDLER_S    "30"
-#define PR_PS_SWITCHHANDLER      (30)
+#define PR_PS_SWITCHHANDLER_S    "0"
+#define PR_PS_SWITCHHANDLER      (0)
 
 #define MN_SS_WINSYS          "SS_WinSys"
 #define PR_SS_WINSYS_S        "5"
@@ -709,8 +709,8 @@
 #define PR_RADIOSERVICE       PR_TSS
 
 #define MN_RADIOHDARBITER     "RadioHDArbiter"
-#define PR_RADIOHDARBITER_S   "20"
-#define PR_RADIOHDARBITER     (20)
+#define PR_RADIOHDARBITER_S   "0"
+#define PR_RADIOHDARBITER     (0)
 
 #define MN_HRDS_MANAGER     "hrds_manager"
 #define PR_HRDS_MANAGER_S   PR_TSS_S
@@ -889,8 +889,8 @@
 #define PR_HANDWRITING        PR_TSS
 
 #define MN_EXTUNITAUTH_D      "EXTUNITAUTH_D"
-#define PR_EXTUNITAUTH_D_S    "29"
-#define PR_EXTUNITAUTH_D      29
+#define PR_EXTUNITAUTH_D_S    "0"
+#define PR_EXTUNITAUTH_D      0
 
   #define TN_VPSVC__CWORD84_        "VPSVC_D"
   #define PR_VPSVC__CWORD84__S      PR_TSS_S
@@ -945,8 +945,8 @@
 #define PR_DASSERVICE         PR_TSS
 
 #define MN_EXTUNITAUTH_M      "EXTUNITAUTH_M"
-#define PR_EXTUNITAUTH_M_S    "29"
-#define PR_EXTUNITAUTH_M      29
+#define PR_EXTUNITAUTH_M_S    "0"
+#define PR_EXTUNITAUTH_M      0
 
 #define MN_DUMMYREAD         "DummyRead"
 #define PR_DUMMYREAD_S       PR_TSS_S

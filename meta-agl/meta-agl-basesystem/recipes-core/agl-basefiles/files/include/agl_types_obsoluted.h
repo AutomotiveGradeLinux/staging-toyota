@@ -125,8 +125,12 @@ typedef uint32_t                  BOOL;
 #endif
 
 // AGL ASSERT MACRO
+#ifdef AGL_ASSERT_ON
 #define AGL_ASSERT_NOT_TESTED() \
 do {fprintf(stderr, "[%s][%s][%s:%d]AGL_ASSERT_NOT_TESTED.\n",  \
     program_invocation_short_name, __func__, __FILE__, __LINE__);} while(0)
-
+#else
+#define AGL_ASSERT_NOT_TESTED() \
+do {} while(0)
+#endif
 #endif /* _AGL_TYPES_OBSOLUTED_H_ */

@@ -21,7 +21,7 @@ DEPENDS += " \
     os-posixbasedos001legacylibrary \
     ss-interfaceunified \
     ss-romaccesslibrary \
-    os-vehicleparameterlibrary \
+    libcan-hal \
 "
 RDEPENDS_${PN} += " \
     ns-frameworkunified \
@@ -29,7 +29,7 @@ RDEPENDS_${PN} += " \
     os-posixbasedos001legacylibrary \
     ss-interfaceunified \
     ss-romaccesslibrary \
-    os-vehicleparameterlibrary \
+    libcan-hal \
 "
 
 EXTRA_MAKEFILE = " -f Makefile.server"

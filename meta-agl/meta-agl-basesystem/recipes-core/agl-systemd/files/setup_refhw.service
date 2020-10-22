@@ -1,6 +1,6 @@
 [Unit]
 Description=Initialize Reference Hardware Settings
-After=weston.service
+#After=weston.service
 
 [Service]
 EnvironmentFile=/tool_9E_SI/env.txt

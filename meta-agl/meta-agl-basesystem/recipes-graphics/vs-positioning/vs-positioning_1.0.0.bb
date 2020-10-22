@@ -22,11 +22,13 @@ DEPENDS += " \
     ns-frameworkunified \
     os-vehicleparameterlibrary \
     vs-positioningbaselibrary \
+    libpositioning-hal \
 "
 RDEPENDS_${PN} += " \
     ns-frameworkunified \
     os-vehicleparameterlibrary \
     vs-positioningbaselibrary \
+    libpositioning-hal \
 "
 EXTRA_MAKEFILE=" -f Makefile.client"
 EXTRA_OEMAKE += "${EXTRA_MAKEFILE}  -j 1 'CXX=${CXX} -Wl,--warn-unresolved-symbols' 'CC=${CC} -Wl,--warn-unresolved-symbols'"

@@ -4,7 +4,7 @@
 DISTRO_FEATURES_append = " systemd ${DISTRO_FEATURES_LIBC}"
 #VIRTUAL-RUNTIME_init_manager = "systemd"
 
-TOOLCHAIN_HOST_TASK_append += " nativesdk-os-rpclibrary-tool nativesdk-perl-module-app-cpan nativesdk-perl-module-json-pp" 
+TOOLCHAIN_HOST_TASK_append += " nativesdk-os-rpclibrary-tool nativesdk-perl-module-app-cpan nativesdk-perl-module-json-pp"
 
 # add the static lib to SDK toolchain
 SDKIMAGE_FEATURES_append += " staticdev-pkgs dev-pkgs tools-debug tools-profile headerfiles-pkgs nativesdk-os-rpclibrary-tool"

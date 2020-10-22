@@ -33,6 +33,7 @@ def qemu_boot_image(imagename, **kwargs):
     # subdirectory.
     args.dir = 'tmp/deploy/images'
     args.efi = kwargs.get('efi', False)
+    args.bootloader = kwargs.get('bootloader', None)
     args.machine = kwargs.get('machine', None)
     args.mem = kwargs.get('mem', '128M')
     qemu_use_kvm = get_bb_var("QEMU_USE_KVM")
@@ -48,6 +49,7 @@ def qemu_boot_image(imagename, **kwargs):
     args.overlay = kwargs.get('overlay', None)
     args.dry_run = kwargs.get('dry_run', False)
     args.secondary_network = kwargs.get('secondary_network', False)
+    args.uboot_enable = kwargs.get('uboot_enable', 'yes')
 
     qemu = QemuCommand(args)
     cmdline = qemu.command_line()
@@ -119,20 +121,29 @@ def verifyNotProvisioned(testInst, machine):
                       'Device already provisioned!? ' + stderr.decode() + stdout.decode())
 
 
-def verifyProvisioned(testInst, machine):
+def verifyProvisioned(testInst, machine, hwid=''):
     # Verify that device HAS provisioned.
+    # First loop while waiting for the device to boot.
     ran_ok = False
     for delay in [5, 5, 5, 5, 10, 10, 10, 10]:
         stdout, stderr, retcode = testInst.qemu_command('aktualizr-info')
-        if retcode == 0 and stderr == b'' and stdout.decode().find('Fetched metadata: yes') >= 0:
+        if retcode == 0 and stderr == b'':
             ran_ok = True
             break
         sleep(delay)
     testInst.assertTrue(ran_ok, 'aktualizr-info failed: ' + stderr.decode() + stdout.decode())
-
+    # Then wait for aktualizr to provision.
+    if stdout.decode().find('Fetched metadata: yes') < 0:
+        stdout, stderr, retcode = testInst.qemu_command('aktualizr-info --wait-until-provisioned')
+        testInst.assertFalse(retcode, 'aktualizr-info failed: ' + stderr.decode() + stdout.decode())
+        testInst.assertEqual(stderr, b'', 'aktualizr-info failed: ' + stderr.decode() + stdout.decode())
     testInst.assertIn(b'Device ID: ', stdout, 'Provisioning failed: ' + stderr.decode() + stdout.decode())
-    testInst.assertIn(b'Primary ecu hardware ID: ' + machine.encode(), stdout,
-                      'Provisioning failed: ' + stderr.decode() + stdout.decode())
+    if hwid == '':
+        testInst.assertIn(b'Primary ECU hardware ID: ' + machine.encode(), stdout,
+                  'Provisioning failed: ' + stderr.decode() + stdout.decode())
+    else:
+        testInst.assertIn(b'Primary ECU hardware ID: ' + hwid.encode(), stdout,
+                  'Provisioning failed: ' + stderr.decode() + stdout.decode())
     testInst.assertIn(b'Fetched metadata: yes', stdout, 'Provisioning failed: ' + stderr.decode() + stdout.decode())
     p = re.compile(r'Device ID: ([a-z0-9-]*)\n')
     m = p.search(stdout.decode())

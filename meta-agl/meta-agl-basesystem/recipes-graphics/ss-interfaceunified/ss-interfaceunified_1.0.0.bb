@@ -3,6 +3,8 @@ DESCRIPTION = "ss-interfaceunified to build AGL software"
 LICENSE     = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://${S}/${MAKE_DIR}/LICENSE;md5=2ee41112a44fe7014dce33e26468ba93"
 
+DIRFILES = ""
+
 inherit agl-basesystem-common
 FILES_${PN} += " \
     /usr/agl/lib/* \
@@ -13,6 +15,9 @@ FILES_${PN} += " \
     /usr/agl/share/systemmanager/scfg/* \
     /usr/agl/conf/systemmanager \
     /usr/agl/conf/systemmanager/* \
+    /usr/agl/conf/BS/ss/system_manager/rwdata/* \
+    /usr/agl/conf/BS/ss/power_service/rodata/* \
+    /usr/agl/conf/BS/ss/logger_service/rodata/* \
 "
 FILES_${PN}-dev += "/usr/agl/include/*"
  

@@ -2,16 +2,10 @@ LICENSE = "BSD-3-Clause"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-TRANSPORT_GIT_URI = "git://git.ti.com/keystone-rtos/transport.git"
-TRANSPORT_GIT_PROTOCOL = "git"
-TRANSPORT_GIT_BRANCH = "master"
+inherit ti-pdk-fetch
 
-# Below commit ID corresponds to "DEV.TRANSPORT.01.00.00.15A"
-TRANSPORT_SRCREV = "808affb9c2ba050902fb04f5bda2e5af491941d5"
+TI_PDK_COMP = "ti.transport"
 
-BRANCH = "${TRANSPORT_GIT_BRANCH}"
-SRC_URI = "${TRANSPORT_GIT_URI};protocol=${TRANSPORT_GIT_PROTOCOL};branch=${BRANCH}"
+PE = "1"
 
-SRCREV = "${TRANSPORT_SRCREV}"
-PV = "01.00.00.15A"
 INC_PR = "r0"

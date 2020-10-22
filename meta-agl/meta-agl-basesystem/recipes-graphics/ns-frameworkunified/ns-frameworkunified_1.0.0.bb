@@ -8,6 +8,8 @@ inherit agl-basesystem-common
 FILES_${PN} += " \
     /usr/agl/lib/* \
     /usr/agl/conf/ns_logger/* \
+    /nv/BS/ns/framework_unified/* \
+    /usr/agl/conf/BS/ns/framework_unified/rodata/* \
 "
 FILES_${PN}-staticdev += " \
     /usr/agl/lib/*.a \
@@ -23,7 +25,6 @@ S = "${WORKDIR}/git"
 
 # Common Dependencies
 DEPENDS += " \
-    os-vehicleparameterlibrary \
     os-posixbasedos001legacylibrary \
     ns-loglibrary \
     ns-commonlibrary \
@@ -31,7 +32,6 @@ DEPENDS += " \
     boost \
 "
 RDEPENDS_${PN} += " \
-    os-vehicleparameterlibrary \
     os-posixbasedos001legacylibrary \
     ns-loglibrary \
     ns-commonlibrary \

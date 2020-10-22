@@ -1,6 +1,5 @@
 SUMMARY     = "Navigation Service Binding"
 DESCRIPTION = "AGL Navigation Service API Binding"
-HOMEPAGE    = "https://github.com/AGLExport/agl-service-navigation"
 SECTION     = "apps"
 
 LICENSE     = "Apache-2.0"
@@ -15,3 +14,5 @@ PV = "0.1+git${SRCPV}"
 S  = "${WORKDIR}/git"
 
 inherit cmake aglwgt pkgconfig
+
+RDEPENDS_${PN} += "json-c libdbus-c++"

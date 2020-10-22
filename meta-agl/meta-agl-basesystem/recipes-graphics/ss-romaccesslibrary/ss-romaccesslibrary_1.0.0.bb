@@ -17,9 +17,13 @@ S = "${WORKDIR}/git"
 
 DEPENDS += " \
     ns-frameworkunified \
+    ns-commonlibrary \
+    ns-memorygpioaccesslibrary \
 "
 RDEPENDS_${PN} += " \
     ns-frameworkunified \
+    ns-commonlibrary \
+    ns-memorygpioaccesslibrary \
 "
 EXTRA_MAKEFILE=" -f Makefile.client"
 EXTRA_OEMAKE += "${EXTRA_MAKEFILE}"

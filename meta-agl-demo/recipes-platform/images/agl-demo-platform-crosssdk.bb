@@ -63,3 +63,19 @@ TOOLCHAIN_HOST_TASK_append = " nativesdk-perl-modules "
 # meeting to discuss the path forward (separate versus superset SDKs), this
 # should be reviewed after that.
 TOOLCHAIN_TARGET_TASK += "mosquitto-dev"
+
+# Add nlohmann-json to support building the speech services.
+# Required until either the agl-speech-framework feature is added as a
+# dependency of agl-demo, or the speech services are migrated into the
+# core profile.
+TOOLCHAIN_TARGET_TASK += "nlohmann-json-dev"
+
+# Add libstdc++-staticdev to support building agl-service-voice-high or
+# other users of the C++17 filesystem standard library feature.
+# Can be removed upon upgrade to gcc 9.x, as it will no longer be necessary.
+TOOLCHAIN_TARGET_TASK += "libstdc++-staticdev"
+
+# Add gcc-sanitizers to support building applications using the SDK with
+# AddressSanitizer support to detect use-after-frees along with other
+# memory issue.
+TOOLCHAIN_TARGET_TASK += "gcc-sanitizers"

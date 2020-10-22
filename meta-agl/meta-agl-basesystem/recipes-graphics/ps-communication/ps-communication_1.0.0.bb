@@ -17,9 +17,11 @@ S = "${WORKDIR}/git"
 
 DEPENDS += " \
     ns-frameworkunified \
+    ps-communicationsubcpu \
 "
 RDEPENDS_${PN} += " \
     ns-frameworkunified \
+    ps-communicationsubcpu \
 "
 
 EXTRA_MAKEFILE=" -f Makefile.client"

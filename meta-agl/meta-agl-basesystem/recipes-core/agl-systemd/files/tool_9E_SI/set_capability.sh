@@ -21,7 +21,7 @@ echo `cat ${CAP_LST}`
 #-----------------------------------------------------------------------
 # Capability
 
-df / --exclude-type=nfs > /dev/null
+df -T / | grep nfs > /dev/null
 IS_EMMC_BOOT=$?
 
 #*********************from init_nfs_cap.sh**************************
@@ -35,7 +35,7 @@ SKIPWARN=n
 #CAP_LST="/usr/debug/share/target/cap.lst"
 CAP_LST="/usr/target/cap.lst"
 
-if [ $IS_EMMC_BOOT -ne 0 ]; then
+if [ $IS_EMMC_BOOT -eq 0 ]; then
 if [ -f "${CAP_LST}" ];then
     echo "*** set capability for NFS environment ***"
   CAPPATH=/tmp/

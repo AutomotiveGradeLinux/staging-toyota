@@ -25,6 +25,7 @@ DEPENDS += " \
     ss-taskmanager \
     ns-frameworkunified \
     ns-commonlibrary \
+    os-eventlibrary \
     os-rpclibrary \
     os-vehicleparameterlibrary \
     libxml2-native \
@@ -36,6 +37,7 @@ RDEPENDS_${PN} += " \
     ss-taskmanager \
     ns-frameworkunified \
     ns-commonlibrary \
+    os-eventlibrary \
     os-rpclibrary \
     os-vehicleparameterlibrary \
 "

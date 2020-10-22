@@ -20,18 +20,18 @@ DEPENDS += " \
     ss-resourcemanager \
     ns-commonlibrary \
     ns-frameworkunified \
-    os-vehicleparameterlibrary \
     os-rpclibrary \
     os-eventlibrary \
+    libsoctemperature-hal \
 "
 RDEPENDS_${PN} += " \
     ss-interfaceunified \
     ss-resourcemanager \
     ns-commonlibrary \
     ns-frameworkunified \
-    os-vehicleparameterlibrary \
     os-rpclibrary \
     os-eventlibrary \
+    libsoctemperature-hal \
 "
 EXTRA_MAKEFILE=" -f Makefile.server"
 EXTRA_OEMAKE += "${EXTRA_MAKEFILE} -j 1 'CXX=${CXX} -Wl,--warn-unresolved-symbols' 'CC=${CC} -Wl,--warn-unresolved-symbols' "

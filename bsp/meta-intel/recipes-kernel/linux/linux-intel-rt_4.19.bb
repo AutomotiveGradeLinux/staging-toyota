@@ -5,7 +5,7 @@ require linux-intel.inc
 # to build multiple virtual/kernel providers, e.g. as dependency of
 # core-image-rt-sdk, core-image-rt.
 python () {
-    if d.getVar("PREFERRED_PROVIDER_virtual/kernel") != "linux-intel-rt":
+    if d.getVar("KERNEL_PACKAGE_NAME", True) == "kernel" and d.getVar("PREFERRED_PROVIDER_virtual/kernel") != "linux-intel-rt":
         raise bb.parse.SkipPackage("Set PREFERRED_PROVIDER_virtual/kernel to linux-intel-rt to enable it")
 }
 
@@ -17,8 +17,8 @@ KMETA_BRANCH = "yocto-4.19"
 
 DEPENDS += "elfutils-native openssl-native util-linux-native"
 
-LINUX_VERSION ?= "4.19.31"
-SRCREV_machine ?= "8b4bc03e27be3bd3b23249205d11185b2ed21ec6"
-SRCREV_meta ?= "d85f07e03c980eca5ffd5ba058985d6ed3a83801"
+LINUX_VERSION ?= "4.19.59"
+SRCREV_machine ?= "d6dc301c71aea6098e5e19ef3f265d0ba9981167"
+SRCREV_meta ?= "960be4218436fbbb3500e019f7abf02fa94e6aac"
 
 LINUX_KERNEL_TYPE = "preempt-rt"

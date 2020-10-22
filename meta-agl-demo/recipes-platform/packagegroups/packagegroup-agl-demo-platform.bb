@@ -20,22 +20,6 @@ RDEPENDS_${PN} += "\
     packagegroup-agl-demo \
     "
 
-MOST_DRIVERS = " \
-    most \
-    "
-MOST_DRIVERS_append_m3ulcb = " sllin"
-
-# HVAC dependencies depend on drivers above
-MOST_HVAC = " "
-MOST_HVAC_append = " \
-    ${MOST_DRIVERS} \
-    unicens-config \
-    agl-service-unicens \
-    "
-
-# @Chris: This needs to be checked!
-MOST_HVAC_dra7xx-evm = ""
-MOST_HVAC_dragonboard-410c = ""
 
 AGL_APPS = " \
     dashboard \
@@ -46,47 +30,60 @@ AGL_APPS = " \
     poiapp \
     radio \
     settings \
+    messaging \
     ${@bb.utils.contains('DISTRO_FEATURES', 'agl-devel', 'taskmanager' , '', d)} \
-    high-level-viwi-service \
-    agl-service-signal-composer \
+    ${@bb.utils.contains('DISTRO_FEATURES', 'agl-devel', 'unzip' , '', d)} \
     low-can-demo \
     virtual/mixer \
-    "
-
-AGL_APIS = " \
-    libnaviapi-agl \
+    ${@bb.utils.contains('IMAGE_FEATURES', 'agl-voiceagent-alexa', 'alexa-viewer' , '', d)} \
     "
 
 QTAGLEXTRAS = "${@bb.utils.contains("DISTRO_FEATURES", "agl-hmi-framework", " qtaglextras", "",d)}"
+QTAGLEXTRAS_append = " libqtappfw"
+
+# add support for websocket in Qt and QML
+QTAGLEXTRAS_append = " qtwebsockets qtwebsockets-qmlplugins"
+PREFERRED_PROVIDER_virtual/webruntime = "web-runtime"
+
+#QTAGLEXTRAS_append = " ${@bb.utils.contains('DISTRO_FEATURES', 'agl-devel', 'qtwebengine', '', d)}"
+#QTAGLEXTRAS_append = " qtsmarthome cinematicexperience qt5everywheredemo qt5-demo-extrafiles"
+#IMAGE_INSTALL_append = " qtwebengine-examples"
+
+# packages from hmi-framework aka homescreen-2017
+HOMESCREEN = "packagegroup-hmi-framework"
 
 # Cluster demo support.
-# ATM mapviewer is required for navigation map viewing when doing cluster
-# demos with the older navigation application.
-MAPVIEWER = "${@bb.utils.contains("PREFERRED_PROVIDER_virtual/navigation", "navigation", "mapviewer", "",d)}"
-CLUSTER_SUPPORT = "${@bb.utils.contains("DISTRO_FEATURES", "agl-cluster-demo-support", "${MAPVIEWER} cluster-demo-network-config", "",d)}"
+# ATM no cluster map viewer is supported with the older navigation application.
+MAPVIEWER = "${@bb.utils.contains("PREFERRED_RPROVIDER_virtual/navigation", "ondemandnavi", "tbtnavi", "",d)}"
+CLUSTER_SUPPORT_PACKAGES = " \
+	${MAPVIEWER} \
+	cluster-demo-network-config \
+	cluster-lin-bridging-config \
+	cluster-demo-simulator \
+"
+CLUSTER_SUPPORT = "${@bb.utils.contains("DISTRO_FEATURES", "agl-cluster-demo-support", "${CLUSTER_SUPPORT_PACKAGES}", "",d)}"
+
+# Hook for demo platform configuration
+# ATM used for:
+# 1) Adding udev configuration and scripts for supporting USB attached
+#    I2C devices for RTC and HVAC LED support.
+DEMO_PLATFORM_CONF = " demo-i2c-udev-conf "
 
 # Preload poi API key for demo if requested, and potentially maps for older
 # navigation application if it is configured.
 DEMO_MAPS_LOCALE ?= "uk"
-DEMO_PRELOAD_MAPS = "${@bb.utils.contains("PREFERRED_PROVIDER_virtual/navigation", "navigation", " navigation-maps-${DEMO_MAPS_LOCALE}", "",d)}"
-DEMO_PRELOAD = "${@bb.utils.contains("DISTRO_FEATURES", "agl-demo-preload", " ${DEMO_PRELOAD_MAPS} poiapp-api-key", "",d)}"
+DEMO_PRELOAD_MAPS = "${@bb.utils.contains("PREFERRED_RPROVIDER_virtual/navigation", "navigation", " navigation-maps-${DEMO_MAPS_LOCALE}", "",d)}"
 
-# Hook for demo platform configuration
-# ATM, only used to disable btwilink module on M3ULCB + Kingfisher by default,
-# setting DEMO_ENABLE_BTWILINK to "true" in local.conf / site.conf re-enables.
-DEMO_ENABLE_BTWILINK ?= ""
-DEMO_PLATFORM_CONF = ""
-DEMO_PLATFORM_CONF_append_m3ulcb = "${@bb.utils.contains("DEMO_ENABLE_BTWILINK", "true", "", " btwilink-disable-conf", d)}"
+# Preload only if agl-demo-preload is set
+DEMO_PRELOAD = "${@bb.utils.contains("DISTRO_FEATURES", "agl-demo-preload", " ${DEMO_PRELOAD_MAPS} ${DEMO_PLATFORM_CONF} poiapp-api-key", "",d)}"
+
 
 RDEPENDS_${PN}_append = " \
     qtquickcontrols2-agl \
     qtquickcontrols2-agl-style \
-    linux-firmware-ralink \
-    ${MOST_HVAC} \
     ${AGL_APPS} \
-    ${AGL_APIS} \
     ${QTAGLEXTRAS} \
     ${CLUSTER_SUPPORT} \
     ${DEMO_PRELOAD} \
-    ${DEMO_PLATFORM_CONF} \
+    ${HOMESCREEN} \
     "

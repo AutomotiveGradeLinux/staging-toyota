@@ -21,18 +21,18 @@ DEPENDS += " \
     ss-interfaceunified \
     ns-frameworkunified \
     ns-commonlibrary \
-    os-vehicleparameterlibrary \
     os-rpclibrary \
     os-eventlibrary \
+    libsoctemperature-hal \
 "
 RDEPENDS_${PN} += " \
     ns-frameworkunified \
     ss-interfaceunified \
     ns-commonlibrary \
     ns-frameworkunified \
-    os-vehicleparameterlibrary \
     os-rpclibrary \
     os-eventlibrary \
+    libsoctemperature-hal \
 "
 
 EXTRA_MAKEFILE=" -f Makefile.client"

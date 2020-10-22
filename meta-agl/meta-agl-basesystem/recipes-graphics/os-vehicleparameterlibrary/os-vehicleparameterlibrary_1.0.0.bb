@@ -16,7 +16,13 @@ SRCREV = "${AUTOREV}"
 PV = "1.0.0+gitr${SRCPV}"
 S = "${WORKDIR}/git"
 
-DEPENDS += " " 
+#Added here because they are native recipes, although they are AGLs
+DEPENDS += " \
+    ns-backupmanager \
+"
+RDEPENDS_${PN} += " \
+    ns-backupmanager \
+"
 
 EXTRA_MAKEFILE=" -f Makefile.client"
 EXTRA_OEMAKE += "${EXTRA_MAKEFILE}"

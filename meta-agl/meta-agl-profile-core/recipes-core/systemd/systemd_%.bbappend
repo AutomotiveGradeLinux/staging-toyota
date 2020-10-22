@@ -3,6 +3,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 SRC_URI += "\
     file://e2fsck.conf \
     file://canbus-can.network \
+    file://0001-network-add-CAN-Termination-tristate-option.patch \
     ${@bb.utils.contains('VIRTUAL-RUNTIME_net_manager','systemd','file://wired.network','',d)} \
 "
 
@@ -16,7 +17,7 @@ do_install_append() {
     install -m 644 -p -D ${WORKDIR}/e2fsck.conf ${D}${sysconfdir}/e2fsck.conf
 
     # Install canbus network script
-    install -m 0644 ${WORKDIR}/canbus-can.network ${D}${base_libdir}/systemd/network/60-canbus-can.network
+    install -m 0644 ${WORKDIR}/canbus-can.network ${D}${nonarch_base_libdir}/systemd/network/60-canbus-can.network
 
     if ${@bb.utils.contains('VIRTUAL-RUNTIME_net_manager','systemd','true','false',d)}; then
        # Install DHCP configuration for Ethernet adapters

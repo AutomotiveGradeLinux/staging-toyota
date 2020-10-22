@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ZIP_1="R-Car_Gen3_Series_Evaluation_Software_Package_for_Linux-weston5-20190802.zip"
-ZIP_2="R-Car_Gen3_Series_Evaluation_Software_Package_of_Linux_Drivers-weston5-20190802.zip"
+ZIP_2="R-Car_Gen3_Series_Evaluation_Software_Package_of_Linux_Drivers-weston5-20191021.zip"
 
 COPY_SCRIPT="$METADIR/bsp/meta-renesas-rcar-gen3/meta-rcar-gen3/docs/sample/copyscript/copy_evaproprietary_softwares.sh"
 
@@ -39,8 +39,17 @@ function log() {
 }
 
 function copy_mm_packages() {
-	# first clean up workdir
-	[[ -d $EXTRACT_DIR ]] && rm -r $EXTRACT_DIR
+    # first clean up workdir on need
+    if [ -d $EXTRACT_DIR ]; then
+        if [ -f $EXTRACT_DIR/$ZIP_1 -a -f $EXTRACT_DIR/$ZIP_2 ]; then
+            log   "The graphics and multimedia acceleration packages for R-Car Gen3 look already installed."
+            log   "To force their reinstallation, please, remove manually the directory:"
+            log   "           $EXTRACT_DIR"
+            log
+            return 0
+        fi
+        rm -r $EXTRACT_DIR
+    fi
 
     if [ -f $DOWNLOAD_DIR/$ZIP_1 -a -f $DOWNLOAD_DIR/$ZIP_2 ]; then
         mkdir -p $EXTRACT_DIR

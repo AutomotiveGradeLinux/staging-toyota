@@ -21,6 +21,7 @@ DEPENDS += " \
     ss-versionlibrary \
     ns-frameworkunified \
     ps-communication \
+    os-vehicleparameterlibrary \
 "
 RDEPENDS_${PN} += " \
     ss-interfaceunified \
@@ -28,6 +29,7 @@ RDEPENDS_${PN} += " \
     ns-frameworkunified \
     ps-communication \
     ss-versionlibrary \
+    os-vehicleparameterlibrary \
 "
 EXTRA_MAKEFILE=" -f Makefile.client"
 EXTRA_OEMAKE += "${EXTRA_MAKEFILE}"

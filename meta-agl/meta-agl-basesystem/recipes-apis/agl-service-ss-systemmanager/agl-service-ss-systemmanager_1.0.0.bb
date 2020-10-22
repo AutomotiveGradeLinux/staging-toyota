@@ -9,6 +9,12 @@ CAPABILITY = "cap_sys_nice,cap_setuid,cap_setgid,cap_sys_resource+ep:/usr/agl/bi
 
 FILES_${PN} += " /usr/agl/bin/* "
 
+FILES_${PN} += "/usr/agl/conf/BS/ss/system_manager/rwdata/sm_launch.cfg"
+FILES_${PN} += "/usr/agl/share/BS/ss/system_manager/rodata/version.txt"
+FILES_${PN} += "/usr/agl/share/BS/ss/system_manager/rodata/PhaseInfo.txt"
+
+FILES_${PN} += "/nv/BS/ss/system_manager/*"
+
 SRC_URI = "git://gerrit.automotivelinux.org/gerrit/staging/toyota.git;protocol=https;branch=sandbox/ToshikazuOhiwa/ss-systemmanager"
 SRCREV = "${AUTOREV}"
 
@@ -26,6 +32,10 @@ DEPENDS += " \
     os-vehicleparameterlibrary  \
     os-posixbasedos001legacylibrary  \
     os-rpclibrary  \
+    os-eventlibrary \
+    libpower-hal \
+    vs-clock \
+    vs-diagcode \
 "
 RDEPENDS_${PN} += " \
     agl-service-ss-resourcemanager \
@@ -38,6 +48,10 @@ RDEPENDS_${PN} += " \
     os-vehicleparameterlibrary  \
     os-posixbasedos001legacylibrary  \
     os-rpclibrary  \
+    os-eventlibrary \
+    libpower-hal \
+    vs-clock \
+    vs-diagcode \
 "
 
 EXTRA_MAKEFILE = " -f Makefile.server"

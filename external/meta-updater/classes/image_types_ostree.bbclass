@@ -5,6 +5,7 @@ OSTREE_KERNEL ??= "${KERNEL_IMAGETYPE}"
 OSTREE_ROOTFS ??= "${WORKDIR}/ostree-rootfs"
 OSTREE_COMMIT_SUBJECT ??= "Commit-id: ${IMAGE_NAME}"
 OSTREE_COMMIT_BODY ??= ""
+OSTREE_COMMIT_VERSION ??= "${DISTRO_VERSION}"
 OSTREE_UPDATE_SUMMARY ??= "0"
 OSTREE_DEPLOY_DEVICETREE ??= "0"
 
@@ -13,11 +14,11 @@ BUILD_OSTREE_TARBALL ??= "1"
 SYSTEMD_USED = "${@oe.utils.ifelse(d.getVar('VIRTUAL-RUNTIME_init_manager') == 'systemd', 'true', '')}"
 
 IMAGE_CMD_TAR = "tar --xattrs --xattrs-include=*"
-CONVERSION_CMD_tar = "touch ${IMGDEPLOYDIR}/${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.${type}; ${IMAGE_CMD_TAR} --numeric-owner -cf ${IMGDEPLOYDIR}/${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.${type}.tar -C ${OTA_IMAGE_ROOTFS} . || [ $? -eq 1 ]"
+CONVERSION_CMD_tar = "touch ${IMGDEPLOYDIR}/${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.${type}; ${IMAGE_CMD_TAR} --numeric-owner -cf ${IMGDEPLOYDIR}/${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.${type}.tar -C ${TAR_IMAGE_ROOTFS} . || [ $? -eq 1 ]"
 CONVERSIONTYPES_append = " tar"
 
 REQUIRED_DISTRO_FEATURES = "usrmerge"
-OTA_IMAGE_ROOTFS_task-image-ostree = "${OSTREE_ROOTFS}"
+TAR_IMAGE_ROOTFS_task-image-ostree = "${OSTREE_ROOTFS}"
 do_image_ostree[dirs] = "${OSTREE_ROOTFS}"
 do_image_ostree[cleandirs] = "${OSTREE_ROOTFS}"
 do_image_ostree[depends] = "coreutils-native:do_populate_sysroot virtual/kernel:do_deploy ${INITRAMFS_IMAGE}:do_image_complete"
@@ -78,15 +79,15 @@ IMAGE_CMD_ostree () {
             if [ "$(ls -A $dir)" ]; then
                 bbwarn "Data in /$dir directory is not preserved by OSTree. Consider moving it under /usr"
             fi
-
-            if [ -n "${SYSTEMD_USED}" ]; then
-                echo "d /var/rootdirs/${dir} 0755 root root -" >>${tmpfiles_conf}
-            else
-                echo "mkdir -p /var/rootdirs/${dir}; chown 755 /var/rootdirs/${dir}" >>${tmpfiles_conf}
-            fi
             rm -rf ${dir}
-            ln -sf var/rootdirs/${dir} ${dir}
         fi
+
+        if [ -n "${SYSTEMD_USED}" ]; then
+            echo "d /var/rootdirs/${dir} 0755 root root -" >>${tmpfiles_conf}
+        else
+            echo "mkdir -p /var/rootdirs/${dir}; chown 755 /var/rootdirs/${dir}" >>${tmpfiles_conf}
+        fi
+        ln -sf var/rootdirs/${dir} ${dir}
     done
 
     if [ -d root ] && [ ! -L root ]; then
@@ -95,14 +96,39 @@ IMAGE_CMD_ostree () {
         fi
 
         if [ -n "${SYSTEMD_USED}" ]; then
-            echo "d /var/roothome 0755 root root -" >>${tmpfiles_conf}
+            echo "d /var/roothome 0700 root root -" >>${tmpfiles_conf}
         else
-            echo "mkdir -p /var/roothome; chown 755 /var/roothome" >>${tmpfiles_conf}
+            echo "mkdir -p /var/roothome; chown 700 /var/roothome" >>${tmpfiles_conf}
         fi
 
         rm -rf root
         ln -sf var/roothome root
     fi
+
+    if [ -d usr/local ] && [ ! -L usr/local ]; then
+        if [ "$(ls -A usr/local)" ]; then
+            bbfatal "Data in /usr/local directory is not preserved by OSTree."
+        fi
+        rm -rf usr/local
+    fi
+
+    if [ -n "${SYSTEMD_USED}" ]; then
+        echo "d /var/usrlocal 0755 root root -" >>${tmpfiles_conf}
+    else
+        echo "mkdir -p /var/usrlocal; chown 755 /var/usrlocal" >>${tmpfiles_conf}
+    fi
+
+    dirs="bin etc games include lib man sbin share src"
+
+    for dir in ${dirs}; do
+        if [ -n "${SYSTEMD_USED}" ]; then
+            echo "d /var/usrlocal/${dir} 0755 root root -" >>${tmpfiles_conf}
+        else
+            echo "mkdir -p /var/usrlocal/${dir}; chown 755 /var/usrlocal/${dir}" >>${tmpfiles_conf}
+        fi
+    done
+
+    ln -sf ../var/usrlocal usr/local
 
     if [ "${KERNEL_IMAGETYPE}" = "fitImage" ]; then
         # this is a hack for ostree not to override init= in kernel cmdline -
@@ -143,7 +169,9 @@ IMAGE_CMD_ostreecommit () {
            --skip-if-unchanged \
            --branch=${OSTREE_BRANCHNAME} \
            --subject="${OSTREE_COMMIT_SUBJECT}" \
-           --body="${OSTREE_COMMIT_BODY}"
+           --body="${OSTREE_COMMIT_BODY}" \
+           --add-metadata-string=version="${OSTREE_COMMIT_VERSION}" \
+           --bind-ref="${OSTREE_BRANCHNAME}-${IMAGE_BASENAME}"
 
     if [ "${OSTREE_UPDATE_SUMMARY}" = "1" ]; then
         ostree --repo=${OSTREE_REPO} summary -u
@@ -160,13 +188,20 @@ IMAGE_CMD_ostreecommit () {
 IMAGE_TYPEDEP_ostreepush = "ostreecommit"
 do_image_ostreepush[depends] += "aktualizr-native:do_populate_sysroot ca-certificates-native:do_populate_sysroot"
 IMAGE_CMD_ostreepush () {
-    # Print warnings if credetials are not set or if the file has not been found.
+    # send a copy of the repo manifest to backend if available
+    local SEND_MANIFEST=""
+    # check if garage-push supports the --repo-manifest option before trying
+    if $(garage-push --help | grep -q '^\s*--repo-manifest') && [ -f ${IMAGE_ROOTFS}${sysconfdir}/manifest.xml ]; then
+        SEND_MANIFEST="--repo-manifest ${IMAGE_ROOTFS}${sysconfdir}/manifest.xml"
+    fi
+
     if [ -n "${SOTA_PACKED_CREDENTIALS}" ]; then
         if [ -e ${SOTA_PACKED_CREDENTIALS} ]; then
             garage-push -vv --repo=${OSTREE_REPO} \
                         --ref=${OSTREE_BRANCHNAME} \
                         --credentials=${SOTA_PACKED_CREDENTIALS} \
-                        --cacert=${STAGING_ETCDIR_NATIVE}/ssl/certs/ca-certificates.crt
+                        --cacert=${STAGING_ETCDIR_NATIVE}/ssl/certs/ca-certificates.crt \
+                        $SEND_MANIFEST
         else
             bbwarn "SOTA_PACKED_CREDENTIALS file does not exist."
         fi
@@ -203,19 +238,29 @@ IMAGE_CMD_garagesign () {
         target_version=${ostree_target_hash}
         if [ -n "${GARAGE_TARGET_VERSION}" ]; then
             target_version=${GARAGE_TARGET_VERSION}
-            bbwarn "Target version is overriden with GARAGE_TARGET_VERSION variable. It is a dangerous operation, make sure you've read the respective secion in meta-updater/README.adoc"
+            bbwarn "Target version is overriden with GARAGE_TARGET_VERSION variable. This is a dangerous operation! See https://docs.ota.here.com/ota-client/latest/build-configuration.html#_overriding_target_version"
         elif [ -e "${STAGING_DATADIR_NATIVE}/target_version" ]; then
             target_version=$(cat "${STAGING_DATADIR_NATIVE}/target_version")
-            bbwarn "Target version is overriden with target_version file. It is a dangerous operation, make sure you've read the respective secion in meta-updater/README.adoc"
+            bbwarn "Target version is overriden with target_version file. This is a dangerous operation! See https://docs.ota.here.com/ota-client/latest/build-configuration.html#_overriding_target_version"
         fi
 
         # Push may fail due to race condition when multiple build machines try to push simultaneously
         #   in which case targets.json should be pulled again and the whole procedure repeated
         push_success=0
-	target_url=""
-	if [ -n "${GARAGE_TARGET_URL}" ]; then
-		target_url='--url ${GARAGE_TARGET_URL}'
-	fi
+        target_url=""
+        if [ -n "${GARAGE_TARGET_URL}" ]; then
+            target_url="--url ${GARAGE_TARGET_URL}"
+        fi
+        target_expiry=""
+        if [ -n "${GARAGE_TARGET_EXPIRES}" ] && [ -n "${GARAGE_TARGET_EXPIRE_AFTER}" ]; then
+            bbfatal "Both GARAGE_TARGET_EXPIRES and GARAGE_TARGET_EXPIRE_AFTER are set. Only one can be set at a time."
+        elif [ -n "${GARAGE_TARGET_EXPIRES}" ]; then
+            target_expiry="--expires ${GARAGE_TARGET_EXPIRES}"
+        elif [ -n "${GARAGE_TARGET_EXPIRE_AFTER}" ]; then
+            target_expiry="--expire-after ${GARAGE_TARGET_EXPIRE_AFTER}"
+        else
+            target_expiry="--expire-after 1M"
+        fi
 
         for push_retries in $( seq 3 ); do
             garage-sign targets pull --repo tufrepo \
@@ -229,8 +274,15 @@ IMAGE_CMD_garagesign () {
                                     ${target_url} \
                                     --sha256 ${ostree_target_hash} \
                                     --hardwareids ${SOTA_HARDWARE_ID}
+            if [ -n "${GARAGE_CUSTOMIZE_TARGET}" ]; then
+                bbplain "Running command(${GARAGE_CUSTOMIZE_TARGET}) to customize target"
+                ${GARAGE_CUSTOMIZE_TARGET} \
+                    ${GARAGE_SIGN_REPO}/tufrepo/roles/unsigned/targets.json \
+                    ${GARAGE_TARGET_NAME}-${target_version}
+            fi
             garage-sign targets sign --repo tufrepo \
                                      --home-dir ${GARAGE_SIGN_REPO} \
+                                     ${target_expiry} \
                                      --key-name=targets
             errcode=0
             garage-sign targets push --repo tufrepo \

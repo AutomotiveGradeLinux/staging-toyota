@@ -33,20 +33,20 @@ echo "AREA=$VEHICLEPARAMETERLIBRARY_AREA" >> /tmp/udev_device.env
 ## For btservice initial data.
 #chown -R agl:agl /nv/backup/D_BK_CA_BT_MANAGEMENT 
 ## Sprint 29 PFDRECThread
-mkdir -p /ramd/log/frameworkunifiedlog/diag
-#chmod 777 /ramd/log/frameworkunifiedlog/diag
-touch /dev/mmcblk0p9
-chmod 660 /dev/mmcblk0p9
+mkdir -p /ramd/BS/ns/backup_manager/rwdata
+mkdir -p /ramd/BS/ss/logger_service/rwdata/frameworkunifiedlog/diag
+restorecon -R /ramd
+#chmod 777 /ramd/BS/ss/logger_service/rwdata/frameworkunifiedlog/diag
 ## Sprint 29 communication
 #chmod -R 777 /home/root/.app_can_d
 # TODO:for bluetooth_service
 #chmod 777 /usr/agl/share
 
-if ! `df / --exclude-type=nfs > /dev/null`; then
-cp /sbin/insmod.kmod /tmp/insmod.kmod
-ln -s -f /tmp/insmod.kmod /sbin/insmod
-setcap cap_sys_module+ep /tmp/insmod.kmod
-fi
+#if `df -T / | grep nfs > /dev/null`; then
+#cp /sbin/insmod.kmod /tmp/insmod.kmod
+#ln -s -f /tmp/insmod.kmod /sbin/insmod
+#setcap cap_sys_module+ep /tmp/insmod.kmod
+#fi
 
 ## Sprint 32 Positioning
 #chmod 777 /dev/ttySC3
