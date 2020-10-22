@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,17 +30,16 @@
 #include <crashdetector/ss_crashdetector.h>
 #include <system_service/ss_system_manager_protocol.h>
 #include <system_service/ss_power_service_protocol.h>
-#include <system_service/ss_sm_rom_access.h>
 #include <heartbeat/ss_hb_if.h>
 #include <other_service/PosixBasedOS001ClockCycleApi.h>
 #include <system_service/ss_string_maps.h>
 #include <system_service/ss_templates.h>
-#include <system_service/ss_boot_map.h>
 #include <system_service/ss_system_manager_conf.h>
 #include <system_service/ss_system_manager_protocol_local.h>
 #include <system_service/ss_logger_store_logs.h>
 #include <native_service/ns_logger_if.h>
 #include <native_service/frameworkunified_types.h>
+#include <power_hal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -59,6 +58,21 @@
 #include "ss_system_thread_info.h"
 #include "ss_system_memory_monitor.h"
 #include "ss_sm_dynamic_launcher.h"
+
+static_assert((SS_SM_PROG_UPDATE_STATE_NONE == PWR_PROGUPDATE_STATE_NONE),
+  "SS_SM_PROG_UPDATE_STATE_NONE should be equal to "
+  "PWR_PROGUPDATE_STATE_NONE");
+static_assert((SS_SM_PROG_UPDATE_STATE_UPDATED == PWR_PROGUPDATE_STATE_UPDATED),
+  "SS_SM_PROG_UPDATE_STATE_UPDATED should be equal to "
+  "PWR_PROGUPDATE_STATE_UPDATED");
+static_assert((SS_SM_PROG_UPDATE_STATE_MAP_UPDATED ==
+  PWR_PROGUPDATE_STATE_MAP_UPDATED),
+  "SS_SM_PROG_UPDATE_STATE_MAP_UPDATED should be equal to "
+  "PWR_PROGUPDATE_STATE_MAP_UPDATED");
+static_assert((SS_SM_PROG_UPDATE_STATE_MAPDIFF_UPDATED ==
+  PWR_PROGUPDATE_STATE_MAPDIFF_UPDATED),
+  "SS_SM_PROG_UPDATE_STATE_MAPDIFF_UPDATED should be equal to "
+  "PWR_PROGUPDATE_STATE_MAPDIFF_UPDATED");
 
 #define SM_SHUTDOWN_COMPLETE_MONITOR_TIMEOUT 60
 
@@ -302,9 +316,9 @@ class CSystemManager {
   EFrameworkunifiedStatus OnLVI2Notify(HANDLE hApp);
 
   EFrameworkunifiedStatus OnModuleStartCompleteResponse(HANDLE hApp);  /// Process start complete from client
-  EFrameworkunifiedStatus OnModuleStopCompleteResponse(HANDLE hApp) noexcept;    /// Process stop Complete from client
-  EFrameworkunifiedStatus OnGetStartExtInfo(HANDLE hApp) noexcept;
-  EFrameworkunifiedStatus OnGetStopExtInfo(HANDLE hApp) noexcept;
+  EFrameworkunifiedStatus OnModuleStopCompleteResponse(HANDLE hApp);    /// Process stop Complete from client
+  EFrameworkunifiedStatus OnGetStartExtInfo(HANDLE hApp);
+  EFrameworkunifiedStatus OnGetStopExtInfo(HANDLE hApp);
   EFrameworkunifiedStatus OnModuleStopCompleteNotification(HANDLE hApp);
   EFrameworkunifiedStatus ProcessModuleStopCompleteResponse(HANDLE hApp,
                          PCSTR  f_moduleName);
@@ -322,7 +336,7 @@ class CSystemManager {
   EFrameworkunifiedStatus OnLaunchGroupTriggerProcessResponseTimerExpiry(HANDLE hApp);
 
   EFrameworkunifiedStatus OnNppStopComplete(HANDLE hApp);      /// Process stop Complete from NPPService
-  EFrameworkunifiedStatus OnOpenSession(HANDLE hApp) noexcept;     /// Process open session request
+  EFrameworkunifiedStatus OnOpenSession(HANDLE hApp);     /// Process open session request
   EFrameworkunifiedStatus OnCloseSession(HANDLE hApp);         /// Process close session acknowledgment
 
   EFrameworkunifiedStatus CloseApplication(HANDLE hApp);
@@ -336,51 +350,36 @@ class CSystemManager {
   EFrameworkunifiedStatus OnNPPReadyStatusCallback(HANDLE hApp);
   EFrameworkunifiedStatus OnNPPReadyEventCallback(HANDLE hApp);
   EFrameworkunifiedStatus OnWakeupCallback(HANDLE hApp);
-  EFrameworkunifiedStatus OnPowerRequestCallback(HANDLE hApp) noexcept;
+  EFrameworkunifiedStatus OnPowerRequestCallback(HANDLE hApp);
   EFrameworkunifiedStatus OnBackupMgrAvailCallback(HANDLE hApp);
   EFrameworkunifiedStatus OnShutdownModulesRequest(HANDLE hApp);
-  EFrameworkunifiedStatus OnSystemModeInfoRequest(HANDLE hApp) noexcept;
+  EFrameworkunifiedStatus OnSystemModeInfoRequest(HANDLE hApp);
   EFrameworkunifiedStatus ClearDramBackupInfo(HANDLE hApp);
-  EFrameworkunifiedStatus OnInitCompReportCallback(HANDLE hApp) noexcept;
+  EFrameworkunifiedStatus OnInitCompReportCallback(HANDLE hApp);
   EFrameworkunifiedStatus SetEnvVariableForVupMode(BOOL bIsVupMode);
-  static int CreateSyslogd();
   static int CreateRtUsb();
-  EFrameworkunifiedStatus PerformMountResetAll();
-  EFrameworkunifiedStatus PerformMountResetRamd(const HANDLE h_app, const bool isMountRamd);
-  EFrameworkunifiedStatus PerformMountNand();
-  EFrameworkunifiedStatus PerformMountRamd();
-  EFrameworkunifiedStatus PerformUmountNand();
-  EFrameworkunifiedStatus PerformUmountRamd();
-  EFrameworkunifiedStatus PerformForceUmountRamd();
-  EFrameworkunifiedStatus PerformFinalUmount(BOOL bIsNeedLog);
   EFrameworkunifiedStatus SecureChipOff();
-  EFrameworkunifiedStatus OnRebootNotification(HANDLE hApp);
   EFrameworkunifiedStatus CallStopCompleteHandler(HANDLE hApp, BOOL bISDetectTimeout = FALSE);
-  EFrameworkunifiedStatus OnVarCodeSetRequest(HANDLE hApp) noexcept;
-  EFrameworkunifiedStatus OnSetBootloaderInfoRequest(HANDLE hApp) noexcept;
 
-  EFrameworkunifiedStatus OnGetBootloaderInfoRequest( HANDLE hApp );
-  EFrameworkunifiedStatus On_CWORD56_HeartBeatRequest(HANDLE hApp) noexcept;
+  EFrameworkunifiedStatus On_CWORD56_HeartBeatRequest(HANDLE hApp);
   EFrameworkunifiedStatus On_CWORD56_HeartBeatResponseIntervalTimerExpiry(HANDLE hApp);
   EFrameworkunifiedStatus OnGroupLaunchWaitTimeout(HANDLE hApp);
   EFrameworkunifiedStatus OnModuleConnectWaitTimeout(HANDLE hApp);
   EFrameworkunifiedStatus OnStartRespMonitorTimeout(HANDLE hApp);
   EFrameworkunifiedStatus OnShutdownCompleteMonitorTimeout(HANDLE hApp);
-  EFrameworkunifiedStatus PerformCpuReset(HANDLE hApp, ESMCpuResetReason f_eSmCpuResetReason, std::string f_messageStr = "") noexcept;  // NOLINT
-  EFrameworkunifiedStatus OnCpuResetRequest(HANDLE hApp) noexcept;
-  EFrameworkunifiedStatus OnSetBootModeRequest(HANDLE hApp) noexcept;
-  EFrameworkunifiedStatus OnSetDataResetModeRequest(HANDLE hApp) noexcept;
-  EFrameworkunifiedStatus OnSetProgUpdateStateRequest(HANDLE hApp) noexcept;
+  EFrameworkunifiedStatus PerformCpuReset(HANDLE hApp, ESMCpuResetReason f_eSmCpuResetReason, std::string f_messageStr = "");  // NOLINT
+  EFrameworkunifiedStatus OnCpuResetRequest(HANDLE hApp);
+  EFrameworkunifiedStatus OnSetDataResetModeRequest(HANDLE hApp);
+  EFrameworkunifiedStatus OnSetProgUpdateStateRequest(HANDLE hApp);
   EFrameworkunifiedStatus OnLaunchGroupTriggerProcessResponse(HANDLE hApp);
-  EFrameworkunifiedStatus OnSetWakeupOrderRequest(HANDLE hApp) noexcept;
-  EFrameworkunifiedStatus OnSetNextWakeupTypeRequest(HANDLE hApp) noexcept;
+  EFrameworkunifiedStatus OnSetNextWakeupTypeRequest(HANDLE hApp);
 
-  LBM_UINT32 GetDramStatusInfo(const HANDLE h_app);
-  void     SetDramStatusInfo(LBM_UINT32 f_state);
-
+  bool GetDramPowerStatusInfo(const HANDLE h_app);
+  bool GetDramStoreStatusInfo(const HANDLE h_app);
+  bool GetSyscomPowerStatusInfo(const HANDLE h_app);
   //
   // Start Confirmation, Get _CWORD56_ Version callback functions
-  EFrameworkunifiedStatus OnSetStartupConfirmationDataRequest(HANDLE hApp) noexcept;
+  EFrameworkunifiedStatus OnSetStartupConfirmationDataRequest(HANDLE hApp);
 
   void SystemManagerDebugDump(HANDLE hApp);
 
@@ -401,9 +400,6 @@ class CSystemManager {
   UI_32                    m_ActiveGroupId;               // Modules of Group to whom START/STOP has been sent
   wakeInfo                 m_Wake;                        // WakeUp data from power
   EPWR_WAKEUP_FACTOR_TYPE  m_StartUpReason;               // System Manager preserve start up reason
-  LBM_RAM_t                m_Lbm_Ram;
-  LBM_RAM_t               *m_BootMemory;                  // Boot If
-  UI_32                    m_BootMemoryMapSize;           // Size of Boot If
   ESMDataResetModeInfo     m_DataResetMode;               // Data Reset Mode
   SMProgUpdateState        m_ProgUpdateState;             // ProgUpdate State
   ESMNextWakeupType        m_NextWakeupType;              // Next Progupdate State
@@ -418,8 +414,6 @@ class CSystemManager {
   UI_32                    m_NbrDebugDumpRspnRecv;        // Total number of debug dump responses received.
   BOOL                     m_isRcvModeInfo;
   SystemModeInfo           m_SystemModeInfo;  // System Mode Info, SM to read data from persistent file at start
-  ESMBootModeInfo          m_BootMode;                    // Application or Programming
-  std::vector<std::string> ListOfServicesAuthorizedToSetBootMode;
   SS_String                m_BinaryFilesPath;             // Store binary files path
   SS_String                m_ConfigFilesPath;             // Store config files path
   ConfigurationData        m_SMConfig;                    // Configuration Data of System Manager and its threads
@@ -471,10 +465,12 @@ class CSystemManager {
 
   bool  m_InitialBoot;
 
+  PsmFactorT m_ResetFactor;     //  reset(start-up) factor.
+
   void SetCmdHist(std::string cmd, cmdHist &hist, cmdHistIter &it, std::string sender);  // NOLINT
 
   // ILGRST or ACCOFFON Logging
-  bool     StoreDebugLogs(SS_STORELOGS_OPE_TYPE type);
+  bool StoreDebugLogs(const HANDLE h_app, SS_STORELOGS_OPE_TYPE);
 
   UI_32 InProgressStateToSendMsg() const;
   SMModuleState InProgressStateToState() const;
@@ -505,22 +501,6 @@ class CSystemManager {
   ////     enum<=>enum maps                                             ////
   //
   //
-  //  Control Mode <=> Limp Home Cutoff Mode enum maps
-  std::map<ECONTROL_MODE, EPWR_LHC_TYPE> m_Control_to_LimpHomeCutoffMode_map;
-  std::map<EPWR_LHC_TYPE, ECONTROL_MODE> m_LimpHomeCutoff_to_ControlMode_map;
-  //
-  //  Control Mode <=> Production Mode enum maps
-  std::map<ECONTROL_MODE, EPWR_PROD_MODE_TYPE> m_Control_to_ProductionMode_map;
-  std::map<EPWR_PROD_MODE_TYPE, ECONTROL_MODE> m_Production_to_ControlMode_map;
-  //
-  //  Control Mode <=> Transport Mode enum maps
-  std::map<ECONTROL_MODE, EPWR_TRANSPORT_MODE_TYPE> m_Control_to_TransportMode_map;
-  std::map<EPWR_TRANSPORT_MODE_TYPE, ECONTROL_MODE> m_Transport_to_ControlMode_map;
-  //
-  //  PowerService SystemModeInfo <=> SystemServices BootMode enum maps
-  std::map<EPWR_SYSTEM_MODE_INFO, ESMBootModeInfo> m_PSSMI_to_SSBootMode_map;
-  std::map<ESMBootModeInfo, EPWR_SYSTEM_MODE_INFO> m_SSBootMode_to_PSSMI_map;
-  //
   //  EPWR_POWER_STATE_TYPE <=> BOOL
   std::map<EPWR_POWER_STATE_TYPE, BOOL>    m_PowerType_to_SSBoolEnumMap;
   std::map<EPWR_POWER_STATE_TYPE, EPWR_USER_MODE_TYPE>
@@ -528,17 +508,9 @@ class CSystemManager {
   std::map<BOOL, EPWR_POWER_STATE_TYPE>    m_SSBool_to_PowerTypeEnumMap;
   //
   //  User Mode
-  std::map<EUSER_MODE, EPWR_USER_MODE_TYPE>  m_ROM_to_SSUserModeEnumMap;
-  std::map<EPWR_USER_MODE_TYPE, EUSER_MODE>  m_SS_to_ROMUserModeEnumMap;
   std::map<EPWR_USER_MODE_TYPE, BOOL>    m_SSUserMode_to_SSBoolEnumMap;
   std::map<BOOL, EPWR_USER_MODE_TYPE>    m_SSBool_to_SSUserModeEnumMap;
 
-  std::map<UI_32, LBM_UINT32>   m_PsmSysupDram_to_SysupDramMap;
-  std::map<UI_32, LBM_UINT32>   m_PsmStartStatus_to_SysupCndMap;
-  std::map<UI_32, LBM_UINT32>   m_PsmComSts_to_SubcpuStsMap;
-  std::map<UI_32, LBM_UINT32>   m_PsmDramSts_to_SdramStsMap;
-  std::map<UI_32, LBM_UINT32>   m_PsmDramSts_to_RamjudgeStsMap;
-  std::map<UI_32, LBM_UINT32>   m_PsmDramSts_to_SelfRefreshMap;
   //
   ////     End of enum<=>enum maps                                      ////
   ////******************************************************************////
@@ -559,13 +531,13 @@ class CSystemManager {
 
   // Wakeup from Power
   EFrameworkunifiedStatus BeginStartup(HANDLE hApp);
-  EFrameworkunifiedStatus start_all_modules_of_group(HANDLE hApp, UI_32 f_ui32GroupNumber) noexcept;
+  EFrameworkunifiedStatus start_all_modules_of_group(HANDLE hApp, UI_32 f_ui32GroupNumber);
   EFrameworkunifiedStatus send_power_request_complete_response(HANDLE hApp,
-                           std::string pStr) noexcept;
+                           std::string pStr);
   BOOL     have_all_services_start_completed(const SMModuleState f_moduleState);
 
   // Power Off from Power
-  EFrameworkunifiedStatus PublishPowerOnOffNotification(HANDLE hApp) noexcept;
+  EFrameworkunifiedStatus PublishPowerOnOffNotification(HANDLE hApp);
 
   // Shutdown from Power
   EFrameworkunifiedStatus stop_all_modules_of_group(HANDLE hApp);
@@ -577,6 +549,8 @@ class CSystemManager {
   EFrameworkunifiedStatus send_shutdown_complete_response(HANDLE hApp);
   EFrameworkunifiedStatus SendShutdownResponseMessage(HANDLE hApp);
 
+  PsmFactorT GetResetFactor(PCSTR f_module_name, BOOL f_user_reset);
+  PsmFactorT GetResetFactor(const ModuleLaunchListIter f_module_iter, BOOL f_user_reset);
 
   EFrameworkunifiedStatus ValidateUserModeMessage(HANDLE hApp, EPWR_USER_MODE_TYPE &l_eUserModeState);  // NOLINT
 
@@ -588,71 +562,6 @@ class CSystemManager {
 
 
   VOID ReadUsingVMPlayerEnvironmentVariable();
-
-  EFrameworkunifiedStatus GetBootMode(ROM_AccessIf & f_cRomAccess
-                        , ESMBootModeInfo & f_BootMode);  // NOLINT
-  EFrameworkunifiedStatus GetLastUserMode(ROM_AccessIf & f_cRomAccess  // NOLINT
-                           , EPWR_USER_MODE_TYPE& f_lastUserMode);  // NOLINT
-  EFrameworkunifiedStatus SaveLastUserModeToNVM(EPWR_USER_MODE_TYPE l_eUserModeState);
-  EFrameworkunifiedStatus GetLimpHomeCutoffMode(ROM_AccessIf & f_cRomAccess
-                                 , EPWR_LHC_TYPE& f_limpHomeCutoff);  // NOLINT
-  EFrameworkunifiedStatus GetProductionMode(ROM_AccessIf & f_cRomAccess
-                             , EPWR_PROD_MODE_TYPE& f_productionMode);  // NOLINT
-  EFrameworkunifiedStatus GetSignature(ROM_AccessIf & f_cRomAccess
-                        , UI_32 * pData);
-  EFrameworkunifiedStatus GetTransportMode(ROM_AccessIf & f_cRomAccess
-                            , EPWR_TRANSPORT_MODE_TYPE& f_transportMode);  // NOLINT
-  EFrameworkunifiedStatus GetDataResetMode(ROM_AccessIf & f_cRomAccess
-                            , ESMDataResetModeInfo& f_dataResetMode, bool isFast = false);  // NOLINT
-  EFrameworkunifiedStatus GetResetCount(ROM_AccessIf & f_cRomAccess
-                            , UI_32& f_resetCount);  // NOLINT
-  EFrameworkunifiedStatus GetLastIlgReset(ROM_AccessIf & f_cRomAccess
-                            , BOOL& f_lastIlgReset);  // NOLINT
-  EFrameworkunifiedStatus GetProgUpdateState(ROM_AccessIf & f_cRomAccess
-                            , SMProgUpdateState& f_progUpdateState);  // NOLINT
-  EFrameworkunifiedStatus GetErrLogCount(ROM_AccessIf & f_cRomAccess
-                            , UI_32& f_errLogCount);  // NOLINT
-  EFrameworkunifiedStatus GetNextWakeupType(ROM_AccessIf & f_cRomAccess
-                            , ESMNextWakeupType& f_wakeupType);  // NOLINT
-  EFrameworkunifiedStatus SetActiveFlashloader(ROM_AccessIf & f_cRomAccess
-                                 , EACTIVE_FLASHLOADER f_FlashloaderMode);
-  EFrameworkunifiedStatus SetBootMode(ROM_AccessIf & f_cRomAccess
-                        , ESMBootModeInfo f_BootMode);
-  EFrameworkunifiedStatus SetLastUserMode(ROM_AccessIf & f_cRomAccess
-                           , EPWR_USER_MODE_TYPE f_lastUserMode);
-  EFrameworkunifiedStatus SetLimpHomeCutoffMode(ROM_AccessIf & f_cRomAccess
-                                 , EPWR_LHC_TYPE f_limpHomeCutoff);
-  EFrameworkunifiedStatus SetProductionMode(ROM_AccessIf & f_cRomAccess
-                             , EPWR_PROD_MODE_TYPE f_productionMode);
-  EFrameworkunifiedStatus SetSignature(ROM_AccessIf & f_cRomAccess
-                        , UI_32 Data);
-  EFrameworkunifiedStatus SetTransportMode(ROM_AccessIf & f_cRomAccess
-                            , EPWR_TRANSPORT_MODE_TYPE f_transportMode);
-  EFrameworkunifiedStatus SetDataResetMode(ROM_AccessIf & f_cRomAccess
-                            , ESMDataResetModeInfo f_dataResetMode);
-  EFrameworkunifiedStatus SetResetCount(ROM_AccessIf & f_cRomAccess
-                            , UI_32 f_resetCount);
-  EFrameworkunifiedStatus SetLastIlgReset(ROM_AccessIf & f_cRomAccess
-                            , BOOL f_lastIlgReset);
-  EFrameworkunifiedStatus SetProgUpdateState(ROM_AccessIf & f_cRomAccess
-                            , SMProgUpdateState f_progUpdateState);
-  EFrameworkunifiedStatus SetErrLogCount(ROM_AccessIf & f_cRomAccess
-                            , UI_32 f_errLogCount);
-  EFrameworkunifiedStatus SetNextWakeupType(ROM_AccessIf & f_cRomAccess
-                            , ESMNextWakeupType f_wakeupType);
-  EFrameworkunifiedStatus SetProductPrivate(ROM_AccessIf & f_cRomAccess
-                            , UI_8 buf[ROM_PRODUCT_PRIVATE_MAX]);
-  EFrameworkunifiedStatus PublishBootModeNotification(HANDLE hApp) noexcept;
-  EFrameworkunifiedStatus ReturnBootModeAndStatus(HANDLE hApp
-                                    , SS_SystemManagerProtocol protocolID
-                                    , PCSTR                    p_sIDName
-                                    , ESMBootModeInfo          f_BootMode
-                                    , EFrameworkunifiedStatus               eFrameworkunifiedStatus) noexcept;
-  EFrameworkunifiedStatus ValidateBootModeMessage(HANDLE hApp
-                                    , ESMBootModeInfo &l_eBootModeState) noexcept;  // NOLINT
-  EFrameworkunifiedStatus ValidateRequester(HANDLE hApp
-                              , std::vector<std::string> &L
-                              , PCSTR p_sActionName);
 
   VOID       InitiateAllGroupsShutdown(HANDLE hApp);
   VOID       SendDeferMsg(HANDLE hApp);
@@ -682,24 +591,23 @@ class CSystemManager {
 
   EFrameworkunifiedStatus RemoveModuleEntryFromHB(HANDLE hApp, const CHAR *f_ModuleName);
 
-  EFrameworkunifiedStatus PublishUserModeNotification(HANDLE hApp) noexcept;
+  EFrameworkunifiedStatus PublishUserModeNotification(HANDLE hApp);
   EFrameworkunifiedStatus PerformPowerOnOffUserModePublication(
                   HANDLE hApp,
-                  const char * p_NotificationStr) noexcept;
+                  const char * p_NotificationStr);
   EFrameworkunifiedStatus SendSystemModeInfoResponse(
           HANDLE hApp,
-          EPWR_STARTUP_STAGE_TYPE f_startupStage) noexcept;
+          EPWR_STARTUP_STAGE_TYPE f_startupStage);
 
   VOID     SYSTEMMANAGERLOG_StartupConfirmationMsg(EPWR_SC_MSG_STRUCT & f_scMsg);  // NOLINT
-  VOID     LogGroupModulesState(UI_32 f_groupId, std::string pStr) noexcept;
-  VOID     LogAllGroupModulesState(std::string pStr) noexcept;
+  VOID     LogGroupModulesState(UI_32 f_groupId, std::string pStr);
+  VOID     LogAllGroupModulesState(std::string pStr);
 
   EFrameworkunifiedStatus ProcessGroupAsStarted(HANDLE hApp
                   , GroupLaunchMapIter f_GroupIterator);
   EFrameworkunifiedStatus ProcessGroupAsStarted(HANDLE hApp
                   , UI_32 f_groupId);
-  EFrameworkunifiedStatus GetModuleIterator(PCSTR          f_moduleName
-                , ModuleLaunchListIter & f_moduleIter) noexcept;  // NOLINT
+  EFrameworkunifiedStatus GetModuleIterator(PCSTR f_moduleName, ModuleLaunchListIter & f_moduleIter);  // NOLINT
   BOOL     IsGroupStarted(UI_32 f_groupId);
   BOOL     IsGroupStopped(UI_32 f_groupId);
   EFrameworkunifiedStatus ResetModulesStateToConnected(HANDLE hApp);
@@ -793,7 +701,7 @@ class CSystemManager {
                                 EErrorEventType       f_eventType,
                                 std::string          &f_moduleQueueName,  // NOLINT
                                 EErrorEventResetType  f_resetType   = eErrorEventResetTypeNone,
-                                const SMLoggingInfo  &f_loggingInfo = SMLoggingInfo()) noexcept;
+                                const SMLoggingInfo  &f_loggingInfo = SMLoggingInfo());
 
   EFrameworkunifiedStatus  PerformResetAfterLogging(HANDLE                f_hApp,
                                        ESMCpuResetReason     f_eCpuResetReason,

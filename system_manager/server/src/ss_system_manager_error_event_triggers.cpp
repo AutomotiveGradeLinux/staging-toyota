@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,11 +33,10 @@
 #include <string.h>
 #include <system_service/ss_power_service_notifications.h>
 #include <system_service/ss_power_service_protocol.h>
-//#include <stub/ss_diag.h>
+#include <stub/ss_diag.h>
 #include <system_service/ss_test_clients.h>
 #include <native_service/ns_np_service_protocol.h>
 #include <native_service/frameworkunified_application.h>
-#include <system_service/ss_sm_rom_access.h>
 #include <system_service/ss_sm_thread_names.h>
 #include <system_service/ss_templates.h>
 #include <native_service/ns_plogger_if.h>

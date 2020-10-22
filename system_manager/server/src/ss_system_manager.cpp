@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,9 @@
 ///
 ///////////////////////////////////////////////////////////////////////////////
 
-//#include <stub/mounter_ex_if.h>
 #include <native_service/cl_lock.h>
 #include <native_service/cl_process.h>
 #include <native_service/cl_monitor.h>
-//#include <stub/el_mem.h>
-//#include <stub/el_gpio.h>
 
 #include <native_service/frameworkunified_application.h>
 #include <native_service/frameworkunified_framework_if.h>
@@ -45,7 +42,7 @@
 #include <processlauncher/ss_sm_process_launcher_protocol.h>
 
 #include <system_service/ss_system_manager_conf.h>
-//#include <stub/ss_diag.h>
+#include <stub/ss_diag.h>
 
 #include <system_service/ss_client_names.h>
 #include <system_service/ss_heartbeat_service_protocol.h>
@@ -53,8 +50,6 @@
 #include <system_service/ss_power_service_notifications.h>
 #include <system_service/ss_power_service_protocol.h>
 #include <system_service/ss_services.h>
-#include <system_service/ss_sm_rom_access.h>
-#include <system_service/ss_sm_ram_access.h>
 #include <system_service/ss_sm_thread_names.h>
 #include <system_service/ss_sm_thread_names_local.h>
 #include <system_service/ss_sm_client_if.h>
@@ -62,12 +57,10 @@
 #include <system_service/ss_system_manager_notifications.h>
 #include <system_service/ss_system_manager_notifications_local.h>
 #include <system_service/ss_templates.h>
-#include <system_service/ss_sys_boot_area_map.h>
 #include <system_service/ss_sm_client_if_local.h>
 #include <system_service/ss_test_clients.h>
-//#include <vehicle_service/Clock_API.h>
-//#include <power_hal.h>
-//#include <security_hal.h>
+#include <stub/Clock_API.h>
+#include <power_hal.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -102,7 +95,7 @@ using namespace std;  // NOLINT
 
 static CSystemManager g_oSystemManger;
 
-#define SS_SM_TEMP_FILE_FOR_STORE_LOGS "/nv/romaccess/sm_tempStoreLogs"
+#define SS_SM_TEMP_FILE_FOR_STORE_LOGS "/nv/BS/ss/system_manager/rwdata/sm_tempStoreLogs"
 #define TR_USB_PATH "/usr/agl/bin/realtimeUsbLog"
 
 // \brief: public structure that is used for logging by NSLogger.
@@ -130,21 +123,6 @@ std::string NumberToString(int Number) {  // LCOV_EXCL_START 8: dead code
 // LCOV_EXCL_STOP
 
 /* Check if "Mount Point" exsists as Directory */
-static bool CheckMountPoint(const char* mntpt) {
-  bool exists_mntpt = false;
-  struct stat stat_buf;
-
-  if (NULL != mntpt) {  // LCOV_EXCL_BR_LINE 200: cannot be null
-    if (0 == lstat(mntpt, &stat_buf)) {
-      if(S_ISDIR(stat_buf.st_mode)) {
-        exists_mntpt = true;
-      }
-    }
-  }
-  return exists_mntpt;
-}
-
-
 /*****************************************************************************/
 /**
  @ingroup: CSystemManager
@@ -227,8 +205,6 @@ CSystemManager::CSystemManager() :
   m_hPowerServiceSession(NULL),
   m_ActiveGroupId(SS_SM_INITIAL_GROUP),
   m_StartUpReason(epswfINVALID),
-  m_BootMemory(NULL),
-  m_BootMemoryMapSize(0),
   m_DataResetMode(e_SS_SM_DATA_RESET_MODE_NONE),
   m_ProgUpdateState(SS_SM_PROG_UPDATE_STATE_NONE),
   m_NextWakeupType(e_SS_SM_NEXT_WAKEUP_TYPE_NONE),
@@ -241,7 +217,6 @@ CSystemManager::CSystemManager() :
   m_MaxShutdownTime(0),
   m_NbrDebugDumpRspnRecv(0),
   m_isRcvModeInfo(FALSE),
-  m_BootMode(e_SS_SM_BOOT_MODE_INVALID),
   m_BinaryFilesPath(""),
   m_ConfigFilesPath(""),
   m_pfStopCompleteHandler(
@@ -282,10 +257,12 @@ CSystemManager::CSystemManager() :
   m_requestedArtifactId(eArtifactIdInterfaceunifiedDebugLog) {  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
   m_InitialBoot = true;
 
+  m_ResetFactor = PSM_FACTOR_NONE;
+
   m_Wake.powerupType = epswsPWRON;
   m_Wake.up.level = epswlFULLRUN;
 
-  m_SystemModeInfo.lastUserMode = epsumINVALID;
+  m_SystemModeInfo.lastUserMode = m_lastUserMode;
   m_SystemModeInfo.limpHomeCutoff = epslhcINVALID;
   m_SystemModeInfo.productionMode = epspmINVALID;
   m_SystemModeInfo.transportMode = epstmINVALID;
@@ -295,44 +272,17 @@ CSystemManager::CSystemManager() :
   bzero(&m_SMConfig, sizeof(m_SMConfig));
   bzero(&m_startUpConfirmationMsg, sizeof(m_startUpConfirmationMsg));
   bzero(&m_HBReport, sizeof(m_HBReport));
-  bzero(&m_Lbm_Ram, sizeof(LBM_RAM_t));
 
   m__CWORD56_HistIter = m__CWORD56_CmdHist.begin();
   m_TimerHistIter = m_TimerCmdHist.begin();
   m_SMHistIter = m_SMCmdHist.begin();
   m_PubHistIter = m_PubCmdHist.begin();
   m_ErrHistIter = m_ErrHist.begin();
-    // LCOV_EXCL_BR_START 11:unexpected branch  // NOLINT(whitespace/line_length)
-  ListOfServicesAuthorizedToSetBootMode.push_back(SERVICE_SOFTWAREUPDATE);
-  //
-  // ToDo: Remove "Updater Thread" name from the Authorized list
-  ListOfServicesAuthorizedToSetBootMode.push_back("UpdaterThread");
-  //
-  // ToDo Jay 02 July 2012 Replace with actual name
-  ListOfServicesAuthorizedToSetBootMode.push_back(SERVICE_HMI);
-  ListOfServicesAuthorizedToSetBootMode.push_back(SERVICE_VS_DIAG);
-  ListOfServicesAuthorizedToSetBootMode.push_back(SERVICE_PSM_SHADOW);
-  ListOfServicesAuthorizedToSetBootMode.push_back(TC_SysManager);
-  ListOfServicesAuthorizedToSetBootMode.push_back(SERVICE_VUP);
-  ListOfServicesAuthorizedToSetBootMode.push_back(SS_UPDATESERVICE);
-  ListOfServicesAuthorizedToSetBootMode.push_back("SSBOX");
 
   ////******************************************************************////
   ////       Initialization of enum<=>enum and enum=>string maps        ////
   ////                                                                  ////
-  //
-  // **** Initialization of BootMode enum maps ****
-  // Map of Power Service SystemModeInfo to System Services BootMode
-  // enum values
-  m_PSSMI_to_SSBootMode_map[epssinfINVALID] = e_SS_SM_BOOT_MODE_INVALID;
-  m_PSSMI_to_SSBootMode_map[epssinfNORMAL] = e_SS_SM_BOOT_MODE_APPLICATION;
-  m_PSSMI_to_SSBootMode_map[epssinfPROGRAMMING] = e_SS_SM_BOOT_MODE_PROGRAMMING;
-  //
-  // Map of System Services to Power Service SystemModeInfo BootMode
-  // enum values
-  m_SSBootMode_to_PSSMI_map[e_SS_SM_BOOT_MODE_INVALID] = epssinfINVALID;
-  m_SSBootMode_to_PSSMI_map[e_SS_SM_BOOT_MODE_APPLICATION] = epssinfNORMAL;
-  m_SSBootMode_to_PSSMI_map[e_SS_SM_BOOT_MODE_PROGRAMMING] = epssinfPROGRAMMING;
+
   //
   // **** Initialization of powerupType enum maps ****
   // Map of System Services powerupType to BOOL enum values
@@ -355,60 +305,6 @@ CSystemManager::CSystemManager() :
   // Map of BOOL to System Services User Mode enum values
   m_SSUserMode_to_SSBoolEnumMap[epsumOFF] = FALSE;
   m_SSUserMode_to_SSBoolEnumMap[epsumON] = TRUE;
-  //
-  // Map of ROM to System Services User Mode enum values
-  m_ROM_to_SSUserModeEnumMap[USER_OFF] = epsumOFF;
-  m_ROM_to_SSUserModeEnumMap[USER_ON] = epsumON;
-  //
-  // Map of System Services to ROM User Mode enum values
-  m_SS_to_ROMUserModeEnumMap[epsumOFF] = USER_OFF;
-  m_SS_to_ROMUserModeEnumMap[epsumON] = USER_ON;
-  //
-  // **** Initialization of Limp Home Cutoff maps ****
-  // Map of Control to Limp Home Cutoff Mode enum values
-  m_Control_to_LimpHomeCutoffMode_map[DISABLE_MODE] = epslhcDISABLED;
-  m_Control_to_LimpHomeCutoffMode_map[ENABLE_MODE] = epslhcENABLED;
-  //
-  // Map of Limp Home Cutoff Mode to Control enum values
-  m_LimpHomeCutoff_to_ControlMode_map[epslhcDISABLED] = DISABLE_MODE;
-  m_LimpHomeCutoff_to_ControlMode_map[epslhcENABLED] = ENABLE_MODE;
-  //
-  // **** Initialization of Production Mode maps ****
-  // Map of Control to Production Mode enum values
-  m_Control_to_ProductionMode_map[DISABLE_MODE] = epspmDISABLED;
-  m_Control_to_ProductionMode_map[ENABLE_MODE] = epspmENABLED;
-  //
-  // Map of Production to Mode Control enum values
-  m_Production_to_ControlMode_map[epspmDISABLED] = DISABLE_MODE;
-  m_Production_to_ControlMode_map[epspmENABLED] = ENABLE_MODE;
-  //
-  // **** Initialization of Transport Mode maps ****
-  // Map of Control Mode to Transport Mode enum values
-  m_Control_to_TransportMode_map[DISABLE_MODE] = epstmDISABLED;
-  m_Control_to_TransportMode_map[ENABLE_MODE] = epstmENABLED;
-  //
-  // Map of Transport Mode to Control Mode enum values
-  m_Transport_to_ControlMode_map[epstmDISABLED] = DISABLE_MODE;
-  m_Transport_to_ControlMode_map[epstmENABLED] = ENABLE_MODE;
-
-//  m_PsmSysupDram_to_SysupDramMap[PSM_SYSUP_DRAM_NORMAL]   = SYSUP_DRAM_NORMAL;
-//  m_PsmSysupDram_to_SysupDramMap[PSM_SYSUP_DRAM_SFTERRSR] = SYSUP_DRAM_SFTERRSR;
-//  m_PsmSysupDram_to_SysupDramMap[PSM_SYSUP_DRAM_DISCARD]  = SYSUP_DRAM_DISCARD;
-
-//  m_PsmStartStatus_to_SysupCndMap[PSM_START_STATUS_FACTRESET] = SYSUP_CND_FACTRESET;
-//  m_PsmStartStatus_to_SysupCndMap[PSM_START_STATUS_NORMAL]    = SYSUP_CND_NORMAL;
-
-//  m_PsmComSts_to_SubcpuStsMap[PSM_COM_STS_NORMAL]   = SUBCPU_STS_NOMAL;
-//  m_PsmComSts_to_SubcpuStsMap[PSM_COM_STS_ABNORMAL] = SUBCPU_STS_COMNG;
-
-//  m_PsmDramSts_to_SdramStsMap[PSM_DRAM_STS_NORMAL]   = SDRAM_STS_NOMAL;
-//  m_PsmDramSts_to_SdramStsMap[PSM_DRAM_STS_ABNORMAL] = SDRAM_STS_BUPNG;
-
-//  m_PsmDramSts_to_RamjudgeStsMap[PSM_DRAM_STS_NORMAL]   = RAMJUDGE_STS_NOMAL;
-//  m_PsmDramSts_to_RamjudgeStsMap[PSM_DRAM_STS_ABNORMAL] = RAMJUDGE_STS_NG;
-
-//  m_PsmDramSts_to_SelfRefreshMap[PSM_DRAM_STS_NORMAL]   = SELF_REFRESH_OK;
-//  m_PsmDramSts_to_SelfRefreshMap[PSM_DRAM_STS_ABNORMAL] = SELF_REFRESH_NG;
 
   // LCOV_EXCL_BR_STOP
   ////                                                                  ////
@@ -469,18 +365,6 @@ void CSystemManager::Initialize_memory(HANDLE hApp, bool* l_isInitFail, EFramewo
     m_PreLaunchModuleList.push_back(l_rtuparam);
   }
 
-  {
-    PreLaunchModuleParams l_param;
-    l_param.LaunchFunc = CreateSyslogd;
-    l_param.relaunchLimit = 1;   // limit of abnormal relaunching
-    l_param.name = "syslogd";
-    l_param.binaryFileName = "/usr/bin/syslogd";
-    if (l_param.pid == 1) {
-      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: CreateSyslogd()");
-    }
-    m_PreLaunchModuleList.push_back(l_param);
-  }
-
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
 
   int fd = open("/dev/urandom", O_RDONLY);  // LCOV_EXCL_BR_LINE 5: standard lib error
@@ -521,82 +405,11 @@ void CSystemManager::Initialize_memory(HANDLE hApp, bool* l_isInitFail, EFramewo
   ReadPathFromEnvironmentVariables();
   ReadUsingVMPlayerEnvironmentVariable();
 
-  FRAMEWORKUNIFIEDLOG(ZONE_STATE, __FUNCTION__, "\n"
-      "bootIf\n"
-      " sts        :%#x %s\n"
-      " dram123      :%#x/%#x/%#x %s\n"
-      " syscomSts    :%#x %s\n"
-      " pwSts      :%#x %s\n"
-      " ramjudgeSts    :%#x %s\n"
-      " dram_self_refresh:%#x %s", m_BootMemory->sts,
-      (m_BootMemory->sts == SYSUP_CND_FACTRESET) ? "FACT" : "NML",
-              m_BootMemory->dram1, m_BootMemory->dram2, m_BootMemory->dram3,
-              (m_BootMemory->dram1 == SYSUP_DRAM_NORMAL) ? "NML" :
-              (m_BootMemory->dram1 == SYSUP_DRAM_DISCARD) ? "DISCARD" : "ERROR",
-      m_BootMemory->syscomSts,
-              (m_BootMemory->syscomSts == SUBCPU_STS_COMNG) ? "NG" : "NML",
-      m_BootMemory->pwSts,
-              (m_BootMemory->pwSts == SDRAM_STS_BUPNG) ? "NG" : "NML",
-      m_BootMemory->ramjudgeSts,
-              (m_BootMemory->ramjudgeSts == RAMJUDGE_STS_NG) ? "NG" : "NML",
-      m_BootMemory->dram_self_refresh,
-              (m_BootMemory->dram_self_refresh == SELF_REFRESH_NG) ? "NG" : "OK");
-
-  {
-    DRAM_BACKUP_STATE l_bkupState =
-        (SDRAM_STS_BUPNG == m_BootMemory->pwSts) ? DRAM_BACKUP_STATE_NG : DRAM_BACKUP_STATE_OK;  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-    ROM_AccessIf rom_access;
-    if (eFrameworkunifiedStatusOK != (*l_eStatus_work = rom_access.SystemInitialize(l_bkupState))) {
-      l_eStatus = *l_eStatus_work;
-      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: rom_access.SystemInitialize(%d)", l_eStatus);
-      *l_isInitFail = true;
-    }
-  }
+  // FIXME : Dump information from power_hal by using
 
   if (eFrameworkunifiedStatusOK != (*l_eStatus_work = SetSystemModeInfoStruct())) {
     LOG_ERROR("SetSystemModeInfoStruct()");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
     *l_isInitFail = true;
-  }
-
-  m_BootMode = m_PSSMI_to_SSBootMode_map[m_SystemModeInfo.systemMode];
-  FRAMEWORKUNIFIEDLOG(ZONE_STATE, __FUNCTION__, "Bootmode is '%s'", GetStr(m_BootMode).c_str());
-  FRAMEWORKUNIFIEDLOG(ZONE_PERFORMANCE, __FUNCTION__, "Bootmode is '%s'", GetStr(m_BootMode).c_str());
-
-  {
-    ROM_AccessIf rom_access;
-    rom_access.Initialize();  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-    BOOL isLastIlgReset = FALSE;
-
-    if (eFrameworkunifiedStatusOK != (*l_eStatus_work = GetLastIlgReset(rom_access, isLastIlgReset))) {
-      l_eStatus = *l_eStatus_work;
-      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: GetLastIlgReset(%d)", l_eStatus);
-    }
-
-    m_isIlgReset = isIllReset ? TRUE : isLastIlgReset;  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-
-    if (eFrameworkunifiedStatusOK != (*l_eStatus_work = SetLastIlgReset(rom_access, m_isIlgReset))) {
-      l_eStatus = *l_eStatus_work;
-      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: SetLastIlgReset(%d)", l_eStatus);
-    }
-  }
-
-  {
-    RAM_WAKEUP_STATE l_ramWakeupState =
-        (SDRAM_STS_BUPNG == m_BootMemory->pwSts) ? RAM_WAKEUP_STATE_BACKUP_NG : RAM_WAKEUP_STATE_DONT_CARE;  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-    RAM_AccessIf l_cRamAccess(l_ramWakeupState);
-    RAM_SM_INFO_t info;
-
-    if (eFrameworkunifiedStatusOK != (*l_eStatus_work = l_cRamAccess.getRamInfo(&info))) {
-      l_eStatus = *l_eStatus_work;
-      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: l_cRamAccess.getRamInfo(%d)", l_eStatus);
-    } else {
-      m_isImmediateReset = info.isImmediateReset;
-      info.isImmediateReset = TRUE;
-      if (eFrameworkunifiedStatusOK != (*l_eStatus_work = l_cRamAccess.setRamInfo(&info))) {
-        l_eStatus = *l_eStatus_work;
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: l_cRamAccess.setRamInfo(%d)", l_eStatus);
-      }
-    }
   }
 
   // Select configuration file for wakeup services
@@ -606,7 +419,6 @@ void CSystemManager::Initialize_memory(HANDLE hApp, bool* l_isInitFail, EFramewo
 
   std::memset(&inPrm, 0, sizeof(inPrm));
   inPrm.bIsVupMode = bIsVupMode;
-  inPrm.cbRebootNoticeFunc = SysMgrCallback<CSystemManager, &CSystemManager::OnRebootNotification>;
 
   if (eFrameworkunifiedStatusOK != (*l_eStatus_work = ss_sm_initHook(hApp, &inPrm, &m_productCustomPrm))) {
     SS_ASERT_LOG(0, "ERROR: ss_sm_initHook()");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
@@ -874,9 +686,7 @@ EFrameworkunifiedStatus CSystemManager::Initialize(HANDLE hApp) {
   bool l_isInitFail = false;
   EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
   int ret;
-//  PsmStartStatusT l_sts;
-//  PsmComStsT      l_syscom_sts;
-//  PsmDramStsT     l_dram_sts;
+  PsmFactorT      l_startup_factor;
 
   // Need to call Lock System Initialize API once in the system
   ret = CL_LockSystemInit();
@@ -890,79 +700,52 @@ EFrameworkunifiedStatus CSystemManager::Initialize(HANDLE hApp) {
     l_isInitFail = true;
   }
 
-  SS_STATIC_ASERT(sizeof(LBM_RAM_t) <= SS_SYS_AREA_BOOT_MAX_SIZE);  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
+  ret = PsmGetStartupFactor(hApp, &l_startup_factor);
+  if (ret == 0) {
+    if ((static_cast<UI_32>(l_startup_factor) & PSM_RESET_HISTORY) == PSM_RESET_HISTORY) {
+      DGCODE_RET_API  l_ret = DGCODE_RET_ERROR;
+      uint64_t l_SystemResetRobCode = 0;
+      DGCODE_ROB_SSR_INFO  l_info;
+      if (l_startup_factor == PSM_FACTOR_AGL_WITH_HISTORY) {
+        l_SystemResetRobCode = 0x2219;                // AGL cause
+      } else if (l_startup_factor == PSM_FACTOR_TIER1_WITH_HISTORY) {
+        l_SystemResetRobCode = 0x221A;                // Tier1 cause
+      } else if (l_startup_factor == PSM_FACTOR_USER_WITH_HISTORY) {
+        l_SystemResetRobCode = 0x8027;                // USER cause
+      } else {
+        // No processing
+      }
 
-  m_BootMemoryMapSize = SS_SYS_AREA_BOOT_MAX_SIZE;
-//  if (EL_mem_getLength(EL_MEM_ID_SYS_BOOT) < m_BootMemoryMapSize) {
-//    m_BootMemoryMapSize = static_cast<UI_32>(EL_mem_getLength(EL_MEM_ID_SYS_BOOT));
-//  }
-  m_BootMemory = &m_Lbm_Ram;
-  if (m_BootMemory == NULL) {  // LCOV_EXCL_BR_LINE 200: m_BootMemory always not null
-    // LCOV_EXCL_START 200: m_BootMemory always not null
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    m_BootMemoryMapSize = 0;
-    fprintf(stderr, "SS_SysManager/%s/ERROR:EL_mem_getLength\n", __FUNCTION__);
-    // LCOV_EXCL_STOP
-  }
+      if (l_SystemResetRobCode != 0) {
+        memset(&l_info, 0x00, sizeof(DGCODE_ROB_SSR_INFO));
 
-//  ret = PsmGetStartStatusPower(hApp, &l_sts);
-//  if ((ret == 0) && ((l_sts >= PSM_START_STATUS_FACTRESET) && (l_sts < PSM_START_STATUS_MAX))) {
-//    m_BootMemory->sts = m_PsmStartStatus_to_SysupCndMap[static_cast<UI_32>(l_sts)];
-//  } else {
-//    (void)fprintf(stderr, "SS_SysManager/%s/ERROR:start status not get\n", __FUNCTION__);
-//  }
-//  ret = PsmGetSyscomStatusPower(hApp, &l_syscom_sts);
-//  if ((ret == 0) && ((l_syscom_sts >= PSM_COM_STS_NORMAL) && (l_syscom_sts < PSM_COM_STS_MAX))) {
-//    m_BootMemory->syscomSts = m_PsmComSts_to_SubcpuStsMap[static_cast<UI_32>(l_syscom_sts)];
-//  } else {
-//    (void)fprintf(stderr, "SS_SysManager/%s/ERROR:communication status between mainsoc-sys not get\n", __FUNCTION__);
-//  }
-//  ret = PsmGetDramPowerSupplyAbnormalityCheckResultPower(hApp, &l_dram_sts);
-//  if ((ret == 0) && ((l_dram_sts >= PSM_DRAM_STS_NORMAL) && (l_dram_sts < PSM_DRAM_STS_MAX))) {
-//    m_BootMemory->pwSts             = m_PsmDramSts_to_SdramStsMap[static_cast<UI_32>(l_dram_sts)];
-//    m_BootMemory->ramjudgeSts       = m_PsmDramSts_to_RamjudgeStsMap[static_cast<UI_32>(l_dram_sts)];
-//    m_BootMemory->dram_self_refresh = m_PsmDramSts_to_SelfRefreshMap[static_cast<UI_32>(l_dram_sts)];
-//  } else {
-//    (void)fprintf(stderr, "SS_SysManager/%s/ERROR:dram power supply abnormality check result not get\n", __FUNCTION__);
-//  }
-
-  if (SYSUP_CND_FACTRESET == m_BootMemory->sts) {
-    if (eFrameworkunifiedStatusOK != (l_eStatus = PerformMountResetAll())) {
-      fprintf(stderr, "SS_SysManager/%s/Error: PerformMountResetAll() errored: %d\n", __FUNCTION__, l_eStatus);
-    }
-    SetDramStatusInfo(SYSUP_DRAM_NORMAL);
-  } else {
-    if (eFrameworkunifiedStatusOK != (l_eStatus = PerformMountNand())) {  // LCOV_EXCL_BR_LINE 200: PerformMountNand return always OK
-      // LCOV_EXCL_START 200: PerformMountNand return always OK
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      fprintf(stderr, "SS_SysManager/%s/Error: PerformMountNand() errored: %d\n", __FUNCTION__, l_eStatus);
-      l_isInitFail = true;
-      // LCOV_EXCL_STOP
-    }
-  }
-
-  BOOL isIllReset = (m_BootMemory->syscomSts == SUBCPU_STS_COMNG) ? TRUE : FALSE;  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-  bool isMountRamd = false;
-
-  if (isIllReset || ("elog" == m_bootOpt)) {
-    fprintf(stderr, "SS_SysManager/%s/Error: ILGRST LOG SAVE\n", __FUNCTION__);
-    isMountRamd = StoreDebugLogs(SS_STORELOGS_ILLEGAL);
-  } else {
-    isMountRamd = StoreDebugLogs(SS_STORELOGS_ACCOFFON);
-  }
-
-  if (SDRAM_STS_BUPNG == m_BootMemory->pwSts) {
-    l_eStatus = PerformMountResetRamd(hApp, isMountRamd);
-    if (eFrameworkunifiedStatusOK != l_eStatus) {
-      fprintf(stderr, "SS_SysManager/%s/Error: PerformMountResetRamd() errored: %d\n", __FUNCTION__, l_eStatus);
-    }
-  } else {
-    if (isMountRamd == false) {
-      if (eFrameworkunifiedStatusOK != (l_eStatus = PerformMountRamd())) {
-//        fprintf(stderr, "SS_SysManager/%s/Error: PerformMountRamd() errored: %d\n", __FUNCTION__, l_eStatus);
-        l_isInitFail = true;
+        l_ret = Diag_PutRoBInfo(hApp, l_SystemResetRobCode, &l_info);
+        if (l_ret == DGCODE_RET_ERROR) {
+          LOG_ERROR("Diag_PutRoBInfo()");
+        }
       }
     }
+  } else {
+    (void)fprintf(stderr, "SS_SysManager/%s/ERROR:start-up factor not get\n", __FUNCTION__);
+  }
+
+  m_isIlgReset = (false == GetSyscomPowerStatusInfo(hApp)) ? TRUE : FALSE;
+  if (m_isIlgReset || ("elog" == m_bootOpt)) {
+    fprintf(stderr, "SS_SysManager/%s/Error: ILGRST LOG SAVE\n", __func__);
+    StoreDebugLogs(hApp, SS_STORELOGS_ILLEGAL);
+  } else {
+    StoreDebugLogs(hApp, SS_STORELOGS_ACCOFFON);
+  }
+
+  if (m_isIlgReset == TRUE) {
+    // overwrite AGL_ILLRESET_FLAG.
+    uint32_t tmp = static_cast<uint32_t>(m_isIlgReset);
+    if (PowerHalSetResetInfo(AGL_ILLRESET_FLAG, tmp)) {
+      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
+           "Could not set AGL_ILLRESET_FLAG to power_hal");
+    }
+  } else {
+    // keep last value of AGL_ILLRESET_FLAG.
   }
 
   FRAMEWORKUNIFIED_SET_ZONES();
@@ -986,7 +769,7 @@ EFrameworkunifiedStatus CSystemManager::Initialize(HANDLE hApp) {
 
   // Threads MUST NOT be started until this line
 // ===== Initialization No.1
-  Initialize_memory(hApp, &l_isInitFail, &l_eStatus, isIllReset);
+  Initialize_memory(hApp, &l_isInitFail, &l_eStatus, m_isIlgReset);
 
 // ===== Initialization No.2
   Initialize_callbacks(hApp, &l_isInitFail, &l_eStatus);
@@ -1060,143 +843,41 @@ ERROR:
   return pid;
 }// LCOV_EXCL_STOP
 
-#define SYSLOGD_PATH "/usr/bin/syslogd"
-#define SYSLOGD_NFS_PATH "/tmp/syslogd"
-#define SYSLOG_LIMIT_FSIZE (249 * 1024);  // 249KB
-int CSystemManager::CreateSyslogd(void) {// LCOV_EXCL_START 8: dead code
-  AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-  int pid = -1;
-  int ret;
-
-  ret = mkdir("/var/run", 0775);
-  if ((ret < 0) && (errno != EEXIST)) {
-    return -1;
-  }
-  {
-    // Suppress Warning : logrotate
-    //  error: stat of /ramd/log/frameworkunifiedlog/syslog/syslog.log failed: No such file or directory
-    int fd;
-    fd = open("/ramd/log/frameworkunifiedlog/syslog/syslog.log", O_CREAT | O_RDWR | O_CLOEXEC, 0644);
-    if (fd != -1) {
-      AGL_ASSERT_NOT_TESTED();
-      close(fd);
-    }
-  }
-
-  pid = fork();
-  switch (pid) {
-  case 0:  // child process
-  {
-    struct sched_param param;
-    int policy;
-    const char *exec;
-    struct rlimit rlim;
-    sigset_t mask;
-    const char* nfsenv = getenv("AGL_NFS");
-    if (nfsenv && (strcmp(nfsenv, "y") == 0)) {
-      exec = const_cast<char *>(SYSLOGD_NFS_PATH);
-    } else {
-      exec = const_cast<char *>(SYSLOGD_PATH);
-    }
-    // file size
-    if (sigaddset(&mask, SIGXFSZ) < 0) {  // RLIMIT_FSIZE
-      SS_ASERT(0);
-      _exit(-1);
-    }
-    if (sigprocmask(SIG_BLOCK, &mask, NULL) < 0) {
-      SS_ASERT(0);
-      _exit(-1);
-    }
-    getrlimit(RLIMIT_FSIZE, &rlim);
-    rlim.rlim_cur = SYSLOG_LIMIT_FSIZE;
-    if (setrlimit(RLIMIT_FSIZE, &rlim) < 0) {
-      SS_ASERT(0);
-      _exit(-1);
-    }
-    param.sched_priority = 0;
-    policy = SCHED_OTHER;
-    if (sched_setscheduler(getpid(), policy, &param) < 0) {
-      SS_ASERT(0);
-      _exit(-1);
-    }
-    if (setpriority(PRIO_PROCESS, getpid(), 0) < 0) {
-      SS_ASERT(0);
-      _exit(-1);
-    }
-    // exec
-    if (execlp(exec, exec, "-n", "-f", "/usr/agl/conf/syslogd/syslog.conf", NULL) < 0) {
-      SS_ASERT(0);
-      _exit(-1);
-    }
-    _exit(0);
-  }
-    break;
-
-  case -1:  // error
-    SS_ASERT(0);
-    goto ERROR;
-
-  default:  // parent process
-    break;
-  }
-
-  ERROR: return pid;
-}// LCOV_EXCL_STOP
-
-bool CSystemManager::StoreDebugLogs(SS_STORELOGS_OPE_TYPE type) {
+bool CSystemManager::StoreDebugLogs(const HANDLE h_app,
+                                                   SS_STORELOGS_OPE_TYPE type) {
   bool isMountRamd = false;
   EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
   int pid;
 
-  if (m_BootMemory->ramjudgeSts != RAMJUDGE_STS_NOMAL) {
-//    fprintf(stderr, "SS_SysManager/%s/Error: RAM JUDGE NG\n", __FUNCTION__);
+  if (!GetDramPowerStatusInfo(h_app)) {
     goto ERROR;
   } else if (access(SS_SM_TEMP_FILE_FOR_STORE_LOGS, F_OK) == 0) {
     fprintf(stderr, "SS_SysManager/%s/Error: Skip StoreDebugLogs\n", __FUNCTION__);
-    goto ERROR;
-  }
-  if (eFrameworkunifiedStatusOK != (l_eStatus = PerformMountRamd())) {
-    fprintf(stderr, "SS_SysManager/%s/Error: PerformMountRamd() errored: %d\n", __FUNCTION__, l_eStatus);
     goto ERROR;
   }
 
   isMountRamd = true;
 
   if (type == SS_STORELOGS_ILLEGAL) {
-  // In order to obtain the anomaly reboot count, nv information is acquired first when ILG is reset.
-  // * Duplicate initialization and recovery operations to simplify design.
-  // Therefore, SystemInitialize() must operate normally even if it is called more than once.
-    DRAM_BACKUP_STATE l_bkupState =
-        (SDRAM_STS_BUPNG == m_BootMemory->pwSts) ? DRAM_BACKUP_STATE_NG : DRAM_BACKUP_STATE_OK;  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-    ROM_AccessIf rom_access;
-    if (eFrameworkunifiedStatusOK != (l_eStatus = rom_access.SystemInitialize(l_bkupState))) {
-      fprintf(stderr, "SS_SysManager/%s/Error: rom_access.SystemInitialize(%d)\n", __FUNCTION__, l_eStatus);  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
+    UI_32 l_ErrLogCount = 0;
+    if (PowerHalGetResetInfo(AGL_ERRLOG_COUNTER, &l_ErrLogCount)) {
+      fprintf(stderr, "SS_SysManager/%s/Error: "
+        "Could not read AGL_ERRLOG_COUNTER from power_hal\n", __FUNCTION__);
       goto ERROR;
     }
 
-    rom_access.Initialize();  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
+    if (l_ErrLogCount >= SS_SM_ERR_LOGGING_LIMIT) {
+      fprintf(stderr, "SS_SysManager/%s/Error: "
+        "Skip StoreDebugLogs by continuous error l_ErrLogCount=%lu\n",
+        __FUNCTION__, l_ErrLogCount);
+      goto ERROR;
+    }
 
-    UI_32 l_SigValue;
-
-    if ((eFrameworkunifiedStatusOK != GetSignature(rom_access, &l_SigValue))
-        || (l_SigValue != NVM_VALID_SIGNATURE)) {
-      fprintf(stderr, "SS_SysManager/%s/Error: NVM SIGERR\n", __FUNCTION__);  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-    } else {
-      UI_32 l_ErrLogCount;
-
-      if (eFrameworkunifiedStatusOK != GetErrLogCount(rom_access, l_ErrLogCount)) {
-        fprintf(stderr, "SS_SysManager/%s/Error: GetErrLogCount()\n", __FUNCTION__);  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-      } else {
-        if (l_ErrLogCount >= SS_SM_ERR_LOGGING_LIMIT) {
-          fprintf(stderr, "SS_SysManager/%s/Error: Skip StoreDebugLogs by continuous error \n", __FUNCTION__);
-          goto ERROR;
-        }
-
-        l_ErrLogCount++;
-        if (eFrameworkunifiedStatusOK != SetErrLogCount(rom_access, l_ErrLogCount)) {
-          fprintf(stderr, "SS_SysManager/%s/Error: SetErrLogCount()\n", __FUNCTION__);  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-        }
-      }
+    l_ErrLogCount++;
+    if (PowerHalSetResetInfo(AGL_ERRLOG_COUNTER, l_ErrLogCount)) {
+      // Just logging, don't go to  ERROR.
+      fprintf(stderr, "SS_SysManager/%s/Error: "
+        "Could not write AGL_ERRLOG_COUNTER to power_hal\n", __FUNCTION__);
     }
   } else if (type == SS_STORELOGS_ACCOFFON) {
     if (0 != unlink(SS_LOGGER_SAVE_INTERFACEUNIFIEDLOG_FLAG)) {
@@ -1249,381 +930,6 @@ bool CSystemManager::StoreDebugLogs(SS_STORELOGS_OPE_TYPE type) {
   return isMountRamd;
 }
 
-#define SM_MNT_P_NAND_LOG        "/mnt_nv/mmcblk0p11"
-#define SM_MNT_P_NAND_PTDATE     "/mnt_nv/mmcblk0p17"
-#define SM_MNT_P_NAND_LOG2       "/mnt_nv/mmcblk0p18"
-#define SM_MNT_P_NAND_NV         "/nv"
-#define SM_MNT_P_NAND_NV_SYSTEM  "/nv_system"
-#define SM_MNT_P_RAMD_SYSTEMMANAGERLOG     "/ramd/log/frameworkunifiedlog"
-#define SM_MNT_P_RAMD_BKUP       "/ramd/bkup"
-
-#define SM_MNT_P_RAMD_SDL        "/ramd/sdl"
-
-EFrameworkunifiedStatus CSystemManager::PerformMountResetAll(void) {  // LCOV_EXCL_START 6: Because the condition cannot be set
-  AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-//  MntErr l_eMnt;
-
-//  l_eMnt = MntResetAll();
-//  if (MNT_SUCCESS != l_eMnt) {
-//    fprintf(stderr, "SS_SysManager/%s/Error: MntResetAll(%d)\n", __FUNCTION__, l_eMnt);
-//    l_eStatus = eFrameworkunifiedStatusFail;
-//  }
-
-  return l_eStatus;
-}
-// LCOV_EXCL_STOP
-
-EFrameworkunifiedStatus CSystemManager::PerformMountResetRamd(const HANDLE h_app, const bool isMountRamd) {
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-//  MntErr l_eMnt;
-  bool l_reset = false;
-  bool l_reset_sdl = false;
-//  PsmDramStsT l_dram_sts;
-  int ret;
-
-//  l_eMnt = MntReset(SM_MNT_P_RAMD_SYSTEMMANAGERLOG);
-//  if (MNT_SUCCESS != l_eMnt) {
-//    fprintf(stderr, "SS_SysManager/%s/Error: MntReset(%s:%d)\n", __FUNCTION__, SM_MNT_P_RAMD_SYSTEMMANAGERLOG, l_eMnt);
-//    l_eStatus = eFrameworkunifiedStatusFail;
-//  }
-  // Although RomAccessIf.progUpdate should be used to determine the initial start after updating Changing the
-  // RomAccessIf initialization timings at the end of development is risky and should be judged by SYSUP_DRAM_DISCARD.
-//  ret = PsmGetDramPowerSupplyAbnormalityCheckResultPower(h_app, &l_dram_sts);
-//  if ((ret == 0) && ((l_dram_sts >= PSM_DRAM_STS_NORMAL) && (l_dram_sts < PSM_DRAM_STS_MAX))) {
-//    m_BootMemory->pwSts             = m_PsmDramSts_to_SdramStsMap[static_cast<UI_32>(l_dram_sts)];
-//    m_BootMemory->ramjudgeSts       = m_PsmDramSts_to_RamjudgeStsMap[static_cast<UI_32>(l_dram_sts)];
-//    m_BootMemory->dram_self_refresh = m_PsmDramSts_to_SelfRefreshMap[static_cast<UI_32>(l_dram_sts)];
-//  } else {
-//    LOG_ERROR("PsmGetDramPowerSupplyAbnormalityCheckResultPower()");
-//  }
-
-  if ((SYSUP_DRAM_DISCARD == GetDramStatusInfo(h_app))
-      && (m_BootMemory->ramjudgeSts == RAMJUDGE_STS_NOMAL
-          && m_BootMemory->dram_self_refresh == SELF_REFRESH_OK)) {
-    if (!isMountRamd) {
-//      l_eMnt = MntMountEx(SM_MNT_P_RAMD_BKUP);
-//      if (MNT_SUCCESS != l_eMnt) {
-//        fprintf(stderr, "SS_SysManager/%s/Error: MntMountEX(%s:%d)\n", __FUNCTION__, SM_MNT_P_RAMD_BKUP, l_eMnt);
-//        l_reset = true;
-//        l_eStatus = eFrameworkunifiedStatusFail;
-//      }
-
-      if (CheckMountPoint(SM_MNT_P_RAMD_SDL)) {
-//        l_eMnt = MntMountEx(SM_MNT_P_RAMD_SDL);
-//        if (MNT_SUCCESS != l_eMnt) {
-//          fprintf(stderr, "SS_SysManager/%s/Error: MntMountEX(%s:%d)\n", __FUNCTION__, SM_MNT_P_RAMD_SDL, l_eMnt);
-//          l_reset_sdl = true;
-//          l_eStatus = eFrameworkunifiedStatusFail;
-//        }
-      }
-
-    }
-  } else {
-    l_reset = true;
-
-    if (CheckMountPoint(SM_MNT_P_RAMD_SDL)) {
-      l_reset_sdl = true;
-    }
-
-  }
-
-  /* SM_MNT_P_RAMD_BKUP */
-  if (l_reset) {
-//    l_eMnt = MntReset(SM_MNT_P_RAMD_BKUP);
-//    if (MNT_SUCCESS != l_eMnt) {  // LCOV_EXCL_BR_LINE 6: Due to Initialize processing
-      // LCOV_EXCL_START 6: Due to Initialize processing
-//      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//      fprintf(stderr, "SS_SysManager/%s/Error: MntReset(%s:%d)\n", __FUNCTION__, SM_MNT_P_RAMD_BKUP, l_eMnt);
-//      l_eStatus = eFrameworkunifiedStatusFail;
-      // LCOV_EXCL_STOP
-//    }
-  }
-
-  /* SM_MNT_P_RAMD_SDL */
-  // Additional correspondence of SDL is NA only : For common code, Add "Check Mount Point"
-  if (l_reset_sdl) {
-    if (CheckMountPoint(SM_MNT_P_RAMD_SDL)) {  // LCOV_EXCL_BR_LINE 6: l_reset_sdl==True guarantees CheckMountPoint is True  // NOLINT(whitespace/line_length)
-//      l_eMnt = MntReset(SM_MNT_P_RAMD_SDL);
-//      if (MNT_SUCCESS != l_eMnt) {
-//        fprintf(stderr, "SS_SysManager/%s/Error: MntReset(%s:%d)\n", __FUNCTION__, SM_MNT_P_RAMD_SDL, l_eMnt);
-//        l_eStatus = eFrameworkunifiedStatusFail;
-//      }
-    }
-  }
-
-  return l_eStatus;
-}
-
-EFrameworkunifiedStatus CSystemManager::PerformMountNand(void) {
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-
-// Delete in order to move mount to init quickly
-
-  return l_eStatus;
-}
-
-EFrameworkunifiedStatus CSystemManager::PerformMountRamd(void) {
-
-//#define SS_SM_MOUNT_RAMD_MAX (2)
-
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-
-#if 0
-  const char* l_mountlist[SS_SM_MOUNT_RAMD_MAX] = { SM_MNT_P_RAMD_SYSTEMMANAGERLOG, SM_MNT_P_RAMD_BKUP };
-  MntErr l_eMnt[SS_SM_MOUNT_RAMD_MAX];
-
-  MntMultiMountEx(l_mountlist, SS_SM_MOUNT_RAMD_MAX, l_eMnt);
-  for (int i = 0; i < SS_SM_MOUNT_RAMD_MAX; i++) {
-    if (MNT_SUCCESS != l_eMnt[i] && MNT_ERR_MOUNTED != l_eMnt[i]) {
-//      fprintf(stderr, "SS_SysManager/%s/Error: MntMultiMountEx(%s:%d)\n",
-//          __FUNCTION__, l_mountlist[i], l_eMnt[i]);
-      MntErr l_eMntReset;
-      l_eMntReset = MntReset(l_mountlist[i]);
-      if (MNT_SUCCESS != l_eMntReset) {
-//        fprintf(stderr, "SS_SysManager/%s/Error: MntReset(%s:%d)\n",
-//            __FUNCTION__, l_mountlist[i], l_eMntReset);
-        l_eStatus = eFrameworkunifiedStatusFail;
-      }
-    }
-  }
-#endif
-  const char* l_mountlist[] = { SM_MNT_P_RAMD_SYSTEMMANAGERLOG,
-                                SM_MNT_P_RAMD_BKUP };
-  const char* l_mountlist_sdl[] = { SM_MNT_P_RAMD_SYSTEMMANAGERLOG,
-                                    SM_MNT_P_RAMD_BKUP,
-                                    SM_MNT_P_RAMD_SDL };
-  const char** l_mlist = l_mountlist;
-  int ramd_mount_max = sizeof (l_mountlist) / sizeof (l_mountlist[0]);
-
-  // Additional correspondence of SDL is NA only : For common code, Add "Check Mount Point"
-  if (CheckMountPoint(SM_MNT_P_RAMD_SDL)) {
-    l_mlist = l_mountlist_sdl;
-    ramd_mount_max = sizeof (l_mountlist_sdl) / sizeof (l_mountlist_sdl[0]);
-  }
-
-//  MntErr l_eMnt[ramd_mount_max];
-
-//  MntMultiMountEx((const char**)l_mlist, ramd_mount_max, l_eMnt);
-//  for (int i = 0; i < ramd_mount_max; i++) {
-//    if (MNT_SUCCESS != l_eMnt[i] && MNT_ERR_MOUNTED != l_eMnt[i]) {
-//      fprintf(stderr, "SS_SysManager/%s/Error: MntMultiMountEx(%s:%d)\n", __FUNCTION__, l_mlist[i], l_eMnt[i]);
-//      MntErr l_eMntReset;
-//      l_eMntReset = MntReset(l_mlist[i]);
-//      if (MNT_SUCCESS != l_eMntReset) {
-//        fprintf(stderr, "SS_SysManager/%s/Error: MntReset(%s:%d)\n", __FUNCTION__, l_mlist[i], l_eMntReset);
-//        l_eStatus = eFrameworkunifiedStatusFail;
-//      }
-//    }
-//  }
-
-  return l_eStatus;
-}
-
-EFrameworkunifiedStatus CSystemManager::PerformUmountNand(void) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-//  MntErr l_eMnt;
-
-//  l_eMnt = MntUmountEx(SM_MNT_P_NAND_PTDATE);
-//  if (MNT_SUCCESS != l_eMnt) {
-//    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: MntUmountEx(%s:%d)",
-//        SM_MNT_P_NAND_PTDATE, l_eMnt);
-//    l_eStatus = eFrameworkunifiedStatusFail;
-//  }
-
-//  l_eMnt = MntUmountEx(SM_MNT_P_NAND_NV);
-//  if (MNT_SUCCESS != l_eMnt) {
-//    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: MntUmountEx(%s:%d)",
-//        SM_MNT_P_NAND_NV, l_eMnt);
-//    l_eStatus = eFrameworkunifiedStatusFail;
-//  }
-
-//  l_eMnt = MntUmountEx(SM_MNT_P_NAND_LOG2);  // /nv/log2
-//  if (MNT_SUCCESS != l_eMnt) {
-//    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: MntUmountEx(%s:%d)",
-//        SM_MNT_P_NAND_LOG2, l_eMnt);
-//    l_eStatus = eFrameworkunifiedStatusFail;
-//  }
-
-//  l_eMnt = MntUmountEx(SM_MNT_P_NAND_LOG);  // /nv/log
-//  if (MNT_SUCCESS != l_eMnt) {
-//    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: MntUmountEx(%s:%d)",
-//        SM_MNT_P_NAND_LOG, l_eMnt);
-//    l_eStatus = eFrameworkunifiedStatusFail;
-//  }
-
-//  l_eMnt = MntUmountEx(SM_MNT_P_NAND_NV_SYSTEM);
-//  if (MNT_SUCCESS != l_eMnt) {
-//    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: MntUmountEx(/nv_system:%d)",
-//        l_eMnt);
-//    l_eStatus = eFrameworkunifiedStatusFail;
-//  }
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}
-
-EFrameworkunifiedStatus CSystemManager::PerformUmountRamd(void) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-//  MntErr l_eMnt;
-
-
-  /* SM_MNT_P_RAMD_BKUP */
-  PreLaunchModuleListIter l_itr;
-  for (l_itr = m_PreLaunchModuleList.begin();
-      m_PreLaunchModuleList.end() != l_itr; l_itr++) {
-    if (("syslogd" == l_itr->name) && (-1 != l_itr->pid)) {  // LCOV_EXCL_BR_LINE 200:prelaunch mode is not valid at UT test //NOLINT (whitespace/line_length)
-      // LCOV_EXCL_START 200 :prelaunch mode is not valid at UT test
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      if (0 != kill(l_itr->pid, SS_SM_KILL_SIGNAL)) {  // LCOV_EXCL_BR_LINE 5:kill error case
-        SS_ASERT_ERRNO(0);  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-      } else {
-        SS_ASERT_ERRNO(l_itr->pid == waitpid(l_itr->pid, NULL, 0));  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-      }
-      // LCOV_EXCL_STOP
-    }
-  }
-
-//  l_eMnt = MntUmountEx(SM_MNT_P_RAMD_BKUP);
-//  if (MNT_ERR_BUSY == l_eMnt) {
-//    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: MntUmountEx(%s) BUSY", SM_MNT_P_RAMD_BKUP);
-
-    ModuleLaunchListIter l_ModuleListIter;
-    l_eStatus = GetModuleIterator(MN_NS_BACKUPMGR, l_ModuleListIter);
-    if (eFrameworkunifiedStatusOK != l_eStatus) {  // LCOV_EXCL_BR_LINE 200 : BACKUP cannot be error
-      // LCOV_EXCL_START 200 : BACKUP cannot be error
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: %s not found", MN_NS_BACKUPMGR);  // LCOV_EXCL_BR_LINE 15: marco defined in ns_logger_if.h  // NOLINT(whitespace/line_length)
-      // LCOV_EXCL_STOP
-    } else if (0 >= l_ModuleListIter->pid) {
-      SS_ASERT_ERRNO(0);  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-      l_eStatus = eFrameworkunifiedStatusFail;
-    } else {
-      int ret;
-
-      ret = kill(l_ModuleListIter->pid, SS_SM_TERMINATE_SIGNAL);
-      if (0 != ret) {  // LCOV_EXCL_BR_LINE 5:kill error case
-        // LCOV_EXCL_START 5: kill error case
-        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-        SS_ASERT_ERRNO(0);  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-        l_eStatus = eFrameworkunifiedStatusFail;
-        // LCOV_EXCL_STOP
-      } else {
-        pid_t retPid;
-
-        retPid = waitpid(l_ModuleListIter->pid, NULL, 0);
-        if (l_ModuleListIter->pid != retPid) {  // LCOV_EXCL_BR_LINE 5:waitpid error case
-          // LCOV_EXCL_START 5: kill error case
-          AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-          SS_ASERT_ERRNO(0);  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-          l_eStatus = eFrameworkunifiedStatusFail;
-          // LCOV_EXCL_STOP
-        } else {
-//          l_eMnt = MntUmountEx(SM_MNT_P_RAMD_BKUP);
-//          if (MNT_SUCCESS != l_eMnt) {
-//            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-//                " Error: MntUmountEx(%s:%d)",
-//                SM_MNT_P_RAMD_BKUP, l_eMnt);
-//            l_eStatus = eFrameworkunifiedStatusFail;
-//          }
-        }
-      }
-    }
-//  } else if (MNT_SUCCESS != l_eMnt) {
-//    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: MntUmountEx(%s:%d)", SM_MNT_P_RAMD_BKUP, l_eMnt);
-//  }
-
-
-  /* SM_MNT_P_RAMD_SDL */
-  // Additional correspondence of SDL is NA only : For common code, Add "Check Mount Point"
-  if (CheckMountPoint(SM_MNT_P_RAMD_SDL)) {
-//    l_eMnt = MntUmountEx(SM_MNT_P_RAMD_SDL);
-//    if (MNT_SUCCESS != l_eMnt) {
-//      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: MntUmountEx(%s:%d)", SM_MNT_P_RAMD_SDL, l_eMnt);
-//    }
-  }
-
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}
-
-EFrameworkunifiedStatus CSystemManager::PerformForceUmountRamd(void) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  ModuleLaunchListIter l_ModuleListIter;
-
-  l_eStatus = GetModuleIterator(MN_NS_BACKUPMGR, l_ModuleListIter);
-  if (eFrameworkunifiedStatusOK != l_eStatus) {  // LCOV_EXCL_BR_LINE 200 : cannot be error
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: %s not found", MN_NS_BACKUPMGR);  // LCOV_EXCL_LINE:200 cannot be error
-  } else if (0 >= l_ModuleListIter->pid) {
-    SS_ASERT_ERRNO(0);  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-    l_eStatus = eFrameworkunifiedStatusFail;
-  } else {
-    if (0 != kill(l_ModuleListIter->pid, SS_SM_TERMINATE_SIGNAL)) {
-      SS_ASERT_ERRNO(0);  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-      l_eStatus = eFrameworkunifiedStatusFail;
-    } else {
-      if (l_ModuleListIter->pid != waitpid(l_ModuleListIter->pid, NULL, 0)) {  // LCOV_EXCL_BR_LINE 5:waitpid error case  //NOLINT (whitespace/line_length)
-        // LCOV_EXCL_START 5: waitpid error
-        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-        SS_ASERT_ERRNO(0);  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-        l_eStatus = eFrameworkunifiedStatusFail;
-        // LCOV_EXCL_STOP
-      } else {
-//        MntErr l_eMnt = MntUmountEx2(SM_MNT_P_RAMD_BKUP, MNT_UMOUNT_NOLOG);
-//        if (MNT_SUCCESS != l_eMnt) {
-//          FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: MntUmountEx(%s:%d)",
-//              SM_MNT_P_RAMD_BKUP, l_eMnt);
-//          l_eStatus = eFrameworkunifiedStatusFail;
-//        }
-      }
-    }
-  }
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}
-
-EFrameworkunifiedStatus CSystemManager::PerformFinalUmount(BOOL bIsNeedLog) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-//  MntErr l_eMnt;
-//  MntLogMode l_MntMode = MNT_LOGOFF;
-  ModuleLaunchListIter l_ModuleListIter;
-
-  if (eFrameworkunifiedStatusOK != GetModuleIterator(MN_SS_LOGGERSRV, l_ModuleListIter)) {  // LCOV_EXCL_BR_LINE 200:LOGSERVER is not valid at UT
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: %s not found", MN_SS_LOGGERSRV);  // LCOV_EXCL_BR_LINE 15: marco defined in ns_logger_if.h  // NOLINT(whitespace/line_length)
-  } else if (0 >= l_ModuleListIter->pid) {  // LCOV_EXCL_BR_LINE 200:LOGSERVER is not valid at UT
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    SS_ASERT(0);  // LCOV_EXCL_LINE 200: LOGSERVER is not valid at UT
-  } else {
-    // LCOV_EXCL_START 200: LOGSERVER is not valid at UT
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    if (0 != kill(l_ModuleListIter->pid, SS_SM_KILL_SIGNAL)) {  // LCOV_EXCL_BR_LINE 5: standard lib error
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      SS_ASERT_ERRNO(0);  // LCOV_EXCL_LINE 5: standard lib error
-    }
-    // LCOV_EXCL_STOP
-  }
-
-  if (bIsNeedLog) {
-//    l_MntMode = MNT_LOGON;
-  }
-
-//  l_eMnt = MntFinalUmount(l_MntMode);
-//  if (MNT_SUCCESS != l_eMnt) {
-//    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: MntFinalUmount(%d)", l_eMnt);
-//    l_eStatus = eFrameworkunifiedStatusFail;
-//  }
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}
-
 #define SS_SM_SCAC_DEVICE_NODE      "/dev/scac_driver"
 #define SS_SM_SCAC_CMD_SHUTDOWN     0x3000
 
@@ -1650,12 +956,6 @@ EFrameworkunifiedStatus CSystemManager::SecureChipOff() {
 
       close(fd);
     }
-
-//    const EFrameworkunifiedStatus  l_ret = ResetSecurityIC();
-//    if (eFrameworkunifiedStatusOK != l_ret) {
-//      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "ResetSecurityIC ERR(%#X)", l_ret);
-//      l_eStatus = eFrameworkunifiedStatusFail;
-//    }
 
     isOffDone = true;
   } else {
@@ -1728,7 +1028,6 @@ EFrameworkunifiedStatus CSystemManager::SetSystemModeInfoStruct() {
   if (m_UsingVMPlayer) {
     FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " 'm_UsingVMPlayer' is True,"
         " using default SystemModeInfo values");
-    m_SystemModeInfo.lastUserMode = epsumOFF;
     m_SystemModeInfo.limpHomeCutoff = epslhcDISABLED;
     m_SystemModeInfo.productionMode = epspmDISABLED;
     m_SystemModeInfo.transportMode = epstmDISABLED;
@@ -1739,153 +1038,29 @@ EFrameworkunifiedStatus CSystemManager::SetSystemModeInfoStruct() {
     // Don't change the m_SystemModeInfo.startupStage.
     // It is set dynamically as System Manager initializes the _CWORD102_.
   } else {
-    UI_32 SigValue;
-    UI_32 * pSigValue = &SigValue;
-    ROM_AccessIf l_cRomAccess;
-    l_cRomAccess.Initialize();  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-    bool isFast = true;
+    uint32_t tmp = 0;
+    if (PowerHalGetResetInfo(AGL_RESET_COUNTER, &m_ResetCount)) {
+      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
+            "Could not read AGLRESET_COUNTER from power_hal, assume to 0");
+      m_ResetCount = 0;
+    }
 
-    if (eFrameworkunifiedStatusOK != (l_eStatus = GetSignature(l_cRomAccess, pSigValue))) {  // LCOV_EXCL_BR_LINE 6: For setting the initialization conditions at SystemManager startup // NOLINT(whitespace/line_length)
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      LOG_ERROR("GetSignature( l_cRomAccess, pSigValue)");  // LCOV_EXCL_LINE 6: For setting the initialization conditions at SystemManager startup
+    if (PowerHalGetResetInfo(AGL_PROGUPDATE_STATE, &m_ProgUpdateState)) {
+      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
+            "Could not read AGL_PROGUPDATE_STATE from power_hal, "
+            "assume to SS_SM_PROG_UPDATE_STATE_NONE");
+      m_ProgUpdateState = SS_SM_PROG_UPDATE_STATE_NONE;
+    }
+
+    if (PowerHalGetResetInfo(AGL_DATARESET_STATE, &tmp)) {
+      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
+            "Could not read AGL_DATARESET_STATE from power_hal, "
+            "assume to e_SS_SM_DATA_REESET_MODE_NONE");
+      m_DataResetMode = e_SS_SM_DATA_RESET_MODE_NONE;
     } else {
-      ESMBootModeInfo l_BootMode;
-      if (SigValue != NVM_VALID_SIGNATURE) {
-        FRAMEWORKUNIFIEDLOG(ZONE_WARN, __FUNCTION__, "[SBX]NVM SIGERR");
-
-        isFast = false;
-
-        // LCOV_EXCL_BR_START 6: For setting the initialization conditions at SystemManager startup
-        if (eFrameworkunifiedStatusOK != (l_eStatus =
-            SetSignature(l_cRomAccess, NVM_VALID_SIGNATURE))) {
-        // LCOV_EXCL_BR_STOP
-          LOG_ERROR("SetSignature(NVM_VALID_SIGNATURE");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-        } else if (eFrameworkunifiedStatusOK
-            != (l_eStatus = SetActiveFlashloader(l_cRomAccess, NEW_FLASHLOADER))) {
-          AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-          LOG_ERROR("SetActiveFlashloader(NEW_FLASHLOADER)");
-        } else if (eFrameworkunifiedStatusOK
-            != (l_eStatus = SetBootMode(l_cRomAccess, e_SS_SM_BOOT_MODE_APPLICATION))) {
-          AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-          LOG_ERROR("SetBootMode(e_SS_SM_BOOT_MODE_APPLICATION)");
-        } else if (eFrameworkunifiedStatusOK
-            != (l_eStatus = SetLastUserMode(l_cRomAccess, epsumON))) {
-          AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-          LOG_ERROR("SetLastUserMode(epsumON))");
-        } else if (eFrameworkunifiedStatusOK
-            != (l_eStatus = SetLimpHomeCutoffMode(l_cRomAccess, epslhcDISABLED))) {
-          AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-          LOG_ERROR("SetLimpHomeCutOffReqMode(epslhcDISABLED)");
-        } else if (eFrameworkunifiedStatusOK
-            != (l_eStatus = SetProductionMode(l_cRomAccess, epspmDISABLED))) {
-          AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-          LOG_ERROR("SetProductionMode(epspmDISABLED)");
-        } else if (eFrameworkunifiedStatusOK
-            != (l_eStatus = SetTransportMode(l_cRomAccess, epstmDISABLED))) {
-          AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-          LOG_ERROR("SetTransportMode(epstmDISABLED)");
-        } else if (eFrameworkunifiedStatusOK
-            != (l_eStatus = SetDataResetMode(l_cRomAccess, e_SS_SM_DATA_RESET_MODE_FACTORY))) {
-          AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-          LOG_ERROR("SetDataResetMode(e_SS_SM_DATA_RESET_MODE_FACTORY)");
-        } else if (eFrameworkunifiedStatusOK
-            != (l_eStatus = SetResetCount(l_cRomAccess, 0))) {
-          AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-          LOG_ERROR("SetResetCount(0)");
-        } else if (eFrameworkunifiedStatusOK
-            != (l_eStatus = SetLastIlgReset(l_cRomAccess, FALSE))) {
-          AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-          LOG_ERROR("SetLastIlgReset(LAST_ILGRESET_NORMAL)");
-        } else if (eFrameworkunifiedStatusOK
-            != (l_eStatus = SetProgUpdateState(l_cRomAccess,
-                m_ProgUpdateState))) {
-          AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-          LOG_ERROR("SetProgUpdateState(NONE)");
-        } else if (eFrameworkunifiedStatusOK
-            != (l_eStatus = SetErrLogCount(l_cRomAccess, 0))) {
-          AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-          LOG_ERROR("SetErrLogCount(0)");
-        } else if (eFrameworkunifiedStatusOK
-            != (l_eStatus = SetNextWakeupType(l_cRomAccess,
-                e_SS_SM_NEXT_WAKEUP_TYPE_NONE))) {
-          AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-          LOG_ERROR("SetNextWakeupType(NEXT_WAKEUP_TYPE_NONE)");
-        } else {
-          UI_8 buf[ROM_PRODUCT_PRIVATE_MAX];
-
-          memset(buf, 0, sizeof(buf));
-
-          if (eFrameworkunifiedStatusOK
-              != (l_eStatus = SetProductPrivate(l_cRomAccess, buf))) {
-            LOG_ERROR("SetProductPrivate(fill_0)");
-          }
-        }
-      }  // End if NVM had not yet been initialized
-
-      if (eFrameworkunifiedStatusOK == l_eStatus) {  // LCOV_EXCL_BR_LINE 6: Because the condition of the first if statement is satisfied, the branch condition cannot be satisfied.
-        // LCOV_EXCL_START 6: Because the condition of the first if statement is satisfied, the branch condition cannot be satisfied.
-        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-        // Get Boot Mode ( BootMode determines SystemModeInfo )
-        if (eFrameworkunifiedStatusOK
-            != (l_eStatus = GetBootMode(l_cRomAccess, l_BootMode))) {
-          LOG_ERROR("GetBootMode()");
-        } else if (eFrameworkunifiedStatusOK
-            != (l_eStatus = GetLastUserMode(l_cRomAccess,
-                m_SystemModeInfo.lastUserMode))) {
-          LOG_ERROR("GetLastUserMode()");
-        } else if (eFrameworkunifiedStatusOK
-            != (l_eStatus = GetLimpHomeCutoffMode(l_cRomAccess,
-                m_SystemModeInfo.limpHomeCutoff))) {
-          LOG_ERROR("GetLimpHomeCutoff()");
-        } else if (eFrameworkunifiedStatusOK
-            != (l_eStatus = GetProductionMode(l_cRomAccess,
-                m_SystemModeInfo.productionMode))) {
-          LOG_ERROR("GetProductionMode()");
-        } else if (eFrameworkunifiedStatusOK
-            != (l_eStatus = GetTransportMode(l_cRomAccess,
-                m_SystemModeInfo.transportMode))) {
-          LOG_ERROR("GetTransportMode()");
-        } else if (eFrameworkunifiedStatusOK
-            != (l_eStatus = GetDataResetMode(l_cRomAccess,
-                m_DataResetMode, isFast))) {  // Call using Fast
-          LOG_ERROR("GetDataResetMode()");
-        } else if (eFrameworkunifiedStatusOK
-            != (l_eStatus = GetResetCount(l_cRomAccess,
-                m_ResetCount))) {
-          LOG_ERROR("GetResetCount()");
-        } else if (eFrameworkunifiedStatusOK
-            != (l_eStatus = GetProgUpdateState(l_cRomAccess,
-                m_ProgUpdateState))) {
-          LOG_ERROR("GetProgUpdateState()");
-        } else if (eFrameworkunifiedStatusOK
-            != (l_eStatus = GetNextWakeupType(l_cRomAccess,
-                m_NextWakeupType))) {
-          LOG_ERROR("GetNextWakeupType()");
-        }
-        // LCOV_EXCL_STOP
-      }  // End else either 1) Signature already set or 2) NVM successfully
-        // initialized
-        // ToDo Jay 2012 September 24 Save SystemModeInfo ( ala Progamming /
-        //    Application ) or get overlap wrt BootMode straightened out
-        // Convert BootMode as read from NVM to SystemModeInfo as expected by
-        // PowerShadow. ToDo: Investigate consolidating the two types.
-      if (eFrameworkunifiedStatusOK == l_eStatus) {
-        switch (l_BootMode) {
-        case e_SS_SM_BOOT_MODE_APPLICATION:
-          m_SystemModeInfo.systemMode = epssinfNORMAL;
-          break;
-        case e_SS_SM_BOOT_MODE_PROGRAMMING:
-          m_SystemModeInfo.systemMode = epssinfPROGRAMMING;
-          break;
-        default:
-          FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-              " Error: Unknown l_BootMode value: 0x%X",
-              l_BootMode);
-          l_eStatus = eFrameworkunifiedStatusInvldParam;
-          break;
-        }
-      }
-    }  // End else a successful read of the NVM Signature field
+      m_DataResetMode = static_cast<ESMDataResetModeInfo>(tmp);
+    }
+    m_SystemModeInfo.systemMode = epssinfNORMAL;
   }  // End else ! m_UsingVMPlayer
 
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
@@ -1908,7 +1083,7 @@ EFrameworkunifiedStatus CSystemManager::ClearDramBackupInfo(HANDLE hApp) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
 
   FRAMEWORKUNIFIEDLOG(ZONE_STATE, __FUNCTION__, "PsmClrRamJudgeFlgPower()");
-//  ret = PsmClrRamJudgeFlgPower(hApp);
+  ret = PsmClrRamJudgeFlgPower(hApp);
   if (ret != 0) {  // LCOV_EXCL_BR_LINE 11: Excluded due to gcov constraints (others)
     SS_ASERT_ERRNO(0);  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
     l_eStatus = eFrameworkunifiedStatusFail;
@@ -2006,60 +1181,27 @@ VOID CSystemManager::SMStateStartCompleteEntry(HANDLE hApp) {
     l_eStatus = SendRequestToHeartBeat(hApp, SS_HEARTBEAT_START, &send_data, static_cast<UI_32>(sizeof(send_data)));  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
     LOG_ERROR_REC_HIST_IF_ERRORED(l_eStatus, "SendRequestToHeartBeat()");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
 
+    m_DataResetMode = e_SS_SM_DATA_RESET_MODE_NONE;
     {
-      ROM_AccessIf rom_access;  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-      rom_access.Initialize();  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-
-      if (e_SS_SM_DATA_RESET_MODE_NONE != m_DataResetMode) {
-        l_eStatus = SetDataResetMode(rom_access, e_SS_SM_DATA_RESET_MODE_NONE);  // LCOV_EXCL_BR_LINE 11: Excluded due to gcov constraints (others)
-
-        if (eFrameworkunifiedStatusOK != l_eStatus) {
-          FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: SetDataResetMode(%d)", l_eStatus);
-        } else {
-          m_DataResetMode = e_SS_SM_DATA_RESET_MODE_NONE;
-        }
-      }
-      if (m_ProgUpdateState != SS_SM_PROG_UPDATE_STATE_NONE) {
-        m_ProgUpdateState = SS_SM_PROG_UPDATE_STATE_NONE;
-        l_eStatus = SetProgUpdateState(rom_access, m_ProgUpdateState);  // LCOV_EXCL_BR_LINE 11: Excluded due to gcov constraints (others)
-        if (eFrameworkunifiedStatusOK != l_eStatus) {
-          FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: SetProgUpdateState(%d)", l_eStatus);
-        }
-      }
-
-      m_isIlgReset = FALSE;
-
-      l_eStatus = SetLastIlgReset(rom_access, m_isIlgReset);  // LCOV_EXCL_BR_LINE 11: Excluded due to gcov constraints (others)
-      if (eFrameworkunifiedStatusOK != l_eStatus) {
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: SetLastIlgReset(%d)", l_eStatus);
-      }
-
-      if (e_SS_SM_NEXT_WAKEUP_TYPE_NONE != m_NextWakeupType) {
-        l_eStatus = SetNextWakeupType(rom_access, e_SS_SM_NEXT_WAKEUP_TYPE_NONE);  // LCOV_EXCL_BR_LINE 11: Excluded due to gcov constraints (others)
-        if (eFrameworkunifiedStatusOK != l_eStatus) {
-          FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: SetNextWakeupType(%d)", l_eStatus);
-        }
+      uint32_t tmp = static_cast<uint32_t>(m_DataResetMode);
+      if (PowerHalSetResetInfo(AGL_DATARESET_STATE, tmp)) {
+        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
+             "Could not set AGL_DATARESET_STATE to power_hal");
       }
     }
 
+    m_ProgUpdateState = SS_SM_PROG_UPDATE_STATE_NONE;
+    if (PowerHalSetResetInfo(AGL_PROGUPDATE_STATE, m_ProgUpdateState)) {
+      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
+             "Could not set AGL_PROGUPDATE_STATE to power_hal");
+    }
+
+    m_isIlgReset = FALSE;
     {
-      RAM_AccessIf ram_access;  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-      RAM_SM_INFO_t info;
-
-      l_eStatus = ram_access.getRamInfo(&info);  // LCOV_EXCL_BR_LINE 11: Excluded due to gcov constraints (others)
-      if (eFrameworkunifiedStatusOK != l_eStatus) {
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: ram_access.getRamInfo(%d)", l_eStatus);
-      }
-
-      info.needRenotifyStartPrm = FALSE;
-      info.lastResetStatus = e_SS_SM_RESET_STATUS_NONE;
-      info.lastWakeupType = epsstWARMSTART;
-      info.lastDramBackupStatus = e_SS_SM_DRAM_BACKUP_OK;
-      memset(info.order_name, 0x00, sizeof(info.order_name));
-
-      l_eStatus = ram_access.setRamInfo(&info);  // LCOV_EXCL_BR_LINE 11: Excluded due to gcov constraints (others)
-      if (eFrameworkunifiedStatusOK != l_eStatus) {
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: ram_access.setRamInfo(%d)", l_eStatus);
+      uint32_t tmp = static_cast<uint32_t>(m_isIlgReset);
+      if (PowerHalSetResetInfo(AGL_ILLRESET_FLAG, tmp)) {
+        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
+             "Could not set AGL_ILLRESET_FLAG to power_hal");
       }
     }
 
@@ -2159,7 +1301,6 @@ VOID CSystemManager::SMStateExit(HANDLE hApp, SS_SMModuleState l_SMState) {
   default:
     break;
   }
-
 }  // End of VOID CSystemManager::SMStateExit(SS_SMModuleState l_SMState)
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2208,14 +1349,12 @@ EFrameworkunifiedStatus CSystemManager::register_all_notification_callbacks(HAND
       NTFY_SSSystemMgrUserMode,
       sizeof(T_SS_SM_UserModeOnOffNotification_Struct), eFrameworkunifiedStateVar } };
 
-  FrameworkunifiedNotificationsList sm_notifications[] = { { NTFY_SSHUBootModes,
-      sizeof(TSS_BootModeListStruct), eFrameworkunifiedStateVar }, {
-      NTFY_SSSystemMgrStartUpType, sizeof(EPWR_SC_WAKEUP_TYPE),
-      eFrameworkunifiedStateVar }, { NTFY_SSSystemMgrDataReset,
-      sizeof(ESMDataResetType), eFrameworkunifiedStateVar }, {
-      NTFY_SSSystemMgrShutdownStarted, 0, eFrameworkunifiedStateVar }, {
-      NTFY_SSServiceWakeupStatus, sizeof(ESMServiceWakeupStatus),
-      eFrameworkunifiedStateVar }, { NTFY_SSNeedAplRestart, 0, eFrameworkunifiedStateVar } };
+  FrameworkunifiedNotificationsList sm_notifications[] = {
+      { NTFY_SSSystemMgrStartUpType, sizeof(EPWR_SC_WAKEUP_TYPE), eFrameworkunifiedStateVar },
+      { NTFY_SSSystemMgrDataReset, sizeof(ESMDataResetType), eFrameworkunifiedStateVar },
+      { NTFY_SSSystemMgrShutdownStarted, 0, eFrameworkunifiedStateVar },
+      { NTFY_SSServiceWakeupStatus, sizeof(ESMServiceWakeupStatus), eFrameworkunifiedStateVar },
+      { NTFY_SSNeedAplRestart, 0, eFrameworkunifiedStateVar } };
 
   if (m_SMConfig.UMConfig.IsUserModeNotificationABOOL) {
     l_eStatus = FrameworkunifiedNPRegisterNotifications(hApp, userModeNotificationsBOOL,
@@ -2223,7 +1362,7 @@ EFrameworkunifiedStatus CSystemManager::register_all_notification_callbacks(HAND
   } else {
     l_eStatus = FrameworkunifiedNPRegisterNotifications(hApp,
         userModeNotificationsStruct,
-  static_cast<UI_32>(_countof(userModeNotificationsStruct)));
+        static_cast<UI_32>(_countof(userModeNotificationsStruct)));
   }
 
   if (eFrameworkunifiedStatusOK != l_eStatus) {
@@ -2775,15 +1914,8 @@ SS_String CSystemManager::ReadLaunchConfigFileNameFromEnvironmentVariable() {
     // LCOV_EXCL_START 5: standard lib error
     AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
     FRAMEWORKUNIFIEDLOG(ZONE_WARN, __FUNCTION__, "no found %s", retStr.c_str());
-    // For working even if the system installed into legacy path
-    SS_String tmpStr = DefaultConfigFilesPathOld;
-    tmpStr += l_FileName;
+    SS_ASERT(0);
     // LCOV_EXCL_STOP
-    if (access(tmpStr.c_str(), F_OK) == 0) {  // LCOV_EXCL_BR_LINE 5: standard lib error
-      retStr = tmpStr;  // LCOV_EXCL_BR_LINE 5: standard lib error
-    } else {
-      SS_ASERT(0);  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-    }
   }
   return retStr;
 }
@@ -2819,14 +1951,7 @@ SS_String CSystemManager::ReadConfigDataFileNameFromEnvironmentVariable() {
     // LCOV_EXCL_START 5: standard lib error
     AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
     FRAMEWORKUNIFIEDLOG(ZONE_WARN, __FUNCTION__, "no found %s", retStr.c_str());
-    // For working even if the system installed into legacy path
-    SS_String tmpStr = DefaultConfigFilesPathOld;
-    tmpStr += l_FileName;
-    if (access(tmpStr.c_str(), F_OK) == 0) {
-      retStr = tmpStr;
-    } else {
-      SS_ASERT(0);
-    }
+    SS_ASERT(0);
     // LCOV_EXCL_STOP
   }
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
@@ -2886,28 +2011,6 @@ EFrameworkunifiedStatus CSystemManager::start_process_launching(HANDLE hApp) {
 
     SS_String l_launchOrderName = "DEFAULT";  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
     LaunchOrderedVector l_OrderList;
-
-    {
-      RAM_AccessIf ram_access;
-      EFrameworkunifiedStatus l_eRamStatus;
-      RAM_SM_INFO_t info;
-
-      // LCOV_EXCL_BR_START 6: Because RamAccessIf::getRamInfo returns only eFrameworkunifiedStatusOK
-      if (eFrameworkunifiedStatusOK !=
-          (l_eRamStatus = ram_access.getRamInfo(&info))) {
-      // LCOV_EXCL_BR_STOP
-        // LCOV_EXCL_START 6: Because RamAccessIf::getRamInfo returns only eFrameworkunifiedStatusOK
-        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-               " Error: ram_access.getRamInfo(%d)", l_eRamStatus);
-        // LCOV_EXCL_STOP
-      } else {
-        if (info.order_name[0] != '\0') {  // LCOV_EXCL_BR_LINE 6: For setting the initialization conditions at SystemManager startup
-          AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-          l_launchOrderName = info.order_name;  // LCOV_EXCL_LINE 6: For setting the initialization conditions at SystemManager startup
-        }
-      }
-    }
 
     l_bIsGoodRc = l_launchConfig.LoadParametersCfg(m_MapProclaunchGrps,
         m_MapProcNames, l_OrderList, l_launchOrderName, l_LaunchConfigFile);
@@ -3216,7 +2319,7 @@ VOID CSystemManager::SystemManagerDebugDump(HANDLE hApp) {
   // LCOV_EXCL_BR_START 11:unexpected branch  // NOLINT(whitespace/line_length)
   l_debugDumpBuf << FrameworkunifiedGetAppName(hApp) << "/" << endl
       << " <SYSTEM MANAGER DUMP DATA> " << endl << endl << " ***internals*** " << endl
-      << endl << " boot mode " << GetStr(m_BootMode).c_str() << endl << " SM state: "
+      << endl << " SM state: "
       << GetStr(m_SMCurrentState).c_str() << endl << " SM  startup reason: "
       << GetStr(m_StartUpReason).c_str() << endl << " SM shutdown reason: "
       << GetStr(m_shutdownTrigger).c_str() << endl << " LUM: "
@@ -3486,23 +2589,6 @@ EFrameworkunifiedStatus CSystemManager::PerformTerminateProcedure(HANDLE hApp,
       SS_String s_ModuleStatus2 = f_stopCompName + " is now unregistered ";
       FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "%s", s_ModuleStatus2.c_str());
     }
-
-    if (SS_SM_APPS_STOPPING_AT__CWORD56__REQ == m_SMCurrentState
-        || SS_SM_APPS_STOPPING_AT_INTERNAL_REQ == m_SMCurrentState) {
-      // When the shutdown_critical service terminates during the termination sequence, NAVI_DET is set to acquire the LOG at the next startup.
-      // In the event of a Relaunch, NAVI_DET should be set because the likelihood of recovery is low.
-        fprintf(stderr, "SS_SysManager/%s:will %s dead in Stopping \n", __FUNCTION__,
-            f_ModuleIterator->name.c_str());
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "will %s dead in Stopping ",
-            f_ModuleIterator->name.c_str());
-        {
-          RAM_AccessIf ram_access;
-          RAM_SM_INFO_t info;
-          SS_ASERT(eFrameworkunifiedStatusOK == ram_access.getRamInfo(&info));  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-          info.isErrorReset = TRUE;
-          SS_ASERT(eFrameworkunifiedStatusOK == ram_access.setRamInfo(&info));  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-        }
-    }
   }
 
   return l_eStatus;
@@ -3536,6 +2622,7 @@ EFrameworkunifiedStatus CSystemManager::SendRequestToLauncher(HANDLE hApp,
   strcpy(l_ModuleLaunchReq.logging_mask,  // NOLINT
   f_ModuleIterator->logging_msk_str.c_str());
   l_ModuleLaunchReq.priority = f_ModuleIterator->configuration_priority;
+  l_ModuleLaunchReq.cpu_assign = f_ModuleIterator->cpu_assign;
   l_ModuleLaunchReq.groupIterator = m_MapProclaunchGrps.find(
   f_ModuleIterator->group_id);
   l_ModuleLaunchReq.moduleIterator = f_ModuleIterator;
@@ -3729,24 +2816,13 @@ EFrameworkunifiedStatus CSystemManager::RegisterCallbacksForRequester(HANDLE hAp
                                 &CSystemManager::OnGetStopExtInfo> },
     { SS_SM_CRNT_STATE_QUERY,   SysMgrCallback<CSystemManager,
                                 &CSystemManager::OnCurrentSMStateQuery> },
-    { SS_SM_BOOT_MODE_SET_REQ,  SysMgrCallback<CSystemManager,
-                                &CSystemManager::OnSetBootModeRequest> },
     { SS_SM_DATA_RESET_MODE_SET_REQ, SysMgrCallback<CSystemManager,
                                 &CSystemManager::OnSetDataResetModeRequest> },
     { SS_SM_PROG_UPDATE_STATE_SET_REQ, SysMgrCallback<CSystemManager,
                                 &CSystemManager::OnSetProgUpdateStateRequest> },
-    { SS_SM_DEBUG_VAR_CODE_DATA_SET_REQ, SysMgrCallback<CSystemManager,
-                                &CSystemManager::OnVarCodeSetRequest> },
-    { SS_SM_SET_BOOTLOADER_INFO, SysMgrCallback<CSystemManager,
-                                &CSystemManager::OnSetBootloaderInfoRequest> },
-
-    { SS_SM_GET_BOOTLOADER_INFO, SysMgrCallback<CSystemManager,
-                                &CSystemManager::OnGetBootloaderInfoRequest> },
 
     { SS_SM__CWORD56__HEARTBEAT_REQ, SysMgrCallback<CSystemManager,
                                 &CSystemManager::On_CWORD56_HeartBeatRequest> },
-    { SS_SM_WAKEUP_ORDER_SET_REQ, SysMgrCallback<CSystemManager,
-                                &CSystemManager::OnSetWakeupOrderRequest> },
     { SS_SM_NEXT_WAKEUP_TYPE_SET_REQ, SysMgrCallback<CSystemManager,
                                 &CSystemManager::OnSetNextWakeupTypeRequest> },
       // Error Event Logging
@@ -3887,7 +2963,7 @@ EFrameworkunifiedStatus CSystemManager::open_session_with_sm_test_client(HANDLE 
 /// Success ==> eFrameworkunifiedStatusOK
 /// Failure ==> Other values
 ///////////////////////////////////////////////////////////////////////////////
-EFrameworkunifiedStatus CSystemManager::OnOpenSession(HANDLE hApp) noexcept {
+EFrameworkunifiedStatus CSystemManager::OnOpenSession(HANDLE hApp) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   INTERFACEUNIFIEDLOG_RECEIVED_FROM(hApp);  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
   EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
@@ -4230,820 +3306,76 @@ EFrameworkunifiedStatus CSystemManager::GetBuildInfo(std::string &f_BuildInfoStr
 
   CSMVersion cVersion;
   if (eFrameworkunifiedStatusOK != (l_eStatus = cVersion.get_build_info(f_BuildInfoStr))) {  // LCOV_EXCL_BR_LINE 6: For setting the initialization conditions at SystemManager startup // NOLINT(whitespace/line_length)
-
     LOG_ERROR("cVersion.get_build_info()");  // LCOV_EXCL_BR_LINE 6:For setting the initialization conditions at SystemManager startup // NOLINT(whitespace/line_length)
   }
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
   return l_eStatus;
 }  // End of EFrameworkunifiedStatus CSystemManager::GetBuildInfo(std::string)
 
-EFrameworkunifiedStatus CSystemManager::GetBootMode(ROM_AccessIf & f_cRomAccess, ESMBootModeInfo & f_BootMode) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
+bool CSystemManager::GetDramPowerStatusInfo(const HANDLE h_app) {
+  PsmDramStsT l_dram_sts = PSM_DRAM_STS_NORMAL;
+  bool ret = false;
 
-  if (m_UsingVMPlayer) {  // LCOV_EXCL_BR_LINE 6: For setting the initialization conditions at SystemManager startup
+  // Checking dram power status.
+  if (PsmGetDramPowerSupplyAbnormalityCheckResultPower(h_app, &l_dram_sts))
+    return ret;
 
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    f_BootMode = e_SS_SM_BOOT_MODE_APPLICATION;  // LCOV_EXCL_LINE 6: For setting the initialization conditions at SystemManager startup
-    FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
-           " 'm_UsingVMPlayer' is True");
-  } else {
-    EBOOT_MODE l_boot_mode;
-    // LCOV_EXCL_BR_START 6: Because RomAccessIf APIs cannot satisfy the fail condition
-    if (eFrameworkunifiedStatusOK != (l_eStatus =
-        f_cRomAccess.GetBootMode(&l_boot_mode))) {
-    // LCOV_EXCL_BR_STOP
-      // LCOV_EXCL_START 6: Because RomAccessIf APIs cannot satisfy the fail condition
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      f_BootMode = e_SS_SM_BOOT_MODE_INVALID;
-      LOG_ERROR("f_cRomAccess.GetBootMode()");  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-    } else if (l_boot_mode == APPLICATION_MODE) {
-      f_BootMode = e_SS_SM_BOOT_MODE_APPLICATION;
-      // LCOV_EXCL_STOP
-    } else {
-      f_BootMode = e_SS_SM_BOOT_MODE_PROGRAMMING;
-    }
-  }
-  FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " BootMode is '%s'",
-  GetStr(f_BootMode).c_str());  // LCOV_EXCL_BR_LINE 15: marco defined in ns_logger_if.h  // NOLINT(whitespace/line_length)
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of EFrameworkunifiedStatus CSystemManager::GetBootMode(
+  if (l_dram_sts == PSM_DRAM_STS_NORMAL)
+    ret = true;
 
-EFrameworkunifiedStatus CSystemManager::GetLastUserMode(ROM_AccessIf & f_cRomAccess, EPWR_USER_MODE_TYPE& f_lastUserMode) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  EUSER_MODE l_RomData;
-
-  if (m_UsingVMPlayer) {  // LCOV_EXCL_BR_LINE 6: For setting the initialization conditions at SystemManager startup
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
-           " 'm_UsingVMPlayer' is True");
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    f_lastUserMode = epsumON;  // LCOV_EXCL_LINE 6: For setting the initialization conditions at SystemManager startup
-  } else {
-    if (eFrameworkunifiedStatusOK != (l_eStatus = f_cRomAccess.GetLastUserMode(&l_RomData))) {  // LCOV_EXCL_BR_LINE 6: Because RomAccessIf APIs cannot satisfy the fail condition
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      LOG_ERROR("f_cRomAccess.GetLastUserMode()");  // LCOV_EXCL_LINE 6: Because RomAccessIf APIs cannot satisfy the fail condition
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      f_lastUserMode = epsumINVALID;  // LCOV_EXCL_LINE 6: Because RomAccessIf APIs cannot satisfy the fail condition
-    } else {
-      f_lastUserMode = m_ROM_to_SSUserModeEnumMap[l_RomData];
-    }
-  }
-  if (eFrameworkunifiedStatusOK == l_eStatus) {  // LCOV_EXCL_LINE 6: Because RomAccessIf APIs cannot satisfy the fail condition
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " Read LastUserMode of 'User%s'",
-            f_lastUserMode == epsumON ? "On" : "Off");
-  }
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of EFrameworkunifiedStatus CSystemManager::GetLastUserMode(
-
-EFrameworkunifiedStatus CSystemManager::SaveLastUserModeToNVM(EPWR_USER_MODE_TYPE f_eUserModeState) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  if (m_UsingVMPlayer) {  // LCOV_EXCL_BR_LINE 6: For setting the initialization conditions at SystemManager startup
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_WARN, __FUNCTION__,
-           " Warning: 'm_UsingVMPlayer' is True; "
-        "unable to save LastUserMode to NVM");
-  } else {
-    // Initialize ROM access object
-    ROM_AccessIf f_cRomAccess;  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-    f_cRomAccess.Initialize();  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-    EUSER_MODE l_RomData = m_SS_to_ROMUserModeEnumMap[f_eUserModeState];  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-
-    if (eFrameworkunifiedStatusOK != (l_eStatus = f_cRomAccess.SetLastUserMode(l_RomData))) {
-      LOG_ERROR("f_cRomAccess.SetLastUserMode()");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-    } else {
-      FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " Successfully wrote LastUserMode '%s' to NVM",
-          l_RomData == USER_OFF ? "USER_OFF" : "USER_ON");
-    }
-  }
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of EFrameworkunifiedStatus CSystemManager::SaveLastUserModeToNVM(
-
-EFrameworkunifiedStatus CSystemManager::GetLimpHomeCutoffMode(ROM_AccessIf & f_cRomAccess, EPWR_LHC_TYPE& f_limpHomeCutoff) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  ECONTROL_MODE l_RomData;
-
-  if (m_UsingVMPlayer) {  // LCOV_EXCL_BR_LINE 6: For setting the initialization conditions at SystemManager startup
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
-           " 'm_UsingVMPlayer' is True");
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    f_limpHomeCutoff = epslhcDISABLED;  // LCOV_EXCL_LINE 6: For setting the initialization conditions at SystemManager startup
-  } else {
-    if (eFrameworkunifiedStatusOK != (l_eStatus = f_cRomAccess.GetLimpHomeCutOffReqMode(&l_RomData))) {  // LCOV_EXCL_BR_LINE 6: Because RomAccessIf APIs cannot satisfy the fail condition // NOLINT(whitespace/line_length)
-
-      LOG_ERROR("f_cRomAccess.GetLimpHomeCutOffReqMode()");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      f_limpHomeCutoff = epslhcINVALID;  // LCOV_EXCL_LINE 6: Because RomAccessIf APIs cannot satisfy the fail condition
-    } else {
-      f_limpHomeCutoff = m_Control_to_LimpHomeCutoffMode_map[l_RomData];
-    }
-  }
-
-  FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " LimpHomeCutoff is %s",
-  GetStr(f_limpHomeCutoff).c_str());
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of EFrameworkunifiedStatus CSystemManager::GetLimpHomeCutoffMode(
-
-EFrameworkunifiedStatus CSystemManager::GetProductionMode(ROM_AccessIf & f_cRomAccess, EPWR_PROD_MODE_TYPE& f_productionMode) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  ECONTROL_MODE l_RomData;
-
-  if (m_UsingVMPlayer) {  // LCOV_EXCL_BR_LINE 6: For setting the initialization conditions at SystemManager startup
-    // LCOV_EXCL_START 6: For setting the initialization conditions at SystemManager startup
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " 'm_UsingVMPlayer' is True");
-    f_productionMode = epspmDISABLED;
-    // LCOV_EXCL_STOP
-  } else {
-    if (eFrameworkunifiedStatusOK != (l_eStatus = f_cRomAccess.GetProductionMode(&l_RomData))) {  // LCOV_EXCL_BR_LINE 6: Because RomAccessIf APIs cannot satisfy the fail condition // NOLINT(whitespace/line_length)
-      LOG_ERROR("f_cRomAccess.GetProductionMode()");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      f_productionMode = epspmINVALID;  // LCOV_EXCL_LINE 6: RomAccessIf APIs cannot satisfy the fail condition
-    } else {
-      f_productionMode = m_Control_to_ProductionMode_map[l_RomData];
-    }
-  }
-
-  FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " Production Mode is %s",
-  GetStr(f_productionMode).c_str());  // LCOV_EXCL_BR_LINE 15: marco defined in ns_logger_if.h  // NOLINT(whitespace/line_length)
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of EFrameworkunifiedStatus CSystemManager::GetProductionMode(
-
-EFrameworkunifiedStatus CSystemManager::GetSignature(ROM_AccessIf & f_cRomAccess, UI_32 * pData) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-
-  if (m_UsingVMPlayer) {  // LCOV_EXCL_BR_LINE 6: For setting the initialization conditions at SystemManager startup
-    // LCOV_EXCL_START 6: For setting the initialization conditions at SystemManager startup
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: 'm_UsingVMPlayer' is True");
-    l_eStatus = eFrameworkunifiedStatusInvldParam;
-    // LCOV_EXCL_STOP
-  } else {
-    if (eFrameworkunifiedStatusOK != (l_eStatus = f_cRomAccess.GetSignature(pData))) {  // LCOV_EXCL_BR_LINE 6: Because RomAccessIf APIs cannot satisfy the fail condition // NOLINT(whitespace/line_length)
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      LOG_ERROR("f_cRomAccess.GetSignature()");  // LCOV_EXCL_LINE 6: Because RomAccessIf APIs cannot satisfy the fail condition
-    }
-  }
-  if (eFrameworkunifiedStatusOK == l_eStatus) {  // LCOV_EXCL_BR_LINE 6: Because RomAccessIf APIs cannot satisfy the fail condition
-    FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " NVM Signature is %llx",
-        static_cast<long long unsigned int>(*pData));
-  }
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of EFrameworkunifiedStatus CSystemManager::GetSignature(ROM_AccessIf & f_cRomAccess
-
-EFrameworkunifiedStatus CSystemManager::GetTransportMode(ROM_AccessIf & f_cRomAccess, EPWR_TRANSPORT_MODE_TYPE& f_transportMode) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  ECONTROL_MODE l_RomData;
-
-  if (m_UsingVMPlayer) {  // LCOV_EXCL_BR_LINE 6: For setting the initialization conditions at SystemManager startup
-    // LCOV_EXCL_START 6: For setting the initialization conditions at SystemManager startup
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: 'm_UsingVMPlayer' is True");
-    l_eStatus = eFrameworkunifiedStatusInvldParam;
-    // LCOV_EXCL_STOP
-  } else {
-    if (eFrameworkunifiedStatusOK != (l_eStatus = f_cRomAccess.GetTransportMode(&l_RomData))) {  // LCOV_EXCL_BR_LINE 6: Because RomAccessIf APIs cannot satisfy the fail condition // NOLINT(whitespace/line_length)
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      LOG_ERROR  // LCOV_EXCL_LINE 6: Because RomAccessIf APIs cannot satisfy the fail condition
-      ("f_cRomAccess.GetTransportMode()");  // LCOV_EXCL_LINE 6: Because RomAccessIf APIs cannot satisfy the fail condition
-    } else {
-      f_transportMode = m_Control_to_TransportMode_map[l_RomData];
-    }
-  }
-
-  FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " Transport Mode is %s",
-  GetStr(f_transportMode).c_str());
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of EFrameworkunifiedStatus CSystemManager::GetTransportMode(
-
-EFrameworkunifiedStatus CSystemManager::GetDataResetMode(ROM_AccessIf & f_cRomAccess,
-        ESMDataResetModeInfo& f_dataResetMode, bool isFast) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  EDATARESET_MODE l_DataResetMode;
-
-  if (m_UsingVMPlayer) {  // LCOV_EXCL_BR_LINE 6: For setting the initialization conditions at SystemManager startup
-    // LCOV_EXCL_START 6: For setting the initialization conditions at SystemManager startup
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: 'm_UsingVMPlayer' is True");
-    l_eStatus = eFrameworkunifiedStatusInvldParam;
-    // LCOV_EXCL_STOP
-  } else {
-    if (isFast) {  // LCOV_EXCL_BR_LINE 6: Because the condition cannot be set
-      l_eStatus = f_cRomAccess.GetDataResetModeFast(&l_DataResetMode);
-    } else {
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      l_eStatus = f_cRomAccess.GetDataResetMode(&l_DataResetMode);  // LCOV_EXCL_LINE 6: Because the condition cannot be set
-    }
-
-    if (eFrameworkunifiedStatusOK != l_eStatus) {  // LCOV_EXCL_BR_LINE 6: Because RomAccessIf APIs cannot satisfy the fail condition
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      LOG_ERROR  // LCOV_EXCL_LINE 6: Because RomAccessIf APIs cannot satisfy the fail condition
-      ("f_cRomAccess.GetDataResetMode()");  // LCOV_EXCL_LINE 6: Because RomAccessIf APIs cannot satisfy the fail condition
-    } else {
-      switch (l_DataResetMode) {  // LCOV_EXCL_BR_LINE 6: Because RomAccessIf APIs cannot satisfy the fail condition
-        case DATARESET_NONE:
-          f_dataResetMode = e_SS_SM_DATA_RESET_MODE_NONE;
-          break;
-        // LCOV_EXCL_START 6: Because values other than DATARESET NONE cannot be returned by RomAccessIf APIs
-        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-        case DATARESET_USER:
-          f_dataResetMode = e_SS_SM_DATA_RESET_MODE_USER;
-          break;
-        case DATARESET_FACTORY:
-          f_dataResetMode = e_SS_SM_DATA_RESET_MODE_FACTORY;
-          break;
-        default:
-          f_dataResetMode = e_SS_SM_DATA_RESET_MODE_NONE;
-          FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: reset_mode = %d", l_DataResetMode);
-          break;
-        // LCOV_EXCL_STOP
-      }
-    }
-  }
-
-  FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " Data Reset Mode is %s",
-         f_dataResetMode == e_SS_SM_DATA_RESET_MODE_USER ? "DATARESET_USER" :
-         f_dataResetMode == e_SS_SM_DATA_RESET_MODE_FACTORY ? "DATARESET_FACTORY" : "DATARESET_NONE");
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}
-// End of EFrameworkunifiedStatus CSystemManager::GetDataResetMode(
-
-EFrameworkunifiedStatus CSystemManager::GetResetCount(ROM_AccessIf & f_cRomAccess, UI_32& f_rebootCount) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-
-  if (m_UsingVMPlayer) {  // LCOV_EXCL_BR_LINE 6: For setting the initialization conditions at SystemManager startup
-    // LCOV_EXCL_START 6: For setting the initialization conditions at SystemManager startup
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: 'm_UsingVMPlayer' is True");
-    l_eStatus = eFrameworkunifiedStatusInvldParam;
-    // LCOV_EXCL_STOP
-  } else {
-    if (eFrameworkunifiedStatusOK != (l_eStatus = f_cRomAccess.GetResetCount(&f_rebootCount))) {  // LCOV_EXCL_BR_LINE 6: Because RomAccessIf APIs cannot satisfy the fail condition // NOLINT(whitespace/line_length)
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      LOG_ERROR("f_cRomAccess.GetResetCount()");  // LCOV_EXCL_LINE 6: Because RomAccessIf APIs cannot satisfy the fail condition
-    }
-  }
-
-  FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " Reboot Count is %d", f_rebootCount);
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}
-// End of EFrameworkunifiedStatus CSystemManager::GetResetCount(
-
-EFrameworkunifiedStatus CSystemManager::GetLastIlgReset(ROM_AccessIf & f_cRomAccess, BOOL& f_lastIlgReset) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-
-  if (m_UsingVMPlayer) {
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: 'm_UsingVMPlayer' is True");
-    l_eStatus = eFrameworkunifiedStatusInvldParam;
-  } else {
-    ELASTILGRESET_MODE l_lastIlgReset;
-
-    // LCOV_EXCL_BR_START 6: Because RomAccessIf APIs cannot satisfy the fail condition
-    if (eFrameworkunifiedStatusOK
-        != (l_eStatus = f_cRomAccess.GetLastIlgReset(&l_lastIlgReset))) {
-    // LCOV_EXCL_BR_STOP
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      LOG_ERROR("f_cRomAccess.GetLastIlgReset()");  // LCOV_EXCL_LINE 6: Because RomAccessIf APIs cannot satisfy the fail condition
-    }
-
-    f_lastIlgReset = (l_lastIlgReset == LAST_ILGRESET_NG) ? TRUE : FALSE;  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-  }
-
-  FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " LastIlgRerset is %s", f_lastIlgReset ? "LAST_ILGRESET_NORMAL" : "LAST_ILGRESET_NG");
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}
-// End of EFrameworkunifiedStatus CSystemManager::GetLastIlgReset(
-
-EFrameworkunifiedStatus CSystemManager::GetProgUpdateState(ROM_AccessIf & f_cRomAccess, SMProgUpdateState& f_progUpdateState) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-
-  if (m_UsingVMPlayer) {  // LCOV_EXCL_BR_LINE 6: For setting the initialization conditions at SystemManager startup
-    // LCOV_EXCL_START 6: For setting the initialization conditions at SystemManager startup
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Error:m_UsingVMPlayer is True");
-    l_eStatus = eFrameworkunifiedStatusInvldParam;
-    // LCOV_EXCL_STOP
-  } else {
-    // LCOV_EXCL_BR_START 6: Because RomAccessIf APIs cannot satisfy the fail condition
-    if (eFrameworkunifiedStatusOK
-        != (l_eStatus = f_cRomAccess.GetProgUpdateState(&f_progUpdateState))) {
-    // LCOV_EXCL_BR_STOP
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      LOG_ERROR  // LCOV_EXCL_LINE 6: Because RomAccessIf APIs cannot satisfy the fail condition
-      ("f_cRomAccess.GetProgUpdateState()");  // LCOV_EXCL_LINE 6: Because RomAccessIf APIs cannot satisfy the fail condition
-    }
-  }
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}
-// End of EFrameworkunifiedStatus CSystemManager::GetProgUpdateState(
-
-EFrameworkunifiedStatus CSystemManager::GetErrLogCount(ROM_AccessIf & f_cRomAccess, UI_32& f_errLogCount) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-
-  if (m_UsingVMPlayer) {  // LCOV_EXCL_BR_LINE 6:Because the applicable variable cannot be changed from the external API (only evaluated by the initial value)
-  // LCOV_EXCL_START 6: Because the applicable variable cannot be changed from the external API (only evaluated by the initial value)
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Error:m_UsingVMPlayer is True");
-    l_eStatus = eFrameworkunifiedStatusInvldParam;
-    // LCOV_EXCL_STOP
-  } else {
-    // LCOV_EXCL_BR_START 6: Because RomAccessIf APIs cannot satisfy the fail condition
-    if (eFrameworkunifiedStatusOK
-        != (l_eStatus = f_cRomAccess.GetErrLogCount(&f_errLogCount))) {
-    // LCOV_EXCL_BR_STOP
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      LOG_ERROR("f_cRomAccess.GetErrLogCount()");  // LCOV_EXCL_LINE 6:Because RomAccessIf APIs cannot satisfy the fail condition
-    }
-  }
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}
-// End of EFrameworkunifiedStatus CSystemManager::GetErrLogCount
-
-EFrameworkunifiedStatus CSystemManager::GetNextWakeupType(ROM_AccessIf & f_cRomAccess, ESMNextWakeupType& f_wakeupType) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-
-  if (m_UsingVMPlayer) {
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Error:m_UsingVMPlayer is True");
-    l_eStatus = eFrameworkunifiedStatusInvldParam;
-  } else {
-    ENEXT_WAKEUP_TYPE l_wakeupType;
-
-    if (eFrameworkunifiedStatusOK != (l_eStatus = f_cRomAccess.GetNextWakeupType(&l_wakeupType))) {
-      LOG_ERROR("f_cRomAccess.GetNextWakeupType()");  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-    } else {
-      switch (l_wakeupType) {
-        case NEXT_WAKEUP_TYPE_NONE:
-          f_wakeupType = e_SS_SM_NEXT_WAKEUP_TYPE_NONE;
-          break;
-        case NEXT_WAKEUP_TYPE_COLD:
-          f_wakeupType = e_SS_SM_NEXT_WAKEUP_TYPE_COLD;
-          break;
-        case NEXT_WAKEUP_TYPE_HOT:
-          f_wakeupType = e_SS_SM_NEXT_WAKEUP_TYPE_HOT;
-          break;
-        default:
-          f_wakeupType = e_SS_SM_NEXT_WAKEUP_TYPE_NONE;
-          FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: wakeupType = %d", l_wakeupType);
-          break;
-      }
-    }
-  }
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}
-// End of EFrameworkunifiedStatus CSystemManager::GetNextWakeupType(
-
-EFrameworkunifiedStatus CSystemManager::SetActiveFlashloader(ROM_AccessIf & f_cRomAccess, EACTIVE_FLASHLOADER f_FlashloaderMode) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus;
-  if (m_UsingVMPlayer) {  // LCOV_EXCL_BR_LINE 6: SetSystemModeInfoStruct() has checked
-    // LCOV_EXCL_START 6: SetSystemModeInfoStruct() has checked
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: 'm_UsingVMPlayer' is True");
-    l_eStatus = eFrameworkunifiedStatusInvldParam;
-    // LCOV_EXCL_STOP
-  } else if (eFrameworkunifiedStatusOK != (l_eStatus = f_cRomAccess.SetActiveFlashloader(f_FlashloaderMode))) {
-    LOG_ERROR("f_cRomAccess.SetActiveFlashloader()");  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-  } else {
-    FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " NVM ActiveFlashloader initialized to %s",
-        f_FlashloaderMode == NEW_FLASHLOADER ? "NEW_FLASHLOADER" : "OLD_FLASHLOADER");
-  }
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of EFrameworkunifiedStatus CSystemManager::SetActiveFlashloader(
-
-EFrameworkunifiedStatus CSystemManager::SetBootMode(ROM_AccessIf & f_cRomAccess, ESMBootModeInfo f_BootMode) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  if (m_UsingVMPlayer) {  // LCOV_EXCL_BR_LINE 6: SetSystemModeInfoStruct() has checked
-    // LCOV_EXCL_START 6: SetSystemModeInfoStruct() has checked
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: 'm_UsingVMPlayer' is True");
-    l_eStatus = eFrameworkunifiedStatusInvldParam;
-    // LCOV_EXCL_STOP
-  } else {
-    EBOOT_MODE l_RomBootMode;
-    switch (f_BootMode) {  // LCOV_EXCL_BR_LINE 200:only e_SS_SM_BOOT_MODE_APPLICATION is called
-      case e_SS_SM_BOOT_MODE_APPLICATION:
-        l_RomBootMode = APPLICATION_MODE;
-        break;
-      case e_SS_SM_BOOT_MODE_PROGRAMMING:
-        // LCOV_EXCL_START 200:only e_SS_SM_BOOT_MODE_APPLICATION is called
-        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-        l_RomBootMode = PROGRAMMING_MODE;
-        break;
-        // LCOV_EXCL_STOP
-      default:
-        // LCOV_EXCL_START 200:only e_SS_SM_BOOT_MODE_APPLICATION is called
-        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-        // Shouldn't ever get here, but hey, in case we do...
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-            " Error: Unknown ESMBootModeInfo f_BootMode: 0x%X", f_BootMode);
-        l_eStatus = eFrameworkunifiedStatusInvldParam;
-        // LCOV_EXCL_STOP
-    }
-
-    if (eFrameworkunifiedStatusOK == l_eStatus) {  // LCOV_EXCL_BR_LINE 200: l_eStatus is always eFrameworkunifiedStatusOK
-      if (eFrameworkunifiedStatusOK != (l_eStatus = f_cRomAccess.SetBootMode(l_RomBootMode))) {
-        LOG_ERROR("f_cRomAccess.SetBootMode()");  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-      } else {
-        FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " NVM BootMode initialized to %s",
-            l_RomBootMode == APPLICATION_MODE ? "APPLICATION_MODE" : "PROGRAMMING_MODE");
-      }
-    }
-  }
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of EFrameworkunifiedStatus CSystemManager::SetBootMode(
-
-EFrameworkunifiedStatus CSystemManager::SetLastUserMode(ROM_AccessIf & f_cRomAccess, EPWR_USER_MODE_TYPE f_lastUserMode) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  EUSER_MODE l_RomMode = f_lastUserMode == epsumOFF ? USER_OFF : USER_ON;
-  if (m_UsingVMPlayer) {  // LCOV_EXCL_BR_LINE 6: SetSystemModeInfoStruct() has checked
-    // LCOV_EXCL_START 6: SetSystemModeInfoStruct() has checked
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: 'm_UsingVMPlayer' is True");
-    l_eStatus = eFrameworkunifiedStatusInvldParam;
-    // LCOV_EXCL_STOP
-  } else if (eFrameworkunifiedStatusOK != (l_eStatus = f_cRomAccess.SetLastUserMode(l_RomMode))) {
-    LOG_ERROR("f_cRomAccess.SetLastUserMode()");
-  } else {
-    FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " NVM LastUserMode initialized to %s",
-        f_lastUserMode == epsumOFF ? "USER_OFF" : "USER_ON");
-  }
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of EFrameworkunifiedStatus SetLastUserMode(ROM_AccessIf & f_cRomAccess
-
-EFrameworkunifiedStatus CSystemManager::SetLimpHomeCutoffMode(ROM_AccessIf & f_cRomAccess, EPWR_LHC_TYPE f_controlMode) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  ECONTROL_MODE l_RomControlMode;
-  if (m_UsingVMPlayer) {  // LCOV_EXCL_BR_LINE 6: SetSystemModeInfoStruct() has checked
-    // LCOV_EXCL_START 6: SetSystemModeInfoStruct() has checked
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: 'm_UsingVMPlayer' is True");
-    l_eStatus = eFrameworkunifiedStatusInvldParam;
-    // LCOV_EXCL_STOP
-  } else {
-    l_RomControlMode = f_controlMode == epslhcDISABLED ? DISABLE_MODE : ENABLE_MODE;
-    if (eFrameworkunifiedStatusOK
-        != (l_eStatus = f_cRomAccess.SetLimpHomeCutOffReqMode(l_RomControlMode))) {
-      LOG_ERROR("f_cRomAccess.SetLimpHomeCutOffReqMode()");  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-    } else {
-      FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " NVM LimpHomeCutOff initialized to %s",
-          f_controlMode == epslhcDISABLED ? "DISABLE_MODE" : "ENABLE_MODE");
-    }
-  }
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of CSystemManager::SetLimpHomeCutoffMode(ROM_AccessIf & f_cRomAccess
-
-EFrameworkunifiedStatus CSystemManager::SetProductionMode(ROM_AccessIf & f_cRomAccess, EPWR_PROD_MODE_TYPE f_productionMode) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  ECONTROL_MODE l_RomControlMode;
-  if (m_UsingVMPlayer) {  // LCOV_EXCL_BR_LINE 6: SetSystemModeInfoStruct() has checked
-    // LCOV_EXCL_START 6: SetSystemModeInfoStruct() has checked
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: 'm_UsingVMPlayer' is True");
-    l_eStatus = eFrameworkunifiedStatusInvldParam;
-    // LCOV_EXCL_STOP
-  } else {
-    l_RomControlMode = f_productionMode == epspmDISABLED ? DISABLE_MODE : ENABLE_MODE;
-    if (eFrameworkunifiedStatusOK
-        != (l_eStatus = f_cRomAccess.SetProductionMode(l_RomControlMode))) {
-      LOG_ERROR("f_cRomAccess.SetProductionMode()");  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-    } else {
-      FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " NVM ProductionMode initialized to %s",
-           f_productionMode == epspmDISABLED ? "DISABLE_MODE" : "ENABLE_MODE");
-    }
-  }
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of CSystemManager::SetLimpHomeCutoff(ROM_AccessIf & f_cRomAccess
-
-EFrameworkunifiedStatus CSystemManager::SetSignature(ROM_AccessIf & f_cRomAccess, UI_32 f_Data) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-
-  if (m_UsingVMPlayer) {  // LCOV_EXCL_BR_LINE 6: For setting the initialization conditions at SystemManager startup
-    // LCOV_EXCL_START 6: For setting the initialization conditions at SystemManager startup
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-           " Error: 'm_UsingVMPlayer' is True");
-    l_eStatus = eFrameworkunifiedStatusInvldParam;
-    // LCOV_EXCL_STOP
-  } else {
-    // LCOV_EXCL_BR_START 6: Because RomAccessIf APIs cannot satisfy the fail condition
-    if (eFrameworkunifiedStatusOK !=
-        (l_eStatus = f_cRomAccess.SetSignature(f_Data))) {
-    // LCOV_EXCL_BR_STOP
-      LOG_ERROR("f_cRomAccess.SetSignature()");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-    }
-  }
-
-  if (eFrameworkunifiedStatusOK == l_eStatus) {
-    FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " NVM Signature is set to %llx",
-    static_cast<long long unsigned int>(f_Data));  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT
-  }
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of
-
-EFrameworkunifiedStatus CSystemManager::SetTransportMode(ROM_AccessIf & f_cRomAccess, EPWR_TRANSPORT_MODE_TYPE f_transportMode) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  ECONTROL_MODE l_RomControlMode;
-  if (m_UsingVMPlayer) {  // LCOV_EXCL_BR_LINE 6: SetSystemModeInfoStruct() has checked
-    // LCOV_EXCL_START 6: SetSystemModeInfoStruct() has checked
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: 'm_UsingVMPlayer' is True");
-    l_eStatus = eFrameworkunifiedStatusInvldParam;
-    // LCOV_EXCL_STOP
-  } else {
-    l_RomControlMode = f_transportMode == epstmDISABLED ? DISABLE_MODE : ENABLE_MODE;
-    if (eFrameworkunifiedStatusOK
-        != (l_eStatus = f_cRomAccess.SetTransportMode(l_RomControlMode))) {
-      LOG_ERROR("f_cRomAccess.SetTransportMode()");  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-    } else {
-      FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " NVM TransportMode initialized to %s",
-          f_transportMode == epstmDISABLED ? "DISABLE_MODE" : "ENABLE_MODE");
-    }
-  }
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of CSystemManager::SetLimpHomeCutoff(ROM_AccessIf & f_cRomAccess
-
-EFrameworkunifiedStatus CSystemManager::SetDataResetMode(ROM_AccessIf & f_cRomAccess, ESMDataResetModeInfo f_dataResetMode) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  EDATARESET_MODE l_DataResetMode;
-
-  if (m_UsingVMPlayer) {  // LCOV_EXCL_BR_LINE 6: Because the applicable variable cannot be changed from the external API (only evaluated by the initial value)
-    // LCOV_EXCL_START 6: Because the applicable variable cannot be changed from the external API (only evaluated by the initial value)
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-           " Error: 'm_UsingVMPlayer' is True");
-    l_eStatus = eFrameworkunifiedStatusInvldParam;
-    // LCOV_EXCL_STOP
-  } else {
-    switch (f_dataResetMode) {
-      case e_SS_SM_DATA_RESET_MODE_NONE:
-        l_DataResetMode = DATARESET_NONE;
-        break;
-      case e_SS_SM_DATA_RESET_MODE_USER:
-        l_DataResetMode = DATARESET_USER;
-        break;
-      case e_SS_SM_DATA_RESET_MODE_FACTORY:
-        l_DataResetMode = DATARESET_FACTORY;
-        break;
-      default:
-        l_DataResetMode = DATARESET_NONE;
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: reset_mode = %d", f_dataResetMode);
-        break;
-    }
-
-    if (eFrameworkunifiedStatusOK != (l_eStatus = f_cRomAccess.SetDataResetMode(l_DataResetMode))) {
-      LOG_ERROR("f_cRomAccess.SetDataResetMode()");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-    } else {
-      FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " NVM DataResetMode set to %s",
-          f_dataResetMode == e_SS_SM_DATA_RESET_MODE_USER ? "DATARESET_USER" :
-          f_dataResetMode == e_SS_SM_DATA_RESET_MODE_FACTORY ? "DATARESET_FACTORY" : "DATARESET_NONE");
-    }
-  }
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of CSystemManager::SetDataResetMode(ROM_AccessIf & f_cRomAccess
-
-EFrameworkunifiedStatus CSystemManager::SetResetCount(ROM_AccessIf & f_cRomAccess, UI_32 f_resetCount) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  if (m_UsingVMPlayer) {  // LCOV_EXCL_BR_LINE 6: Because the applicable variable cannot be changed from the external API (only evaluated by the initial value)
-    // LCOV_EXCL_START 6: Because the applicable variable cannot be changed from the external API (only evaluated by the initial value)
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: 'm_UsingVMPlayer' is True");
-    l_eStatus = eFrameworkunifiedStatusInvldParam;
-    // LCOV_EXCL_STOP
-  } else {
-    if (eFrameworkunifiedStatusOK != (l_eStatus = f_cRomAccess.SetResetCount(f_resetCount))) {  // LCOV_EXCL_BR_LINE 6: Because the applicable variable cannot be changed from the external API (only evaluated by the initial value) // NOLINT(whitespace/line_length)
-      LOG_ERROR("f_cRomAccess.SetResetCount()");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-    } else {
-     FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
-             " NVM ResetCount set to %d", f_resetCount);
-    }
-  }
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of CSystemManager::SetResetCount(ROM_AccessIf & f_cRomAccess
-
-EFrameworkunifiedStatus CSystemManager::SetLastIlgReset(ROM_AccessIf & f_cRomAccess, BOOL f_lastIlgReset) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-
-  if (m_UsingVMPlayer) {
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: 'm_UsingVMPlayer' is True");
-    l_eStatus = eFrameworkunifiedStatusInvldParam;
-  } else {
-    // LCOV_EXCL_BR_START 6: For setting the initialization conditions at SystemManager startup
-    ELASTILGRESET_MODE l_lastIlgReset =
-      f_lastIlgReset ? LAST_ILGRESET_NG : LAST_ILGRESET_NORMAL;
-    // LCOV_EXCL_BR_STOP
-
-    if (eFrameworkunifiedStatusOK
-        != (l_eStatus =
-            f_cRomAccess.SetLastIlgReset(l_lastIlgReset))) {
-      LOG_ERROR("f_cRomAccess.SetLastIlgReset()");
-    } else {
-      FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " NVM LastIlgReset is set to %s",
-          f_lastIlgReset ? "LAST_ILGRESET_NG" : "LAST_ILGRESET_NORMAL");
-    }
-  }
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of CSystemManager::SetLastIlgReset(ROM_AccessIf & f_cRomAccess
-
-EFrameworkunifiedStatus CSystemManager::SetProgUpdateState(ROM_AccessIf & f_cRomAccess, SMProgUpdateState f_progUpdateState) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-
-  if (m_UsingVMPlayer) {  // LCOV_EXCL_BR_LINE 6: Because the applicable variable cannot be changed from the external API (only evaluated by the initial value)
-    // LCOV_EXCL_START 6: Because the applicable variable cannot be changed from the external API (only evaluated by the initial value)
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-           "Error:m_UsingVMPlayer is True");
-    l_eStatus = eFrameworkunifiedStatusInvldParam;
-    // LCOV_EXCL_STOP
-  } else {
-    if (eFrameworkunifiedStatusOK
-        != (l_eStatus = f_cRomAccess.SetProgUpdateState(f_progUpdateState))) {
-      LOG_ERROR("f_cRomAccess.SetProgUpdateState()");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-    } else {
-      FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "NVM ProgUpdateState : %#x", f_progUpdateState);
-    }
-  }
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of CSystemManager::SetProgUpdateState(ROM_AccessIf & f_cRomAccess
-
-EFrameworkunifiedStatus CSystemManager::SetErrLogCount(ROM_AccessIf & f_cRomAccess, UI_32 f_errLogCount) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-
-  if (m_UsingVMPlayer) {  // LCOV_EXCL_BR_LINE 6: Because the applicable variable cannot be changed from the external API (only evaluated by the initial value)
-    // LCOV_EXCL_START 6: Because the applicable variable cannot be changed from the external API (only evaluated by the initial value)
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-           "Error:m_UsingVMPlayer is True");
-    l_eStatus = eFrameworkunifiedStatusInvldParam;
-    // LCOV_EXCL_STOP
-  } else {
-    if (eFrameworkunifiedStatusOK != (l_eStatus =
-        f_cRomAccess.SetErrLogCount(f_errLogCount))) {
-      LOG_ERROR("f_cRomAccess.SetErrLogCount()");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-    } else {
-      FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
-             "NVM ErrLogCount : %#x", f_errLogCount);
-    }
-  }
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of CSystemManager::SetErrLogCount(ROM_AccessIf & f_cRomAccess
-
-EFrameworkunifiedStatus CSystemManager::SetNextWakeupType(ROM_AccessIf & f_cRomAccess, ESMNextWakeupType f_wakeupType) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-
-  if (m_UsingVMPlayer) {
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Error:m_UsingVMPlayer is True");
-    l_eStatus = eFrameworkunifiedStatusInvldParam;
-  } else {
-    ENEXT_WAKEUP_TYPE l_wakeupType;
-
-    switch (f_wakeupType) {
-      case e_SS_SM_NEXT_WAKEUP_TYPE_NONE:
-        l_wakeupType = NEXT_WAKEUP_TYPE_NONE;
-        break;
-      case e_SS_SM_NEXT_WAKEUP_TYPE_COLD:
-        l_wakeupType = NEXT_WAKEUP_TYPE_COLD;
-        break;
-      case e_SS_SM_NEXT_WAKEUP_TYPE_HOT:
-        l_wakeupType = NEXT_WAKEUP_TYPE_HOT;
-        break;
-      default:
-        l_wakeupType = NEXT_WAKEUP_TYPE_NONE;
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: wakeupType = %d", f_wakeupType);
-        break;
-    }
-
-    if (eFrameworkunifiedStatusOK
-        != (l_eStatus = f_cRomAccess.SetNextWakeupType(l_wakeupType))) {
-      LOG_ERROR("f_cRomAccess.SetNextWakeupType()");  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-    } else {
-      FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "NVM NextWakeupType : %#x", f_wakeupType);
-    }
-  }
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of CSystemManager::SetNextWakeupType(ROM_AccessIf & f_cRomAccess
-
-EFrameworkunifiedStatus CSystemManager::SetProductPrivate(ROM_AccessIf & f_cRomAccess, UI_8 buf[ROM_PRODUCT_PRIVATE_MAX]) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-
-  if (m_UsingVMPlayer) {  // LCOV_EXCL_BR_LINE 6: SetSystemModeInfoStruct() has checked
-    // LCOV_EXCL_START 6: SetSystemModeInfoStruct() has checked
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: 'm_UsingVMPlayer' is True");
-    l_eStatus = eFrameworkunifiedStatusInvldParam;
-    // LCOV_EXCL_STOP
-  } else {
-    if (eFrameworkunifiedStatusOK != (l_eStatus = f_cRomAccess.SetProductPrivate(buf))) {
-      LOG_ERROR("f_cRomAccess.SetProductPrivate()");  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-    } else {
-      FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " NVM ProductPrivate is set");
-    }
-  }
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of CSystemManager::SetProductPrivate(ROM_AccessIf & f_cRomAccess
-
-LBM_UINT32 CSystemManager::GetDramStatusInfo(const HANDLE h_app) {
-  LBM_UINT32 dramStatus = SYSUP_DRAM_NORMAL;
-//  PsmSysupDramT l_dram1 = PSM_SYSUP_DRAM_NORMAL;
-//  PsmSysupDramT l_dram2 = PSM_SYSUP_DRAM_NORMAL;
-//  PsmSysupDramT l_dram3 = PSM_SYSUP_DRAM_NORMAL;
-  int ret;
-
-//  ret = PsmGetDramBackupStatusPower(h_app, &l_dram1, &l_dram2, &l_dram3);
-//  if ((ret == 0)
-//      && ((l_dram1 >= PSM_SYSUP_DRAM_NORMAL) && (l_dram1 < PSM_SYSUP_DRAM_MAX))
-//      && ((l_dram2 >= PSM_SYSUP_DRAM_NORMAL) && (l_dram2 < PSM_SYSUP_DRAM_MAX))
-//      && ((l_dram3 >= PSM_SYSUP_DRAM_NORMAL) && (l_dram3 < PSM_SYSUP_DRAM_MAX))) {
-//    m_BootMemory->dram1 = m_PsmSysupDram_to_SysupDramMap[static_cast<UI_32>(l_dram1)];
-//    m_BootMemory->dram2 = m_PsmSysupDram_to_SysupDramMap[static_cast<UI_32>(l_dram2)];
-//    m_BootMemory->dram3 = m_PsmSysupDram_to_SysupDramMap[static_cast<UI_32>(l_dram3)];
-//    if ((m_BootMemory->dram1 == m_BootMemory->dram2)
-//        || (m_BootMemory->dram1 == m_BootMemory->dram3)) {
-//      dramStatus = m_BootMemory->dram1;
-//    } else if (m_BootMemory->dram2 == m_BootMemory->dram3) {
-//      dramStatus = m_BootMemory->dram2;
-//      SS_ASERT(0);  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-//    } else {
-//      dramStatus = SYSUP_DRAM_NORMAL;
-//      SS_ASERT(0);  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-//    }
-//  } else {
-//    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "PsmGetDramBackupStatusPower()");
-//  }
-
-  return dramStatus;
+  return ret;
 }
 
-void CSystemManager::SetDramStatusInfo(LBM_UINT32 f_state) {
-  m_BootMemory->dram1 = m_BootMemory->dram2 = m_BootMemory->dram3 = f_state;
-  return;
+bool CSystemManager::GetDramStoreStatusInfo(const HANDLE h_app) {
+  PsmSysupDramT l_dram1 = PSM_SYSUP_DRAM_NORMAL;
+  PsmSysupDramT l_dram2 = PSM_SYSUP_DRAM_NORMAL;
+  PsmSysupDramT l_dram3 = PSM_SYSUP_DRAM_NORMAL;
+  PsmStartStatusT l_sts = PSM_START_STATUS_FACTRESET;
+
+  bool ret = false;
+
+  // Checking factory shipment status
+  if (PsmGetStartStatusPower(h_app, &l_sts))
+    return ret;
+
+  if (l_sts == PSM_START_STATUS_FACTRESET) {
+    ret = true;
+    goto finish;
+  }
+
+  // Checking dram power
+  if (!GetDramPowerStatusInfo(h_app))
+    goto finish;
+
+  // Checking dram status.
+  if (PsmGetDramBackupStatusPower(h_app, &l_dram1, &l_dram2, &l_dram3))
+    goto finish;
+
+  // l_dram2 and l_dram3 would be ignored.
+  if (l_dram1 == PSM_SYSUP_DRAM_NORMAL)
+    ret = true;
+
+  if (l_dram2 == PSM_SYSUP_DRAM_SFTERRSR)
+    ret = true;
+
+finish:
+  return ret;
 }
 
-EFrameworkunifiedStatus CSystemManager::OnSetStartupConfirmationDataRequest(HANDLE hApp) noexcept {
+bool CSystemManager::GetSyscomPowerStatusInfo(const HANDLE h_app) {
+  PsmComStsT l_syscom_sts = PSM_COM_STS_NORMAL;
+  bool ret = false;
+
+  if (PsmGetSyscomStatusPower(h_app, &l_syscom_sts))
+    return ret;
+
+  if (l_syscom_sts == PSM_COM_STS_NORMAL)
+    ret = true;
+
+  return ret;
+}
+
+EFrameworkunifiedStatus CSystemManager::OnSetStartupConfirmationDataRequest(HANDLE hApp) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   INTERFACEUNIFIEDLOG_RECEIVED_FROM(hApp);  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
   FRAMEWORKUNIFIEDLOG(ZONE_PERFORMANCE, __FUNCTION__, "from %s", FrameworkunifiedGetMsgSrc(hApp));
@@ -5063,12 +3395,12 @@ EFrameworkunifiedStatus CSystemManager::OnSetStartupConfirmationDataRequest(HAND
     m_startUpConfirmationMsg = tServiceSetIf.data.startupConfirmationMsg;
     FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " %s Startup Confirmation data:", FrameworkunifiedGetMsgSrc(hApp));
     SYSTEMMANAGERLOG_StartupConfirmationMsg(m_startUpConfirmationMsg);  // LCOV_EXCL_BR_LINE 15: marco defined in ns_logger_if.h  // NOLINT(whitespace/line_length)
-//    DGCODE_RET_API  l_ret = DGCODE_RET_ERROR;
+    DGCODE_RET_API  l_ret = DGCODE_RET_ERROR;
 
-//    l_ret = Diag_StartupAllStatusOfDTC();
-//    if (l_ret == DGCODE_RET_ERROR) {
-//      LOG_ERROR("Diag_StartupAllStatusOfDTC()");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-//    }
+    l_ret = Diag_StartupAllStatusOfDTC();
+    if (l_ret == DGCODE_RET_ERROR) {
+      LOG_ERROR("Diag_StartupAllStatusOfDTC()");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
+    }
 
     if ((e_SS_SM_NEXT_WAKEUP_TYPE_COLD == m_NextWakeupType) && (epsstCOLDSTART != m_startUpConfirmationMsg.wakeupType)) {  //  LCOV_EXCL_BR_LINE 6: Because the above formula cannot be set to true // NOLINT(whitespace/line_length)
       // LCOV_EXCL_START 6: Because the condition cannot be set
@@ -5078,137 +3410,55 @@ EFrameworkunifiedStatus CSystemManager::OnSetStartupConfirmationDataRequest(HAND
       // LCOV_EXCL_STOP
     }
 
-    RAM_WAKEUP_STATE l_ramWakeupState =
-      (SDRAM_STS_BUPNG == m_BootMemory->pwSts) ? RAM_WAKEUP_STATE_BACKUP_NG : RAM_WAKEUP_STATE_DONT_CARE; // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-    if (epsstWARMSTART != m_startUpConfirmationMsg.wakeupType) {
-      l_ramWakeupState = RAM_WAKEUP_STATE_BATTERY_DOWN;
-    }
-    RAM_SM_INFO_t info;
-    {
-      RAM_AccessIf ram_access(l_ramWakeupState);
-
-      if (eFrameworkunifiedStatusOK != (l_eStatus = ram_access.getRamInfo(&info))) {  //  LCOV_EXCL_BR_LINE 200:  As they are not returned except to eFrameworkunifiedStatusOK // NOLINT(whitespace/line_length)
-        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-               " Error: ram_access.getRamInfo(%d)", l_eStatus);
-      }
-
-      if (epsstWARMSTART != m_startUpConfirmationMsg.wakeupType) {
-        // To standardize the behavior when DRAM is backed up/not backed up, standardize the FALSE.
-        m_isImmediateReset = FALSE;
-        info.isImmediateReset = TRUE;
-        if (eFrameworkunifiedStatusOK != (l_eStatus = ram_access.setRamInfo(&info))) {  //  LCOV_EXCL_BR_LINE 200: As they are not returned except to eFrameworkunifiedStatusOK // NOLINT(whitespace/line_length)
-          AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-          FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-                 " Error: ram_access.setRamInfo(%d)", l_eStatus);
-        }
-      }
-    }
-
-    m_needReNotifyStartPrm = info.needRenotifyStartPrm;
-    m_ResetStatus = (((m_isIlgReset == TRUE) || (info.isErrorReset == TRUE)) ?
+    m_ResetStatus = ((m_isIlgReset == TRUE) ?
                      e_SS_SM_RESET_STATUS_NG :
                     ((m_isImmediateReset == TRUE) ?
                      e_SS_SM_RESET_STATUS_IMMEDIATE : e_SS_SM_RESET_STATUS_NONE));
     if (e_SS_SM_RESET_STATUS_NG == m_ResetStatus) {
       FRAMEWORKUNIFIEDLOG(ZONE_ERR, __PRETTY_FUNCTION__,
-          "ResetStatus NG   illRst:%s lastErr:%s",
-          m_isIlgReset ? "TRUE" : "FALSE",
-          info.isErrorReset ? "ERROR" : "NOT ERROR");
-    }
-
-    // Count the number of abnormal REBOOTs based on the ResetStatus judged from the startup information (not counted when NG is retransmitted).
-    if (e_SS_SM_RESET_STATUS_NG == m_ResetStatus) {
-      ROM_AccessIf rom_access;
-#ifndef SS_SM_SKIP_PUT_ROB_SYSTEM_RESET
-      const uint64_t l_SystemResetRobCode = 0x2219;
-//      DGCODE_ROB_SSR_INFO  l_info;
-
-//      memset(&l_info, 0x00, sizeof(DGCODE_ROB_SSR_INFO));
-
-//      l_ret = Diag_PutRoBInfo(hApp, l_SystemResetRobCode, l_info);
-//      if (l_ret == DGCODE_RET_ERROR) {
-//        LOG_ERROR("Diag_PutDiagCodeWithSSR_Custom()");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-//      }
-#endif
-
+          "ResetStatus NG   illRst:%s lastErr:Not Support",
+          m_isIlgReset ? "TRUE" : "FALSE");
       m_ResetCount++;
-      rom_access.Initialize();
-      // Count the number of abnormal REBOOTs based on the ResetStatus judged from the startup information (not counted when NG is retransmitted).
-      if (eFrameworkunifiedStatusOK != (l_eStatus =
-          SetResetCount(rom_access, m_ResetCount))) {
-      // LCOV_EXCL_BR_STOP
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: SetResetCount(%d)", l_eStatus);
+      if (PowerHalSetResetInfo(AGL_RESET_COUNTER, m_ResetCount)) {
+        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
+          "Could not back up m_ResetCount(%lu) to power_hal", m_ResetCount);
       }
     }
 
-    // LCOV_EXCL_BR_START 11:unexpected branch  // NOLINT(whitespace/line_length)
     m_DramBackupStatus =
-      ((epsstWARMSTART != m_startUpConfirmationMsg.wakeupType)
+            ((epsstWARMSTART != m_startUpConfirmationMsg.wakeupType)
             || (e_SS_SM_DATA_RESET_MODE_FACTORY == m_DataResetMode)
-            || (SDRAM_STS_BUPNG == m_BootMemory->pwSts)
-            || (GetDramStatusInfo(hApp) == SYSUP_DRAM_DISCARD)) ?
+            || (GetDramStoreStatusInfo(hApp) == false)) ?
             e_SS_SM_DRAM_BACKUP_NG : e_SS_SM_DRAM_BACKUP_OK;
-    // LCOV_EXCL_BR_STOP
 
     if (e_SS_SM_DRAM_BACKUP_NG == m_DramBackupStatus) {
       FRAMEWORKUNIFIEDLOG(ZONE_ERR, __PRETTY_FUNCTION__,
-          "DramBackup NG  wakeupType:%s dataResetMode:%s pwSts:%s",
-          (epsstWARMSTART == m_startUpConfirmationMsg.wakeupType) ? "WARM" : "COLD",
-          (e_SS_SM_DATA_RESET_MODE_FACTORY == m_DataResetMode) ? "FACTORY" : "NotFactory",
-          (SDRAM_STS_NOMAL == m_BootMemory->pwSts) ? "OK" : "NG");
+          "DramBackup NG  wakeupType:%s dataResetMode:%s",
+          (epsstWARMSTART == m_startUpConfirmationMsg.wakeupType) ?
+          "WARM" : "COLD",
+          (e_SS_SM_DATA_RESET_MODE_FACTORY == m_DataResetMode) ?
+          "FACTORY" : "NotFactory");
     }
 
     if (m_needReNotifyStartPrm) {  //  LCOV_EXCL_BR_LINE 6: Because the condition cannot be satisfied from the external API
       // LCOV_EXCL_BR_START 6: Because both sides are not FALSE
-      if ((e_SS_SM_DRAM_BACKUP_NG == m_DramBackupStatus)
-          || (e_SS_SM_DRAM_BACKUP_NG == info.lastDramBackupStatus)) {
+      if (e_SS_SM_DRAM_BACKUP_NG == m_DramBackupStatus) {
       // LCOV_EXCL_BR_STOP
         m_DramBackupStatus = e_SS_SM_DRAM_BACKUP_NG;
       }
     }
 
-    // To ensure notification to SVCs when DRAM backups are destroyed,
-    // Saving DramBackupStatus to RamAccessIf Prior to dramStatus Initialization
-    info.lastDramBackupStatus = m_DramBackupStatus;
-    {
-      RAM_AccessIf ram_access(l_ramWakeupState);
-      if (eFrameworkunifiedStatusOK != (l_eStatus = ram_access.setRamInfo(&info))) {  //  LCOV_EXCL_BR_LINE 200: As they are not returned except to eFrameworkunifiedStatusOK // NOLINT(whitespace/line_length)
-      // NOLINT(whitespace/line_length)
-        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-               " Error: ram_access.setRamInfo(%d)", l_eStatus);
-      }
-    }
-
-    SetDramStatusInfo(SYSUP_DRAM_NORMAL);
-
     if (m_needReNotifyStartPrm) {  //  LCOV_EXCL_BR_LINE 6: Because the condition cannot be satisfied from the external API
-      if ((e_SS_SM_RESET_STATUS_NG == info.lastResetStatus)
-          || (e_SS_SM_RESET_STATUS_NG == m_ResetStatus)) {
-        m_ResetStatus = e_SS_SM_RESET_STATUS_NG;
-      } else if ((e_SS_SM_RESET_STATUS_IMMEDIATE == info.lastResetStatus)
-          || (e_SS_SM_RESET_STATUS_IMMEDIATE == m_ResetStatus)) {
-        m_ResetStatus = e_SS_SM_RESET_STATUS_IMMEDIATE;
+      if (e_SS_SM_RESET_STATUS_NG == m_ResetStatus) {
+        // do nothing, keep m_ResetStatus.
+      } else if (e_SS_SM_RESET_STATUS_IMMEDIATE == m_ResetStatus) {
+        // do nothing, keep m_ResetStatus.
       } else {
         m_ResetStatus = e_SS_SM_RESET_STATUS_NONE;
       }
 
-      if ((epsstWARMSTART != info.lastWakeupType) || (epsstWARMSTART != m_startUpConfirmationMsg.wakeupType)) {  //  LCOV_EXCL_BR_LINE 6: Because the above condition cannot be satisfied // NOLINT(whitespace/line_length)
+      if (epsstWARMSTART != m_startUpConfirmationMsg.wakeupType) {  //  LCOV_EXCL_BR_LINE 6: Because the above condition cannot be satisfied // NOLINT(whitespace/line_length)
         m_startUpConfirmationMsg.wakeupType = epsstCOLDSTART;
-      }
-    }
-
-    info.lastResetStatus = m_ResetStatus;
-    info.lastWakeupType = m_startUpConfirmationMsg.wakeupType;
-    info.needRenotifyStartPrm = TRUE;
-    info.isErrorReset = FALSE;
-    {
-      RAM_AccessIf ram_access(l_ramWakeupState);
-      if (eFrameworkunifiedStatusOK != (l_eStatus = ram_access.setRamInfo(&info))) {  //  LCOV_EXCL_BR_LINE 200:As there are no cases other than eFrameworkunifiedStatusOK // NOLINT(whitespace/line_length)
-        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-               " Error: ram_access.setRamInfo(%d)", l_eStatus);
       }
     }
 
@@ -5250,11 +3500,6 @@ EFrameworkunifiedStatus CSystemManager::OnSetStartupConfirmationDataRequest(HAND
                              m_PubCmdHist, m_PubHistIter, "", l_eStatus);
       // LCOV_EXCL_BR_STOP
     }
-
-    if (eFrameworkunifiedStatusOK != (l_eStatus = PublishBootModeNotification(hApp))) {  // LCOV_EXCL_BR_LINE 4:NSFW error case  //NOLINT (whitespace/line_length)
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      LOG_ERROR("PublishBootModeNotification()");  // LCOV_EXCL_LINE 4: nsfw error
-    }
   }
 
   EFrameworkunifiedStatus l_responseStatus = l_eStatus;
@@ -5291,12 +3536,12 @@ EFrameworkunifiedStatus CSystemManager::GetTimeStamp(std::string& TimeStamp) {
   uint8_t status;
   struct tm theTime;
   ftime(&timebuf);
-//  Clock_getSystemTimeY2K38(&time, &status);
-//  CLOCK_RETURN clock_ret = Clock_CnvSecToDateY2K38(&time, &theTime);
+  Clock_getSystemTimeY2K38(&time, &status);
+  CLOCK_RETURN clock_ret = Clock_CnvSecToDateY2K38(&time, &theTime);
 
-//  if (CLOCK_OK != clock_ret) {
-//    return eFrameworkunifiedStatusNullPointer;
-//  }
+  if (CLOCK_OK != clock_ret) {
+    return eFrameworkunifiedStatusNullPointer;
+  }
 
   sprintf(l_format, "GMT Time,%04d-%02d-%02d %02d:%02d:%02d.%hu\n",  // NOLINT
   theTime.tm_year + 1900, theTime.tm_mon + 1, theTime.tm_mday,

@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ CSMVersion::CSMVersion() {
 CSMVersion::~CSMVersion() {
 }
 
-EFrameworkunifiedStatus CSMVersion::get_version(SS_VersionNumberType &f_VersionNumber) noexcept {
+EFrameworkunifiedStatus CSMVersion::get_version(SS_VersionNumberType& f_VersionNumber) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   CSSVer ver;
 
@@ -59,7 +59,7 @@ EFrameworkunifiedStatus CSMVersion::get_version(SS_VersionNumberType &f_VersionN
   return l_eStatus;
 }  // End of EFrameworkunifiedStatus CSMVersion::get_version(SS_VersionNumberType &f_VersionNumber)
 
-EFrameworkunifiedStatus CSMVersion::get_build_info(std::string &f_buildInfoStr) noexcept {
+EFrameworkunifiedStatus CSMVersion::get_build_info(std::string& f_buildInfoStr) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
   std::string build_info_str;

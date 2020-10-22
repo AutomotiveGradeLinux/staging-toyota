@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -248,6 +248,7 @@ class ModuleLaunchParams {
   SS_String               arguments;
   SS_String               restart;
   UI_32                   configuration_priority;
+  int                     cpu_assign;
   UI_32                   previous_priority;
   UI_32                   current_priority;
   BOOL                    critical;
@@ -269,32 +270,43 @@ class ModuleLaunchParams {
   CStartReason            m_startReason;
   CStopReason             m_stopReason;
 
-  ModuleLaunchParams() noexcept;
+  ModuleLaunchParams();
   ~ModuleLaunchParams();
-  SMModuleState           GetModuleState(void) noexcept;
-  BOOL                    IsModuleState(SMModuleState f_moduleState) noexcept;
-  BOOL                    IsModuleConnected() const noexcept;
-  VOID                    SetModuleState(SMModuleState f_moduleState
-                                       , BOOL f_bLog = TRUE) noexcept;
-  std::string             ModuleStateStr(void) noexcept;
+  SMModuleState           GetModuleState(void);
+  BOOL                    IsModuleState(SMModuleState f_moduleState);
+  BOOL                    IsModuleConnected() const;
+  VOID                    SetModuleState(SMModuleState f_moduleState, BOOL f_bLog = TRUE);
+  std::string             ModuleStateStr(void);
 
-  SMModuleDebugDumpState  GetModuleDebugDumpState(void) noexcept;
-  std::string             GetModuleDebugDumpStateStr(void) noexcept;
-  VOID                    SetModuleDebugDumpState(SMModuleDebugDumpState f_moduleState
-                                                , BOOL                   f_bLog = TRUE) noexcept;
-  EFrameworkunifiedStatus              SendMsgAndUpdateState(
-                             const UI_32 f_iCmd, const T_SS_SM_START_DataStructType * const f_startData) noexcept;
-  EFrameworkunifiedStatus              SendMsgAndUpdateState(
-                             T_SS_SM_STOP_DataStruct const * f_stopData) noexcept;
+  SMModuleDebugDumpState  GetModuleDebugDumpState(void);
+  std::string             GetModuleDebugDumpStateStr(void);
+  VOID                    SetModuleDebugDumpState(SMModuleDebugDumpState f_moduleDebugDumpState, BOOL f_bLog = TRUE);
+  EFrameworkunifiedStatus SendMsgAndUpdateState(
+                            const UI_32 f_iCmd, const T_SS_SM_START_DataStructType* const f_startData);
+  EFrameworkunifiedStatus SendMsgAndUpdateState(T_SS_SM_STOP_DataStruct const* f_stopData);
 
-  EFrameworkunifiedStatus              GetPriority(UI_32 & f_Priority) noexcept;  // NOLINT
-  EFrameworkunifiedStatus              SetPriority(UI_32 f_Priority) noexcept;
+  EFrameworkunifiedStatus GetPriority(UI_32& f_Priority);  // NOLINT
+  EFrameworkunifiedStatus SetPriority(UI_32 f_Priority);
+
+  BOOL                    IsAGLUnit(void) const { return is_agl_unit; }
+  BOOL                    IsAGLResetHistoryDisable(void) const { return disable_agl_resethistory; }
+  BOOL                    IsNonAGLResetHistoryDisable(void) const { return disable_nonagl_resethistory; }
+  void                    SetAGLUnit(BOOL f_is_agl_unit) { is_agl_unit = f_is_agl_unit; }
+  void                    SetAGLResetHistoryDisable(BOOL f_disable_agl_resethistory) {
+    disable_agl_resethistory = f_disable_agl_resethistory;
+  }
+  void                    SetNonAGLResetHisoryDisable(BOOL f_disable_nonagl_resethistory) {
+    disable_nonagl_resethistory = f_disable_nonagl_resethistory;
+  }
 
  private:
   SMModuleState                    m_moduleState;
   SMModuleStateStrMapType          m_ModuleStateStrMap;
   SMModuleDebugDumpState           m_ModuleDebugDumpState;
   SMModuleDebugDumpStateStrMapType m_ModuleDebugDumpStateStrMap;
+  BOOL                             is_agl_unit;
+  BOOL                             disable_agl_resethistory;
+  BOOL                             disable_nonagl_resethistory;
 };
 
 typedef std::list<ModuleLaunchParams> ModuleLaunchList;
@@ -389,7 +401,7 @@ typedef LaunchOrderedVector::iterator LaunchOrderedIter;
 
 class SMConfigParams {
  public:
-  SMConfigParams() noexcept;
+  SMConfigParams();
   virtual ~SMConfigParams();
 
   ////////////////////////////////////////////////////////////////////////////////////////////
@@ -403,8 +415,8 @@ class SMConfigParams {
   /// \return BOOL
   ///         BOOL - TRUE or FALSE
   ////////////////////////////////////////////////////////////////////////////////////////////
-  BOOL LoadSMConfigParameters(ConfigurationData &f_ConfigParams,  // NOLINT
-                              SS_String          f_FileName) noexcept;
+  BOOL LoadSMConfigParameters(ConfigurationData& f_ConfigParams,  // NOLINT
+                              SS_String          f_FileName);
 
   ////////////////////////////////////////////////////////////////////////////////////////////
   /// GetSMConfigInformation
@@ -416,8 +428,8 @@ class SMConfigParams {
   /// \return BOOL
   ///         BOOL - TRUE or FALSE
   ////////////////////////////////////////////////////////////////////////////////////////////
-  BOOL GetSMConfigInformation(ConfigurationData &f_SMConfigParams,  // NOLINT
-                              SS_String          f_FileName) noexcept;
+  BOOL GetSMConfigInformation(ConfigurationData& f_ConfigParams,  // NOLINT
+                              SS_String          f_FileName);
 
   ////////////////////////////////////////////////////////////////////////////////////////////
   ///  PrintConfigInfo
@@ -428,7 +440,7 @@ class SMConfigParams {
   ///
   /// \return VOID
   ////////////////////////////////////////////////////////////////////////////////////////////
-  VOID PrintConfigInfo(ConfigurationData const & f_SMConfigParams) noexcept;
+  VOID PrintConfigInfo(ConfigurationData const& f_ConfigParams);
 };
 
 class SysMgrConfiguration {
@@ -440,7 +452,7 @@ class SysMgrConfiguration {
   /// \return NA
   ///
   ////////////////////////////////////////////////////////////////////////////////////////////
-  SysMgrConfiguration() noexcept;
+  SysMgrConfiguration();
 
   ////////////////////////////////////////////////////////////////////////////////////////////
   ///  ~SysMgrConfiguration
@@ -476,11 +488,11 @@ class SysMgrConfiguration {
   /// \return BOOL
   ///         BOOL - TRUE or FALSE
   ////////////////////////////////////////////////////////////////////////////////////////////
-  BOOL LoadParametersCfg(GroupLaunchMap &groups_map,  // NOLINT
-                         ProcessNameMap &f_processNameMap,  // NOLINT
-                         LaunchOrderedVector &f_OrderList,  // NOLINT
-                         SS_String      &f_launchOrderName,  // NOLINT
-                         SS_String      &f_launchCfgFn) noexcept;  // NOLINT
+  BOOL LoadParametersCfg(GroupLaunchMap&      groups_map,  // NOLINT
+                         ProcessNameMap&      f_processNameMap,  // NOLINT
+                         LaunchOrderedVector& f_OrderList,  // NOLINT
+                         SS_String&           f_launchOrderName,  // NOLINT
+                         SS_String&           f_launchCfgFn);  // NOLINT
 
 
   ////////////////////////////////////////////////////////////////////////////////////////////
@@ -492,7 +504,7 @@ class SysMgrConfiguration {
   ///
   /// \return VOID
   ////////////////////////////////////////////////////////////////////////////////////////////
-  VOID PrintGroupInfo(GroupLaunchInfo & refGrpInfo) noexcept;  // NOLINT
+  VOID PrintGroupInfo(GroupLaunchInfo& refGrpInfo);  // NOLINT
 
   ////////////////////////////////////////////////////////////////////////////////////////////
   ///  PrintModuleInfo
@@ -503,7 +515,7 @@ class SysMgrConfiguration {
   ///
   /// \return VOID
   ////////////////////////////////////////////////////////////////////////////////////////////
-  VOID PrintModuleInfo(ModuleLaunchParams & refMbrInfo) noexcept;  // NOLINT
+  VOID PrintModuleInfo(ModuleLaunchParams& refMbrInfo);  // NOLINT
 
   ////////////////////////////////////////////////////////////////////////////////////////////
   ///  PrintAllInfo
@@ -514,15 +526,18 @@ class SysMgrConfiguration {
   ///
   /// \return VOID
   ////////////////////////////////////////////////////////////////////////////////////////////
-  VOID PrintAllInfo(GroupLaunchMap & refGrpMap) noexcept;  // NOLINT
+  VOID PrintAllInfo(GroupLaunchMap& refGrpMap);  // NOLINT
 
  protected:
   // define all the configuration parameters that will be used to get data
 
   CNSConfigReader * l_pReaderCfg;
 
-  SysMgrConfiguration(const SysMgrConfiguration &) noexcept;
+  SysMgrConfiguration(const SysMgrConfiguration&) : l_pReaderCfg(NULL) {}
   SysMgrConfiguration & operator = (const SysMgrConfiguration &);
+
+ private:
+  BOOL ParseBoolParameter(PCSTR f_value, BOOL f_default = FALSE) const;
 };
 
 #endif  // SS_SM_CONFIG_H_  // NOLINT

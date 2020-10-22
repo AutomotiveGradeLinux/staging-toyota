@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,7 @@ typedef struct {
   CHAR                 logging_mask[SS_SM_MAX_MODULE_LOG_MASK_LENGTH];
   GroupLaunchMapIter   groupIterator;
   ModuleLaunchListIter moduleIterator;
+  int                  cpu_assign;
 } T_ProcessLauncherLaunchReq;
 
 ///////////////////////////////////////////////////////////////////////////////

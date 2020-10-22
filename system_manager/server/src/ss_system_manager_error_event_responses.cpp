@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include <native_service/frameworkunified_types.h>
 #include <native_service/ns_plogger_if.h>
-//#include <stub/ss_diag.h>
+#include <stub/ss_diag.h>
 #include <system_service/ss_ver.h>
 #include <system_service/ss_services.h>
 #include <system_service/ss_templates.h>
@@ -471,15 +471,13 @@ EFrameworkunifiedStatus CSystemManager::OnObtainSystemmanagerSystemDataCsv(HANDL
   // LCOV_EXCL_BR_STOP
 
   {
-    ROM_AccessIf rom_access;  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-    UI_32 l_ErrLogCount;
+    UI_32 l_ErrLogCount = 0;
+    if (PowerHalGetResetInfo(AGL_ERRLOG_COUNTER, &l_ErrLogCount)) {  // LCOV_EXCL_BR_LINE 11:Gcov constraints (because exception-handling routes are automatically generated)
+      FRAMEWORKUNIFIEDLOG(ZONE_SYSLOG, __FUNCTION__,
+        "Could not get AGL_ERRLOG_COUNTER from power_hal.");
+    }
 
-    rom_access.Initialize();  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-
-    if (eFrameworkunifiedStatusOK != GetErrLogCount(rom_access, l_ErrLogCount)) {  // LCOV_EXCL_BR_LINE 200:will not be this case
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200:test assert
-      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: GetErrLogCount()");  // LCOV_EXCL_LINE 200:will not be this case
-    } else {
+    {
       l_stream << "ErrLogCount," << l_ErrLogCount << "/"
           << SS_SM_ERR_LOGGING_LIMIT << endl;  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
     }
@@ -833,7 +831,7 @@ EFrameworkunifiedStatus CSystemManager::OnObtainDebugDumpLog(HANDLE f_hApp) {
     for (l_moduleIter = l_GroupIter->second.modules.begin();
         l_moduleIter != l_GroupIter->second.modules.end();
         l_moduleIter++) {
-      const BOOL isModuleConnected = l_moduleIter->IsModuleConnected();
+      const BOOL isModuleConnected = l_moduleIter->IsModuleConnected();  // LCOV_EXCL_BR_LINE 11:Gcov constraints (because exception-handling routes are automatically generated)
       if ((SERVICE_NS_NPP != l_moduleIter->name) &&  // NPP is a special case and does NOT session connect with SM.
           (TRUE == isModuleConnected)) {
         l_eStatus = FrameworkunifiedSendMsg(l_moduleIter->hsession, SS_SM_DEBUG_DUMP,

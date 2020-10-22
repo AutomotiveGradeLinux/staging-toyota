@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@
 #include <native_service/frameworkunified_thread_priority.h>
 #include <system_service/ss_sm_thread_names_local.h>
 #include <system_service/ss_templates.h>
-//#include <vehicle_service/Clock_API.h>
+#include <stub/Clock_API.h>
 
 #include <sys/stat.h>
 #include <errno.h>
@@ -287,15 +287,15 @@ EFrameworkunifiedStatus CSysMemoryMonitor::OnSystemmanagerlogTimerExpiry(HANDLE 
     uint8_t status;
     struct tm gmt;
     struct tm local;
-//    Clock_getSystemTimeY2K38(&timebuf, &status);
-//    Clock_CnvSecToDateY2K38(&timebuf, &gmt);
-//    Clock_getLocalTimeY2K38(&timebuf, &local);
+    Clock_getSystemTimeY2K38(&timebuf, &status);
+    Clock_CnvSecToDateY2K38(&timebuf, &gmt);
+    Clock_getLocalTimeY2K38(&timebuf, &local);
 
-//    sprintf(l_format, " G%02d %02d%02d%02d L%02d %02d%02d%02d", gmt.tm_mday, // NOLINT
-//            gmt.tm_hour, gmt.tm_min, gmt.tm_sec, local.tm_mday,
-//            local.tm_hour, local.tm_min, local.tm_sec);
+    sprintf(l_format, " G%02d %02d%02d%02d L%02d %02d%02d%02d", gmt.tm_mday, // NOLINT
+            gmt.tm_hour, gmt.tm_min, gmt.tm_sec, local.tm_mday,
+            local.tm_hour, local.tm_min, local.tm_sec);
 
-//    FRAMEWORKUNIFIEDLOG(ZONE_STATE, __FUNCTION__, "%s", l_format);
+    FRAMEWORKUNIFIEDLOG(ZONE_STATE, __FUNCTION__, "%s", l_format);
   }
 
   count++;

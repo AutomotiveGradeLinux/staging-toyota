@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@
 /// \brief    This file provides support for System Manager business logic.
 ///
 ///////////////////////////////////////////////////////////////////////////////
-//#include <stub/el_gpio.h>
 #include <system_service/ss_heartbeat_service_protocol.h>
 #include <system_service/ss_system_manager_if.h>
 #include <system_service/ss_system_manager_if_local.h>
@@ -42,15 +41,12 @@
 #include <native_service/ns_np_service_protocol.h>
 #include <native_service/ns_backup.h>
 
-//#include <stub/ss_diag.h>
+#include <stub/ss_diag.h>
 
 #include <system_service/ss_error_message.h>
 #include <system_service/ss_test_clients.h>
-#include <system_service/ss_sm_rom_access.h>
-#include <system_service/ss_sm_ram_access.h>
 #include <system_service/ss_templates.h>
 #include <native_service/ns_plogger_if.h>
-//#include <stub/el_mem.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -61,7 +57,6 @@
 #include <vector>
 #include <algorithm>
 #include <string>
-//#include <power_hal.h>
 
 #include "ss_system_manager_callbacks.h"
 #include "ss_system_manager.h"
@@ -106,7 +101,7 @@ enum {
   POWEROFF = FALSE
 };
 
-VOID CSystemManager::LogGroupModulesState(UI_32 f_groupId, std::string pStr) noexcept {
+VOID CSystemManager::LogGroupModulesState(UI_32 f_groupId, std::string pStr) {
   if (IS_ZONE_SET(ZONE_INFO)) {  // LCOV_EXCL_BR_LINE 6: Because the applicable variable cannot be changed from the external API (only evaluated by the initial value)
     // LCOV_EXCL_START 6: Because the applicable variable cannot be changed from the external API (only evaluated by the initial value)
     AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
@@ -119,7 +114,7 @@ VOID CSystemManager::LogGroupModulesState(UI_32 f_groupId, std::string pStr) noe
              f_groupId);
     } else {
       std::string sIsOKFlag;
-      TEXT(__FUNCTION__, " Group %d/%s, %d modules: %s, %s", f_groupId,
+      TEXT(__FUNCTION__, " Group %d/%s, %ld modules: %s, %s", f_groupId,
           l_GroupIterator->second.name.c_str(),
           l_GroupIterator->second.modules.size(), pStr.c_str(),
           GetStr(m_SMCurrentState).c_str());
@@ -147,7 +142,7 @@ VOID CSystemManager::LogGroupModulesState(UI_32 f_groupId, std::string pStr) noe
   }
 }  // End of VOID CSystemManager::LogGroupModulesState( UI_32 f_groupId, std::string pStr)
 
-VOID CSystemManager::LogAllGroupModulesState(std::string pStr) noexcept {
+VOID CSystemManager::LogAllGroupModulesState(std::string pStr) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
 
   std::string l_sIsOKFlag;
@@ -606,7 +601,7 @@ EFrameworkunifiedStatus CSystemManager::OnClientStartMonitorTimerExpiry(HANDLE h
 /// Success ==> eFrameworkunifiedStatusOK
 /// Failure ==> Other values
 ///////////////////////////////////////////////////////////////////////////////
-EFrameworkunifiedStatus CSystemManager::send_power_request_complete_response(HANDLE hApp, std::string pStr) noexcept {
+EFrameworkunifiedStatus CSystemManager::send_power_request_complete_response(HANDLE hApp, std::string pStr) {
   EFrameworkunifiedStatus l_eStatus;
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
 
@@ -789,7 +784,7 @@ EFrameworkunifiedStatus CSystemManager::OnBackupMgrAvailCallback(HANDLE hApp) {
 /// Success ==> eFrameworkunifiedStatusOK
 /// Failure ==> Other values
 ///////////////////////////////////////////////////////////////////////////////
-EFrameworkunifiedStatus CSystemManager::OnPowerRequestCallback(HANDLE hApp) noexcept {
+EFrameworkunifiedStatus CSystemManager::OnPowerRequestCallback(HANDLE hApp) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
   Pwr_ServiceSetInterface tServiceIf;
@@ -808,6 +803,7 @@ EFrameworkunifiedStatus CSystemManager::OnPowerRequestCallback(HANDLE hApp) noex
     LOG_ERROR("ReadMsg()");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
     // LCOV_EXCL_STOP
   } else {
+    // NOTE: interface_unified always set userMode as 0. so don't use m_lastUserMode.
     m_lastUserMode = tServiceIf.data.powerRequestMsg.userMode;
     //
     // 2012 December 04 Temporary hack ( I hope ) to set m_Wake to nominal
@@ -1306,11 +1302,12 @@ EFrameworkunifiedStatus CSystemManager::OnShutdownCompleteMonitorTimeout(HANDLE 
 
   FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Error: Reset Timeout");
 
-  CALL_AND_LOG_STATUS(PerformUmountRamd());  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
   l_eStatus = SecureChipOff();
   if (eFrameworkunifiedStatusOK != l_eStatus) {
     FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Error: SecureChipOff Failed");
   }
+
+  m_ResetFactor = PSM_FACTOR_AGL_WITH_HISTORY;
 
   l_eStatus = perform_force_reset(hApp);
 
@@ -1329,8 +1326,7 @@ EFrameworkunifiedStatus CSystemManager::OnShutdownCompleteMonitorTimeout(HANDLE 
 /// Success ==> eFrameworkunifiedStatusOK
 /// Failure ==> Other values
 ///////////////////////////////////////////////////////////////////////////////
-EFrameworkunifiedStatus CSystemManager::start_all_modules_of_group(HANDLE hApp,
-        UI_32 f_ui32GroupNumber) noexcept {
+EFrameworkunifiedStatus CSystemManager::start_all_modules_of_group(HANDLE hApp, UI_32 f_ui32GroupNumber) {
   EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
 
@@ -1367,8 +1363,8 @@ EFrameworkunifiedStatus CSystemManager::start_all_modules_of_group(HANDLE hApp,
       //    ZONE_INFO logging internally.
       if (!l_ModuleListIterator->is_start_required) {
         if (FRAMEWORKUNIFIED_NS_NPSERVICE == l_ModuleListIterator->name) {
-          const SMModuleState l_transition_state = InProgressStateToState();
-          l_ModuleListIterator->SetModuleState(l_transition_state);
+          const SMModuleState l_transition_state = InProgressStateToState();  // LCOV_EXCL_BR_LINE 11:Gcov constraints (because exception-handling routes are automatically generated)
+          l_ModuleListIterator->SetModuleState(l_transition_state);  // LCOV_EXCL_BR_LINE 11:Gcov constraints (because exception-handling routes are automatically generated)
         } else {
           // Not an error
           FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
@@ -1438,7 +1434,7 @@ EFrameworkunifiedStatus CSystemManager::start_all_modules_of_group(HANDLE hApp,
         case MODULE_STATE_STOPPED_BACKGROUND:
         case MODULE_STATE_STOP_BACKGROUND_FAILED:
           {
-            const UI_32 l_iCmd = InProgressStateToSendMsg();
+            const UI_32 l_iCmd = InProgressStateToSendMsg();  // LCOV_EXCL_BR_LINE 11:Gcov constraints (because exception-handling routes are automatically generated)
             if (l_iCmd != SS_SYSTEM_MANAGER_PROTOCOL_ENDING_INDEX) {  // LCOV_EXCL_BR_LINE 6: Excluded due to value never returned at present
               // LCOV_EXCL_BR_START 15: Excluded due to inlined functions
               CALL_AND_LOG_STATUS_IF_ERRORED(l_ModuleListIterator->SendMsgAndUpdateState(l_iCmd, &f_startupData));
@@ -1456,7 +1452,7 @@ EFrameworkunifiedStatus CSystemManager::start_all_modules_of_group(HANDLE hApp,
     }
 
     if (0 == l_numModulesMessaged) {
-      LogGroupModulesState(f_ui32GroupNumber, " Warning: NO modules were sent system_manager protocol message");
+      LogGroupModulesState(f_ui32GroupNumber, " Warning: NO modules were sent system_manager protocol message");  // LCOV_EXCL_BR_LINE 11:Gcov constraints (because exception-handling routes are automatically generated)
 
       char l_cBuf[100];
       snprintf(l_cBuf, sizeof(l_cBuf), "ProcessGroupAsStarted(%d)", l_GroupIterator->second.id);
@@ -1541,20 +1537,20 @@ EFrameworkunifiedStatus CSystemManager::ProcessGroupAsStarted(HANDLE hApp,
       // check if WakeUp Level has been achieved
       if (m_SystemStarter.is_end() == FALSE) {
         // Start modules from next group
-        l_groupID = m_SystemStarter.advance_id();
+        l_groupID = m_SystemStarter.advance_id();  // LCOV_EXCL_BR_LINE 11:Gcov constraints (because exception-handling routes are automatically generated)
         char l_cBuf[100] = {0};
         snprintf(l_cBuf, sizeof(l_cBuf), "start_all_modules_of_group(%u)", l_groupID);
-        l_eStatus = start_all_modules_of_group(hApp, l_groupID);
+        l_eStatus = start_all_modules_of_group(hApp, l_groupID);  // LCOV_EXCL_BR_LINE 11:Gcov constraints (because exception-handling routes are automatically generated)
         LOG_STATUS_REC_HIST_IF_ERRORED(l_eStatus, l_cBuf);   // LCOV_EXCL_BR_LINE 6: Because the condition cannot be set
       }
     } else if ((m_SMCurrentState == SS_SM_APPS_PRE_STOP_IN_PROGRESS)
         || (m_SMCurrentState == SS_SM_APPS_BACKGROUND_STOP_IN_PROGRESS)) {
       if (m_SystemStarter.is_begin() == FALSE) {
         // Stop modules from next group
-        l_groupID = m_SystemStarter.decrement_id();
+        l_groupID = m_SystemStarter.decrement_id();  // LCOV_EXCL_BR_LINE 11:Gcov constraints (because exception-handling routes are automatically generated)
         char l_cBuf[100] = {0};
         snprintf(l_cBuf, sizeof(l_cBuf), "stop_all_modules_of_group(%u)", l_groupID);
-        l_eStatus = start_all_modules_of_group(hApp, l_groupID);
+        l_eStatus = start_all_modules_of_group(hApp, l_groupID);  // LCOV_EXCL_BR_LINE 11:Gcov constraints (because exception-handling routes are automatically generated)
         LOG_STATUS_REC_HIST_IF_ERRORED(l_eStatus, l_cBuf);   // LCOV_EXCL_BR_LINE 6: Because the condition cannot be set
       }
     } else {
@@ -1668,20 +1664,19 @@ EFrameworkunifiedStatus CSystemManager::OnShutdownModulesRequest(HANDLE hApp) {
       case SS_SM_APPS_BACKGROUND_STOP_IN_PROGRESS:
       case SS_SM_APPS_BACKGROUND_RUN_COMPLETE:
 
-        if (l_tServiceSetIf.data.shutdownRequestMsg.shutdownTrigger == epssdmsdtIGN_OFF) {
-          ROM_AccessIf rom_access;
-
-          rom_access.Initialize(); // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-          if (eFrameworkunifiedStatusOK != (l_eStatus = SetErrLogCount(rom_access, 0))) {
-            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "SetErrLogCount(%d)", l_eStatus);
+        if (l_tServiceSetIf.data.shutdownRequestMsg.shutdownTrigger ==
+                                                            epssdmsdtIGN_OFF) {
+          m_ResetCount = 0;
+          if (PowerHalSetResetInfo(AGL_RESET_COUNTER, m_ResetCount)) {  // LCOV_EXCL_BR_LINE 11:Gcov constraints (because exception-handling routes are automatically generated)
+            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
+              "Could not back up m_ResetCount(%lu) to power_hal", m_ResetCount);
           }
 
-          m_ResetCount = 0;
-          if (eFrameworkunifiedStatusOK != (l_eStatus = SetResetCount(rom_access, m_ResetCount))) {
-              FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "SetResetCount(%d)", l_eStatus);
+          if (PowerHalSetResetInfo(AGL_ERRLOG_COUNTER, 0)) {  // LCOV_EXCL_BR_LINE 11:Gcov constraints (because exception-handling routes are automatically generated)
+            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
+              "Could not reset AGL_ERRLOG_COUNTER");
           }
         }
-
         if (!m_isPrevErrEventCompleted
             || ((!((m_SMCurrentState == SS_SM_APPS_START_COMPLETE)
                 || (m_SMCurrentState == SS_SM_APPS_PRE_RUN_COMPLETE)
@@ -1773,8 +1768,7 @@ EFrameworkunifiedStatus CSystemManager::OnShutdownModulesRequest(HANDLE hApp) {
 /// Success ==> eFrameworkunifiedStatusOK
 /// Failure ==> Other values
 ///////////////////////////////////////////////////////////////////////////////
-EFrameworkunifiedStatus CSystemManager::SendSystemModeInfoResponse(HANDLE hApp,
-        EPWR_STARTUP_STAGE_TYPE f_startupStage) noexcept {
+EFrameworkunifiedStatus CSystemManager::SendSystemModeInfoResponse(HANDLE hApp, EPWR_STARTUP_STAGE_TYPE f_startupStage) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
   SystemModeInfo l_SystemModeInfo;
@@ -1815,7 +1809,7 @@ EFrameworkunifiedStatus CSystemManager::SendSystemModeInfoResponse(HANDLE hApp,
 /// Success ==> eFrameworkunifiedStatusOK
 /// Failure ==> Other values
 ///////////////////////////////////////////////////////////////////////////////
-EFrameworkunifiedStatus CSystemManager::OnSystemModeInfoRequest(HANDLE hApp) noexcept {
+EFrameworkunifiedStatus CSystemManager::OnSystemModeInfoRequest(HANDLE hApp) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
   INTERFACEUNIFIEDLOG_RECEIVED_FROM(hApp);  // LCOV_EXCL_BR_LINE 15: marco defined in ns_logger_if.h  // NOLINT(whitespace/line_length)
@@ -1865,7 +1859,7 @@ EFrameworkunifiedStatus CSystemManager::OnSystemModeInfoRequest(HANDLE hApp) noe
 /// Success ==> eFrameworkunifiedStatusOK
 /// Failure ==> Other values
 ///////////////////////////////////////////////////////////////////////////////
-EFrameworkunifiedStatus CSystemManager::OnInitCompReportCallback(HANDLE hApp) noexcept {
+EFrameworkunifiedStatus CSystemManager::OnInitCompReportCallback(HANDLE hApp) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
   INTERFACEUNIFIEDLOG_RECEIVED_FROM(hApp);  // LCOV_EXCL_BR_LINE 15: marco defined in ns_logger_if.h  // NOLINT(whitespace/line_length)
@@ -1919,9 +1913,9 @@ BOOL CSystemManager::have_all_services_start_completed(const SMModuleState f_mod
       ModuleLaunchListIter l_ModuleListIterator = l_GroupIterator->second.modules.begin();
       for (; l_ModuleListIterator != l_GroupIterator->second.modules.end(); l_ModuleListIterator++) {
         if ((l_ModuleListIterator->is_start_required == TRUE)
-            && ((l_ModuleListIterator->IsModuleState(f_moduleState) == FALSE)
-                && (l_ModuleListIterator->IsModuleState(MODULE_STATE_SKIPPED) == FALSE)
-                && (l_ModuleListIterator->IsModuleState(l_failedState) == FALSE))) {
+            && ((l_ModuleListIterator->IsModuleState(f_moduleState) == FALSE)  // LCOV_EXCL_BR_LINE 11:Gcov constraints (because exception-handling routes are automatically generated)
+                && (l_ModuleListIterator->IsModuleState(MODULE_STATE_SKIPPED) == FALSE)  // LCOV_EXCL_BR_LINE 11:Gcov constraints (because exception-handling routes are automatically generated)
+                && (l_ModuleListIterator->IsModuleState(l_failedState) == FALSE))) {  // LCOV_EXCL_BR_LINE 11:Gcov constraints (because exception-handling routes are automatically generated)
           // Allow _SKIPPED/START_FAILED for StartRespMonitor conditions
           bIsStartCompleted = FALSE;
           break;
@@ -2006,29 +2000,23 @@ EFrameworkunifiedStatus CSystemManager::perform_force_reset(HANDLE hApp) {
         "NO NAVIDET!! but SendShutdownComp for FactReset");
     CALL_AND_LOG_STATUS(send_shutdown_complete_response(hApp));  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
     sleep(60);
-  } else if (access("/nv/bs/ss_debug", F_OK) == 0) {
+  } else if (access("/nv/BS/ss/system_manager/rwdata/ss_debug", F_OK) == 0) {
     fprintf(stderr, "SS_SysManager/%s/NO NAVIDET!! but SendShutdownComp\n", __FUNCTION__);
     FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "NO NAVIDET!! but SendShutdownComp");
     CALL_AND_LOG_STATUS(send_shutdown_complete_response(hApp));  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
     sleep(60);
   }
 
-  FRAMEWORKUNIFIEDLOG(ZONE_SYSLOG, __FUNCTION__, "Perform Final Umount(0)");
-  CALL_AND_LOG_STATUS(PerformFinalUmount(TRUE));  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-
-  fprintf(stderr, "SS_SysManager/%s/Perform Final Umount(0)\n", __FUNCTION__);
   fflush(stderr);
   usleep(100 * 1000);
 
-//  SS_ASERT(0 == EL_Gpio_finalize());  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-
-//  if (0 == PsmNaviResetPower(hApp)) {  // LCOV_EXCL_BR_LINE 200: power_hal if, can not to be error.
-//    SS_ASERT_ERRNO(0);  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-//  } else {
-//    usleep(300 * 1000);
-//    fprintf(stderr, "SS_SysManager/%s/Error: Not Reset !!!\n", __FUNCTION__);
-//    l_eStatus = eFrameworkunifiedStatusFail;
-//  }
+  if (0 == PsmNaviResetPower(hApp, m_ResetFactor)) {  // LCOV_EXCL_BR_LINE 200: power_hal if, can not to be error.
+    SS_ASERT_ERRNO(0);  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
+  } else {
+    usleep(300 * 1000);
+    fprintf(stderr, "SS_SysManager/%s/Error: Not Reset !!!\n", __FUNCTION__);
+    l_eStatus = eFrameworkunifiedStatusFail;
+  }
 
   send_shutdown_complete_response(hApp);  // Try to NAVI_RESET even if ignored
 
@@ -2102,6 +2090,46 @@ EFrameworkunifiedStatus CSystemManager::SendShutdownResponseMessage(HANDLE hApp)
   return l_eStatus;
 }  // End of EFrameworkunifiedStatus CSystemManager::SendShutdownResponseMessage( HANDLE hApp )
 
+
+PsmFactorT CSystemManager::GetResetFactor(PCSTR f_module_name, BOOL f_user_reset) {
+  PsmFactorT  l_reset_factor = PSM_FACTOR_NONE;
+  EFrameworkunifiedStatus l_eStatus;
+  ModuleLaunchListIter l_moduleIter;
+  l_eStatus = GetModuleIterator(f_module_name, l_moduleIter);  // LCOV_EXCL_BR_LINE 11:Gcov constraints (because exception-handling routes are automatically generated)
+  if (eFrameworkunifiedStatusOK != l_eStatus) {
+    LOG_ERROR("GetModuleIterator()");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
+  } else {
+    l_reset_factor = GetResetFactor(l_moduleIter, f_user_reset);
+  }
+  return l_reset_factor;
+}   // End of PsmFactorT CSystemManager::GetResetFactor(PCSTR f_module_name)
+
+
+PsmFactorT CSystemManager::GetResetFactor(const ModuleLaunchListIter f_module_iter, BOOL f_user_reset) {
+  PsmFactorT  l_reset_factor;
+  if (f_module_iter->IsAGLUnit() == TRUE) {
+    if (f_module_iter->IsAGLResetHistoryDisable() == TRUE) {
+      l_reset_factor = PSM_FACTOR_AGL;
+    } else {
+      l_reset_factor = PSM_FACTOR_AGL_WITH_HISTORY;
+    }
+  } else {
+    if (f_module_iter->IsNonAGLResetHistoryDisable() == TRUE) {
+      l_reset_factor = PSM_FACTOR_TIER1;
+    } else {
+      l_reset_factor = PSM_FACTOR_TIER1_WITH_HISTORY;
+    }
+  }
+
+  if (f_user_reset == TRUE) {
+    if ((l_reset_factor == PSM_FACTOR_AGL) || (l_reset_factor == PSM_FACTOR_TIER1)) {
+      l_reset_factor = PSM_FACTOR_USER;
+    } else {
+      l_reset_factor = PSM_FACTOR_USER_WITH_HISTORY;
+    }
+  }
+  return l_reset_factor;
+}   // End of PsmFactorT GetResetFactor(ModuleLaunchListIter & f_module_iter)
 ///////////////////////////////////////////////////////////////////////////////
 /// \ingroup OnClientStopMonitorTimerExpiry
 ///
@@ -2149,14 +2177,6 @@ EFrameworkunifiedStatus CSystemManager::OnClientStopMonitorTimerExpiry(HANDLE hA
       // DEAD CODE
       fprintf(stderr, "SS_SysManager/%s:SVC stop timeout\n", __FUNCTION__);
       FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " SVC stop timeout");
-      {
-        RAM_AccessIf ram_access;
-        RAM_SM_INFO_t info;
-
-        SS_ASERT(eFrameworkunifiedStatusOK == ram_access.getRamInfo(&info));  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-        info.isErrorReset = TRUE;
-        SS_ASERT(eFrameworkunifiedStatusOK == ram_access.setRamInfo(&info));  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-      }
       l_eStatus = CallStopCompleteHandler(hApp);
       LOG_STATUS_REC_HIST_IF_ERRORED(l_eStatus, "CallStopCompleteHandler( hApp )");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_system_manager.h  // NOLINT(whitespace/line_length)
     }
@@ -2225,14 +2245,6 @@ VOID CSystemManager::check_all_groups_have_stopped(HANDLE hApp) {
       }
       fprintf(stderr, "SS_SysManager/%s:critical service no stop\n", __FUNCTION__);
       FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "critical service no stop");
-      {
-        RAM_AccessIf ram_access;
-        RAM_SM_INFO_t info;
-
-        SS_ASERT(eFrameworkunifiedStatusOK == ram_access.getRamInfo(&info));  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-        info.isErrorReset = TRUE;
-        SS_ASERT(eFrameworkunifiedStatusOK == ram_access.setRamInfo(&info));  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-      }
     }
 
     CALL_AND_LOG_STATUS(CallStopCompleteHandler(hApp, l_bIsDetectTimeout));  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
@@ -2286,8 +2298,7 @@ EFrameworkunifiedStatus CSystemManager::OnNppStopComplete(HANDLE hApp) {
   return eFrameworkunifiedStatusOK;
 }
 
-EFrameworkunifiedStatus CSystemManager::GetModuleIterator(PCSTR f_moduleName,
-        ModuleLaunchListIter &f_moduleIter) noexcept {
+EFrameworkunifiedStatus CSystemManager::GetModuleIterator(PCSTR f_moduleName, ModuleLaunchListIter &f_moduleIter) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   EFrameworkunifiedStatus l_eStatus;
 
@@ -2364,13 +2375,14 @@ BOOL CSystemManager::IsGroupStarted(UI_32 f_groupID) {
     const SMModuleState l_dest_state = InProgressStateToState();  // LCOV_EXCL_BR_LINE 11: Gcov constraints (because exception-handling routes are automatically generated) // NOLINT(whitespace/line_length)
     if (l_dest_state != MODULE_STATE_INVALID) {
       for (; l_ModuleListIter != l_GroupIter->second.modules.end(); l_ModuleListIter++) {
-        if (((l_ModuleListIter->IsModuleState(l_dest_state) == FALSE)
+        if (((l_ModuleListIter->IsModuleState(l_dest_state) == FALSE)  // LCOV_EXCL_BR_START 11:Gcov constraints (because exception-handling routes are automatically generated)
             && (l_ModuleListIter->IsModuleState(MODULE_STATE_START_FAILED) == FALSE)
             && (l_ModuleListIter->IsModuleState(MODULE_STATE_START_PRE_FAILED) == FALSE)
             && (l_ModuleListIter->IsModuleState(MODULE_STATE_STOP_PRE_FAILED) == FALSE)
             && (l_ModuleListIter->IsModuleState(MODULE_STATE_START_BACKGROUND_FAILED) == FALSE)
             && (l_ModuleListIter->IsModuleState(MODULE_STATE_STOP_BACKGROUND_FAILED) == FALSE)
             && (l_ModuleListIter->IsModuleState(MODULE_STATE_STOP_FAILED) == FALSE))
+            // LCOV_EXCL_BR_STOP 11:Gcov constraints (because exception-handling routes are automatically generated)
             || ((l_ModuleListIter->is_start_required == TRUE)
                 // LCOV_EXCL_START 6: Because the value cannot be stored to make the condition true
                 && ((l_ModuleListIter->IsModuleState(MODULE_STATE_LAUNCHING) == TRUE)
@@ -2425,7 +2437,7 @@ BOOL CSystemManager::IsGroupStopped(UI_32 f_groupID) {
 /// Success ==> eFrameworkunifiedStatusOK
 /// Failure ==> Other values
 ///////////////////////////////////////////////////////////////////////////////
-EFrameworkunifiedStatus CSystemManager::OnModuleStopCompleteResponse(HANDLE hApp) noexcept {
+EFrameworkunifiedStatus CSystemManager::OnModuleStopCompleteResponse(HANDLE hApp) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusErrOther;
   INTERFACEUNIFIEDLOG_RECEIVED_FROM(hApp);  // LCOV_EXCL_BR_LINE 15: marco defined in ns_logger_if.h  // NOLINT(whitespace/line_length)
@@ -2454,7 +2466,7 @@ EFrameworkunifiedStatus CSystemManager::OnModuleStopCompleteResponse(HANDLE hApp
 /// Success ==> eFrameworkunifiedStatusOK
 /// Failure ==> Other values
 ///////////////////////////////////////////////////////////////////////////////
-EFrameworkunifiedStatus CSystemManager::OnGetStartExtInfo(HANDLE hApp) noexcept {
+EFrameworkunifiedStatus CSystemManager::OnGetStartExtInfo(HANDLE hApp) {
   EFrameworkunifiedStatus l_eStatus;
   T_SS_SM_START_ExtDataStructType l_extInfo = { 0 };
 
@@ -2518,7 +2530,7 @@ EFrameworkunifiedStatus CSystemManager::OnGetStartExtInfo(HANDLE hApp) noexcept 
 /// Success ==> eFrameworkunifiedStatusOK
 /// Failure ==> Other values
 ///////////////////////////////////////////////////////////////////////////////
-EFrameworkunifiedStatus CSystemManager::OnGetStopExtInfo(HANDLE hApp) noexcept {
+EFrameworkunifiedStatus CSystemManager::OnGetStopExtInfo(HANDLE hApp) {
   EFrameworkunifiedStatus l_eStatus;
   T_SS_SM_STOP_ExtDataStructType l_extInfo = { 0 };
 
@@ -2840,111 +2852,9 @@ EFrameworkunifiedStatus CSystemManager::ValidateUserModeMessage(HANDLE hApp, EPW
 // LCOV_EXCL_STOP
 
 //*****************************************************************************
-// Boot Mode Protocol functions                                               *
-//                                                                            *
-EFrameworkunifiedStatus CSystemManager::OnSetBootModeRequest(HANDLE hApp) noexcept {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus;
-  INTERFACEUNIFIEDLOG_RECEIVED_FROM(hApp);  // LCOV_EXCL_BR_LINE 15: marco defined in ns_logger_if.h  // NOLINT(whitespace/line_length)
-  FRAMEWORKUNIFIEDLOG(ZONE_STATE, __FUNCTION__, "from %s", FrameworkunifiedGetMsgSrc(hApp));
-
-  SetCmdHist("SS_SM_BOOT_MODE_SET_REQ", m_SMCmdHist, m_SMHistIter, FrameworkunifiedGetMsgSrc(hApp));
-
-  ESMBootModeInfo l_eBootModeState = e_SS_SM_BOOT_MODE_INVALID;
-  l_eStatus = ValidateBootModeMessage(hApp, l_eBootModeState);
-
-  if (eFrameworkunifiedStatusOK != l_eStatus) {
-    LOG_ERROR_REC_HIST(l_eStatus, "ValidateBootModeMessage(&l_eBootModeState)");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_system_manager.h  // NOLINT(whitespace/line_length)
-  } else {
-    FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__,
-        " Per %s's request, changing 'CSystemManager::m_BootMode' from '0x%x' to '0x%x'",
-        FrameworkunifiedGetMsgSrc(hApp), m_SystemModeInfo.systemMode,
-        l_eBootModeState);
-
-    // Got valid boot mode flag
-    m_BootMode = l_eBootModeState;
-
-    if (m_UsingVMPlayer) {  // LCOV_EXCL_BR_LINE 6: For setting the initialization conditions at SystemManager startup
-      // LCOV_EXCL_START 6: For setting the initialization conditions at SystemManager startup
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      FRAMEWORKUNIFIEDLOG(ZONE_WARN, __FUNCTION__, " Warning: 'm_UsingVMPlayer' is True");
-      l_eStatus = eFrameworkunifiedStatusOK;
-      // LCOV_EXCL_STOP
-    } else {
-      // Initialize ROM access object
-      ROM_AccessIf rom_access;
-      EBOOT_MODE boot_mode = PROGRAMMING_MODE;
-      rom_access.Initialize();
-
-      if (m_BootMode == e_SS_SM_BOOT_MODE_APPLICATION) {
-        boot_mode = APPLICATION_MODE;
-      }
-
-      FRAMEWORKUNIFIEDLOG(ZONE_STATE, __FUNCTION__, "boot_mode:%s", (boot_mode == APPLICATION_MODE) ? "APL" : "PROG");
-
-      // Try setting boot mode. If it's failed revert back to Invalid mode
-      if (eFrameworkunifiedStatusOK == (l_eStatus = rom_access.SetBootMode(boot_mode))) {
-        l_eStatus = PublishBootModeNotification(hApp);
-      } else {
-        l_eBootModeState = e_SS_SM_BOOT_MODE_INVALID;
-      }
-    }
-  }
-  //
-  // Return current status to the client, good or bad
-  //  ( ReturnBootModeAndStatus() will report errors as needed )
-  //
-  l_eStatus = ReturnBootModeAndStatus(hApp, SS_SM_BOOT_MODE_SET_RESP,
-      "SS_SM_BOOT_MODE_SET_RESP", m_BootMode, l_eStatus);
-  LOG_STATUS_IF_ERRORED(l_eStatus, "ReturnBootModeAndStatus(SS_SM_BOOT_MODE_SET_RESP");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of EFrameworkunifiedStatus CSystemManager::OnSetBootModeRequest( HANDLE hApp )
-
-//*****************************************************************************
-// Wakeup Order Protocol functions                                            *
-//                                                                            *
-EFrameworkunifiedStatus CSystemManager::OnSetWakeupOrderRequest(HANDLE hApp) noexcept {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus;
-  TSystemManagerWakeupOrderInfo tWakeupOrderInfo;
-
-  INTERFACEUNIFIEDLOG_RECEIVED_FROM(hApp);  // LCOV_EXCL_BR_LINE 15: marco defined in ns_logger_if.h  // NOLINT(whitespace/line_length)
-  FRAMEWORKUNIFIEDLOG(ZONE_STATE, __FUNCTION__, "from %s", FrameworkunifiedGetMsgSrc(hApp));
-
-  SetCmdHist("SS_SM_WAKEUP_ORDER_SET_REQ", m_SMCmdHist, m_SMHistIter, FrameworkunifiedGetMsgSrc(hApp));
-
-  if (eFrameworkunifiedStatusOK != (l_eStatus = ReadMsg < TSystemManagerWakeupOrderInfo
-      > (hApp, tWakeupOrderInfo))) {
-    LOG_ERROR("ReadMsg()");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-  } else {
-    RAM_AccessIf ram_access;
-    RAM_SM_INFO_t info;
-
-    if (eFrameworkunifiedStatusOK != (l_eStatus = ram_access.getRamInfo(&info))) {
-      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-             " Error: getRamInfo(%d)", l_eStatus);
-    } else {
-      snprintf(info.order_name, sizeof(info.order_name), "%s",
-               tWakeupOrderInfo.order_name);
-      if (eFrameworkunifiedStatusOK != (l_eStatus = ram_access.setRamInfo(&info))) {
-          FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-                 " Error: setRamInfo(%d)", l_eStatus);
-      }
-    }
-  }
-  l_eStatus = FrameworkunifiedSetSyncResponseData(hApp, &l_eStatus, sizeof(l_eStatus));
-  LOG_STATUS_IF_ERRORED(l_eStatus, "FrameworkunifiedSetSyncResponseData()");  // LCOV_EXCL_BR_LINE 6:Error Pattern can't pass here
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of EFrameworkunifiedStatus CSystemManager::OnSetWakeupOrderRequest( HANDLE hApp )
-
-//*****************************************************************************
 // Next Wakeup Type Set Protocol functions                                    *
 //                                                                            *
-EFrameworkunifiedStatus CSystemManager::OnSetNextWakeupTypeRequest(HANDLE hApp) noexcept {
+EFrameworkunifiedStatus CSystemManager::OnSetNextWakeupTypeRequest(HANDLE hApp) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   EFrameworkunifiedStatus l_eStatus;
   ESMNextWakeupType l_wakeupType;
@@ -2960,15 +2870,6 @@ EFrameworkunifiedStatus CSystemManager::OnSetNextWakeupTypeRequest(HANDLE hApp) 
     case e_SS_SM_NEXT_WAKEUP_TYPE_NONE:
     case e_SS_SM_NEXT_WAKEUP_TYPE_COLD:
     case e_SS_SM_NEXT_WAKEUP_TYPE_HOT:
-      {
-        ROM_AccessIf rom_access;
-        rom_access.Initialize();
-        if (eFrameworkunifiedStatusOK != (l_eStatus = SetNextWakeupType(rom_access, l_wakeupType))) {
-          FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: SetNextWakeupType(%d)", l_eStatus);
-        } else {
-          FRAMEWORKUNIFIEDLOG(ZONE_STATE, __FUNCTION__, "SetNextWakeupType(%d)", l_wakeupType);
-        }
-      }
       break;
     default:
       FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "unknown type(%d)", l_wakeupType);
@@ -2980,142 +2881,17 @@ EFrameworkunifiedStatus CSystemManager::OnSetNextWakeupTypeRequest(HANDLE hApp) 
 
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
   return l_eStatus;
-}  // End of EFrameworkunifiedStatus CSystemManager::OnSetWakeupOrderRequest( HANDLE hApp )
-
-EFrameworkunifiedStatus CSystemManager::PublishBootModeNotification(HANDLE hApp) noexcept {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-
-  TSS_BootModeListStruct l_bootModes;
-  l_bootModes.hostBootMode = m_BootMode;
-  l_bootModes._CWORD56_BootMode = m_startUpConfirmationMsg._CWORD56_BootMode;
-
-  char l_cBuf[500] = { 0 };
-  snprintf(l_cBuf, sizeof(l_cBuf), "FrameworkunifiedNPPublishNotification(%s, %s, %s)",
-      NTFY_SSHUBootModes, GetStr(m_BootMode).c_str(),
-      GetStr(m_startUpConfirmationMsg._CWORD56_BootMode).c_str());
-
-  l_eStatus = FrameworkunifiedNPPublishNotification(hApp, NTFY_SSHUBootModes, &l_bootModes, sizeof(l_bootModes));
-
-  REC_HIST_IF_SUCCESSFUL(NTFY_SSHUBootModes, m_PubCmdHist, m_PubHistIter, "", l_eStatus);  // LCOV_EXCL_BR_LINE 15: marco defined in ss_system_manager.h  // NOLINT(whitespace/line_length)
-
-  LOG_STATUS_REC_HIST_IF_ERRORED(l_eStatus, l_cBuf);  // LCOV_EXCL_BR_LINE 15: marco defined in ss_system_manager.h  // NOLINT(whitespace/line_length)
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of EFrameworkunifiedStatus CSystemManager::PublishBootModeNotification(ESMBootModeInfo f_BootMode)
-
-EFrameworkunifiedStatus CSystemManager::ReturnBootModeAndStatus(HANDLE hApp,
-        SS_SystemManagerProtocol protocolID, PCSTR p_sIDName,
-        ESMBootModeInfo f_BootMode, EFrameworkunifiedStatus eFrameworkunifiedStatus) noexcept {
-    FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-    EFrameworkunifiedStatus l_eStatus;
-    TSystemManagerBootModeRequestResponse l_response;
-    PCSTR p_sBootModeName = (
-            f_BootMode == e_SS_SM_BOOT_MODE_APPLICATION ?
-            "BOOT_MODE_APPLICATION" : "BOOT_MODE_PROGRAMMING");  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-
-    (void) p_sBootModeName;
-    l_response.hostBootMode = f_BootMode;
-    l_response.eFrameworkunifiedStatus = eFrameworkunifiedStatus;
-
-    ModuleLaunchListIter l_ModuleListIter;
-    PCSTR l_moduleName = FrameworkunifiedGetMsgSrc(hApp);
-    if (eFrameworkunifiedStatusOK != (l_eStatus = GetModuleIterator(l_moduleName, l_ModuleListIter))) {
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: Module %s not found in Group Launch Map", l_moduleName);
-    } else if (l_ModuleListIter->hsession != NULL) {
-        if (eFrameworkunifiedStatusOK != (l_eStatus = FrameworkunifiedSendMsg(l_ModuleListIter->hsession, protocolID, sizeof(TSystemManagerBootModeRequestResponse), (PVOID) & l_response))) {  // LCOV_EXCL_BR_LINE 4:NSFW error case  //NOLINT (whitespace/line_length)
-            // LCOV_EXCL_START 4: nsfw error
-            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-                    " Error: FrameworkunifiedSendMsg(%s, %s) errored: %d/'%s'", p_sIDName,
-                    p_sBootModeName, l_eStatus, GetStr(l_eStatus).c_str());
-            // LCOV_EXCL_STOP
-        }
-    } else {
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-                " NULL == hsession; %s not connected yet",
-                l_ModuleListIter->name.c_str());
-    }
-
-    FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-    return l_eStatus;
-}  // End of EFrameworkunifiedStatus CSystemManager::ReturnBootModeAndStatus()
-
-EFrameworkunifiedStatus CSystemManager::ValidateBootModeMessage(HANDLE hApp,
-        ESMBootModeInfo &l_eBootModeState) noexcept {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus;
-  TSystemManagerBootModeRequestResponse tBootModeInfoStruct;
-  ESMBootModeInfo l_my_eBootModeState;
-
-  // ReadMsg():                                                        *
-  //     Check hApp ptr, msg size, msg reception, read msg if all ok.  *
-  //     Report any errors found.                                      *
-  //                                                                   *
-  if (eFrameworkunifiedStatusOK
-      != (l_eStatus = ReadMsg < TSystemManagerBootModeRequestResponse
-              > (hApp, tBootModeInfoStruct))) {
-    LOG_ERROR("ReadMsg()");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-// BUGBUG: Temporarily disable authorization for reproservice join
-#if 0
-  } else if ( eFrameworkunifiedStatusOK !=
-            (l_eStatus = ValidateRequester(
-                            hApp
-                            , ListOfServicesAuthorizedToSetBootMode,
-                            "change Boot Mode"))) {
-      // ValidateRequester() will report via FRAMEWORKUNIFIEDLOG any  // LCOV_EXCL_BR_LINE 15: marco defined in ns_logger_if.h  // NOLINT(whitespace/line_length)
-      // errors it detects, as well as reporting the name of an
-      // unauthorized requester
-    }
-#endif
-  } else {
-    l_my_eBootModeState = tBootModeInfoStruct.hostBootMode;
-    switch (l_my_eBootModeState) {  // LCOV_EXCL_BR_LINE 6: Out-of-range values for the enum are not feasible
-      case e_SS_SM_BOOT_MODE_INVALID:
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-            " Error: l_eBootModeState == e_SS_SM_BOOT_MODE_INVALID");
-        l_eStatus = eFrameworkunifiedStatusInvldParam;
-        break;
-
-      case e_SS_SM_BOOT_MODE_APPLICATION:
-      case e_SS_SM_BOOT_MODE_PROGRAMMING:
-        l_eBootModeState = l_my_eBootModeState;
-        break;
-
-      // default:  Don't code a 'default' here - let the compiler
-      // issue a warning ( set via -Wall or -Wswitch ) when the set of
-      // enumerations changes - then the maintainer will
-      // automagically know to update this switch statement.
-    }  // End switch
-  }
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of EFrameworkunifiedStatus CSystemManager::ValidateBootModeMessage()
+}  // End of EFrameworkunifiedStatus CSystemManager::OnSetNextWakeupTypeRequest( HANDLE hApp )
 
 //                                                                            *
 // End of Boot Mode Protocol functions                                        *
 //*****************************************************************************
-EFrameworkunifiedStatus CSystemManager::OnRebootNotification(HANDLE hApp) {
-  FRAMEWORKUNIFIEDLOG(ZONE_STATE, __FUNCTION__, "+");  // LCOV_EXCL_BR_LINE 15: marco defined in ns_logger_if.h  // NOLINT(whitespace/line_length)
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
 
-  CALL_AND_LOG_STATUS(PerformForceUmountRamd());  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-  CALL_AND_LOG_STATUS(PerformFinalUmount(FALSE));  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-
-  // Wait for reset from SYS after completion of sync
-  fprintf(stderr, "SS_SysManager/%s/wait reset for RebootNotification\n", __FUNCTION__);
-  sleep(10);
-  fprintf(stderr, "SS_SysManager/%s/Not reset 10sec after RebootNotification\n", __FUNCTION__);
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of EFrameworkunifiedStatus CSystemManager::OnRebootNotification()
 
 //*****************************************************************************
 // Data Reset Mode Protocol functions                                         *
 //                                                                            *
-EFrameworkunifiedStatus CSystemManager::OnSetDataResetModeRequest(HANDLE hApp) noexcept {
+EFrameworkunifiedStatus CSystemManager::OnSetDataResetModeRequest(HANDLE hApp) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   EFrameworkunifiedStatus l_eStatus;
   ESMDataResetModeInfo l_dataResetMode;
@@ -3127,14 +2903,13 @@ EFrameworkunifiedStatus CSystemManager::OnSetDataResetModeRequest(HANDLE hApp) n
   if (eFrameworkunifiedStatusOK != (l_eStatus = ReadMsg < ESMDataResetModeInfo > (hApp, l_dataResetMode))) {
     LOG_ERROR("ReadMsg()");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
   } else {
-    // Set Data Reset Mode to ROM access object
-    ROM_AccessIf rom_access;
-    rom_access.Initialize();
-
-    if (eFrameworkunifiedStatusOK != (l_eStatus = SetDataResetMode(rom_access, l_dataResetMode))) {
-      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: SetDataResetMode(%d)", l_eStatus);
-  } else {
-      m_DataResetMode = l_dataResetMode;
+    uint32_t tmp;
+    m_DataResetMode = l_dataResetMode;
+    tmp = static_cast<uint32_t>(m_DataResetMode);
+    if (PowerHalSetResetInfo(AGL_DATARESET_STATE, tmp)) {  // LCOV_EXCL_BR_LINE 11:Gcov constraints (because exception-handling routes are automatically generated)
+      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Could not set AGL_DATARESET_STATE.");
+      // Return error to client of system_manager.
+      l_eStatus = eFrameworkunifiedStatusFail;
     }
   }
   //
@@ -3148,7 +2923,7 @@ EFrameworkunifiedStatus CSystemManager::OnSetDataResetModeRequest(HANDLE hApp) n
   return l_eStatus;
 }  // End of EFrameworkunifiedStatus CSystemManager::OnSetDataResetModeRequest( HANDLE hApp )
 
-EFrameworkunifiedStatus CSystemManager::OnSetProgUpdateStateRequest(HANDLE hApp) noexcept {
+EFrameworkunifiedStatus CSystemManager::OnSetProgUpdateStateRequest(HANDLE hApp) {
   EFrameworkunifiedStatus l_eStatus;
   SMProgUpdateState l_progUpdateState;
 
@@ -3163,16 +2938,11 @@ EFrameworkunifiedStatus CSystemManager::OnSetProgUpdateStateRequest(HANDLE hApp)
     LOG_ERROR("ReadMsg()");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
     // LCOV_EXCL_STOP
   } else {
-    // Set Program Update Status to ROM access object
-    ROM_AccessIf rom_access;
-    rom_access.Initialize();
-
     m_ProgUpdateState |= l_progUpdateState;
-    if (SS_SM_PROG_UPDATE_STATE_UPDATED & l_progUpdateState) {
-      SetDramStatusInfo(SYSUP_DRAM_DISCARD);
-    }
-    if (eFrameworkunifiedStatusOK != (l_eStatus = SetProgUpdateState(rom_access, m_ProgUpdateState))) {
-      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: SetProgUpdateState(%d)", l_eStatus);
+    if (PowerHalSetResetInfo(AGL_PROGUPDATE_STATE, m_ProgUpdateState)) {  // LCOV_EXCL_BR_LINE 11:Gcov constraints (because exception-handling routes are automatically generated)
+      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Could not set AGL_PROGUPDATE_STATE.");
+      // return Error to client of system_manager.
+      l_eStatus = eFrameworkunifiedStatusFail;
     }
   }
   // Instead of sending Return Message, this function must call FrameworkunifiedSetSyncResponseData()
@@ -3188,30 +2958,12 @@ EFrameworkunifiedStatus CSystemManager::CallStopCompleteHandler(HANDLE hApp, BOO
   FRAMEWORKUNIFIEDLOG(ZONE_STATE, __FUNCTION__, "+");
   EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
 
-  m_isImmediateReset = FALSE;
-
-  {
-    RAM_AccessIf ram_access;
-    RAM_SM_INFO_t info;
-
-    if (eFrameworkunifiedStatusOK != (l_eStatus = ram_access.getRamInfo(&info))) {
-      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: ram_access.getRamInfo(%d)", l_eStatus);
-    } else {
-      info.isImmediateReset = m_isImmediateReset;
-      if (eFrameworkunifiedStatusOK != (l_eStatus = ram_access.setRamInfo(&info))) {
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, " Error: ram_access.setRamInfo(%d)", l_eStatus);
-      }
-    }
-  }
 
   if (bIsDetectTimeout) {
     fprintf(stderr, "SS_SysManager/%s/State StopComplete(timeout)\n", __FUNCTION__);
   } else {
     fprintf(stderr, "SS_SysManager/%s/State StopComplete\n", __FUNCTION__);
   }
-
-  CALL_AND_LOG_STATUS(PerformUmountRamd());  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-  CALL_AND_LOG_STATUS(PerformUmountNand());  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
 
   l_eStatus = SecureChipOff();
   if (eFrameworkunifiedStatusOK != l_eStatus) {
@@ -3246,119 +2998,8 @@ static char *get_line(const char *filepath) {
   return strdup(line);
 }
 
-#define PATH_ROOTFS_SIDEA "/dev/mmcblk0p4"
-#define PATH_ROOTFS_SIDEB "/dev/mmcblk0p5"
-
-static const char *get_path_rootfs(void) {
-  char *side;
-  const char *devpath;
-
-  if ((side = get_line("/proc/device-tree/bootinfo/nand_rootfs_part")) == NULL) {
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "get nand_rootfs_partfailed.");
-    return PATH_ROOTFS_SIDEA;
-  }
-
-  if (!strcmp(side, "SideA")) {
-    devpath = PATH_ROOTFS_SIDEA;
-  } else if (!strcmp(side, "SideB")) {
-    devpath = PATH_ROOTFS_SIDEB;
-  } else {
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Invalid side, fall back to SideA");
-    devpath = PATH_ROOTFS_SIDEA;
-  }
-  free(side);
-
-  return devpath;
-}
-
-#define READ_SIZE       (4096)
-#define OUTPUT_MAX      (1024)
-
-static int output_count = 0;
-static int check_pramfs_body(int emmcfd, off_t offset, size_t read_count) {
-  int rtn = -1;
-  size_t i;
-  char *prDat, *emDat;
-
-  if (output_count >= OUTPUT_MAX) {
-    return rtn;
-  }
-
-  /* Pramfs MMAP */
-//  prDat = reinterpret_cast<char *>(EL_mem_exram_mmap(EL_MEM_TYPE_REGION_PRAMFS, offset, read_count, PROT_READ,
-//                                    MAP_SHARED, EL_MEM_CACHE_VALID));
-  if (prDat == MAP_FAILED) {
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Map (Pramfs) failed offset=0x%lx", offset);
-    goto FAIL_MAP;
-  }
-
-  /* EMMC MMAP */
-  emDat = reinterpret_cast<char *>(mmap(NULL, read_count, PROT_READ, MAP_SHARED, emmcfd, offset));
-  if (emDat == MAP_FAILED) {  // LCOV_EXCL_BR_LINE 5: mmap error
-    // LCOV_EXCL_START 5: nsfw error
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Map (EMMC) failed offset=0x%lx", offset);  // LCOV_EXCL_BR_LINE 15: marco defined in ns_logger_if.h  // NOLINT(whitespace/line_length)
-    goto FAIL_MAP2;
-    // LCOV_EXCL_STOP
-  }
-
-  rtn = memcmp(prDat, emDat, read_count);
-  if (rtn) {
-    for (i = 0; i < read_count; i++) {
-      if (*(prDat+i) != *(emDat+i)) {
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "%08lx : %02x : %02x", i + offset, *(prDat+i), *(emDat+i));
-        output_count++;
-      }
-    }
-  }
-  munmap(emDat, read_count);
-FAIL_MAP2:
-//  EL_mem_exram_munmap(prDat, read_count);
-FAIL_MAP:
-
-  return rtn;
-}
-
-static void checker_pramfs() {
-  int i, r_cnt, emmcfd;
-  size_t pramfs_size;
-  off_t offset = 0;
-  const char *path = get_path_rootfs();
-
-  FRAMEWORKUNIFIEDLOG(ZONE_STATE, __FUNCTION__, "Check Start %s", path);
-
-  emmcfd = open(path, O_RDONLY|O_CLOEXEC);
-  if (emmcfd < 0) {
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "open fail errno=%d", errno);
-    goto FAIL_OPEN;
-  }
-
-//  pramfs_size = EL_mem_getLength(EL_MEM_ID_PRAMFS_ALL);
-
-  r_cnt = static_cast<int>(pramfs_size/READ_SIZE);
-  for (i=0 ; i < r_cnt ; i++) {
-    check_pramfs_body(emmcfd, offset, READ_SIZE);
-    if (output_count >= OUTPUT_MAX) {
-      goto LOG_MAX;
-    }
-    offset += READ_SIZE;
-  }
-  if (pramfs_size%READ_SIZE) {
-    check_pramfs_body(emmcfd, offset, pramfs_size%READ_SIZE);
-  }
-
-LOG_MAX:
-  if (output_count >= OUTPUT_MAX) {
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "NG part num over %d", OUTPUT_MAX);
-  }
-  close(emmcfd);
-FAIL_OPEN:
-  FRAMEWORKUNIFIEDLOG(ZONE_STATE, __FUNCTION__, "Check End");
-  return;
-}
-
 EFrameworkunifiedStatus CSystemManager::PerformCpuReset(HANDLE hApp,
-        ESMCpuResetReason f_eSmCpuResetReason, std::string f_messageStr) noexcept {
+        ESMCpuResetReason f_eSmCpuResetReason, std::string f_messageStr) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
   if (FALSE == m_isRcvModeInfo) {
@@ -3371,18 +3012,14 @@ EFrameworkunifiedStatus CSystemManager::PerformCpuReset(HANDLE hApp,
   } else {
     switch (f_eSmCpuResetReason) {
     case e_SS_SM_CPU_RESET_REASON_CRITICAL_ERR:
-      /* Outputs the pramfs validation result to the frameworkunifiedlog when falsification is checked */
-      checker_pramfs();
-      m_pfStopCompleteHandler = (SysMgrCallback<CSystemManager, &CSystemManager::perform_force_reset>);
-      // The break is omitted because the same process as for abnormal rebooting is performed.
     case e_SS_SM_CPU_RESET_REASON_GENERIC_ERR:
     case e_SS_SM_CPU_RESET_REASON_DSP_ERR:
       m_isImmResetReq = TRUE;
       FRAMEWORKUNIFIEDLOG(ZONE_STATE, __FUNCTION__, " will reset immediately");
       // The break is omitted because the same process as for a normal reboot is performed.
-
-    case e_SS_SM_CPU_RESET_REASON_NORMAL:
-    case e_SS_SM_CPU_RESET_REASON_USER_FORCE_RESET: {
+    case e_SS_SM_CPU_RESET_REASON_USER_FORCE_RESET:
+      m_pfStopCompleteHandler = (SysMgrCallback<CSystemManager, &CSystemManager::perform_force_reset>);
+    case e_SS_SM_CPU_RESET_REASON_NORMAL: {
         TSystemManagerCpuResetInfo l_resetInfo;
 
         l_resetInfo.resetReason = f_eSmCpuResetReason;
@@ -3402,6 +3039,8 @@ EFrameworkunifiedStatus CSystemManager::PerformCpuReset(HANDLE hApp,
           break;
         case e_SS_SM_DATA_RESET_MODE_USER:
           l_eSmDataResetType = e_SS_SM_DATA_RESET_TYPE_USER;
+          l_eStatus = FrameworkunifiedBroadcastEvent(hApp, SS_SM_EVENT_USER_DATA_RESET, NULL, 0);
+          LOG_STATUS(l_eStatus, "FrameworkunifiedBroadcastEvent(SS_SM_EVENT_USER_DATA_RESET)");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
           break;
         default:
           SS_ASERT_LOG(0, "unexpected data reset mode : %d", m_DataResetMode);  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
@@ -3432,7 +3071,7 @@ EFrameworkunifiedStatus CSystemManager::PerformCpuReset(HANDLE hApp,
 //*****************************************************************************
 // CPU Reset Protocol functions                                               *
 //                                                                            *
-EFrameworkunifiedStatus CSystemManager::OnCpuResetRequest(HANDLE hApp) noexcept {  // SS_SM_CPU_RESET_REQ
+EFrameworkunifiedStatus CSystemManager::OnCpuResetRequest(HANDLE hApp) {  // SS_SM_CPU_RESET_REQ
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusFail;
   std::string l_moduleName = FrameworkunifiedGetMsgSrc(hApp);
@@ -3512,44 +3151,16 @@ EFrameworkunifiedStatus CSystemManager::OnCpuResetRequest(HANDLE hApp) noexcept 
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
   return l_eStatus;
 }
-
 //                                                                            *
 // End of CPU Reset Protocol functions                                        *
 //*****************************************************************************
-EFrameworkunifiedStatus CSystemManager::ValidateRequester(HANDLE hApp,
-        std::vector<std::string> &L, PCSTR p_sActionName) {  // LCOV_EXCL_START 6: Because the condition cannot be set
-  AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus;
-  //
-  // FrameworkunifiedGetMsgSrc( hApp ) is known to return a non-null string from having
-  // been successfully called by this function's caller.
-  //
-  PCSTR p_sRequesterName = FrameworkunifiedGetMsgSrc(hApp);
-  if (L.end() == find(L.begin(), L.end(), p_sRequesterName)) {
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-        " Error: Unauthorized service '%s' requested to %s;"
-        " request refused.", p_sRequesterName, p_sActionName);
-    l_eStatus = eFrameworkunifiedStatusInvldID;
-  } else {
-    l_eStatus = eFrameworkunifiedStatusOK;
-  }
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}  // End of EFrameworkunifiedStatus CSystemManager::ValidateRequester( HANDLE hApp )
-// LCOV_EXCL_STOP
 
 VOID CSystemManager::InitiateAllGroupsShutdown(HANDLE hApp) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   EFrameworkunifiedStatus l_eStatus;
-  char l_cBuf[100];
 
   // Prioritize safe termination sequence and do not save logs during termination
   m_errorEventQueueLocked = TRUE;
-
-  snprintf(l_cBuf, sizeof(l_cBuf), "SaveLastUserModeToNVM(%s)", GetStr(m_lastUserMode).c_str());
-  l_eStatus = SaveLastUserModeToNVM(m_lastUserMode);
-  LOG_STATUS_REC_HIST_IF_ERRORED(l_eStatus, l_cBuf);  // LCOV_EXCL_BR_LINE 15: marco defined in ss_system_manager.h  // NOLINT(whitespace/line_length)
 
   m_MaxShutdownTime = calculate_max_shutdown_time();
 
@@ -3624,7 +3235,7 @@ VOID CSystemManager::SendDeferMsg(HANDLE hApp) {
 /// Success ==> eFrameworkunifiedStatusOK
 /// Failure ==> Other values
 ///////////////////////////////////////////////////////////////////////////////
-EFrameworkunifiedStatus CSystemManager::PublishPowerOnOffNotification(HANDLE hApp) noexcept {
+EFrameworkunifiedStatus CSystemManager::PublishPowerOnOffNotification(HANDLE hApp) {
   EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
 
@@ -3637,7 +3248,7 @@ EFrameworkunifiedStatus CSystemManager::PublishPowerOnOffNotification(HANDLE hAp
   return l_eStatus;
 }
 
-EFrameworkunifiedStatus CSystemManager::PublishUserModeNotification(HANDLE hApp) noexcept {
+EFrameworkunifiedStatus CSystemManager::PublishUserModeNotification(HANDLE hApp) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   EFrameworkunifiedStatus l_eStatus;
 
@@ -3650,8 +3261,7 @@ EFrameworkunifiedStatus CSystemManager::PublishUserModeNotification(HANDLE hApp)
   return l_eStatus;
 }  // End of EFrameworkunifiedStatus CSystemManager::PublishUserModeNotification(
 
-EFrameworkunifiedStatus CSystemManager::PerformPowerOnOffUserModePublication(HANDLE hApp,
-        const char * p_NotificationStr) noexcept {
+EFrameworkunifiedStatus CSystemManager::PerformPowerOnOffUserModePublication(HANDLE hApp, const char * p_NotificationStr) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   EFrameworkunifiedStatus l_eStatus;
   char l_cBuf[500] = { 0 };
@@ -3752,92 +3362,7 @@ EFrameworkunifiedStatus CSystemManager::ResetModulesStateToConnected(HANDLE hApp
   return l_eStatus;
 }  // End of EFrameworkunifiedStatus CSystemManager::ResetModulesStateToConnected(HANDLE hApp)
 
-EFrameworkunifiedStatus CSystemManager::OnVarCodeSetRequest(HANDLE hApp) noexcept {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  EFrameworkunifiedStatus l_eStatus;
-  INTERFACEUNIFIEDLOG_RECEIVED_FROM(hApp);  // LCOV_EXCL_BR_LINE 15: marco defined in ns_logger_if.h  // NOLINT(whitespace/line_length)
-  FRAMEWORKUNIFIEDLOG(ZONE_STATE, __FUNCTION__, "from %s", FrameworkunifiedGetMsgSrc(hApp));
-
-  SetCmdHist("SS_SM_DEBUG_VAR_CODE_DATA_SET_REQ", m_SMCmdHist, m_SMHistIter, FrameworkunifiedGetMsgSrc(hApp));
-
-  UI_32 l_msgLen;
-  if (NULL != m_pVarCodeStr) {
-    delete[] m_pVarCodeStr;
-  }
-  if (0 == (l_msgLen = FrameworkunifiedGetMsgLength(hApp))) {
-    l_eStatus = eFrameworkunifiedStatusInvldBufSize;
-    FRAMEWORKUNIFIEDLOG(ZONE_WARN, __FUNCTION__, " Warning: Variant code string length is 0.");
-  } else if (NULL == (m_pVarCodeStr = new (std::nothrow) CHAR[l_msgLen])) {  // LCOV_EXCL_BR_LINE 5: new's error case
-    // LCOV_EXCL_START 5: new's error case
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    l_eStatus = eFrameworkunifiedStatusNullPointer;
-    LOG_ERROR("new (std::nothrow) CHAR[l_msgLen]");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-    // LCOV_EXCL_STOP
-  } else {
-    l_eStatus = FrameworkunifiedGetMsgDataOfSize(hApp, m_pVarCodeStr, l_msgLen, eSMRRelease);
-    if (eFrameworkunifiedStatusOK != l_eStatus) {  // LCOV_EXCL_BR_LINE 4: nsfw error
-      // LCOV_EXCL_START 4: nsfw error
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      delete[] m_pVarCodeStr;  // LCOV_EXCL_LINE 6: Because it cannot pass the delete[] failure case
-      m_pVarCodeStr = NULL;
-
-      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-          " Error: FrameworkunifiedGetMsgDataOfSize(hApp, m_pVarCodeStr, "
-              "l_msgLen '%d', eSMRRelease) errored: %d/'%s'",
-          l_msgLen, l_eStatus, GetStr(l_eStatus).c_str());
-      // LCOV_EXCL_STOP
-    } else {
-      // Guarantee NULL termination of the string.
-      m_pVarCodeStr[l_msgLen - 1] = 0;
-      FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, " m_pVarCodeStr is '%s'", m_pVarCodeStr);
-    }
-  }
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}
-
-EFrameworkunifiedStatus CSystemManager::OnSetBootloaderInfoRequest(HANDLE hApp) noexcept {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  FRAMEWORKUNIFIEDLOG(ZONE_STATE, __FUNCTION__, "from %s", FrameworkunifiedGetMsgSrc(hApp));
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-  TSystemManagerBootInfoStruct l_bootInfo;
-
-  SetCmdHist("SS_SM_SET_BOOTLOADER_INFO", m_SMCmdHist, m_SMHistIter, FrameworkunifiedGetMsgSrc(hApp));
-
-  l_eStatus = ReadMsg < TSystemManagerBootInfoStruct > (hApp, l_bootInfo);
-  if (eFrameworkunifiedStatusOK != l_eStatus) {
-    LOG_ERROR("ReadMsg()");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-  }
-
-  // Instead of sending Return Message, this function must call FrameworkunifiedSetSyncResponseData()
-  // because this request is sent by FrameworkunifiedInvokeSync()
-  l_eStatus = FrameworkunifiedSetSyncResponseData(hApp, &l_eStatus, sizeof(l_eStatus));
-  LOG_STATUS_IF_ERRORED(l_eStatus, "FrameworkunifiedSetSyncResponseData()");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}
-
-
-EFrameworkunifiedStatus CSystemManager::OnGetBootloaderInfoRequest( HANDLE hApp ) {
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
-  FRAMEWORKUNIFIEDLOG(ZONE_STATE, __FUNCTION__, "from %s", FrameworkunifiedGetMsgSrc(hApp));
-  EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
-
-  SetCmdHist("SS_SM_GET_BOOTLOADER_INFO", m_SMCmdHist, m_SMHistIter, FrameworkunifiedGetMsgSrc(hApp));  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-
-  // Instead of sending Return Message, this function must call FrameworkunifiedSetSyncResponseData()
-  // because this request is sent by FrameworkunifiedInvokeSync()
-  l_eStatus = FrameworkunifiedSetSyncResponseData(hApp, m_BootMemory, sizeof(LBM_RAM_t));
-  LOG_STATUS_IF_ERRORED(l_eStatus, "FrameworkunifiedSetSyncResponseData()");  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-
-  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
-  return l_eStatus;
-}
-
-
-EFrameworkunifiedStatus CSystemManager::On_CWORD56_HeartBeatRequest(HANDLE hApp) noexcept {
+EFrameworkunifiedStatus CSystemManager::On_CWORD56_HeartBeatRequest(HANDLE hApp) {
   FRAMEWORKUNIFIEDLOG(ZONE_PERIODIC_FUNC, __FUNCTION__, "+");
   EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
 

@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -86,25 +86,6 @@ prefix DefaultModuleLaunchParams SystemModulesGroup[] = {
    (const PCHAR)"", (const PCHAR)"me",    12, FALSE, 3, (const PCHAR)"0x00000000, 0x00000000", TRUE,  FALSE,  0},
   {(const PCHAR)SS_PLM_SERVICE,         (const PCHAR)SS_PLM_SERVICE,
    (const PCHAR)"", (const PCHAR)"me",    12, FALSE, 3, (const PCHAR)"0x00000000, 0x00000000", TRUE,  FALSE,  0},
-  {(const PCHAR)0,                      (const PCHAR)0,
-   (const PCHAR)0,  (const PCHAR)0,        0, FALSE, 0, (const PCHAR)"0x00000000, 0x00000000", FALSE, FALSE,  0}
-};
-
-prefix DefaultModuleLaunchParams _CWORD121_ModulesGroup[] = {
-  {(const PCHAR)SERVICE_CAN_SHADOW,     (const PCHAR)"VS_CANShadow",
-   (const PCHAR)"", (const PCHAR)"me",    10, TRUE,  3, (const PCHAR)"0x00000000, 0x00000000", TRUE,  FALSE,  0},
-  {(const PCHAR)SERVICE_VS_DIAG_DISP,   (const PCHAR)"VS_DoIPServer",
-   (const PCHAR)"", (const PCHAR)"me",    10, TRUE,  3, (const PCHAR)"0x00000000, 0x00000000", TRUE,  FALSE,  0},
-  {(const PCHAR)SERVICE_VS_DIAG,        (const PCHAR)"VS_DiagService",
-   (const PCHAR)"", (const PCHAR)"me",    10, TRUE,  3, (const PCHAR)"0x00000000, 0x00000000", TRUE,  FALSE,  0},
-  {(const PCHAR)SERVICE_VS_VEHICLE,     (const PCHAR)"VS_VehicleService",
-   (const PCHAR)"", (const PCHAR)"me",    10, TRUE,  3, (const PCHAR)"0x00000000, 0x00000000", TRUE,  FALSE,  0},
-  {(const PCHAR)SERVICE_VS__CWORD85_,         (const PCHAR)"VS__CWORD85_Service",
-   (const PCHAR)"", (const PCHAR)"me",    10, TRUE,  3, (const PCHAR)"0x00000000, 0x00000000", TRUE,  FALSE,  0},
-  {(const PCHAR)SERVICE__CWORD51__DR,       (const PCHAR)"_CWORD51__DR.exe",
-   (const PCHAR)"", (const PCHAR)"me",    10, TRUE,  3, (const PCHAR)"0x00000000, 0x00000000", TRUE,  FALSE,  0},
-  {(const PCHAR)SERVICE_VS_RVC,         (const PCHAR)"VS_RVCService",
-   (const PCHAR)"", (const PCHAR)"me",    10, TRUE,  3, (const PCHAR)"0x00000000, 0x00000000", TRUE,  FALSE,  0},
   {(const PCHAR)0,                      (const PCHAR)0,
    (const PCHAR)0,  (const PCHAR)0,        0, FALSE, 0, (const PCHAR)"0x00000000, 0x00000000", FALSE, FALSE,  0}
 };
@@ -197,15 +178,14 @@ prefix DefaultGroupLaunchInfo g_arrLaunchTable[] = {
   {(const PCHAR)"CoreModules",     1, CoreModulesGroup           },
   {(const PCHAR)"ShadowModules",   2, ShadowModulesGroup         },
   {(const PCHAR)"SystemModules",   3, SystemModulesGroup         },
-  {(const PCHAR)"_CWORD121_",            4, _CWORD121_ModulesGroup           },
-  {(const PCHAR)"Audio",           5, AudioModulesGroup          },
-  {(const PCHAR)"Radio",           6, RadioModulesGroup          },
-  {(const PCHAR)"Multimedia",      7, MultimediaModulesGroup     },
-  {(const PCHAR)"HMI",             8, HMIModulesGroup            },
-  {(const PCHAR)"Navigation",      9, NavigationModulesGroup     },
-  {(const PCHAR)"SoftwareUpdate", 10, SoftwareUpdateModulesGroup },
-  {(const PCHAR)"Networking",     11, NetworkingModulesGroup     },
-  {(const PCHAR)"Browser",        12, BrowserModulesGroup        },
+  {(const PCHAR)"Audio",           4, AudioModulesGroup          },
+  {(const PCHAR)"Radio",           5, RadioModulesGroup          },
+  {(const PCHAR)"Multimedia",      6, MultimediaModulesGroup     },
+  {(const PCHAR)"HMI",             7, HMIModulesGroup            },
+  {(const PCHAR)"Navigation",      8, NavigationModulesGroup     },
+  {(const PCHAR)"SoftwareUpdate",  9, SoftwareUpdateModulesGroup },
+  {(const PCHAR)"Networking",     10, NetworkingModulesGroup     },
+  {(const PCHAR)"Browser",        11, BrowserModulesGroup        },
 };
 
 #endif  // SS_SM_LAUNCH_CONFIGURATION_H_  // NOLINT

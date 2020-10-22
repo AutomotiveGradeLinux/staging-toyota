@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,8 +34,7 @@ const CHAR UsingVMPlayerVariable[]              = "USING_VM_PLAYER";
  */
 const CHAR DefaultBasePath[]                = "";
 const CHAR DefaultBinaryPath[]              = "/agl/bin/";
-const CHAR DefaultConfigFilesPathOld[]      = "/usr/agl/share/systemmanager/scfg/";  // Past compatible
-const CHAR DefaultConfigFilesPath[]         = "/usr/agl/conf/systemmanager/";
+const CHAR DefaultConfigFilesPath[]         = "/usr/agl/conf/BS/ss/system_manager/rwdata/";
 const CHAR DefaultLaunchConfigFileName[]    = "sm_launch.cfg";
 const CHAR DefaultSMConfigFileName[]        = "gpf_ss_sm_config_data.cfg";
 

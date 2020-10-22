@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,16 +45,16 @@ typedef struct _tDynamicLaunchParams {
 
 class DynamicLaunchBase {
  public:
-  DynamicLaunchBase() noexcept;
+  DynamicLaunchBase();
   virtual ~DynamicLaunchBase();
   UI_32 get_id() const;
-  UI_32 advance_id() noexcept;
-  UI_32 decrement_id() noexcept;
+  UI_32 advance_id();
+  UI_32 decrement_id();
   BOOL  is_begin();
   BOOL  is_end();
   VOID  to_begin();
   VOID  to_end();
-  VOID  print_info() noexcept;
+  VOID  print_info();
 
  protected:
   typedef std::vector<UI_32> DynamicOrderedVector;
@@ -67,24 +67,30 @@ class DynamicModuleStart;
 
 class DynamicLauncher: public  DynamicLaunchBase {
  public:
-  DynamicLauncher() noexcept;
+  DynamicLauncher();
   virtual ~DynamicLauncher();
   BOOL  dynamic_launch_enabled() const;
   VOID  configure_dynamic_launch(const SS_SOURCE & source_type,  // NOLINT
-                                 GroupLaunchMap & group_info, LaunchOrderedVector & order_info) noexcept;  // NOLINT
-  VOID  copyDynOrderedVector(DynamicModuleStart &) noexcept;
+                                 GroupLaunchMap & group_info, LaunchOrderedVector & order_info);  // NOLINT
+  VOID  copyDynOrderedVector(DynamicModuleStart &);
 
  private:
   // Disable class copy constructors
-  DynamicLauncher(const DynamicLauncher &) noexcept;
+  explicit DynamicLauncher(const DynamicLauncher& f_source)
+    : m_nLaunchGroupId(f_source.m_nLaunchGroupId)
+    , m_nLaunchBeforeGroupId(f_source.m_nLaunchBeforeGroupId)
+    , m_nLaunchAfterGroupId(f_source.m_nLaunchAfterGroupId)
+    , m_nAviageTriggerId(f_source.m_nAviageTriggerId)
+    , m_bDynamicLaunchEnabled(f_source.m_bDynamicLaunchEnabled)
+    , m_eSourceType(f_source.m_eSourceType) {}
   DynamicLauncher & operator = (const DynamicLauncher &);
 
   // helper methods..
-  DynamicLaunchInfo * get_dynamic_source_info(const SS_SOURCE & source_type,  // NOLINT
-                                              BOOL &source_trigger, BOOL &is_aviage_required) noexcept;  // NOLINT
-  UI_32 get_id_using_group_name(PCSTR group_name, GroupLaunchMap & group_info) noexcept;  // NOLINT
-  VOID create_normal_launch_vector(GroupLaunchMap & group_info, LaunchOrderedVector & order_info) noexcept;  // NOLINT
-  BOOL is_inGroupLaunchMap(UI_32& id, GroupLaunchMap & group_info) noexcept;  // NOLINT
+  DynamicLaunchInfo* get_dynamic_source_info(const SS_SOURCE& source_type,  // NOLINT
+                                              BOOL& source_trigger, BOOL &is_aviage_required);  // NOLINT
+  UI_32 get_id_using_group_name(PCSTR group_name, GroupLaunchMap& group_info);  // NOLINT
+  VOID create_normal_launch_vector(GroupLaunchMap& group_info, LaunchOrderedVector& order_info);  // NOLINT
+  BOOL is_inGroupLaunchMap(UI_32& id, GroupLaunchMap& group_info);  // NOLINT
 
   // Data Members
   UI_32 m_nLaunchGroupId;
@@ -97,9 +103,9 @@ class DynamicLauncher: public  DynamicLaunchBase {
 
 class DynamicModuleStart: public DynamicLaunchBase {
  public:
-  DynamicModuleStart() noexcept;
-  virtual ~DynamicModuleStart() noexcept;
-  VOID setGroupVector(DynamicOrderedVector &) noexcept;
+  DynamicModuleStart();
+  virtual ~DynamicModuleStart();
+  VOID setGroupVector(DynamicOrderedVector&);
 };
 
 #endif  // SS_SM_DYNAMIC_LAUNCHER_H_  // NOLINT

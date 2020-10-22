@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,8 +31,8 @@ class CSMVersion {
  public:
   CSMVersion();
   ~CSMVersion();
-  EFrameworkunifiedStatus get_version(SS_VersionNumberType &f_VersionNumber) noexcept;  // NOLINT
-  EFrameworkunifiedStatus get_build_info(std::string  &f_buildInfoStr) noexcept;  // NOLINT
+  EFrameworkunifiedStatus get_version(SS_VersionNumberType& f_VersionNumber);   // NOLINT
+  EFrameworkunifiedStatus get_build_info(std::string& f_buildInfoStr);  // NOLINT
 
  private:
 };

@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,11 @@
 #include "ss_sm_systemmanagerlog.h"
 #include "ss_system_manager.h"
 
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <errno.h>
+
 //////////////////////////////////////////
 //  Function : FrameworkunifiedOnInitialization
 //////////////////////////////////////////
@@ -37,7 +42,14 @@ EFrameworkunifiedStatus FrameworkunifiedOnInitialization(HANDLE hApp) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
 
   eStatus = CSystemManager::GetInstance().Initialize(hApp);
-
+  struct rlimit setrl = {RLIM_INFINITY, RLIM_INFINITY};
+  struct rlimit getrl = {};
+  int ret = prlimit(getpid(), RLIMIT_MSGQUEUE, &setrl, &getrl);
+  if (ret != 0) {
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "prlimit ret%d", ret);
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Previous limits: soft=%lld; hard=%lld", (long long) getrl.rlim_cur,
+           (long long) getrl.rlim_max);
+  }
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "-");
   return eStatus;
 }

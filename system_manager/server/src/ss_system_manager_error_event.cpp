@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,11 +42,11 @@
 #include <system_service/ss_heartbeat_service_protocol.h>
 #include <system_service/ss_power_service_notifications.h>
 #include <system_service/ss_power_service_protocol.h>
-//#include <stub/ss_diag.h>
+#include <stub/ss_diag.h>
 #include <system_service/ss_test_clients.h>
 #include <native_service/ns_np_service_protocol.h>
 #include <native_service/frameworkunified_application.h>
-#include <system_service/ss_sm_rom_access.h>
+
 #include <system_service/ss_sm_thread_names.h>
 #include <system_service/ss_templates.h>
 #include <native_service/ns_plogger_if.h>
@@ -144,12 +144,13 @@ EFrameworkunifiedStatus CSystemManager::ErrorEventInit(HANDLE f_hApp) {
 ///////////////////////////////////////////////////////////////////////////////
 EFrameworkunifiedStatus CSystemManager::ErrorEventEnqueue(HANDLE f_hApp,
         EErrorEventType f_eventType, std::string &f_moduleQueueName,
-        EErrorEventResetType f_resetType, const SMLoggingInfo &f_loggingInfo) noexcept {
+        EErrorEventResetType f_resetType, const SMLoggingInfo &f_loggingInfo) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   EFrameworkunifiedStatus l_eStatus = eFrameworkunifiedStatusOK;
   ERROR_EVENT_INFO l_errorEventInfo;
   ERROR_EVENT_QUEUE_ITER l_errorEventIter;
   ERROR_EVENT_QUEUE_RET l_retVal;
+  BOOL isErrorReset = FALSE;
 
   if (eErrorEventResetTypeHard == f_resetType) {
     // Forced reset if shutdown process is not completed after Reboot requesting
@@ -157,24 +158,16 @@ EFrameworkunifiedStatus CSystemManager::ErrorEventEnqueue(HANDLE f_hApp,
         m_aTimerIDs[eSM_TIMER_SHUTDOWN_COMPLETE_MONITOR],
         SM_SHUTDOWN_COMPLETE_MONITOR_TIMEOUT, 0, 0, 0);
 
-    RAM_SM_INFO_t info;
-    {
-      RAM_AccessIf ram_access;
-
-      SS_ASERT(eFrameworkunifiedStatusOK == ram_access.getRamInfo(&info));  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
-
       switch (f_loggingInfo.resetReason) {
       case e_SS_SM_CPU_RESET_REASON_GENERIC_ERR:
       case e_SS_SM_CPU_RESET_REASON_DSP_ERR:
-        info.isErrorReset = TRUE;
-        SS_ASERT(eFrameworkunifiedStatusOK == ram_access.setRamInfo(&info));  // LCOV_EXCL_BR_LINE 15: marco defined in ss_templates.h  // NOLINT(whitespace/line_length)
+        isErrorReset = TRUE;
         break;
       default:
         break;
       }
-    }
     // LCOV_EXCL_START 6:This variable cannot be modified by external API
-    if ((m_ResetCount > SS_SM_ERR_NAVI_RESET_LIMIT) && info.isErrorReset) {
+    if ((m_ResetCount > SS_SM_ERR_NAVI_RESET_LIMIT) && isErrorReset) {
     // LCOV_EXCL_BR_STOP
       // LCOV_EXCL_START 6:This variable cannot be modified by external API (evaluated only initial value)
       AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
@@ -295,11 +288,10 @@ EFrameworkunifiedStatus CSystemManager::ErrorEventProcessNext(HANDLE f_hApp) {
         case eErrorEventTypeInterfaceunifiedEmmcLogs:
         case eErrorEventTypeUserInvokedClearLogs:
           if (eFrameworkunifiedStatusOK == m_errorEventResult) {
-            ROM_AccessIf rom_access;  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-            rom_access.Initialize();  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-            l_eStatus = SetErrLogCount(rom_access, 0);  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-            if (eFrameworkunifiedStatusOK != l_eStatus) {
-              FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "SetErrLogCount(%d)", l_eStatus);
+            if (PowerHalSetResetInfo(AGL_ERRLOG_COUNTER, 0)) {
+              // Logging only.
+              FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
+                      "Could not reset AGL_ERRLOG_COUNTER");
             }
           }
           break;
@@ -349,6 +341,17 @@ EFrameworkunifiedStatus CSystemManager::ErrorEventProcessNext(HANDLE f_hApp) {
               "will NAVIDET as LOG save failed");
           m_pfStopCompleteHandler = (SysMgrCallback<CSystemManager,
               &CSystemManager::perform_force_reset>);
+        }
+
+        if ((m_errorEventCurrentIter->m_loggingInfo.resetReason == e_SS_SM_CPU_RESET_REASON_CRITICAL_ERR) ||
+            (m_errorEventCurrentIter->m_loggingInfo.resetReason == e_SS_SM_CPU_RESET_REASON_GENERIC_ERR) ||
+            (m_errorEventCurrentIter->m_loggingInfo.resetReason == e_SS_SM_CPU_RESET_REASON_DSP_ERR) ||
+            (m_errorEventCurrentIter->m_loggingInfo.resetReason == e_SS_SM_CPU_RESET_REASON_USER_FORCE_RESET)) {
+          BOOL l_user_reset = FALSE;
+          if (m_errorEventCurrentIter->m_loggingInfo.resetReason == e_SS_SM_CPU_RESET_REASON_USER_FORCE_RESET) {
+            l_user_reset = TRUE;
+          }
+          m_ResetFactor = GetResetFactor(m_errorEventCurrentIter->m_moduleQueueName.c_str(), l_user_reset);
         }
 
         l_eStatus = PerformResetAfterLogging(f_hApp,
@@ -404,7 +407,7 @@ EFrameworkunifiedStatus CSystemManager::ErrorEventProcessNext(HANDLE f_hApp) {
         size_t path_len = strlen(m_errorEventCurrentIter->m_loggingInfo.path.c_str());
         if (path_len > modl_len) {
           FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
-              "Input buffer size over. input : %d, enable : %d",
+              "Input buffer size over. input : %ld, enable : %ld",
               path_len, modl_len);
         }
         l_errorEventNtfData.ModuleName[sizeof(l_errorEventNtfData.ModuleName) - 1] = 0;
@@ -432,7 +435,6 @@ EFrameworkunifiedStatus CSystemManager::ErrorEventProcessNext(HANDLE f_hApp) {
                   == m_errorEventCurrentIter->m_eventType))) {
       // LCOV_EXCL_BR_STOP
         // LCOV_EXCL_START 6: Because the following conditions cannot be satisfied when called from an external API
-        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
         // Note: If logger crashes, a core file will exist.
         std::string l_hmiDispStr;
         l_hmiDispStr = SERVICE_LOGGER;
@@ -445,6 +447,9 @@ EFrameworkunifiedStatus CSystemManager::ErrorEventProcessNext(HANDLE f_hApp) {
           FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "will NAVIDET as SSL dead");
           m_pfStopCompleteHandler = (SysMgrCallback<CSystemManager,
               &CSystemManager::perform_force_reset>);
+
+          m_ResetFactor = GetResetFactor(SERVICE_LOGGER, FALSE);
+
           l_eStatus = PerformResetAfterLogging(f_hApp,
               e_SS_SM_CPU_RESET_REASON_GENERIC_ERR);
           LOG_STATUS_REC_HIST_IF_ERRORED(l_eStatus, "PerformResetAfterLogging()");
@@ -465,7 +470,6 @@ EFrameworkunifiedStatus CSystemManager::ErrorEventProcessNext(HANDLE f_hApp) {
 
         LOG_ERROR_REC_HIST_IF_ERRORED(l_eStatus,
             "FrameworkunifiedPublishEvent(SS_SM_EVENT_ERROR)");
-            // LCOV_EXCL_STOP
       } else if (m_errorEventCurrentIter->m_eventType == eErrorEventTypeModuleInvokedResetRequest
           && (m_errorEventCurrentIter->m_loggingInfo.resetReason == e_SS_SM_CPU_RESET_REASON_NORMAL
               || m_errorEventCurrentIter->m_loggingInfo.resetReason == e_SS_SM_CPU_RESET_REASON_DATA_RESET)) {
@@ -477,40 +481,33 @@ EFrameworkunifiedStatus CSystemManager::ErrorEventProcessNext(HANDLE f_hApp) {
         BOOL bIsNeedLogging = TRUE;
 
         {
-          ROM_AccessIf rom_access;
           UI_32 l_ErrLogCount = 0;
+          if (PowerHalGetResetInfo(AGL_ERRLOG_COUNTER, &l_ErrLogCount)) {
+            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
+              "Could not get AGL_ERRLOG_COUNTER form power_hal, assume to 0.");
+            l_ErrLogCount = 0;
+          }
 
-          rom_access.Initialize();  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-
-          // LCOV_EXCL_BR_START 200: Because it depends on the ROMAccessIf canonical return values
-          if (eFrameworkunifiedStatusOK
-              != GetErrLogCount(rom_access, l_ErrLogCount)) {
-          // LCOV_EXCL_BR_STOP
-            // LCOV_EXCL_START 200: Because it depends on the ROMAccessIf canonical return values
-            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "GetErrLogCount()");
-            // LCOV_EXCL_STOP
-          } else {
-            // LCOV_EXCL_BR_START 6: Because the condition cannot be set
+          {
             if ((l_ErrLogCount >= SS_SM_ERR_LOGGING_LIMIT)
                 && (eErrorEventResetTypeHard == m_errorEventCurrentIter->m_errorEventResetType)) {
-            // LCOV_EXCL_BR_STOP
-              // LCOV_EXCL_START 8: l_ErrLogCount is always 0
-              AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
               fprintf(stderr, "SS_SysManager/%s:Skip Logging by continuous error \n", __FUNCTION__);
               FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "Skip Logging by continuous error ");
+
+              m_ResetFactor = PSM_FACTOR_AGL_WITH_HISTORY;
+
               l_eStatus =
                   PerformResetAfterLogging(f_hApp,
                       m_errorEventCurrentIter->m_loggingInfo.resetReason,
                       m_errorEventCurrentIter->m_loggingInfo.messageStr);
               LOG_STATUS_REC_HIST_IF_ERRORED(l_eStatus, "PerformResetAfterLogging()");
               bIsNeedLogging = FALSE;
-              // LCOV_EXCL_STOP
             } else if (eErrorEventResetTypeHard
                 == m_errorEventCurrentIter->m_errorEventResetType) {
               l_ErrLogCount++;
-              if (eFrameworkunifiedStatusOK != SetErrLogCount(rom_access, l_ErrLogCount)) {
-                FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__, "SetErrLogCount()");
+              if (PowerHalSetResetInfo(AGL_ERRLOG_COUNTER, l_ErrLogCount)) {
+                FRAMEWORKUNIFIEDLOG(ZONE_ERR, __FUNCTION__,
+                  "Could not set AGL_ERRLOG_COUNTER to power_hal.");
               }
             }
           }

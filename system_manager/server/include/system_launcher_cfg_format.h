@@ -1,6 +1,6 @@
 
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,6 +42,23 @@ typedef struct _tLaunchParams {
   BOOL    shutdown_critical;
   UI_32     shutdown_wait_time;
   UI_32     fast_shutdown_wait_time;
+
+ public:
+  BOOL IsAGLUnit(void) const { return is_agl_unit; }
+  BOOL IsAGLResetHistoryDisable(void) const { return disable_agl_resethistory; }
+  BOOL IsNonAGLResetHistoryDisable(void) const { return disable_nonagl_resethistory; }
+  void SetAGLUnit(BOOL f_is_agl_unit) { is_agl_unit = f_is_agl_unit; }
+  void SetAGLResetHistoryDisable(BOOL f_disable_agl_resethistory) {
+    disable_agl_resethistory = f_disable_agl_resethistory;
+  }
+  void SetNonAGLResetHisoryDisable(BOOL f_disable_nonagl_resethistory) {
+    disable_nonagl_resethistory = f_disable_nonagl_resethistory;
+  }
+
+ private:
+  BOOL        is_agl_unit;
+  BOOL        disable_agl_resethistory;
+  BOOL        disable_nonagl_resethistory;
 } LaunchInfo;
 
 LaunchInfo g_arrLaunchTableCfg[] = {

@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@
 #include "ss_sm_dynamic_launch_table.h"
 #include "ss_sm_systemmanagerlog.h"
 
-DynamicLaunchBase::DynamicLaunchBase() noexcept:
+DynamicLaunchBase::DynamicLaunchBase():
 m_vOrderedGroup(),
 m_iterOrderedGroup() {
 }
@@ -41,7 +41,7 @@ UI_32 DynamicLaunchBase::get_id() const {
     return *m_iterOrderedGroup;
 }
 
-UI_32 DynamicLaunchBase::advance_id() noexcept {
+UI_32 DynamicLaunchBase::advance_id() {
   if (!is_end()) {
     m_iterOrderedGroup++;
   }
@@ -49,7 +49,7 @@ UI_32 DynamicLaunchBase::advance_id() noexcept {
   return *m_iterOrderedGroup;
 }
 
-UI_32 DynamicLaunchBase::decrement_id() noexcept {
+UI_32 DynamicLaunchBase::decrement_id() {
   if (!is_begin()) {  // LCOV_EXCL_BR_LINE 5: stdlib error case.
     m_iterOrderedGroup--;
   }
@@ -80,7 +80,7 @@ VOID DynamicLaunchBase::to_end() {
   return;
 }
 
-VOID DynamicLaunchBase::print_info() noexcept {
+VOID DynamicLaunchBase::print_info() {
   UI_32 idx = 1;
   std::stringstream l_logMsg;
   DynamicOrderedIter l_dyn_iter = m_vOrderedGroup.begin();
@@ -95,7 +95,7 @@ VOID DynamicLaunchBase::print_info() noexcept {
   FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "%s", l_logStr.c_str());
 }
 
-DynamicLauncher::DynamicLauncher() noexcept:DynamicLaunchBase(),
+DynamicLauncher::DynamicLauncher() :DynamicLaunchBase(),
 m_nLaunchGroupId(0),
 m_nLaunchBeforeGroupId(0),
 m_nLaunchAfterGroupId(0),
@@ -113,8 +113,8 @@ BOOL DynamicLauncher::dynamic_launch_enabled() const {  // LCOV_EXCL_START 8: De
 }
 // LCOV_EXCL_STOP
 
-VOID DynamicLauncher::configure_dynamic_launch(const SS_SOURCE & source_type,
-        GroupLaunchMap & group_info, LaunchOrderedVector & order_info) noexcept {
+VOID DynamicLauncher::configure_dynamic_launch(const SS_SOURCE& source_type,
+        GroupLaunchMap& group_info, LaunchOrderedVector& order_info) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   m_eSourceType = source_type;
   // "Dynamic Launch" is not used due to high dependency on a service table
@@ -123,7 +123,7 @@ VOID DynamicLauncher::configure_dynamic_launch(const SS_SOURCE & source_type,
 }
 
 BOOL DynamicLauncher::is_inGroupLaunchMap(UI_32& id,
-      GroupLaunchMap & group_info) noexcept {  // LCOV_EXCL_START 8: Dead code
+      GroupLaunchMap& group_info) {  // LCOV_EXCL_START 8: Dead code
   AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   BOOL Ret = FALSE;
@@ -136,9 +136,10 @@ BOOL DynamicLauncher::is_inGroupLaunchMap(UI_32& id,
 }
 // LCOV_EXCL_STOP
 
-DynamicLaunchInfo * DynamicLauncher::get_dynamic_source_info(
-        const SS_SOURCE & source_type, BOOL &source_trigger,
-        BOOL &is_aviage_required) noexcept {  // LCOV_EXCL_START 8: Dead code
+// LCOV_EXCL_START 8: Dead code
+DynamicLaunchInfo* DynamicLauncher::get_dynamic_source_info(
+        const SS_SOURCE& source_type, BOOL& source_trigger,
+        BOOL& is_aviage_required) {
   AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
   UI_32 num_of_items = static_cast<UI_32>(_countof(g_arrDynamicLaunchTableCfg));
   DynamicLaunchInfo * point_to_this = NULL;
@@ -160,7 +161,7 @@ DynamicLaunchInfo * DynamicLauncher::get_dynamic_source_info(
 // LCOV_EXCL_STOP
 
 UI_32 DynamicLauncher::get_id_using_group_name(PCSTR group_name,
-        GroupLaunchMap & group_info) noexcept {  // LCOV_EXCL_START 8: Dead code
+        GroupLaunchMap& group_info) {  // LCOV_EXCL_START 8: Dead code
   AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
     GroupLaunchMapIter l_grp_iter = group_info.begin();
     UI_32 rtn_grp_id = 0;
@@ -175,8 +176,8 @@ UI_32 DynamicLauncher::get_id_using_group_name(PCSTR group_name,
 }
 // LCOV_EXCL_STOP
 
-VOID DynamicLauncher::create_normal_launch_vector(GroupLaunchMap & group_info,
-        LaunchOrderedVector & order_info) noexcept {
+VOID DynamicLauncher::create_normal_launch_vector(GroupLaunchMap& group_info,
+        LaunchOrderedVector& order_info) {
   m_vOrderedGroup.clear();
 
   if (order_info.size() != 0) {  // LCOV_EXCL_BR_LINE 6: To initialize conditions for launching SystemManager
@@ -202,19 +203,19 @@ VOID DynamicLauncher::create_normal_launch_vector(GroupLaunchMap & group_info,
   print_info();
 }
 
-VOID DynamicLauncher::copyDynOrderedVector(DynamicModuleStart & Start) noexcept {
+VOID DynamicLauncher::copyDynOrderedVector(DynamicModuleStart& Start) {
   Start.setGroupVector(this->m_vOrderedGroup);
 }
 
 // DynamicModuleStart
 
-DynamicModuleStart::DynamicModuleStart() noexcept:DynamicLaunchBase() {
+DynamicModuleStart::DynamicModuleStart() :DynamicLaunchBase() {
 }
 
 DynamicModuleStart::~DynamicModuleStart() {
 }
 
-VOID DynamicModuleStart::setGroupVector(DynamicOrderedVector & Vector) noexcept {
+VOID DynamicModuleStart::setGroupVector(DynamicOrderedVector& Vector) {
     m_vOrderedGroup.assign(Vector.begin(), Vector.end());
     m_iterOrderedGroup = m_vOrderedGroup.begin();
 }  // LCOV_EXCL_BR_LINE 10: Final line

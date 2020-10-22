@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -194,7 +194,7 @@ EFrameworkunifiedStatus CProcessLauncher::PLLaunchModule(HANDLE hThread, T_Proce
               l_ModuleLaunchReq.name);
 
       SS_String sPathAndFileName = l_ModuleLaunchReq.path;  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
-      l_pProcessPtr = new (std::nothrow) Process();  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
+      l_pProcessPtr = new (std::nothrow) Process(l_ModuleLaunchReq.cpu_assign);  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
 
       if (NULL == l_pProcessPtr) {  // LCOV_EXCL_BR_LINE 11::new operation failed
         // LCOV_EXCL_START 11::new operation failed

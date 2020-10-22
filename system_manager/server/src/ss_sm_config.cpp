@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -98,7 +98,11 @@ struct CfgLaunchParams {
         is_start_required(0),
         shutdown_critical(0),
         shutdown_wait_time(0),
-        fast_shutdown_wait_time(0) {
+        fast_shutdown_wait_time(0),
+        cpu_assign(0x0),
+        is_agl_unit(TRUE),
+        disable_agl_resethistory(FALSE),
+        disable_nonagl_resethistory(FALSE) {
     std::memset(&group_name[0], 0, sizeof(group_name));
     std::memset(&name[0], 0, sizeof(name));
     std::memset(&binary_name[0], 0, sizeof(binary_name));
@@ -128,6 +132,24 @@ struct CfgLaunchParams {
   TUserNameBuffer unix_user_name;  // TODO(username): Stuff.: Does Posix define a useful
                                    // constant representing max length of user id?
   CHAR env_value_condition[256];
+  int cpu_assign;
+
+ public:
+  BOOL IsAGLUnit(void) const { return is_agl_unit; }
+  BOOL IsAGLResetHistoryDisable(void) const { return disable_agl_resethistory; }
+  BOOL IsNonAGLResetHistoryDisable(void) const { return disable_nonagl_resethistory; }
+  void SetAGLUnit(BOOL f_is_agl_unit) { is_agl_unit = f_is_agl_unit; }
+  void SetAGLResetHistoryDisable(BOOL f_disable_agl_resethistory) {
+    disable_agl_resethistory = f_disable_agl_resethistory;
+  }
+  void SetNonAGLResetHisoryDisable(BOOL f_disable_nonagl_resethistory) {
+    disable_nonagl_resethistory = f_disable_nonagl_resethistory;
+  }
+
+ private:
+  BOOL is_agl_unit;
+  BOOL disable_agl_resethistory;
+  BOOL disable_nonagl_resethistory;
 };
 
 namespace ss_sm_cfg {
@@ -151,12 +173,19 @@ class cfg_args {
     shutdown_wait_time,
     fast_shutdown_wait_time,
     unix_user_name,
+    is_agl_unit,
+    disable_agl_resethistory,
+    disable_nonagl_resethistory,
     env_value_condition,
+    cpu_assign,
     END
   };
 };
 };  // namespace ss_sm_cfg
 
+static void set_grp_member_info(const LaunchInfo& launch_info, ModuleLaunchList& module_lst);  // NOLINT
+static void load_parameters_order_cfg(
+    GroupLaunchMap& groups_map, LaunchOrderedVector& f_OrderList, SS_String& f_launchOrderName, SS_String& f_launchCfgFn);  // NOLINT
 
 /*******************************************************************************
  * CTimeSpan class                                                             *
@@ -209,12 +238,13 @@ UI_64 CTimeSpan::GetTimeMilliseconds() {
  * End of CTimeSpan class                                                      *
  ******************************************************************************/
 
-ModuleLaunchParams::ModuleLaunchParams() noexcept :
+ModuleLaunchParams::ModuleLaunchParams():
   name("")
   , path("")
   , arguments("")
   , restart("")
   , configuration_priority(0)
+  , cpu_assign(0x0)
   , previous_priority(0)
   , current_priority(0)
   , critical(FALSE)
@@ -232,7 +262,10 @@ ModuleLaunchParams::ModuleLaunchParams() noexcept :
   , m_serviceAvailability(FALSE)
   , m_startReason()
   , m_stopReason()
-  , m_ModuleDebugDumpState(MODULE_DEBUG_DUMP_STATE_NOT_REQUESTED) {
+  , m_ModuleDebugDumpState(MODULE_DEBUG_DUMP_STATE_NOT_REQUESTED)
+  , is_agl_unit(TRUE)
+  , disable_agl_resethistory(FALSE)
+  , disable_nonagl_resethistory(FALSE) {  // LCOV_EXCL_BR_START 11:Gcov constraints (because exception-handling routes are automatically generated)
   SetModuleState(MODULE_STATE_INVALID, FALSE);
   //
   //    Module State strings
@@ -260,6 +293,7 @@ ModuleLaunchParams::ModuleLaunchParams() noexcept :
   m_ModuleStateStrMap[MODULE_STATE_STOP_BACKGROUND_SENT] = "BACKGROUND_STOP_SENT";
   m_ModuleStateStrMap[MODULE_STATE_STOP_BACKGROUND_FAILED] = "BACKGROUND_STOP_FAIL";
   m_ModuleStateStrMap[MODULE_STATE_STOPPED_BACKGROUND] = "BACKGROUND_STOPPED";
+  // LCOV_EXCL_BR_STOP
 
   m_startReason.SetReason(NotStarted);
   m_stopReason.SetReason(NotStopped);
@@ -274,17 +308,17 @@ ModuleLaunchParams::ModuleLaunchParams() noexcept :
 ModuleLaunchParams::~ModuleLaunchParams() {
 }  // End of ModuleLaunchParams::~ModuleLaunchParams() :
 
-SMModuleState ModuleLaunchParams::GetModuleState(void) noexcept {
+SMModuleState ModuleLaunchParams::GetModuleState(void) {
     return m_moduleState;
 }  // End of SMModuleState ModuleLaunchParams::GetModuleState(void)
 
-BOOL ModuleLaunchParams::IsModuleState(SMModuleState f_moduleState) noexcept {
+BOOL ModuleLaunchParams::IsModuleState(SMModuleState f_moduleState) {
     return m_moduleState == f_moduleState;
 }  // End of BOOL ModuleLaunchParams::IsModuleState(SMModuleState f_moduleState )
 
 // IsModuleConnected
 // Determine if a module is in a state capable of receiving messages from System Manager.
-BOOL ModuleLaunchParams::IsModuleConnected() const noexcept {
+BOOL ModuleLaunchParams::IsModuleConnected() const {
   BOOL l_isModuleConnected = FALSE;
 
   switch (m_moduleState) {
@@ -318,7 +352,7 @@ BOOL ModuleLaunchParams::IsModuleConnected() const noexcept {
   return (l_isModuleConnected);
 }  // End of BOOL ModuleLaunchParams::IsModuleConnected(void)
 
-VOID ModuleLaunchParams::SetModuleState(SMModuleState f_moduleState, BOOL f_bLog) noexcept {
+VOID ModuleLaunchParams::SetModuleState(SMModuleState f_moduleState, BOOL f_bLog) {
   m_moduleState = f_moduleState;
 
   switch (m_moduleState) {  // Because the module status cannot be changed from the external API
@@ -418,22 +452,22 @@ VOID ModuleLaunchParams::SetModuleState(SMModuleState f_moduleState, BOOL f_bLog
   }
 }  // End of VOID ModuleLaunchParams::SetModuleState(SMModuleState f_moduleState )
 
-std::string ModuleLaunchParams::ModuleStateStr(void) noexcept {
+std::string ModuleLaunchParams::ModuleStateStr(void) {
   return m_ModuleStateStrMap[m_moduleState];
 }  // End of std::string ModuleLaunchParams::ModuleStateStr(SMModuleState f_moduleState )
 
-SMModuleDebugDumpState ModuleLaunchParams::GetModuleDebugDumpState(void) noexcept {  // LCOV_EXCL_START 6: Because the condition cannot be set // NOLINT(whitespace/line_length)
+SMModuleDebugDumpState ModuleLaunchParams::GetModuleDebugDumpState(void) {  // LCOV_EXCL_START 6: Because the condition cannot be set // NOLINT(whitespace/line_length)
   AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
   return m_ModuleDebugDumpState;
 }  // End of SMModuleDebugDumpState ModuleLaunchParams::GetModuleDebugDumpState(void)
 // LCOV_EXCL_STOP
 
-std::string ModuleLaunchParams::GetModuleDebugDumpStateStr(void) noexcept {
+std::string ModuleLaunchParams::GetModuleDebugDumpStateStr(void) {
   return m_ModuleDebugDumpStateStrMap[m_ModuleDebugDumpState];
 }  // End of std::string ModuleLaunchParams::GetModuleDebugDumpStateStr()
 
 VOID ModuleLaunchParams::SetModuleDebugDumpState(
-        SMModuleDebugDumpState f_moduleDebugDumpState, BOOL f_bLog) noexcept {
+        SMModuleDebugDumpState f_moduleDebugDumpState, BOOL f_bLog) {
   m_ModuleDebugDumpState = f_moduleDebugDumpState;
 
   if (f_bLog) {  // LCOV_EXCL_BR_LINE 200:f_bLog must be TRUE
@@ -443,8 +477,7 @@ VOID ModuleLaunchParams::SetModuleDebugDumpState(
 }  // End of VOID ModuleLaunchParams::SetModuleDebugDumpState(SMModuleDebugDumpState f_moduleDebugDumpState )
 
 EFrameworkunifiedStatus ModuleLaunchParams::SendMsgAndUpdateState(
-    const UI_32 f_iCmd, const T_SS_SM_START_DataStructType * const f_startData)
-        noexcept {
+    const UI_32 f_iCmd, const T_SS_SM_START_DataStructType* const f_startData) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   char l_cBuf[500] = " Error: char l_cBuf[] not built";
   T_SS_SM_START_DataStructType l_startData;
@@ -524,7 +557,7 @@ EFrameworkunifiedStatus ModuleLaunchParams::SendMsgAndUpdateState(
 // End of EFrameworkunifiedStatus ModuleLaunchParams::SendMsgAndUpdateState(T_SS_SM_START_DataStructType const * f_startData)
 
 EFrameworkunifiedStatus ModuleLaunchParams::SendMsgAndUpdateState(
-        T_SS_SM_STOP_DataStructType const * f_stopData) noexcept {
+        T_SS_SM_STOP_DataStructType const* f_stopData) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   char l_cBuf[500] = " Error: char l_cBuf[] not built";
   EFrameworkunifiedStatus l_eStatus = FrameworkunifiedSendMsg(hsession, SS_SM_STOP,
@@ -553,7 +586,7 @@ EFrameworkunifiedStatus ModuleLaunchParams::SendMsgAndUpdateState(
 }
 // End of EFrameworkunifiedStatus ModuleLaunchParams::SendMsgAndUpdateState(T_SS_SM_STOP_DataStructType const * f_stopData)
 
-EFrameworkunifiedStatus ModuleLaunchParams::GetPriority(UI_32 & f_Priority) noexcept {
+EFrameworkunifiedStatus ModuleLaunchParams::GetPriority(UI_32& f_Priority) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   EFrameworkunifiedStatus l_eStatus;
 
@@ -583,7 +616,7 @@ EFrameworkunifiedStatus ModuleLaunchParams::GetPriority(UI_32 & f_Priority) noex
   return l_eStatus;
 }  // End of EFrameworkunifiedStatus ModuleLaunchParams::GetPriority (UI_32 & f_Priority )
 
-EFrameworkunifiedStatus ModuleLaunchParams::SetPriority(UI_32 f_Priority) noexcept {
+EFrameworkunifiedStatus ModuleLaunchParams::SetPriority(UI_32 f_Priority) {
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
   EFrameworkunifiedStatus l_eStatus;
 
@@ -647,7 +680,7 @@ EFrameworkunifiedStatus ModuleLaunchParams::SetPriority(UI_32 f_Priority) noexce
   return l_eStatus;
 }  // End of EFrameworkunifiedStatus ModuleLaunchParams::SetPriority( UI_32 f_Priority )
 
-SysMgrConfiguration::SysMgrConfiguration() noexcept:
+SysMgrConfiguration::SysMgrConfiguration():
 l_pReaderCfg(NULL) {
 }
 
@@ -686,8 +719,7 @@ static BOOL is_satisfy_env_launch_cond(CHAR *env_cond) {  // LCOV_EXCL_START 6: 
   return l_isSatisfy;
 }
 
-void set_grp_member_info(const LaunchInfo & launch_info,
-        ModuleLaunchList & module_lst) noexcept {  // NOLINT
+static void set_grp_member_info(const LaunchInfo& launch_info, ModuleLaunchList& module_lst) {  // NOLINT
   AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
   // Note: the
   ModuleLaunchParams grp_member_info;
@@ -704,13 +736,16 @@ void set_grp_member_info(const LaunchInfo & launch_info,
   grp_member_info.group_id = launch_info.group_id;
   grp_member_info.is_start_required = launch_info.is_start_required;
   grp_member_info.fast_shutdown_wait_time = launch_info.fast_shutdown_wait_time;
+  grp_member_info.SetAGLUnit(launch_info.IsAGLUnit());
+  grp_member_info.SetAGLResetHistoryDisable(launch_info.IsAGLResetHistoryDisable());
+  grp_member_info.SetNonAGLResetHisoryDisable(launch_info.IsNonAGLResetHistoryDisable());
 
   module_lst.push_back(grp_member_info);
 }
 // LCOV_EXCL_STOP
 
-ModuleLaunchListIter set_cfg_grp_member_info(
-        const CfgLaunchParams & launch_info, ModuleLaunchList & module_lst) noexcept {  // NOLINT
+static ModuleLaunchListIter set_cfg_grp_member_info(
+        const CfgLaunchParams& launch_info, ModuleLaunchList& module_lst) {  // NOLINT
   ModuleLaunchParams grp_member_info;
   ModuleLaunchListIter moduleLaunchListIter;
 
@@ -721,6 +756,7 @@ ModuleLaunchListIter set_cfg_grp_member_info(
   grp_member_info.restart = (  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
       std::strcmp(launch_info.restart, "NULL") == 0 ? "" : launch_info.restart);
   grp_member_info.configuration_priority = launch_info.priority;
+  grp_member_info.cpu_assign = launch_info.cpu_assign;
   grp_member_info.retry_cnt = launch_info.retry_cnt;
   grp_member_info.logging_msk_str = (  // LCOV_EXCL_BR_LINE 11:unexpected branch  // NOLINT(whitespace/line_length)
       std::strcmp(launch_info.logging_msk_str, "NULL") == 0 ? "" : launch_info.logging_msk_str);
@@ -731,6 +767,9 @@ ModuleLaunchListIter set_cfg_grp_member_info(
   grp_member_info.group_id = launch_info.group_id;
   grp_member_info.is_start_required = launch_info.is_start_required;
   grp_member_info.fast_shutdown_wait_time = launch_info.fast_shutdown_wait_time;
+  grp_member_info.SetAGLUnit(launch_info.IsAGLUnit());
+  grp_member_info.SetAGLResetHistoryDisable(launch_info.IsAGLResetHistoryDisable());
+  grp_member_info.SetNonAGLResetHisoryDisable(launch_info.IsNonAGLResetHistoryDisable());
 
   strncpy(&grp_member_info.unix_user_name[0], &launch_info.unix_user_name[0],
       sizeof(TUserNameBuffer));
@@ -739,9 +778,9 @@ ModuleLaunchListIter set_cfg_grp_member_info(
   return (moduleLaunchListIter);
 }
 
-void load_parameters_order_cfg(GroupLaunchMap &groups_map,  // NOLINT
-        LaunchOrderedVector &f_OrderList, SS_String &f_launchOrderName,  // NOLINT
-        SS_String &f_launchCfgFn) noexcept {  // NOLINT
+static void load_parameters_order_cfg(GroupLaunchMap& groups_map,  // NOLINT
+        LaunchOrderedVector& f_OrderList, SS_String& f_launchOrderName,  // NOLINT
+        SS_String& f_launchCfgFn) {  // NOLINT
   SS_String l_OrderCfgFn = f_launchCfgFn;
   string::size_type pos = l_OrderCfgFn.find(".cfg");
 
@@ -832,7 +871,7 @@ class SubStringIterator {
       m_position(s.begin()), m_end(s.end()), m_seperator(c), m_done(false) {
   }
 
-  std::string next() noexcept {
+  std::string next() {
     SCIter begin = m_position;
     while (m_position != m_end &&
             *m_position != m_seperator) {
@@ -860,15 +899,15 @@ class SubStringIterator {
 };
 
 template<class Iter>
-
-Iter skipPrecedingWS(Iter begin, Iter end) noexcept {  // LCOV_EXCL_START 6: Because the condition cannot be set
+static
+Iter skipPrecedingWS(Iter begin, Iter end) {  // LCOV_EXCL_START 6: Because the condition cannot be set
   AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
   return std::find_if(begin, end,
       std::not1(std::ptr_fun((int (*)(int))std::isspace)));
 }
 
 // remove only preceding and trailing whitespace, but leave intermediate whitespace characters alone
-std::string strip(const std::string& str) noexcept {
+std::string strip(const std::string& str) {
   AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
   std::string::const_iterator skipTo = skipPrecedingWS(str.begin(), str.end());
   if (skipTo == str.end()) {  // if string consists of ONLY whitespace
@@ -879,9 +918,9 @@ std::string strip(const std::string& str) noexcept {
 }
 // LCOV_EXCL_STOP
 
-BOOL SysMgrConfiguration::LoadParametersCfg(GroupLaunchMap &groups_map,
-        ProcessNameMap &f_processNameMap, LaunchOrderedVector &f_OrderList,
-        SS_String &f_launchOrderName, SS_String &f_launchCfgFn) noexcept {
+BOOL SysMgrConfiguration::LoadParametersCfg(GroupLaunchMap& groups_map,
+        ProcessNameMap& f_processNameMap, LaunchOrderedVector& f_OrderList,
+        SS_String& f_launchOrderName, SS_String& f_launchCfgFn) {
   BOOL rtn_code = TRUE;
   FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __FUNCTION__, "+");
 
@@ -929,6 +968,9 @@ BOOL SysMgrConfiguration::LoadParametersCfg(GroupLaunchMap &groups_map,
         CHAR is_start_required[10] = { };
         CHAR shutdown_critical[10] = { };
         CHAR group_wait_for_trigger[10] = { };
+        CHAR is_agl_unit[10] = { };
+        CHAR disable_agl_resethistory[10] = { };
+        CHAR disable_nonagl_resethistory[10] = { };
         CfgLaunchParams cfg_data;
 
         int at = static_cast<int>(ss_sm_cfg::cfg_args::group_name);
@@ -1002,10 +1044,23 @@ BOOL SysMgrConfiguration::LoadParametersCfg(GroupLaunchMap &groups_map,
                   strip(data_).c_str(),
                   sizeof(cfg_data.unix_user_name) - 1);
               break;
+            case ss_sm_cfg::cfg_args::is_agl_unit:
+              strncpy(is_agl_unit, data, sizeof(is_agl_unit));
+              break;
+            case ss_sm_cfg::cfg_args::disable_agl_resethistory:
+              strncpy(disable_agl_resethistory, data, sizeof(disable_agl_resethistory));
+              break;
+            case ss_sm_cfg::cfg_args::disable_nonagl_resethistory:
+              strncpy(disable_nonagl_resethistory, data, sizeof(disable_nonagl_resethistory));
+              break;
             case ss_sm_cfg::cfg_args::env_value_condition:  // LCOV_EXCL_START 6: Because an initialization condition is set at SystemManager startup and the branching condition cannot be satisfied // NOLINT(whitespace/line_length)
               AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
               snprintf(cfg_data.env_value_condition,
                   sizeof(cfg_data.env_value_condition), "%s", data);
+              break;
+            case ss_sm_cfg::cfg_args::cpu_assign:
+              cfg_data.cpu_assign =
+                static_cast<int>(strtoul(data, NULL, 16));
               break;
             default:
               AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
@@ -1065,6 +1120,10 @@ BOOL SysMgrConfiguration::LoadParametersCfg(GroupLaunchMap &groups_map,
           // FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "shutdown_critical: %s", shutdown_critical);
           cfg_data.shutdown_critical = (std::strcmp("True",
                   shutdown_critical) == 0);
+
+          cfg_data.SetAGLUnit(ParseBoolParameter(is_agl_unit, TRUE));
+          cfg_data.SetAGLResetHistoryDisable(ParseBoolParameter(disable_agl_resethistory));
+          cfg_data.SetNonAGLResetHisoryDisable(ParseBoolParameter(disable_nonagl_resethistory));
 
           GroupLaunchInfo grp_info;
           grp_info.start_complete = FALSE;
@@ -1139,7 +1198,7 @@ BOOL SysMgrConfiguration::LoadParametersCfg(GroupLaunchMap &groups_map,
   return rtn_code;
 }
 
-VOID SysMgrConfiguration::PrintGroupInfo(GroupLaunchInfo & refGrpInfo) noexcept {
+VOID SysMgrConfiguration::PrintGroupInfo(GroupLaunchInfo& refGrpInfo) {
   std::stringstream l_logMsg;
 
   l_logMsg << endl << "Group: " << refGrpInfo.name.data() << endl
@@ -1151,7 +1210,7 @@ VOID SysMgrConfiguration::PrintGroupInfo(GroupLaunchInfo & refGrpInfo) noexcept 
   FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "%s", l_logStr.c_str());
 }
 
-VOID SysMgrConfiguration::PrintModuleInfo(ModuleLaunchParams & refMbrInfo) noexcept {
+VOID SysMgrConfiguration::PrintModuleInfo(ModuleLaunchParams& refMbrInfo) {
   std::stringstream l_logMsg;
 
   // LCOV_EXCL_BR_START 11:unexpected branch  // NOLINT(whitespace/line_length)
@@ -1161,6 +1220,8 @@ VOID SysMgrConfiguration::PrintModuleInfo(ModuleLaunchParams & refMbrInfo) noexc
       << refMbrInfo.restart.data() << endl
       << "    configuration_priority: "
       << refMbrInfo.configuration_priority << endl
+      << "    cpu_assign: "
+      << refMbrInfo.cpu_assign << endl
       << "    current_priority: " << refMbrInfo.current_priority << endl
       << "    previous_priority: " << refMbrInfo.previous_priority << endl
       << "    critical: " << (refMbrInfo.critical == TRUE ? "YES" : "NO")
@@ -1174,7 +1235,10 @@ VOID SysMgrConfiguration::PrintModuleInfo(ModuleLaunchParams & refMbrInfo) noexc
       << (refMbrInfo.shutdown_critical == TRUE ? "YES" : "NO") << endl
       << "    shutdown_wait_time: " << refMbrInfo.shutdown_wait_time
       << endl << "    fast_shutdown_wait_time: "
-      << refMbrInfo.fast_shutdown_wait_time << endl << "    state: "
+      << refMbrInfo.fast_shutdown_wait_time << endl << "    is_agl_unit: "
+      << refMbrInfo.IsAGLUnit() << endl << "    disable_agl_resethistory: "
+      << refMbrInfo.IsAGLResetHistoryDisable() << endl << "    disable_nonagl_resethistory: "
+      << refMbrInfo.IsNonAGLResetHistoryDisable() << endl << "    state: "
       << refMbrInfo.ModuleStateStr() << endl << "    group ID: "
       << refMbrInfo.group_id << endl << "    debug dump state: "
       << refMbrInfo.GetModuleDebugDumpStateStr();
@@ -1183,7 +1247,7 @@ VOID SysMgrConfiguration::PrintModuleInfo(ModuleLaunchParams & refMbrInfo) noexc
   FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "%s", l_logStr.c_str());
 }
 
-VOID SysMgrConfiguration::PrintAllInfo(GroupLaunchMap & refGrpMap) noexcept {
+VOID SysMgrConfiguration::PrintAllInfo(GroupLaunchMap& refGrpMap) {
   // get first client from the map...
   GroupLaunchMapIter grp_iter = refGrpMap.begin();
 
@@ -1196,10 +1260,25 @@ VOID SysMgrConfiguration::PrintAllInfo(GroupLaunchMap & refGrpMap) noexcept {
   }
 }
 
+BOOL SysMgrConfiguration::ParseBoolParameter(PCSTR f_value, BOOL f_default) const {
+  if (FALSE == f_default) {
+    const char TRUE_VALUE[] = "True";
+    if (0 == strcmp(TRUE_VALUE, f_value)) {
+      return TRUE;
+    }
+  } else {
+    const char FALSE_VALUE[] = "False";
+    if (0 == strcmp(FALSE_VALUE, f_value)) {
+      return FALSE;
+    }
+  }
+  return f_default;
+}
+
 /*
  * SM Configuration data constructor
  */
-SMConfigParams::SMConfigParams() noexcept {
+SMConfigParams::SMConfigParams() {
 }
 
 /*
@@ -1217,7 +1296,7 @@ SMConfigParams::~SMConfigParams() {
 ///
 /// \return VOID
 ////////////////////////////////////////////////////////////////////////////////////////////
-VOID SMConfigParams::PrintConfigInfo(ConfigurationData const & f_ConfigParams) noexcept {
+VOID SMConfigParams::PrintConfigInfo(ConfigurationData const & f_ConfigParams) {
   FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "AppHeartBeatInterval_Initial Info: %d",
       f_ConfigParams.HBConfig.ApplicationHeartBeatIntervalInitial);
   FRAMEWORKUNIFIEDLOG(ZONE_INFO, __FUNCTION__, "AppHeartBeatInterval_Repeat Info: %d",
@@ -1260,8 +1339,7 @@ VOID SMConfigParams::PrintConfigInfo(ConfigurationData const & f_ConfigParams) n
 /// \return BOOL
 ///         BOOL - TRUE or FALSE
 ////////////////////////////////////////////////////////////////////////////////////////////
-BOOL SMConfigParams::GetSMConfigInformation(ConfigurationData &f_ConfigParams,
-        SS_String f_FileName) noexcept {
+BOOL SMConfigParams::GetSMConfigInformation(ConfigurationData& f_ConfigParams, SS_String f_FileName) {
   EFrameworkunifiedStatus l_eStatus;
   BOOL l_rtnCode = FALSE;  // LCOV_EXCL_BR_LINE 15: marco defined in ns_logger_if.h  // NOLINT(whitespace/line_length)
 
@@ -1398,8 +1476,7 @@ BOOL SMConfigParams::GetSMConfigInformation(ConfigurationData &f_ConfigParams,
 /// \return BOOL
 ///         BOOL - TRUE or FALSE
 ////////////////////////////////////////////////////////////////////////////////////////////
-BOOL SMConfigParams::LoadSMConfigParameters(ConfigurationData &f_ConfigParams,
-        SS_String f_FileName) noexcept {
+BOOL SMConfigParams::LoadSMConfigParameters(ConfigurationData& f_ConfigParams, SS_String f_FileName) {
   BOOL rtn_code = TRUE;
 
   rtn_code = GetSMConfigInformation(f_ConfigParams, f_FileName);
