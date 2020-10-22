@@ -1,5 +1,5 @@
 #
-# @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+# @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
 # limitations under the License.
 #
 
-SVCONF_DIR=$(DESTDIR)/usr/agl/conf/tm_launch
-THREADCONF_DIR=$(DESTDIR)/usr/agl/conf/thread
 WAKESHUTCONF_DIR=./conf
 
 VPATH = ./src ./include/$(COMPONENT_NAME)
@@ -47,10 +45,8 @@ install:install-pre install-pre-header
 build-lib:install-pre install-pre-header
 install-lib:install-pre install-pre-header
 install-pre:
-	install -d -m 775  $(DESTDIR)/usr/agl/conf/tm_launch;\
-	install -d -m 775  $(DESTDIR)/usr/agl/conf/thread;\
-	install -m 644 -t  $(DESTDIR)/usr/agl/conf/tm_launch $(WAKESHUTCONF_DIR)/tskm_launch.xml;\
-	install -m 644 -t  $(DESTDIR)/usr/agl/conf/thread $(SDKTARGETSYSROOT)/usr/agl/include/agl_thread.h
+	install -d -m 775  $(DESTDIR)/usr/agl/conf/BS/ss/task_manager/rodata;\
+	install -m 644 -t  $(DESTDIR)/usr/agl/conf/BS/ss/task_manager/rodata $(WAKESHUTCONF_DIR)/tskm_launch.xml;\
 
 CONFIG_FILES:=tskm_wakeup.xml tskm_shutdown.xml tskm_wakeup_vup.xml tskm_shutdown_vup.xml tskm_launch.xml tskm_svcid.h agl_thread.h
 
@@ -77,11 +73,11 @@ tskm_shutdown_vup.xml:$(WAKESHUTCONF_DIR)/tskm_shutdown_vup.xml
 #tskm_svcid.h:$(SVCONF_DIR)/tskm_svcid.h
 #	ln -fs $< $@
 
-agl_thread.h:$(THREADCONF_DIR)/agl_thread.h
+agl_thread.h:$(WAKESHUTCONF_DIR)/agl_thread.h
 	ln -fs $< $@
 
 
-tskm_launch.xml:$(SVCONF_DIR)/tskm_launch.xml agl_thread.h
+tskm_launch.xml:$(WAKESHUTCONF_DIR)/tskm_launch.xml agl_thread.h
 	$(HOST_CPP) -P -include agl_thread.h $< > $@
 #tskm_launch.xml:$(SVCONF_DIR)/tskm_launch.xml $(SDKTARGETSYSROOT)/usr/agl/include/agl_thread.h
 #	$(HOST_CPP) -P -include agl_thread.h $< > $@

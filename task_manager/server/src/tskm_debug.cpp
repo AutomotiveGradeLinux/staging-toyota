@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,77 +37,6 @@ tskm_convState2Str(TSKM_STATE_t state) {
       break;
   }
   return ret;
-}
-
-const char*
-tskm_convLocalStep2Str(TSKM_LOCAL_STEP_t localStep) {
-  switch (localStep) {      // LCOV_EXCL_BR_LINE 7:debug code
-    case TSKM_LSTEP_LAST:
-      return "LAST";
-    case TSKM_LSTEP_SHM:
-      // LCOV_EXCL_START 7:debug code
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      return "SHM";
-    case TSKM_LSTEP_BUPCHK:
-      // LCOV_EXCL_START 7:debug code
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      return "BUPCHK";
-    case TSKM_LSTEP_ALL:
-      return "ALL";
-    case 0:
-      return "0";
-    case 1:
-      // LCOV_EXCL_START 7:debug code
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      return "1";
-      // LCOV_EXCL_STOP
-    case 2:
-      // LCOV_EXCL_START 7:debug code
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      return "2";
-      // LCOV_EXCL_STOP
-    case 3:
-      // LCOV_EXCL_START 7:debug code
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      return "3";
-      // LCOV_EXCL_STOP
-    case 4:
-      // LCOV_EXCL_START 7:debug code
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      return "4";
-      // LCOV_EXCL_STOP
-    case 5:
-      // LCOV_EXCL_START 7:debug code
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      return "5";
-      // LCOV_EXCL_STOP
-    case 6:
-      // LCOV_EXCL_START 7:debug code
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      return "6";
-      // LCOV_EXCL_STOP
-    case 7:
-      // LCOV_EXCL_START 7:debug code
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      return "7";
-      // LCOV_EXCL_STOP
-    case 8:
-      // LCOV_EXCL_START 7:debug code
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      return "8";
-      // LCOV_EXCL_STOP
-    case 9:
-      // LCOV_EXCL_START 7:debug code
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      return "9";
-      // LCOV_EXCL_STOP
-    default:
-      break;
-  }
-  // LCOV_EXCL_START 7:debug code
-  AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-  return "UNKNONW";
-  // LCOV_EXCL_STOP
 }
 
 const char*

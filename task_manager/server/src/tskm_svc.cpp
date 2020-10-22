@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -108,10 +108,6 @@ TSKM_STATIC TSKM_ERR_t wakeupRequest(TSKM_SVC_CTX_t* p_svc,
   TSKM_EVENT_INFO_t ev;
   int ret;
   bzero(&ev, sizeof(ev));
-
-  TSKM_PRINTF(TSKM_LOG_SVCSTATE, "WAKEUPREQ %s to %s(%d)",
-              tskm_convLocalStep2Str(p_req->localStep), p_svc->attr->name,
-              p_svc->pid);
 
   ev.event = TSKM_EV_PRI_REQ_WAKEUP;
   ev.errCode = TSKM_E_OK;
@@ -914,10 +910,6 @@ TSKM_ERR_t tskm_svcDownRequest(TSKM_SVC_CTX_t* p_svc,
   if (tskm_svcIsCommunicatable(p_svc) == TSKM_FALSE) {
     return TSKM_E_OK;
   }
-
-  TSKM_PRINTF(TSKM_LOG_SVCSTATE, "DOWNREQ %s to %s(%d)",
-              tskm_convLocalStep2Str(p_req->localStep), p_svc->attr->name,
-              p_svc->pid);
 
   ev.event = TSKM_EV_PRI_REQ_DOWN;
   ev.errCode = TSKM_E_OK;

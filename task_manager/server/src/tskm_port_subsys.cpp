@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -292,12 +292,6 @@ int tskm_sub_resmRcv(TSKM_EVENT_INFO_t* p_ev) {
 }
 
 int tskm_sub_setWakeupOrder(const char* p_order) {
-  EFrameworkunifiedStatus taskmanagerRet;
-  std::string order = p_order;
-
-  taskmanagerRet = SetWakeupOrderToSystemManager(order);
-  if (taskmanagerRet != eFrameworkunifiedStatusOK) {
-    return -1;
-  }
+  // Under consideration
   return 0;
 }  // LCOV_EXCL_BR_LINE 10: Gcov constraints (last row)

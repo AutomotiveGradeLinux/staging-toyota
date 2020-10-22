@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,8 +87,6 @@ int tskm_initServiceList(TSKM_SVCS_CTX_t* p_svcs, int iFd) {
             *p_newPath += nodes.back();
             TSKM_PRINTF(TSKM_LOG_STATE, "EXCHG %s", p_newPath->c_str());
             serviceList[ii].attr->path = p_newPath->c_str();
-            delete p_newPath;
-            p_newPath = NULL;
             break;
           } catch (...) {
             TSKM_ASSERT(0);
