@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,336 +14,392 @@
  * limitations under the License.
  */
 
-/*******************************************************************************
- *	Module configuration	:CANDataReceiveMsg()			CANDataProcess of Received Messages
- *                    CANDlcCheck()				DLC check process
- *                    CANDeliveryEntryMsgCheck()	CANDataDelivery registration message check process
- *                    CAN_DeliveryCtrlMsg()			CANDataDelivery control message processing				Not mounted
- *                    CAN_DeliveryCtrlMsgCheck()	CANDataDelivery control message check processing		Not mounted
- *                    CANCanidIfToUserCvt()		CAN ID Conversion Process 1
- ******************************************************************************/
-/*!-----------------------------------------------------------------------------
- * @file    CAN_Delivery.cpp
- * @~english
- * @brief   CAN Delivery process
- */
 #include "CAN_Delivery.h"
-#include <native_service/frameworkunified_types.h>  // NOLINT(build/include)
-#include <string.h>
-#include "CAN_DeliveryData.h"
-#include "CAN_CommWatch.h"
+
+#include <can_hal.h>
+#include <native_service/frameworkunified_framework_if.h>
+#include <peripheral_service/Canif_API.h>
+#include <can_hal.h>
+#include <utility>
+#include <map>
+#include <string>
 #include "CAN_TxMsg.h"
+#include "CAN_CommWatch.h"
+#include "Canif_API_Local.h"
+#include "API_Local_Common.h"
+#include "Thread_Common.h"
 
-/*************************************************/
-/*           Global variables                      */
-/*************************************************/
-const CANID kCulCanidCsumTbl[] = {/* CAN ID table that performs CSUM checks */
-        (CANID)CAN_CSUM_CHECKTBL_STOP_CODE /* Stop code */
-};
+static CAN_DeliveryEntryList g_map_delivery_list_can;
+// Member of g_msg_rx_msg exist as long as communication exists.
+static std::map<CANID, CanMessage *> g_can_rx_msg;
 
-CAN_MSG_CANGWDATA g_cangw_msg_data; /* CANdata to be sent to the CANGW */
-/*******************************************************************************
- * MODULE    : CANDataReceiveMsg
- ******************************************************************************/
-/*!-----------------------------------------------------------------------------
- * @~english
- * @brief    CAN data reply processing
- *
- * CAN data reply processing
- *
- * CANDataReceive processing 
- *
- * @~english
- * @note
- *   -# OPC check
- *   -# DLC check
- *   -# CSUM check
- *   -# Communication blackout clearness
- *   -# Filter processing
- *   -# ID list making for delivery
- *   -# Message sending
- *
- * @~english
- * @return  Data reception result
- * @retval  <RET_CAN_NORMAL>        Normality
- * @retval  <RET_CAN_ERROR_CANCEL>  Data annulment
- *
- * @~english
- * @param[in]     <pst_rcv_msg> Reception message
- */
-RET_CAN CANDataReceiveMsg(HANDLE h_app, CAN_MSG_DATA *pst_rcv_msg) {
-  RET_CAN ret = RET_CAN_NORMAL;  /* Return value of this function */
-//  T_ICR_CMD_DATA *pst_msg_data;     /* Data part structure pointer */
-  CANID can_id;                  /* CAN ID */
-  uint8_t n_ta = CAN_NTA_INVALID; /* N_TA */
-  uint8_t uc_dlc;                  /* DLC */
-  uint8_t *puc_data_pos;            /* Data */
-  uint8_t i;
+void CANDeliveryInit(void) {
+  g_map_delivery_list_can.clear();
+  return;
+}
 
-//  pst_msg_data = reinterpret_cast<T_ICR_CMD_DATA *>(reinterpret_cast<void *>(&pst_rcv_msg->ucData[0]));
-  g_cangw_msg_data.num = 0;
+static CanMessage *CANMsgFind(CANID k) {
+  std::map<CANID, CanMessage *>::iterator it;
 
-  /****** OPC check process ******/
-//  switch (pst_msg_data->opc) {
-//    case CAN_OPC_RX:           /* CANData reception notice */
-#if 0
-      /****** DLC check process ******/
-      if (RET_CAN_NORMAL != (ret = CANDlcCheck(pst_msg_data))) {
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "#CAN_thread# CAN Delivery DLC Error");
-        CANDebugLogOut(CAN_DELIVERY_DLCERR, reinterpret_cast<void *>(pst_rcv_msg));
+  it = g_can_rx_msg.find(k);
+  if (it == g_can_rx_msg.end())
+    return NULL;
+  return it->second;
+}
+
+static void CANMsgInsert(CANID k, CanMessage *msg) {
+  CanMessage *latest = CANMsgFind(k);
+  if (!latest) {
+    latest = new CanMessage();
+  }
+  g_can_rx_msg[k] = latest;
+  memcpy(latest, msg, sizeof(CanMessage));
+}
+
+static CAN_DeliveryEntryListIt CANDeliveryFind(CANID canid, std::string s) {
+  std::pair<CAN_DeliveryEntryListIt, CAN_DeliveryEntryListIt> range;
+  CAN_DeliveryEntryListPair p = std::make_pair(canid, s);
+  CAN_DeliveryEntryListIt it;
+  bool found = false;
+  range = g_map_delivery_list_can.equal_range(canid);
+  for (it = range.first; it != range.second; ++it) {
+    if (*it == p) {
+      found = true;
+      break;
+    }
+  } 
+
+  if (!found)
+    it = g_map_delivery_list_can.end();
+
+  return it;
+}
+
+bool CANDeliveryInsert(CANID canid, std::string s) {
+  CAN_DeliveryEntryListIt it = CANDeliveryFind(canid, s);
+  CAN_DeliveryEntryListPair p = std::make_pair(canid, s);
+  bool inserted = false;
+
+  if (it == g_map_delivery_list_can.end()) {
+    g_map_delivery_list_can.insert(p);
+    inserted = true;
+  }
+
+  return inserted;
+}
+
+static EFrameworkunifiedStatus CANDeliverySndCmdSingle(HANDLE h_app, CANID cmd,
+                                          CanMessage *msg, std::string dest) {
+  CAN_MSG_CANCMD st_delivery_msg;
+  EFrameworkunifiedStatus e_status = eFrameworkunifiedStatusFail;
+  HANDLE h_client;
+  uint16_t len = 0;
+
+  // Create delivery data
+  memset(&st_delivery_msg, 0, sizeof(st_delivery_msg));
+  switch (cmd) {
+  case CAN_CMDID_FUELCALC_RST_REQ_RX:
+    len = CAN_TX_CMD_DELIVERY_SIZE + CAN_TX_CMD_FUELCALC_RST_SIZE;
+    break;
+  case CAN_CMDID_STARTUP_FIN_RESP_RX:
+    len = CAN_TX_CMD_DELIVERY_SIZE + CAN_TX_CMD_STARTUP_FIN_SIZE;
+    break;
+  case CAN_CMDID_MRST_INFO_RESP_RX:
+    len = CAN_TX_CMD_DELIVERY_SIZE + CAN_TX_CMD_MRST_INFO_SIZE;
+    break;
+  case CAN_CMDID_VERSION_RESP_RX:
+    len = CAN_TX_CMD_DELIVERY_SIZE + CAN_TX_CMD_VERSION_SIZE;
+    break;
+  case CAN_CMDID_CONNECTION_NODE_RESP_RX:
+    len = (uint16_t)(CAN_TX_CMD_DELIVERY_SIZE + msg->data[0] + 1);
+    break;
+  default:
+    return e_status;
+  }
+  st_delivery_msg.hdr.hdr.rid = 0;
+  st_delivery_msg.hdr.hdr.cid = (uint16_t)CID_CAN_CMD_DELIVERY;
+  st_delivery_msg.hdr.hdr.msgbodysize = len;
+  st_delivery_msg.data.cmd_id = (uint8_t)cmd;
+  memcpy(&st_delivery_msg.data.data, msg->data,
+                                     (size_t)(len - CAN_TX_CMD_DELIVERY_SIZE));
+
+  h_client = CommonFindSender(h_app, dest);
+  if (!h_client) {
+    return e_status;
+  }
+
+  FRAMEWORKUNIFIEDLOG(ZONE_INFO, __func__, "cid=%x msgbodysize=%x cmd_id=%x",
+         st_delivery_msg.hdr.hdr.cid, st_delivery_msg.hdr.hdr.msgbodysize,
+         st_delivery_msg.data.cmd_id);
+  FRAMEWORKUNIFIEDLOG(ZONE_DEBUG, __func__, "msg_data=%s",
+         MessageDataOutputLog(st_delivery_msg.data.data, len).c_str());
+
+  e_status = FrameworkunifiedSendMsg(h_client, CID_CAN_CMD_DELIVERY,
+                                   sizeof(st_delivery_msg), &st_delivery_msg);
+  if (e_status != eFrameworkunifiedStatusOK) {
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "FrameworkunifiedSendMsg Error(e_status:%d to:%s)",
+                               e_status, dest.c_str());
+  } else {
+    FRAMEWORKUNIFIEDLOG(ZONE_INFO, __func__,
+           "CAN Delivery : dst = %s, CMD = %x, DLC = %x",
+           dest.c_str(), cmd, msg->dlc);
+  }
+  return e_status;
+}
+
+static EFrameworkunifiedStatus CANDeliverySndMsgSingle(HANDLE h_app, CANID ul_canid,
+        uint8_t uc_dlc, const uint8_t *puc_data,
+        enum CanIfEchoBackFlags flag, std::string dest) {
+  CAN_MSG_CANDATA st_delivery_msg;
+  EFrameworkunifiedStatus e_status = eFrameworkunifiedStatusFail;
+  HANDLE h_client;
+  uint8_t uc_size = uc_dlc;
+
+  // Create delivery data
+  memset(&st_delivery_msg, 0, sizeof(st_delivery_msg));
+  st_delivery_msg.hdr.hdr.cid = CID_CAN_DATA_DELIVERY;
+  st_delivery_msg.hdr.hdr.msgbodysize = (uint16_t)(CAN_TRX_CANID_SIZE + 
+                                                 CAN_TRX_DLC_SIZE + 
+                                                 (uint32_t)uc_size);
+  st_delivery_msg.hdr.hdr.rid = 0;
+  st_delivery_msg.data.can_id = ul_canid;
+  st_delivery_msg.data.dlc = uc_size;
+  st_delivery_msg.echoback = flag;
+  if (uc_size > (uint8_t)CAN_DATA_SIZE)
+    uc_size = CAN_DATA_SIZE;
+  memcpy(st_delivery_msg.data.data, puc_data, (size_t)uc_size);
+
+  h_client = CommonFindSender(h_app, dest);
+  if (!h_client) {
+    return e_status;
+  }
+
+  FRAMEWORKUNIFIEDLOG(ZONE_INFO, __func__, "can_id=%x dlc=%x echoback=%d",
+         st_delivery_msg.data.can_id, st_delivery_msg.data.dlc,
+         st_delivery_msg.echoback);
+  FRAMEWORKUNIFIEDLOG(ZONE_DEBUG, __func__, "msg_data=%s",
+         MessageDataOutputLog(st_delivery_msg.data.data, uc_size).c_str());
+
+  e_status = FrameworkunifiedSendMsg(h_client, CID_CAN_DATA_DELIVERY,
+                                   sizeof(st_delivery_msg), &st_delivery_msg);
+  if (e_status != eFrameworkunifiedStatusOK) {
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "FrameworkunifiedSendMsg Error(e_status:%d to:%s)",
+                               e_status, dest.c_str());
+  } else {
+    FRAMEWORKUNIFIEDLOG(ZONE_INFO, __func__,
+           "CAN Delivery : dst = %s, CANID = %x, DLC = %x",
+           dest.c_str(), ul_canid, uc_dlc);
+  }
+  return e_status;
+}
+
+EFrameworkunifiedStatus CANDeliveryEntry(HANDLE h_app) {
+  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __func__, "@@@ Start communication CanRecv");
+
+  uint16_t i;
+  EFrameworkunifiedStatus e_status = eFrameworkunifiedStatusOK;
+  CAN_DELIVERY_ENTRY rcv_msg;
+  CAN_DeliveryEntryListIt it;
+  bool fail = false;
+
+  memset(&rcv_msg, 0, sizeof(rcv_msg));
+  e_status = FrameworkunifiedGetMsgDataOfSize(h_app, &rcv_msg,
+                                              sizeof(rcv_msg), eSMRRelease);
+  if (e_status != eFrameworkunifiedStatusOK) {
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__,
+          "CAN DeliveryEntry FrameworkunifiedGetMsgDataOfSize Error(%d)", e_status);
+    if (e_status == eFrameworkunifiedStatusInvldBufSize) {
+      FrameworkunifiedClearMsgData(h_app);
+    }
+    goto cleanup;
+  }
+
+  for (i = 0; i < rcv_msg.usCanNum; i++) {
+    CANID canid = rcv_msg.ulCanid[i];
+    CanMessage *latest = CANMsgFind(canid);
+
+    if (CANDeliveryInsert(canid, rcv_msg.notifyName)) {
+      FRAMEWORKUNIFIEDLOG(ZONE_INFO, __func__, "(cnd:%lu) : CANID=0x%x, dst=%s",
+        g_map_delivery_list_can.size(), canid, rcv_msg.notifyName);
+    }
+
+    if (latest) {
+      switch (canid) {
+      case CAN_CMDID_FUELCALC_RST_REQ_RX:
+      case CAN_CMDID_STARTUP_FIN_RESP_RX:
+      case CAN_CMDID_MRST_INFO_RESP_RX:
+      case CAN_CMDID_VERSION_RESP_RX:
+      case CAN_CMDID_CONNECTION_NODE_RESP_RX:
+        if (eFrameworkunifiedStatusOK != CANDeliverySndCmdSingle(h_app, canid,
+                                                 latest, rcv_msg.notifyName)) {
+          fail = true;
+        }
+        break;
+      default:
+        if (eFrameworkunifiedStatusOK != CANDeliverySndMsgSingle(h_app, canid,
+            static_cast<uint8_t>(latest->dlc), 
+            latest->data, CANIF_PURERECV, rcv_msg.notifyName)) {
+          fail = true;
+        }
         break;
       }
-#endif
-
-//      can_id = CANCanidIfToUserCvt(&(pst_msg_data->data[0]));
-
-//      if (pst_msg_data->opc == CAN_OPC_RX) {
-//        uc_dlc = pst_msg_data->data[CAN_MSGBUF_DLC_POS];
-//        puc_data_pos = &pst_msg_data->data[CAN_MSGBUF_DATA_POS];
-//      }
-
-//      ret = CANDeliveryRcvData(h_app, can_id, n_ta, uc_dlc, puc_data_pos, pst_msg_data->opc);
-//      if (ret != RET_CAN_NORMAL) {  // LCOV_EXCL_BR_LINE 4: NSFW error case
-//        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "#CAN_thread# CAN Delivery Error");  // LCOV_EXCL_LINE 4: NSFW error case
-//        CANDebugLogOut(CAN_DELIVERY_ERR, reinterpret_cast<void *>(pst_rcv_msg)); /* Delivery destination unregistered log output */  // LCOV_EXCL_LINE 4: NSFW error case // NOLINT (whitespace/line_length)
-//      }
-//      break;
-//    case CAN_OPC_PAC_RX:
-      /* Check CAN Data num */
-//      if (0 >= pst_msg_data->data[0] || CAN_EXRCV_DATA_NUM < pst_msg_data->data[0]) {
-//        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "#CAN_thread# CAN Delivery CAN Data num Error CAN Data num=%02X",
-//        pst_msg_data->data[0]);  // LCOV_EXCL_BR_LINE 15: marco defined in "native_service/ns_logger_if.h" // NOLINT (whitespace/line_length)
-//        break;
-//      }
-#if 0
-      /****** DLC check process ******/
-      if (RET_CAN_NORMAL != (ret = CANDlcCheck(pst_msg_data))) {
-        FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "#CAN_thread# CAN Delivery CAN Data size over");
-        CANDebugLogOut(CAN_DELIVERY_DLCERR, reinterpret_cast<void *>(pst_rcv_msg));
-      }
-
-#endif
-//      for (i = 0; i < pst_msg_data->data[0]; i++) {
-//        can_id = CANPacCanidIfToUserCvt(&pst_msg_data->data[i * CAN_EXRCV_DATA_SIZE + CAN_MSGBUF_PAC_CANID_POS]);
-
-//        uc_dlc = pst_msg_data->data[i * CAN_EXRCV_DATA_SIZE + CAN_MSGBUF_PAC_DLC_POS];
-//        puc_data_pos = &pst_msg_data->data[i * CAN_EXRCV_DATA_SIZE + CAN_MSGBUF_PAC_DATA_POS];
-
-//        if (RET_CAN_NORMAL != CANDeliveryRcvData(h_app, can_id, n_ta, uc_dlc, puc_data_pos, pst_msg_data->opc)) {  // LCOV_EXCL_BR_LINE 4: NSFW error case // NOLINT (whitespace/line_length)
-//          AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//          ret = RET_CAN_ERROR_CANCEL;  // LCOV_EXCL_LINE 4: NSFW error case
-//          FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "#CAN_thread# CAN Delivery Error");  // LCOV_EXCL_LINE 4: NSFW error case
-//          CANDebugLogOut(CAN_DELIVERY_ERR, reinterpret_cast<void *>(pst_rcv_msg)); /* Delivery destination unregistered log output */  // LCOV_EXCL_LINE 4: NSFW error case // NOLINT (whitespace/line_length)
-//        }
-//      }
-//      break;
-//    default:
-//      ret = RET_CAN_ERROR_CANCEL;
-//      break;
-//  }
-  // When the number of data to be delivered to CANGW_M is 1 or more, the data is sent to CANGW_M by CANDeliverySndMsgToCANGW.
-  if (0 < g_cangw_msg_data.num) {
-    // Sending CAN-data delivery messages to the CANGW
-    if (FALSE == CANDeliverySndMsgToCANGW(h_app, &g_cangw_msg_data)) {  // LCOV_EXCL_BR_LINE 4: NSFW error case
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "#CAN_thread# CAN Delivery Error");  // LCOV_EXCL_LINE 4: NSFW error case
-      ret = RET_CAN_ERROR_CANCEL;  // LCOV_EXCL_LINE 4: NSFW error case
     }
   }
-  return (ret);
+
+  if (fail)
+    e_status = eFrameworkunifiedStatusFail;
+
+cleanup:
+  return e_status;
 }
 
-/*!-----------------------------------------------------------------------------
- * @~english
- * @brief    Recieve data delivery before processing
- *
- * @~english
- * @return  Return value
- * @retval  <RET_CAN_NORMAL>            OK
- * @retval  <RET_CAN_ERROR_CANCEL>      Delivery Error
- *
- * @~english
- * @param[in]     <h_app>       Application handle
- * @param[in]     <ul_canid>    CAN ID
- * @param[in]     <n_ta>       N_TA
- * @param[in]     <uc_dlc>      DLC
- * @param[in]     <puc_data_pos> CAN Data
- * @param[in]     <opc>        OPC
- */
-RET_CAN CANDeliveryRcvData(HANDLE h_app, CANID ul_canid, uint8_t n_ta,
-                           uint8_t uc_dlc, uint8_t *puc_data_pos, uint8_t opc) {
-  RET_CAN ret = RET_CAN_NORMAL;
+static EFrameworkunifiedStatus CANDeliverySndMsgToClient(HANDLE h_app, CANID ul_canid, 
+                        void *data, size_t size, PS_CommunicationProtocol cid) {
+  EFrameworkunifiedStatus e_status = eFrameworkunifiedStatusFail;
+  HANDLE h_client = NULL;
+  CAN_DeliveryEntryListIt it;
+  std::pair<CAN_DeliveryEntryListIt, CAN_DeliveryEntryListIt> range;
+  bool fail = false;
 
-  /****** Communication interruption clear processing ******/
-  CANCommWatchClear(h_app, ul_canid);
+  it = g_map_delivery_list_can.find(ul_canid);
+  range = g_map_delivery_list_can.equal_range(ul_canid);
+  for (it = range.first; it != range.second; ++it) {
+    h_client = CommonFindSender(h_app, it->second);
+    if (!h_client) {
+      continue;
+    }
 
-  /****** CANDataSending a delivery message ******/
-  if (FALSE == CANDeliverySndMsg(h_app, ul_canid, uc_dlc, puc_data_pos, opc, n_ta)) {  // LCOV_EXCL_BR_LINE 4: NSFW error case // NOLINT (whitespace/line_length)
-    /* CANDataDelivery message transmission processing */
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "#CAN_thread# CAN Delivery Error");  // LCOV_EXCL_LINE 4: NSFW error case
-    ret = RET_CAN_ERROR_CANCEL;  // LCOV_EXCL_LINE 4: NSFW error case
+    e_status = FrameworkunifiedSendMsg(h_client, cid, (UI_32)size, data);
+    if (e_status != eFrameworkunifiedStatusOK) {
+      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "FrameworkunifiedSendMsg Error(e_status:%d to:%s)",
+                                              e_status, it->second.c_str());
+      fail = true;
+    }
+  }
+  return fail ? eFrameworkunifiedStatusFail : eFrameworkunifiedStatusOK;
+}
+
+EFrameworkunifiedStatus CANDeliverySndMsg(HANDLE h_app, CANID ul_canid, uint8_t n_ta,
+        uint8_t uc_dlc, const uint8_t *puc_data,
+        PS_CommunicationProtocol cid, enum CanIfEchoBackFlags flag) {
+  CAN_MSG_CANDATA st_delivery_msg;
+  uint8_t uc_size = uc_dlc;
+
+  // Create delivery data
+  memset(&st_delivery_msg, 0, sizeof(st_delivery_msg));
+  st_delivery_msg.hdr.hdr.cid = cid;
+  st_delivery_msg.hdr.hdr.msgbodysize = (uint16_t)(CAN_TRX_CANID_SIZE + 
+                                                 CAN_TRX_DLC_SIZE + 
+                                                 (uint32_t)uc_size);
+  st_delivery_msg.hdr.hdr.rid = 0;
+  st_delivery_msg.data.can_id = ul_canid;
+  st_delivery_msg.data.dlc = uc_size;
+  st_delivery_msg.echoback = flag;
+ 
+  FRAMEWORKUNIFIEDLOG(ZONE_INFO, __func__, "can_id=%x dlc=%x echoback=%d",
+         st_delivery_msg.data.can_id, st_delivery_msg.data.dlc,
+         st_delivery_msg.echoback);
+  FRAMEWORKUNIFIEDLOG(ZONE_DEBUG, __func__, "msg_data=%s",
+         MessageDataOutputLog(st_delivery_msg.data.data, uc_size).c_str());
+
+ 
+  if (uc_size > (uint8_t)CAN_DATA_SIZE)
+    uc_size = CAN_DATA_SIZE;
+  memcpy(st_delivery_msg.data.data, puc_data, (size_t)uc_size);
+
+  return CANDeliverySndMsgToClient(h_app, ul_canid, &st_delivery_msg,
+                                   sizeof(st_delivery_msg), cid);
+}
+
+EFrameworkunifiedStatus CANCommandDeliveryRcvProcess(HANDLE h_app,
+                                                 CanMessage *msg, uint8_t cmd) {
+  EFrameworkunifiedStatus e_status = eFrameworkunifiedStatusFail;
+  CAN_MSG_CANCMD st_delivery_msg;
+  uint16_t len = 0;
+
+  memset(&st_delivery_msg, 0, sizeof(st_delivery_msg));
+  switch (cmd) {
+  case CAN_CMDID_FUELCALC_RST_REQ_RX:
+    len = CAN_TX_CMD_DELIVERY_SIZE + CAN_TX_CMD_FUELCALC_RST_SIZE;
+    break;
+  case CAN_CMDID_STARTUP_FIN_RESP_RX:
+    len = CAN_TX_CMD_DELIVERY_SIZE + CAN_TX_CMD_STARTUP_FIN_SIZE;
+    break;
+  case CAN_CMDID_MRST_INFO_RESP_RX:
+    len = CAN_TX_CMD_DELIVERY_SIZE + CAN_TX_CMD_MRST_INFO_SIZE;
+    break;
+  case CAN_CMDID_VERSION_RESP_RX:
+    len = CAN_TX_CMD_DELIVERY_SIZE + CAN_TX_CMD_VERSION_SIZE;
+    break;
+  case CAN_CMDID_CONNECTION_NODE_RESP_RX:
+    len = (uint16_t)(CAN_TX_CMD_DELIVERY_SIZE + msg->data[0] + 1);
+    break;
+  default:
+    return e_status;
+  }
+  st_delivery_msg.hdr.hdr.rid = 0;
+  st_delivery_msg.hdr.hdr.cid = (uint16_t)CID_CAN_CMD_DELIVERY;
+  st_delivery_msg.hdr.hdr.msgbodysize = len;
+  st_delivery_msg.data.cmd_id = cmd;
+  memcpy(&st_delivery_msg.data.data, msg->data,
+                                     (size_t)(len - CAN_TX_CMD_DELIVERY_SIZE));
+  CANMsgInsert(cmd, msg);
+
+  FRAMEWORKUNIFIEDLOG(ZONE_INFO, __func__, "cid=%x msgbodysize=%x cmd_id=%x",
+         st_delivery_msg.hdr.hdr.cid, st_delivery_msg.hdr.hdr.msgbodysize,
+         st_delivery_msg.data.cmd_id);
+  FRAMEWORKUNIFIEDLOG(ZONE_DEBUG, __func__, "msg_data=%s",
+         MessageDataOutputLog(st_delivery_msg.data.data, len).c_str());
+
+  return CANDeliverySndMsgToClient(h_app, msg->can_id, &st_delivery_msg,
+                                 sizeof(st_delivery_msg), CID_CAN_CMD_DELIVERY);
+}
+
+EFrameworkunifiedStatus CANDeliveryRcvProcess(HANDLE h_app, CanMessage *msg) {
+  if (!Canif_CheckCanID(msg->can_id)) {
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "CANID is invalid (%x)", msg->can_id);
+    return eFrameworkunifiedStatusFail;
   }
 
-  return ret;
-}
-
-/*!-----------------------------------------------------------------------------
- * @~english
- * @brief    Recieve _CWORD29_ data delivery before processing
- *
- * @~english
- * @return  Return value
- * @retval  <RET_CAN_NORMAL>            OK
- * @retval  <RET_CAN_ERROR_CANCEL>      Delivery Error
- *
- * @~english
- * @param[in]     <h_app>         Application handle
- * @param[in]     <us_opc>        OPC
- * @param[in]     <uc_dlc>        DLC
- * @param[in]     <puc_data_pos>  CAN Data
- */
-RET_CAN CANDeliveryRcv_CWORD29_Data(HANDLE h_app, const uint16_t us_opc, uint32_t uc_dlc, uint8_t *puc_data_pos) {
-  RET_CAN ret = RET_CAN_NORMAL;
-
-  /****** CANDataSending a delivery message ******/
-  if (FALSE == CANDelivery_CWORD29_SndMsg(h_app, us_opc, uc_dlc, puc_data_pos)) {
-    /* CANDataDelivery message transmission processing */
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "#CAN_thread# CAN Delivery Error");
-    ret = RET_CAN_ERROR_CANCEL;
+  CANCommWatchClear(h_app, msg->can_id);
+  CANMsgInsert(msg->can_id, msg);
+  if (eFrameworkunifiedStatusOK != CANDeliverySndMsg(h_app, msg->can_id, CAN_NTA_INVALID,
+                       (uint8_t)msg->dlc, msg->data, CID_CAN_DATA_DELIVERY)) {
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "CAN Delivery Error");
+    return eFrameworkunifiedStatusFail;
   }
 
-  return ret;
+  return eFrameworkunifiedStatusOK;
 }
 
-/*******************************************************************************
- * MODULE    : CANDlcCheck
- ******************************************************************************/
-/*!-----------------------------------------------------------------------------
- * @~english
- * @brief    DLC check processing
- *
- * DLC check processing of received CAN data
- *
- * CANDataCheck the PROCESS 
- *
- * @~english
- * @note
- *   -# Length acquisition of header
- *   -# Positional change of DLC
- *   -# Data length calculation
- *   -# Data length comparison
- *
- * @~english
- * @param[in]     <pst_msg_data> Pointer of reference to data division of reception message
- */
-//RET_CAN CANDlcCheck(const T_ICR_CMD_DATA *pst_msg_data) {  // LCOV_EXCL_START 8: dead code
-//  AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-//  RET_CAN ret = RET_CAN_NORMAL; /* Return value of this function */
-//  int32_t l_len1;                 /* For data length calculation */
-//  int32_t l_len2;                 /* For data length calculation */
-//  uint8_t offset = 0;            /* N_TA offset size */
-//  uint8_t uc_dlc;                 /* DLC value */
+EFrameworkunifiedStatus CANClearEntry(HANDLE h_app) {
+  char notify_name[CANIF_NOTIFY_NAME_MAX_SIZE + 1] = {0};
+  CAN_DeliveryEntryListIt it;
+  EFrameworkunifiedStatus e_status = eFrameworkunifiedStatusOK;
 
-  /* Length collection of headers */
-//  l_len1 = (int32_t)pst_msg_data->d_length;
+  e_status = FrameworkunifiedGetMsgDataOfSize(h_app, &notify_name,
+                                 CANIF_NOTIFY_NAME_MAX_SIZE, eSMRRelease);
+  if (e_status != eFrameworkunifiedStatusOK) {
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__,
+                "#CAN thread# FrameworkunifiedGetMsgDataOfSize Error(%d)", e_status);
+    if (e_status == eFrameworkunifiedStatusInvldBufSize) {
+      FrameworkunifiedClearMsgData(h_app);
+    }
+    return e_status;
+  }
 
-//  if ((uint8_t)CAN_OPC_PAC_RX == pst_msg_data->opc) {
-//    l_len2 = (int32_t)(CAN_EXRCV_DATA_SIZE * pst_msg_data->data[0] + CAN_EXRCV_CANNUM_SIZE);
+  FRAMEWORKUNIFIEDLOG(ZONE_DEBUG, __func__, "notify_name=%s", notify_name);
 
-    /* DLC check of pacaging CAN data */
-//    if (l_len1 != l_len2) {
-//      ret = RET_CAN_ERROR_CANCEL; /* DLC error */
-//    }
-//  } else {
-//    uc_dlc = (uint8_t)pst_msg_data->data[CAN_MSGBUF_DLC_POS];
-    /* Data length considered from the DLC */
-//    l_len2 = (int32_t)CAN_TRX_CANID_SIZE /* CAN ID sizes */
-//            + (int32_t)CAN_TRX_DLC_SIZE /* Size of the DLC */
-//            + (int32_t)offset           /* Size of N_TA */
-//            + (int32_t)uc_dlc;           /* CANDataLength: DLC content */
+  // To avoid destruction of iterator.
+  it = g_map_delivery_list_can.begin();
+  while (it != g_map_delivery_list_can.end()) {
+    size_t n = strnlen(it->second.c_str(), CANIF_NOTIFY_NAME_MAX_SIZE);
+    if (!strncmp(it->second.c_str(), notify_name, n)) {
+      g_map_delivery_list_can.erase(it++);
+    } else {
+      ++it;
+    }
+  }
 
-    /* "Comparison of Length of headers and data length considered from DLCs */
-    /* "Valid if the actual data length is equal to or less than the DLC */
-//    if (l_len1 < l_len2) {
-//      ret = RET_CAN_ERROR_CANCEL; /* DLC error */
-//    } else if (uc_dlc > (uint8_t)CAN_DATA_SIZE) {
-      /* CANDataDisabled when exceeding maximum size */
-//      ret = RET_CAN_ERROR_CANCEL; /* DLC error */
-//    } else {
-      /* No DLC error */
-//    }
-//  }
-
-//  return (ret);
-//}
-// LCOV_EXCL_STOP
-
-/*******************************************************************************
- * MODULE    : CANCanidIfToUserCvt
- * ABSTRACT  : CAN ID Conversion Process 1
- * FUNCTION  : Convert CAN ID for interfaces to CAN ID for USER 
- * ARGUMENT  : *puc_operand	:Operand reference pointer
- * NOTE      :
- * RETURN    : CAN ID
- ******************************************************************************/
-CANID CANCanidIfToUserCvt(uint8_t *puc_operand) {
-  CANID can_id = 0; /* CAN ID */
-  uint8_t *puc;      /* Generic pointer */
-  uint32_t ul = 0;   /* General Variables */
-
-  /*	Concept of conversion
-	Input data format (8-bit data with the following structure)
-		Base Address	+0	:ext_flag,    CAN ID[10:4]
-						+1	:CAN ID[3:0], Empty[1:0], CAN ID[28:27]
-						+2	:CAN ID[26:19]
-						+3	:CAN ID[18:11]
-	Output data format (32-bit data)
-		Bit assignment		[31:29]		[28:0]
-		CAN ID			Empty[2:0]	CAN ID[28:0]
-*/
-
-  puc = &puc_operand[CAN_MSGBUF_CANID_POS]; /* Get Base Address of CAN ID */
-  ul = (uint32_t)puc[0] & 0x7F;            /* Contain [10:4] data */
-  ul <<= 4;
-  can_id |= (CANID)ul;
-  ul = (uint32_t)puc[1] & 0xF0; /* Insert data of [3:0] */
-  ul >>= 4;
-  can_id |= (CANID)ul;
-  ul = (uint32_t)puc[1] & 0x03; /* Populate [28:27] */
-  ul <<= 27;
-  can_id |= (CANID)ul;
-  ul = (uint32_t)puc[2]; /* Contain [26:19] data */
-  ul <<= 19;
-  can_id |= (CANID)ul;
-  ul = (uint32_t)puc[3]; /* Populate [18:11] */
-  ul <<= 11;
-  can_id |= (CANID)ul;
-
-  return (can_id);
-}
-
-/*******************************************************************************
- * MODULE    : CANPacCanidIfToUserCvt
- * ABSTRACT  : CAN ID Conversion Process 1
- * FUNCTION  : Convert CAN ID for interfaces to CAN ID for USER 
- * ARGUMENT  : *puc_operand	:Operand reference pointer
- * NOTE      :
- * RETURN    : CAN ID
- ******************************************************************************/
-CANID CANPacCanidIfToUserCvt(uint8_t *puc_operand) {
-  CANID can_id = 0;
-  uint8_t *puc;
-  uint32_t ul = 0;
-
-  puc = &puc_operand[0];
-  ul = (uint32_t)puc[0] & 0x7F;
-  ul <<= 4;
-  can_id |= (CANID)ul;
-  ul = (uint32_t)puc[1] & 0xF0;
-  ul >>= 4;
-  can_id |= (CANID)ul;
-
-  return (can_id);
+  return eFrameworkunifiedStatusOK;
 }

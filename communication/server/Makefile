@@ -1,5 +1,5 @@
 #
-# @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+# @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,24 +33,11 @@ communication_SRCS += ./src/main/communication_application.cpp
 communication_SRCS += ./src/threads/CAN_Thread.cpp
 communication_SRCS += ./src/threads/Thread_Common.cpp
 
-## from ./src/CAN/Command/
-communication_SRCS += ./src/CAN/Command/CAN_Command.cpp
-communication_SRCS += ./src/CAN/Command/CAN_CommandData.cpp
-
 ## from	./src/CAN/CommWatch/
 communication_SRCS += ./src/CAN/CommWatch/CAN_CommWatch.cpp
-communication_SRCS += ./src/CAN/CommWatch/CAN_CommWatchData.cpp
 
 ## from ./src/CAN/Delivery/
 communication_SRCS += ./src/CAN/Delivery/CAN_Delivery.cpp
-communication_SRCS += ./src/CAN/Delivery/CAN_DeliveryData.cpp
-
-## from ./src/CAN/TimerCtrl/
-communication_SRCS += ./src/CAN/TimerCtrl/CAN_TimerCtrl.cpp
-
-## from ./src/CAN/Transmission/
-communication_SRCS += ./src/CAN/Transmission/CAN_Transmission.cpp
-communication_SRCS += ./src/CAN/Transmission/CAN_TransmissionData.cpp
 
 ## from ./src/CAN/TxMsg/
 communication_SRCS += ./src/CAN/TxMsg/CAN_TxMsg.cpp
@@ -61,8 +48,6 @@ VPATH += \
 	./src/CAN/CommWatch  \
 	./src/CAN/Delivery  \
 	./src/CAN/main  \
-	./src/CAN/TimerCtrl  \
-	./src/CAN/Transmission  \
 	./src/CAN/TxMsg  \
     ./src/main  \
 	
@@ -76,7 +61,6 @@ CPPFLAGS += \
 	-I./include/CAN/Delivery  \
 	-I./include/CAN/main  \
 	-I./include/CAN/TimerCtrl  \
-	-I./include/CAN/Transmission  \
 	-I./include/CAN/TxMsg  \
 	-I./include/main  \
 	-I./include/threads  \
@@ -107,7 +91,6 @@ LDLIBS += -Wl,-Bdynamic -lstdc++
 LDLIBS += -Wl,-Bdynamic -lSS_SystemIfUnified
 LDLIBS += -Wl,-Bdynamic -lNS_FrameworkUnified
 LDLIBS += -Wl,-Bdynamic -lcommon
-LDLIBS += -Wl,-Bdynamic -lvp
-#LDLIBS += -Wl,-Bdynamic -lcan_hal
+LDLIBS += -Wl,-Bdynamic -lcan_hal
 
 include ../../peripheral_service.mk

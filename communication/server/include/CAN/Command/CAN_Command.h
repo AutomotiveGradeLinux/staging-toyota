@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,27 +16,6 @@
 
 #ifndef COMMUNICATION_SERVER_INCLUDE_CAN_COMMAND_CAN_COMMAND_H_
 #define COMMUNICATION_SERVER_INCLUDE_CAN_COMMAND_CAN_COMMAND_H_
-/******************************************************************************
- * FILE  :CAN_Command.h
- * SYSTEM  :_CWORD107_
- * SUBSYSTEM :
- ******************************************************************************/
-
-#include "CAN_Thread.h"
-
-/************************************************************************
-*   Macro definitions             *
-************************************************************************/
-
-/************************************************************************
-*   Struct definitions             *
-************************************************************************/
-
-/************************************************************************
-*   Function prototype             *
-************************************************************************/
 EFrameworkunifiedStatus CANCommandTransmission(HANDLE h_app);
 RET_CAN CANCommandTxRslt(HANDLE h_app, CAN_MSG_DATA*);
-RET_CAN CANCommandDelivery(HANDLE h_app, CAN_MSG_DATA*);
-
 #endif  // COMMUNICATION_SERVER_INCLUDE_CAN_COMMAND_CAN_COMMAND_H_

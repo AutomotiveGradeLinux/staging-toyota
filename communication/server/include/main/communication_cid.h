@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,6 @@
  * limitations under the License.
  */
 
-///////////////////////////////////////////////////////////////////////////////
-/// \ingroup
-/// \brief
-///
-///
-///
-///
-///
-///////////////////////////////////////////////////////////////////////////////
-
 /*
  * This file has been generated automatically.
  * User hand written code entry is not allowed. Do not modify the file content.
@@ -31,10 +21,6 @@
  */
 #ifndef COMMUNICATION_SERVER_INCLUDE_MAIN_COMMUNICATION_CID_H_
 #define COMMUNICATION_SERVER_INCLUDE_MAIN_COMMUNICATION_CID_H_
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Include Files
-////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #define LAN_SERVICE_MAIN "Communication"
 

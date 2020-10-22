@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,33 +16,25 @@
 
 #ifndef COMMUNICATION_SERVER_INCLUDE_CAN_DELIVERY_CAN_DELIVERY_H_
 #define COMMUNICATION_SERVER_INCLUDE_CAN_DELIVERY_CAN_DELIVERY_H_
-/******************************************************************************
- * FILE		:CAN_Delivery.h
- * SYSTEM		:_CWORD107_
- * SUBSYSTEM	:
- ******************************************************************************/
-
-#include <peripheral_service/Canif_API.h>
+#include <native_service/frameworkunified_types.h>
 #include "CAN_Thread.h"
+#include <vector>
+#include <map>
+#include <string>
+#include <can_hal.h>
 
-/************************************************************************
-*			Macro definitions													*
-************************************************************************/
-#define CAN_CSUM_CHECKTBL_STOP_CODE 0xFFFFFFFFUL
-/* CANDataStop code of the table for which checksum checksumming is to be performed */
+typedef std::multimap<CANID, std::string> CAN_DeliveryEntryList;
+typedef CAN_DeliveryEntryList::iterator CAN_DeliveryEntryListIt;
+typedef std::pair<const CANID, std::string> CAN_DeliveryEntryListPair;
 
-/************************************************************************
-*			Struct definitions													*
-************************************************************************/
-
-/************************************************************************
-*			Function prototype	  										*
-************************************************************************/
-RET_CAN CANDataReceiveMsg(HANDLE h_app, CAN_MSG_DATA*);            /* CANDataProcess of Received Messages */
-//RET_CAN CANDlcCheck(const T_ICR_CMD_DATA*); /* DLC check process */
-CANID CANCanidIfToUserCvt(uint8_t*);                            /* CAN ID Conversion Process 1 */
-CANID CANPacCanidIfToUserCvt(uint8_t*);
-RET_CAN CANDeliveryRcvData(HANDLE h_app, CANID ul_canid, uint8_t n_ta,
-                           uint8_t uc_dlc, uint8_t* puc_data_pos, uint8_t opc);
-RET_CAN CANDeliveryRcv_CWORD29_Data(HANDLE h_app, const uint16_t us_opc, uint32_t uc_dlc, uint8_t *puc_data_pos);
+void CANDeliveryInit(void);
+bool CANDeliveryInsert(CANID canid, std::string s);
+EFrameworkunifiedStatus CANDeliveryRcvProcess(HANDLE h_app, CanMessage *msg);
+EFrameworkunifiedStatus CANDeliveryEntry(HANDLE h_app);
+EFrameworkunifiedStatus CANClearEntry(HANDLE h_app);
+EFrameworkunifiedStatus CANDeliverySndMsg(HANDLE h_app, CANID ul_canid, uint8_t n_ta,
+  uint8_t uc_dlc, const uint8_t *puc_data,
+  PS_CommunicationProtocol cid, enum CanIfEchoBackFlags flag = CANIF_PURERECV);
+EFrameworkunifiedStatus CANCommandDeliveryRcvProcess(HANDLE h_app,
+                                                 CanMessage *msg, uint8_t cmd);
 #endif  // COMMUNICATION_SERVER_INCLUDE_CAN_DELIVERY_CAN_DELIVERY_H_

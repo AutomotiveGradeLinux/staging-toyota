@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,21 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
-
-///////////////////////////////////////////////////////////////////////////////
-/// \ingroup
-/// \brief
-///
-///
-///
-///
-///
-///////////////////////////////////////////////////////////////////////////////
-
-/*
- * This file has been generated automatically.
- * User hand written code entry is allowed only inside protected zones.
  */
 
 #include <errno.h>
@@ -48,9 +33,9 @@
 #include "CAN_Thread.h"
 #include "Thread_Common.h"
 
-CFrameworkunifiedVersion g_FrameworkunifiedVersion(MAJORNO, MINORNO, REVISION);  // NOLINT (readability/naming)
+CFrameworkunifiedVersion g_FrameworkunifiedVersion(MAJORNO, MINORNO, REVISION);
 
-FRAMEWORKUNIFIEDLOGPARAM g_FrameworkunifiedLogParams = {  // NOLINT (readability/naming)
+FRAMEWORKUNIFIEDLOGPARAM g_FrameworkunifiedLogParams = {
   FRAMEWORKUNIFIEDLOGOPTIONS,
   {ZONE_TEXT_10, ZONE_TEXT_11, ZONE_TEXT_12,
    ZONE_TEXT_13, ZONE_TEXT_14, ZONE_TEXT_15,
@@ -63,42 +48,71 @@ FRAMEWORKUNIFIEDLOGPARAM g_FrameworkunifiedLogParams = {  // NOLINT (readability
   FRAMEWORKUNIFIEDLOGZONES};
 
 extern HANDLE g_can_thread;
+static bool capture_log_flg = FALSE;
 
 #define COMMSYS_SND_ERR_CNT_MAX 10
 
-//////////////////////////////////////////
-//  Function : main
-//////////////////////////////////////////
+static void MessageHandler(HANDLE h_app) {
+  EFrameworkunifiedStatus e_status = eFrameworkunifiedStatusOK;
+  e_status = FrameworkunifiedDispatchProcessWithoutLoop(h_app);
+  if (e_status != eFrameworkunifiedStatusOK) {
+    // Ignore Error. Logging only.
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "FrameworkunifiedDispatchProcessWithoutLoop: %d", e_status);
+  }
+}
+
+static void TimeoutHandlerCAN(HANDLE h_app) {
+  EFrameworkunifiedStatus e_status = eFrameworkunifiedStatusOK;
+  uint32_t dummy = 0;
+  static uint32_t snd_err_cnt_can = 0;
+
+  if (CommGetAvailabilityCurrent(CAN_AVAILABILITY)) {
+    e_status = FrameworkunifiedSendChild(h_app, g_can_thread,
+                            CID_COMMSYS_TIMEOUT, 0, &dummy);
+    if (e_status != eFrameworkunifiedStatusOK) {
+      snd_err_cnt_can++;
+      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__,
+                       "FrameworkunifiedSendChild(timeout for can) faild: %d", e_status);
+
+      if (capture_log_flg)
+        return;
+
+      if (snd_err_cnt_can < COMMSYS_SND_ERR_CNT_MAX)
+        return;
+
+      SendUserInvokedLoggingRequestToSystemManager(
+                     e_SS_SM_CAPTURE_DTC_LOGS, "Send CAN TimeoutNtfy Error");
+      capture_log_flg = true;
+    } else {
+      snd_err_cnt_can = 0;
+    }
+  }
+}
 
 int main(int argc, char *argv[]) {
   EFrameworkunifiedStatus e_status = eFrameworkunifiedStatusOK;
   FrameworkunifiedDefaultCallbackHandler cb_funcs;
-  FRAMEWORKUNIFIED_MAKE_DEFAULT_CALLBACK(cb_funcs);  // LCOV_EXCL_BR_LINE 15:marco defined in "system_service/ss_system_if.h"
+  FRAMEWORKUNIFIED_MAKE_DEFAULT_CALLBACK(cb_funcs);
   HANDLE h_app;
-  FRAMEWORKUNIFIED_SET_ZONES();  // LCOV_EXCL_BR_LINE 15:marco defined in "native_service/ns_logger_if.h"
+  FRAMEWORKUNIFIED_SET_ZONES();
   struct pollfd fds[2];
   int ret;
-  uint32_t dummy = 0;
-  uint32_t snd_err_cnt_can = 0;
-  BOOL capture_log_flg = FALSE;  // Log save flag(Saved:TRUE, Unsaved:FALSE)
 
-  e_status = FrameworkunifiedCreateDispatcherWithoutLoop(LAN_SERVICE_MAIN, h_app, argc, argv, &cb_funcs, TRUE);  // LCOV_EXCL_BR_LINE 11:Unexpected branch  // NOLINT (whitespace/line_length)
-  if (e_status != eFrameworkunifiedStatusOK) {  // LCOV_EXCL_BR_LINE 4: NSFW error case.
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "FrameworkunifiedCreateDispatcherWithoutLoop: %d", e_status);  // LCOV_EXCL_LINE 4: NSFW error case.
+  e_status = FrameworkunifiedCreateDispatcherWithoutLoop(LAN_SERVICE_MAIN, 
+                                        h_app, argc, argv, &cb_funcs, TRUE);
+  if (e_status != eFrameworkunifiedStatusOK) {
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "FrameworkunifiedCreateDispatcherWithoutLoop: %d", e_status);
     return EXIT_FAILURE;
   }
 
-  e_status = FrameworkunifiedGetDispatcherFD(h_app, &fds[0].fd);  // LCOV_EXCL_BR_LINE 11:Unexpected branch
-  if (e_status != eFrameworkunifiedStatusOK) {  // LCOV_EXCL_BR_LINE 4: NSFW error case.
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "FrameworkunifiedGetDispatcherFD: %d", e_status);  // LCOV_EXCL_LINE 4: NSFW error case.
+  e_status = FrameworkunifiedGetDispatcherFD(h_app, &fds[0].fd);
+  if (e_status != eFrameworkunifiedStatusOK) {
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "FrameworkunifiedGetDispatcherFD: %d", e_status);
     return EXIT_FAILURE;
   }
 
-  if ((fds[1].fd = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC)) == -1) {  // LCOV_EXCL_BR_LINE 5: timerfd_create's error case.  // NOLINT (whitespace/line_length)
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "timerfd_create: %d", errno);  // LCOV_EXCL_LINE 5: timerfd_create's error case.
+  if ((fds[1].fd = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC)) == -1) {
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "timerfd_create: %d", errno);
     return EXIT_FAILURE;
   }
 
@@ -107,53 +121,34 @@ int main(int argc, char *argv[]) {
   tm.it_value.tv_nsec = 100 * 1000 * 1000;
   tm.it_interval.tv_sec = 0;
   tm.it_interval.tv_nsec = 100 * 1000 * 1000;
-  if (timerfd_settime(fds[1].fd, 0, &tm, NULL) == -1) {  // LCOV_EXCL_BR_LINE 5: timerfd_create's error case.
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "timerfd_settime: %d", errno);  // LCOV_EXCL_LINE 5: timerfd_create's error case.
+  if (timerfd_settime(fds[1].fd, 0, &tm, NULL) == -1) {
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "timerfd_settime: %d", errno);
     return EXIT_FAILURE;
   }
   fds[0].events = POLLIN;
   fds[1].events = POLLIN;
 
   while (1) {
-    ret = poll(fds, sizeof(fds) / sizeof(struct pollfd), -1);  // LCOV_EXCL_BR_LINE 5: poll's error case.
-    if (ret < 0) {  // LCOV_EXCL_BR_LINE 5: poll's error case.
-      // LCOV_EXCL_START 5: poll's error case.
-      AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-      if (errno == EINTR) { /* signal interrupt */
+    ret = poll(fds, sizeof(fds) / sizeof(struct pollfd), -1);
+    if (ret < 0) {
+      if (errno == EINTR) {
         continue;
       }
       FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "poll errno:%d", errno);
-      // LCOV_EXCL_STOP 5: poll's error case.
-    } else {
-      if ((fds[0].revents & POLLIN) != 0) {
-        e_status = FrameworkunifiedDispatchProcessWithoutLoop(h_app);  // LCOV_EXCL_BR_LINE 11:Unexpected branch
-        if (e_status != eFrameworkunifiedStatusOK) {  // LCOV_EXCL_BR_LINE 4: NSFW error case.
-          AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-          FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "FrameworkunifiedDispatchProcessWithoutLoop: %d", e_status);  // LCOV_EXCL_LINE 4: NSFW error case.  // NOLINT (whitespace/line_length)
-        }
-      } else if ((fds[1].revents & POLLIN) != 0) {  // LCOV_EXCL_BR_LINE 5: poll's error case.
-        // Timeout
-        uint64_t exp;
-        read(fds[1].fd, &exp, sizeof(uint64_t));  // LCOV_EXCL_BR_LINE 11:Unexpected branch
+      continue;
+    }
 
-        // Timeout notification to the CAN thread
-        if (CommGetAvailabilityCurrent(CAN_AVAILABILITY)) {
-          e_status = FrameworkunifiedSendChild(h_app, g_can_thread, CID_COMMSYS_TIMEOUT, 0, &dummy);  // LCOV_EXCL_BR_LINE 11:Unexpected branch  // NOLINT (whitespace/line_length)
-          if (e_status != eFrameworkunifiedStatusOK) {  // LCOV_EXCL_BR_LINE 4: NSFW error case.
-            AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-            snd_err_cnt_can++;  // LCOV_EXCL_LINE 4: NSFW error case.
-            FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "FrameworkunifiedSendChild(timeout for can) faild: %d", e_status);  // LCOV_EXCL_LINE 4: NSFW error case.  // NOLINT (whitespace/line_length)
-            if (!capture_log_flg && (snd_err_cnt_can >= COMMSYS_SND_ERR_CNT_MAX)) {  // LCOV_EXCL_LINE 4: NSFW error case.  // NOLINT (whitespace/line_length)
-              SendUserInvokedLoggingRequestToSystemManager(e_SS_SM_CAPTURE_DTC_LOGS, "Send CAN TimeoutNtfy Error");  // LCOV_EXCL_LINE 4: NSFW error case.  // NOLINT (whitespace/line_length)
-              capture_log_flg = TRUE;  // LCOV_EXCL_LINE 4: NSFW error case.
-            }
-          } else {
-            snd_err_cnt_can = 0;
-          }
-        }
-      }
+    if ((fds[0].revents & POLLIN) != 0) {
+      MessageHandler(h_app);
+      continue;
+    }
+
+    if ((fds[1].revents & POLLIN) != 0) {
+      uint64_t exp;
+      read(fds[1].fd, &exp, sizeof(uint64_t));
+      TimeoutHandlerCAN(h_app);
+      continue;
     }
   }
   return EXIT_SUCCESS;
-}  // LCOV_EXCL_LINE 10: final line
+}

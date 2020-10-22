@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,255 +14,227 @@
  * limitations under the License.
  */
 
-/*******************************************************************************
- * FILE  :CAN_CommWatch.cpp
- * SYSTEM  :_CWORD107_
- * SUBSYSTEM :EXL process
- * PROGRAM :CAN Thread CAN Data Communication Disruption Monitoring Management Process
- * Module configuration :CANCommWatchTimeoutMsg()  CANDataCommunication Disruption Timeout Message Processing
- *     :CAN_CommWatch()   CANDataCommunication Disruption Monitoring Message Processing
- *     :CANCommWatchClear()   CANDataCommunication interruption clear processing
- *     :CANVehicleInfoMsg()   Vehicle sensor information notification message processing
- *     :CANIgStatGet()    IG reception status acquisition processing
- ******************************************************************************/
 #include "CAN_CommWatch.h"
 
-#include <native_service/frameworkunified_types.h>  // NOLINT (build/include)
+#include <native_service/frameworkunified_types.h>
 #include <native_service/frameworkunified_framework_if.h>
-
 #include <peripheral_service/Canif_API.h>
+#include <utility>
+#include <map>
+#include <string>
 #include "CAN_Thread.h"
-#include "CAN_CommWatchData.h"
-#include "CAN_TxMsg.h"
-#include "CAN_TimerCtrl.h"
+#include "Thread_Common.h"
 
-/*************************************************/
-/*           Global variable                      */
-/*************************************************/
+static CAN_CommWatchTable g_map_comm_watch_list_can;
 
-static uint8_t g_uc_comm_watch_ig_stat; /* IG receive mode */
-
-/*******************************************************************************
- * MODULE    : CANCommWatchInit
- * ABSTRACT  : CANDataCommunication Disruption Monitoring Initialization Process
- * FUNCTION  : CANDataInitialize communication interruption monitoring
- * ARGUMENT  : void
- * NOTE      : 
- * RETURN    : void
- ******************************************************************************/
 void CANCommWatchInit(void) {
-  g_uc_comm_watch_ig_stat = CAN_COMM_IG_NORCV; /* Initialization of IG reception status   */
+  g_map_comm_watch_list_can.clear();
+  return;
 }
 
-/*******************************************************************************
- * MODULE    : CANCommWatchTimeoutMsg
- * ABSTRACT  : CANDataCommunication Disruption Timeout Message Processing
- * FUNCTION  : Send communication interruption message when communication interruption of monitored CAN data is detected. 
- * ARGUMENT  : us_timer_seq_no    : Timer sequence number that timed out
- * NOTE      : 
- * RETURN    : RET_CAN_NORMAL   :Normal completion
- *    : RET_CAN_ERROR_CANCEL  :Data destruction
- ******************************************************************************/
-RET_CAN CANCommWatchTimeoutMsg(HANDLE h_app, uint16_t us_timer_seq_no) {
-  RET_CAN ret = RET_CAN_ERROR_CANCEL; /* Return value of this function */
-  uint8_t uc_index;                     /* Index of the corresponding timer sequence number */
-  uint8_t uc_comm_stop;                  /* Communication status of the corresponding timer sequence number */
+static CAN_CommWatchTableIt CANCommWatchFind(CANID k, CAN_COMM_WATCH_VAL *val) {
+  std::pair<CAN_CommWatchTableIt, CAN_CommWatchTableIt> range;
+  CAN_CommWatchTableIt it;
+  bool found = false;
 
-  /* Determine whether communication interruption monitoring of the corresponding sequence number is registered. */
-  /* Timer Sequence Number Search*/
-  if (TRUE == CANCommWatchTimerSeqNoEntryCheck(us_timer_seq_no, &uc_index, &uc_comm_stop, CAN_PROTOCOL_TYPE_CAN)) {
-    /* Determining whether communication is in progress */
-    if ((uint8_t)CAN_COMM_NORMAL == uc_comm_stop) {
-      /* Change the communication status to "Communication interrupted" */
-      (void)CANCommWatchCtrl(uc_index, CAN_COMM_STOP, CAN_PROTOCOL_TYPE_CAN); /* Communication interruption state control processing */
-
-      /* Send Communication Disruption Detection Message */
-      (void)CANCommWatchSndMsg(h_app, uc_index); /* Transmission of communication interruption detection/recovery message */
-
-      ret = RET_CAN_NORMAL;
-    }
-  }
-
-  return (ret);
-}
-
-/*******************************************************************************
- * MODULE    : CANCommWatch
- * ABSTRACT  : CANDataCommunication Disruption Monitoring Message Processing
- * FUNCTION  : CANDataRegister/delete communication disruption monitoring management table 
- * ARGUMENT  : pst_rcv_msg :Received Message Reference Pointer
- * NOTE      : 
- * RETURN    : RET_CAN_NORMAL   :Normal completion
- *    : RET_CAN_ERROR_SNDID  :Distribution destination ID mismatch
- *    : RET_CAN_ERROR_UNDEF  :Unregistered ID
- *    : RET_CAN_ERROR_TIMER  :Timer acquisition failed
- *    : RET_CAN_ERROR_BUFFULL :Communication Disruption Monitoring Registered Number FULL
- ******************************************************************************/
-EFrameworkunifiedStatus CANCommWatch(HANDLE h_app) {
-  return CANCommWatchCore(h_app, CAN_PROTOCOL_TYPE_CAN);
-}
-
-EFrameworkunifiedStatus CANCommWatchCore(HANDLE h_app, CAN_PROTOCOL_TYPE mode) {
-  RET_CAN ret = RET_CAN_NORMAL;                /* Return value of this function */
-  uint8_t uc_cnt;                                /* Generic counters */
-  uint8_t uc_index;                              /* Indexed */
-  uint8_t uc_comm_stop = CAN_COMM_OFF;            /* Communication status */
-  BOOL b_id_flag = FALSE; /* Variables for Stopping Monitoring */    /* ID match flag */
-  BOOL b_snd_id_flag = FALSE; /* Variables for Stopping Monitoring */ /* Destination ID match flag */
-  uint16_t us_timer_seq_no; /* Variables for Starting Monitoring */   /* Acquisition Timer Sequence Number */
-  EFrameworkunifiedStatus e_status = eFrameworkunifiedStatusOK;
-  CAN_COMM_WATCHEXT_MSG_DAT rcv_msg;
-
-  FRAMEWORKUNIFIEDLOG(ZONE_CAN_DEBUG, __func__, "##### CAN COMMWATCH START  #####");  // LCOV_EXCL_BR_LINE 15:marco defined in "native_service/ns_logger_if.h"  //NOLINT (readability/naming)
-
-  e_status = FrameworkunifiedGetMsgDataOfSize(h_app, &rcv_msg, sizeof(rcv_msg), eSMRRelease);
-  if (e_status != eFrameworkunifiedStatusOK) {  // LCOV_EXCL_BR_LINE 4: NSFW error case.
-    // LCOV_EXCL_START 4: NSFW error case.
-    AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "#CAN_thread# FrameworkunifiedGetMsgDataOfSize Error");
-    if (e_status == eFrameworkunifiedStatusInvldBufSize) {
-      FrameworkunifiedClearMsgData(h_app);
-    }
-    ret = RET_CAN_ERROR_CANCEL;
-    goto exit;
-  }
-  // LCOV_EXCL_STOP 4: NSFW error case.
-
-  /* Monitor Registration/Suspension Determination */
-  if ((uint16_t)0 == rcv_msg.usWatchTime) { /* Is the communication interruption time zero? */
-    /*** Suspend Monitoring(Communication interruption time = 0) ***/
-
-    /* Is the delivery destination ID and CANID, DID registered in the disruption monitoring table? */
-    for (uc_cnt = 0; uc_cnt < (uint8_t)COMM_WATCH_LIST_NUM; uc_cnt++) {
-      /* Are data with matching CANID and data IDs registered? ? */
-      if (FALSE == CANCommWatchCanidDidEntryCheck(uc_cnt, rcv_msg.ulCanid, rcv_msg.ulDid, mode)) {
-        continue;
-      }
-      b_id_flag = TRUE; /* Set the ID match flag */
-
-      /* Does the shipping ID match? */
-      if (FALSE == CANCommWatchSndCheck(uc_cnt, rcv_msg.notifyName, mode)) {
-        continue;
-      }
-      b_snd_id_flag = TRUE; /* Set the delivery destination ID match flag  */
-      uc_index = uc_cnt;   /* Store the index subject to monitoring termination. */
+  range = g_map_comm_watch_list_can.equal_range(k);
+  for (it = range.first; it != range.second; it++) {
+    if (!memcmp(&(it->second.notify_name),
+                                  val->notify_name, sizeof(val->notify_name))) {
+      found = true;
       break;
     }
+  }
 
-    if (TRUE != b_id_flag) { /* No matching data */
-      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "#CAN_thread# CAN CommWatchStop CanID Error");  // LCOV_EXCL_BR_LINE 15:marco defined in "native_service/ns_logger_if.h"  //NOLINT (readability/naming)
-      ret = RET_CAN_ERROR_UNDEF; /* Undefined ID error */
-      goto exit;
-    }
-    if (TRUE != b_snd_id_flag) { /* Distribution destination ID mismatch */
-      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "#CAN_thread# CAN CommWatchStop SNDID Error");  // LCOV_EXCL_BR_LINE 15:marco defined in "native_service/ns_logger_if.h"  //NOLINT (readability/naming)
-      ret = RET_CAN_ERROR_SNDID; /* Distribution destination ID mismatch */
-      goto exit;
-    }
+  if (!found)
+    it = g_map_comm_watch_list_can.end();
 
-    /* Suspend Monitoring */
-    /* Communication interruption timer stop processing */
-    if (RET_CAN_NORMAL == CANCommWatchTimerStop(uc_index, mode)) { // LCOV_EXCL_BR_LINE 200:the function is always returned to RET_CAN_NORMAL //NOLINT (readability/naming)
-      /* Successful stop -> delete from communication disconnection monitoring management table */
-      CANCommWatchDelete(uc_index, mode);
-    }
+  return it;
+}
 
+static bool CANCommWatchInsert(CANID k, CAN_COMM_WATCH_VAL *val) {
+  CAN_CommWatchTableIt it = CANCommWatchFind(k, val);
+  CAN_CommWatchTablePair p = std::make_pair((const CANID)k, *val);
+  bool inserted = false;
+
+  if (it == g_map_comm_watch_list_can.end()) {
+    g_map_comm_watch_list_can.insert(p);
+    inserted = true;
+  }
+  return inserted;
+}
+
+static void CANCommWatchUpdate(HANDLE h_app, CANID key,
+                                             CAN_COMM_WATCH_VAL *val) {
+  if (CANCommWatchInsert(key, val)) {
+    FRAMEWORKUNIFIEDLOG(ZONE_INFO, __func__, "Can CommWatch : "
+      "Entry (CANID=%x, DataID=%x, dst=%s, time=%d, cnt=%lu)",
+      key, val->data_id,
+      val->notify_name, val->set_time,
+      g_map_comm_watch_list_can.size());
   } else {
-    /* Storage status can be checked? */
-    /* No free space */
-    if (TRUE != CANCommWatchEntryCheck(rcv_msg.ulCanid, rcv_msg.ulDid, rcv_msg.notifyName, &uc_index, mode)) {
-      FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "#CAN_thread# CAN CommWatch BufferFull");  // LCOV_EXCL_BR_LINE 15:marco defined in "native_service/ns_logger_if.h"  //NOLINT (readability/naming)
-      ret = RET_CAN_ERROR_BUFFULL;
-      goto exit;
-    }
-
-    /* Timer stop */
-    (void)CANCommWatchTimerStop(uc_index, mode);
-
-    /* IG linkage OFF or IG linkage ON and IG reception in progress */
-    if ((rcv_msg.ucIg == (uint8_t)CAN_IG_COOPERATION_OFF) || ((rcv_msg.ucIg == (uint8_t)CAN_IG_COOPERATION_ON) && (g_uc_comm_watch_ig_stat == (uint8_t)CAN_COMM_IG_ON))) {  // LCOV_EXCL_BR_LINE 200: rcv_msg.ucIg is always be CAN_IG_COOPERATION_OFF //NOLINT (readability/naming)
-      /* Timer activation */
-      /* Communication interruption monitoring timer start processing */
-      if (RET_CAN_NORMAL != CANCommWatchTimerStart(uc_index, rcv_msg.usWatchTime, mode)) {  // LCOV_EXCL_BR_LINE 200:the function is always returned to RET_CAN_NORMAL //NOLINT (readability/naming)
-        // LCOV_EXCL_START 200: the function is always returned to RET_CAN_NORMAL
-        AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-        ret = RET_CAN_ERROR_TIMER; /* Timer start failure -> Return value setting: Timer acquisition error */
-        goto exit;
-      }  // LCOV_EXCL_STOP 200: the function is always returned to RET_CAN_NORMAL
-      /* Communication type = set during communication */
-      uc_comm_stop = CAN_COMM_NORMAL;
-    }
-
-    /* Timer sequence number acquisition */
-    us_timer_seq_no = CANCommWatchTimerSeqNoGet(uc_index, mode);
-    /* CANDataCommunication Disruption Monitoring Management Table Registration Process */
-    CANCommWatchEntry(uc_index, &rcv_msg, us_timer_seq_no, uc_comm_stop, mode);
-  }
-
-exit:
-  FRAMEWORKUNIFIEDLOG(ZONE_CAN_DEBUG, __func__, "END(ret=%x)", ret);  // LCOV_EXCL_BR_LINE 15:marco defined in "native_service/ns_logger_if.h"  //NOLINT (readability/naming)
-  if (ret == RET_CAN_NORMAL)
-    return eFrameworkunifiedStatusOK;
-  else
-    return eFrameworkunifiedStatusFail;
-  // return RET_CAN_NORMAL;
-}
-
-/*******************************************************************************
- * MODULE    : CANCommWatchClear
- * ABSTRACT  : CANDataCommunication interruption clear processing
- * FUNCTION  : Sends a communication recovery message and restarts the timer. 
- * ARGUMENT  : can_id  :Received CAN ID
- * NOTE      : 
- * RETURN    : void
- ******************************************************************************/
-void CANCommWatchClear(HANDLE h_app, CANID can_id) {
-  uint8_t uc_cnt;            /* Counter */
-  uint8_t uc_comm_stop;       /* Communication status */
-  BOOL ret;
-  uint16_t us_tbl_chk_cnt = 0; /* Number of effective data checks for communication disruption table */
-
-  /* Corresponding CAN ID retrieval in communication interruption monitoring control table */
-  for (uc_cnt = 0; uc_cnt < (uint8_t)COMM_WATCH_LIST_NUM; uc_cnt++) {
-    ret = CANCommWatchCanidEntryCheck(uc_cnt, can_id, &uc_comm_stop, &us_tbl_chk_cnt, CAN_PROTOCOL_TYPE_CAN);
-    /* CAN ID matching ? */
-    if (TRUE == ret) {
-      /* Is communication interrupted? */
-      if ((uint8_t)CAN_COMM_STOP == uc_comm_stop) {
-        /* Change the communication state to "Communicating" */
-        (void)CANCommWatchCtrl(uc_cnt, CAN_COMM_NORMAL, CAN_PROTOCOL_TYPE_CAN); /* Communication interruption state control processing */
-        uc_comm_stop = CAN_COMM_NORMAL;
-        /* Send communication disruption recovery message */
-        (void)CANCommWatchSndMsg(h_app, uc_cnt); /* Transmission of communication interruption detection/recovery message */
-      }
-
-      /* Timer restart only when communication status is in progress */
-      if (uc_comm_stop == (uint8_t)CAN_COMM_NORMAL) {
-        /* Timer restart */
-        (void)CANCommWatchTimerRenewal(uc_cnt, CAN_PROTOCOL_TYPE_CAN); /* Communication interruption monitoring timer update processing */
-      }
-    }
-    /* Check for completion of retrieval of all valid table data */
-    if (us_tbl_chk_cnt >= g_us_comm_watch_dat_cnt[CAN_PROTOCOL_TYPE_CAN]) {
-      /* Completion of retrieval of all valid data for the table */
-      break;
-    }
+    CAN_CommWatchTableIt it = CANCommWatchFind(key, val);
+    FRAMEWORKUNIFIEDLOG(ZONE_INFO, __func__, "Can CommWatch : Update the time "
+      "(CANID=%x, DataID=%x, dst=%s, time:%d -> %d, cnt =%lu)",
+      key, val->data_id, val->notify_name,
+      it->second.set_time, val->set_time, 
+      g_map_comm_watch_list_can.size());
+    it->second.comm_watch_flag = val->comm_watch_flag;
+    it->second.set_time = val->set_time;
+    it->second.timer_cnt = val->timer_cnt;
+    it->second.data_id = val->data_id;
   }
 
   return;
 }
 
-/*******************************************************************************
- * MODULE    : CANIgStatGet
- * ABSTRACT  : IG reception status acquisition processing
- * FUNCTION  : Obtain IG reception information
- * ARGUMENT  : void
- * NOTE      : 
- * RETURN    : IG Information Received
- ******************************************************************************/
+static void CANCommWatchStop(HANDLE h_app, CANID key,
+                                           CAN_COMM_WATCH_VAL *val) {
+  CAN_CommWatchTableIt it = CANCommWatchFind(key, val);
+  if (it != g_map_comm_watch_list_can.end()) {
+    g_map_comm_watch_list_can.erase(it);
+    FRAMEWORKUNIFIEDLOG(ZONE_INFO, __func__, "Can CommWatch : Stop the commwatch"
+        "(CANID=%x, dst=%s, cnt=%lu)",
+        key, val->notify_name, g_map_comm_watch_list_can.size());
+  }
 
-uint8_t CANIgStatGet(void) {  // LCOV_EXCL_START 8: for dead code
-  AGL_ASSERT_NOT_TESTED();  // LCOV_EXCL_LINE 200: test assert
-  return (g_uc_comm_watch_ig_stat);
+  return;
 }
-// LCOV_EXCL_STOP
+
+EFrameworkunifiedStatus CANCommWatch(HANDLE h_app) {
+  FRAMEWORKUNIFIEDLOG(ZONE_FUNC, __func__, "@@@ Start communication CanCommWatch");
+
+  EFrameworkunifiedStatus e_status = eFrameworkunifiedStatusFail;
+  CAN_COMM_WATCHEXT_MSG_DAT rcv_msg;
+  CANID key;
+  CAN_COMM_WATCH_VAL val;
+  CAN_CommWatchTableIt it;
+
+  memset(&rcv_msg, 0, sizeof(rcv_msg));
+  memset(&val, 0, sizeof(val));
+  e_status = FrameworkunifiedGetMsgDataOfSize(h_app, &rcv_msg, sizeof(rcv_msg), eSMRRelease);
+  if (e_status != eFrameworkunifiedStatusOK) {
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "FrameworkunifiedGetMsgDataOfSize Error(%d)", e_status);
+    if (e_status == eFrameworkunifiedStatusInvldBufSize) {
+      FrameworkunifiedClearMsgData(h_app);
+    }
+    goto cleanup;
+  }
+
+  // Create search data
+  key = rcv_msg.ulCanid;
+  snprintf(val.notify_name, sizeof(val.notify_name), "%s", rcv_msg.notifyName);
+  val.data_id = rcv_msg.ulDid;
+  val.comm_watch_flag = CAN_COMM_NORMAL;
+  val.set_time = rcv_msg.usWatchTime;
+  val.timer_cnt = rcv_msg.usWatchTime;
+  FRAMEWORKUNIFIEDLOG(ZONE_INFO, __func__,
+         "CAN CommWatch : dst=%s, CANID=%x, dataID=%x, time=%d",
+         rcv_msg.notifyName, 
+         rcv_msg.ulCanid, 
+         rcv_msg.ulDid, rcv_msg.usWatchTime);
+
+  if (0 == rcv_msg.usWatchTime) {
+    CANCommWatchStop(h_app, key, &val);
+  } else {
+    CANCommWatchUpdate(h_app, key, &val);
+  }
+  e_status = eFrameworkunifiedStatusOK;
+cleanup:
+  return e_status;
+}
+
+static EFrameworkunifiedStatus CANCommWatchSndMsg(HANDLE h_app,
+                                        CAN_COMM_WATCH_VAL *v, uint32_t cid) {
+  EFrameworkunifiedStatus e_status = eFrameworkunifiedStatusFail;
+  CAN_MSG_COMM_WATCHSTS msg;
+  HANDLE h_client = NULL;
+
+  memset(&msg, 0, sizeof(msg));
+  msg.hdr.hdr.cid = (uint16_t)cid;
+  msg.hdr.hdr.msgbodysize = sizeof(CAN_MSG_COMM_WATCHSTS_DAT);
+  msg.hdr.hdr.rid = 0;
+  msg.data.ulDid = v->data_id;
+
+  FRAMEWORKUNIFIEDLOG(ZONE_INFO, __func__,  "cid=%x msgbodysize=%x ulDid=%x",
+         msg.hdr.hdr.cid, msg.hdr.hdr.msgbodysize, msg.data.ulDid);
+
+  h_client = CommonFindSender(h_app, v->notify_name);
+  if (!h_client){
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "CommonFindSender failed");
+    goto cleanup;
+  }
+
+  e_status = FrameworkunifiedSendMsg(h_client, cid, sizeof(msg), &msg);
+  if (e_status != eFrameworkunifiedStatusOK) {
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__,
+      "FrameworkunifiedSendMSg Error(e_status:%d to %s)",
+      e_status, v->notify_name);
+    goto cleanup;
+  }
+
+  e_status = eFrameworkunifiedStatusOK;
+cleanup:
+  return e_status;
+}
+
+static void CANCommWatchTimeoutCore(HANDLE h_app, CAN_COMM_WATCH_VAL *v) {
+  EFrameworkunifiedStatus e_status = eFrameworkunifiedStatusFail;
+
+  if (CAN_COMM_NORMAL != v->comm_watch_flag)
+    return;
+
+  if (v->timer_cnt != 0)
+    v->timer_cnt--;
+
+  if (v->timer_cnt != 0)
+    return;
+
+  e_status = CANCommWatchSndMsg(h_app, v, CID_CAN_COMM_STOP);
+  if (eFrameworkunifiedStatusOK == e_status) {
+     v->comm_watch_flag = CAN_COMM_STOP;
+  } else {
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "CANCommWatchSndMsg failed");
+     // retry at next timeout.
+  }
+}
+
+EFrameworkunifiedStatus CANCommWatchTimeout(HANDLE h_app) {
+  CAN_CommWatchTableIt it;
+
+  for (it = g_map_comm_watch_list_can.begin();
+                            it != g_map_comm_watch_list_can.end(); it++) {
+    CANCommWatchTimeoutCore(h_app, &(it->second));
+  }
+
+  return eFrameworkunifiedStatusOK;
+}
+
+static void CANCommWatchClearCore(HANDLE h_app, CANID id,
+                                                CAN_COMM_WATCH_VAL *v) {
+  EFrameworkunifiedStatus e_status = eFrameworkunifiedStatusFail;
+
+  v->timer_cnt = v->set_time;
+
+  if (CAN_COMM_STOP != v->comm_watch_flag)
+    return;
+
+  e_status = CANCommWatchSndMsg(h_app, v, CID_CAN_COMM_RESTORE);
+  if (eFrameworkunifiedStatusOK == e_status) {
+    v->comm_watch_flag = CAN_COMM_NORMAL;
+    FRAMEWORKUNIFIEDLOG(ZONE_INFO, __func__, "Can CommWatch Clear : CANID=%x", id);
+  } else {
+    FRAMEWORKUNIFIEDLOG(ZONE_ERR, __func__, "CANCommWatchSndMsg failed");
+     // retry at next timeout.
+  }
+}
+
+void CANCommWatchClear(HANDLE h_app, CANID id) {
+  std::pair<CAN_CommWatchTableIt, CAN_CommWatchTableIt> range;
+  CAN_CommWatchTableIt it;
+
+  range = g_map_comm_watch_list_can.equal_range(id);
+  for (it = range.first; it != range.second; it++) {
+    CANCommWatchClearCore(h_app, id, &(it->second));
+  }
+}

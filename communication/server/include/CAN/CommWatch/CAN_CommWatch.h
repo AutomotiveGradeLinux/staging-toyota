@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,34 +16,27 @@
 
 #ifndef COMMUNICATION_SERVER_INCLUDE_CAN_COMMWATCH_CAN_COMMWATCH_H_
 #define COMMUNICATION_SERVER_INCLUDE_CAN_COMMWATCH_CAN_COMMWATCH_H_
-/******************************************************************************
- * FILE  :CAN_CommWatch.h
- * SYSTEM  :_CWORD107_
- * SUBSYSTEM :
- ******************************************************************************/
-#include "CAN_CommWatchData.h"
+#include <native_service/frameworkunified_types.h>
+#include <peripheral_service/Canif_API.h>
+#include <vector>
+#include <map>
+#include <string>
+#include "CommWatchCommon.h"
 
-/************************************************************************
-*   Macro definitions             *
-************************************************************************/
+typedef struct {
+  char notify_name[MAX_NAME_SIZE_APP];
+  uint32_t data_id;
+  uint8_t comm_watch_flag;
+  uint16_t set_time;
+  uint16_t timer_cnt;
+} CAN_COMM_WATCH_VAL;
 
-/* Flag relationship */
-#define CAN_COMM_IG_OFF 0x00 /* IG OFF   */
-#define CAN_COMM_IG_ON 0x01 /* IG ON    */
-#define CAN_COMM_IG_NORCV 0xFF /* IG not yet */
+typedef std::multimap<CANID, CAN_COMM_WATCH_VAL> CAN_CommWatchTable;
+typedef std::pair<const CANID, CAN_COMM_WATCH_VAL> CAN_CommWatchTablePair;
+typedef CAN_CommWatchTable::iterator CAN_CommWatchTableIt;
 
-/************************************************************************
-*   Struct definitions             *
-************************************************************************/
-
-/************************************************************************
-*   Function prototype             *
-************************************************************************/
 void CANCommWatchInit(void);
-RET_CAN CANCommWatchTimeoutMsg(HANDLE h_app, uint16_t);
 EFrameworkunifiedStatus CANCommWatch(HANDLE h_app);
-EFrameworkunifiedStatus CANCommWatchCore(HANDLE h_app, CAN_PROTOCOL_TYPE type);
-void CANCommWatchClear(HANDLE h_app, CANID);
-EFrameworkunifiedStatus CANVehicleInfoMsg(HANDLE h_app);
-uint8_t CANIgStatGet(void);
+EFrameworkunifiedStatus CANCommWatchTimeout(HANDLE h_app);
+void CANCommWatchClear(HANDLE h_app, CANID id);
 #endif  // COMMUNICATION_SERVER_INCLUDE_CAN_COMMWATCH_CAN_COMMWATCH_H_

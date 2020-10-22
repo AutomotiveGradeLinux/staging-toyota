@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -131,10 +131,7 @@ typedef struct {
 ************************************************************************/
 void CANDeliveryDataInit(void);          /* CANDataDelivery Management Data Initialization Process */
 EFrameworkunifiedStatus CANDeliveryEntry(HANDLE h_app); /* CANDataDelivery registration process */
-EFrameworkunifiedStatus CAN_CWORD29_DeliveryEntry(HANDLE h_app);  /* Process of registering the delivery of _CWORD29_ data */
 void CANDeliveryBufferOut(FILE* fp_log);   /* CAN shipping table log output processing */
-#ifdef CAN_DEBUG
-EFrameworkunifiedStatus CANAllDeleteDeliveryEntry(HANDLE h_app);
-#endif
+EFrameworkunifiedStatus CANClearEntry(HANDLE h_app);
 
 #endif  // COMMUNICATION_SERVER_INCLUDE_CAN_DELIVERY_CAN_DELIVERYDATA_H_

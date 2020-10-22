@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,12 +48,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <asm/unistd.h>
-//#include <stub/com_message_header.h>
-
-/**
- * \~english  Debug defination for DeliveryEntry IT Test
- */
-#define CAN_DEBUG
+#include <stub/com_message_header.h>
 
 /**
  * \~english  Defination of Service name
@@ -112,6 +107,20 @@
 #define CANIF_RET_ERROR_NULL 10
 
 /**
+ * \~english  Flags for specifiy Delivery is echoback or not.
+ */
+enum CanIfEchoBackFlags {
+  /**
+  * \~english  Delivery is recv data
+  */
+  CANIF_PURERECV = 0,
+  /**
+  * \~english  Delivery is echo data
+  */
+  CANIF_ECHOBACK = 1
+};
+
+/**
  * \~english  Defination of Command ID ( CAN -> user )
  */
 typedef enum _PS_CommunicationProtocol {
@@ -131,14 +140,6 @@ typedef enum _PS_CommunicationProtocol {
   * \~english  CAN transmission result
   */
   CID_CAN_TX_RESULT,
-  /**
-  * \~english  CAN _CWORD29_ transmission result
-  */
-  CID_CAN__CWORD29__TX_RESULT,
-  /**
-  * \~english  Delivery CAN data(_CWORD29_)
-  */
-  CID_CAN_DIAG_CWORD29__DELIVERY,
   /**
   * \~english  Delivery CAN command
   */
@@ -162,25 +163,17 @@ typedef enum _PS_Communication_InternalProtocol {
   */
   CID_CANIF_DELIVERY_ENTRY = 0x0501,
   /**
-  * \~english  Delivery registration of _CWORD29_data
+  * \~english  Delivery deregistration of CAN data
   */
-  CID_CANIF__CWORD29__DELIVERY_ENTRY,
+  CID_CANIF_DELIVERY_ERASE,
   /**
   * \~english  CAN data transmission start
   */
   CID_CANIF_TX_START,
   /**
-  * \~english  CAN data transmission stop
-  */
-  CID_CANIF_TX_STOP,
-  /**
   * \~english  CAN data communication stop watching 
   */
   CID_CANIF_COMM_WATCH,
-  /**
-  * \~english  CAN data(_CWORD29_) transmission
-  */
-  CID_CANIF__CWORD29__TX_START,
   /**
   * \~english  CAN command control
   */
@@ -189,27 +182,7 @@ typedef enum _PS_Communication_InternalProtocol {
   * \~english  CAN data transmission start
   */
   CID_CANIF_TX_BIT_START,
-  /**
-  * \~english  CAN data regular transmission stop
-  */
-  CID_CANIF_TX_BIT_STOP,
 } PS_Communication_InternalProtocol;
-
-#ifdef CAN_DEBUG
-/**
- * \~english  Defination of Command ID (Used for debug)
- */
-typedef enum _PS_Communication_Internal_DebugProtocol {
-  /**
-  * \~english  Delivery unregister (Used for debug)
-  */
-  CID_CANIF_DELETE_DELIVERY_ENTRY = 0x0511,
-  /**
-  * \~english  CANIF communication data all clear(Used for debug)
-  */
-  CID_CANIF_COMMWATCH_CLEAR_FOR_DEBUG
-} PS_Communication_Internal_DebugProtocol;
-#endif
 
 /*********************************************************************
 *                     Definitions of CAN command IDs
@@ -370,11 +343,6 @@ typedef enum _PS_Communication_Internal_DebugProtocol {
 */
 #define CANGW_DLC_MAX_SIZE 0x08
 
-/**
-* \~english  Memory size used for _CWORD29_ can data
-*/
-#define CAN__CWORD29__MEM_SZ (4100)
-
 /*********************************************************************
 *                       Type definition
 ***********************************************************************/
@@ -427,11 +395,15 @@ typedef struct {
   /**
   * \~english  header
   */
-//  T_APIMSG_MSGBUF_HEADER_COMM hdr;
+  T_APIMSG_MSGBUF_HEADER_COMM hdr;
   /**
   * \~english  data
   */
   CAN_MSG_CANDATA_DAT data;
+  /**
+  * \~english  echoback flag
+  */
+  enum CanIfEchoBackFlags echoback;
 } CAN_MSG_CANDATA;
 
 /**
@@ -456,15 +428,6 @@ typedef struct {
   */
   uint8_t data[CANGW_DLC_MAX_SIZE];
 } CAN_MSG_CANGWDATA_DAT;
-
-/**
- * \~english Data struct used to transfer CAN _CWORD29_ data.(transfer data from CAN to user)
- */
-typedef struct {
-    uint16_t  opc;                      //!< \~english OPC
-    uint32_t  dlc;                      //!< \~english Data length(1~4100)
-    uint8_t   data[CAN__CWORD29__MEM_SZ];  //!< \~english Data buffer
-} CAN_MSG_CAN__CWORD29_DATA;
 
 /**
 * \~english  Message struct used to transfer CAN data to CANGW
@@ -559,46 +522,12 @@ typedef struct {
   /**
   * \~english  header
   */
-//  T_APIMSG_MSGBUF_HEADER_COMM hdr;
+  T_APIMSG_MSGBUF_HEADER_COMM hdr;
   /**
   * \~english  Data
   */
   CAN_MSG_SENDSTS_DAT data;
 } CAN_MSG_SENDSTS;
-
-/**
-* \~english  Data struct used to notify _CWORD29_ transmission result
-* \~english  (transfer data from CAN API to user)
-*/
-typedef struct {
-  /**
-  * \~english  OPC
-  */
-  uint16_t usOpc;
-  /**
-  * \~english  Transmission result status
-  */
-  uint8_t ucStatus;
-  /**
-  * \~english  Reserve
-  */
-  uint8_t reserve[1];
-} CAN_MSG__CWORD29__SENDSTS_DAT;
-
-/**
-* \~english  Message struct used to notify _CWORD29_ transmission result
-* \~english  (transfer message from CAN API to user)
-*/
-typedef struct {
-  /**
-  * \~english  header
-  */
-//  T_APIMSG_MSGBUF_HEADER_COMM hdr;
-  /**
-  * \~english  Data
-  */
-  CAN_MSG__CWORD29__SENDSTS_DAT data;
-} CAN_MSG__CWORD29__SENDSTS;
 
 /**
 * \~english  Data struct used for regular transmission stop
@@ -639,7 +568,7 @@ typedef struct {
   /**
   * \~english  Header
   */
-//  T_APIMSG_MSGBUF_HEADER_COMM hdr;
+  T_APIMSG_MSGBUF_HEADER_COMM hdr;
   /**
   * \~english  Data
   */
@@ -669,25 +598,6 @@ typedef struct {
   */
   CANID ulCanid[CAN_DELIVERY_CANID_ENTRY_MAX];
 } CAN_DELIVERY_ENTRY;
-
-/**
-* \~english  _CWORD29_data struct used for delivery entry
-* \~english  (transfer data from CANIF API to CAN)
-*/
-typedef struct {
-  /**
-  * \~english  Delivery target thread name
-  */
-  char notifyName[MAX_NAME_SIZE_APP];
-  /**
-  * \~english  Number of OPC entry
-  */
-  uint16_t usOpcNum;
-  /**
-  * \~english  OPC entry array
-  */
-  uint16_t usOpc[CAN_DELIVERY_OPC_ENTRY_MAX];
-} CAN__CWORD29__DELIVERY_ENTRY;
 
 /**
 * \~english  Data struct used for communication stop
@@ -767,7 +677,7 @@ typedef struct {
   /**
   * \~english  Header
   */
-//  T_APIMSG_MSGBUF_HEADER_COMM hdr;
+  T_APIMSG_MSGBUF_HEADER_COMM hdr;
   /**
   * \~english  Data
   */
@@ -801,7 +711,7 @@ typedef struct {
   /**
   * \~english  Header
   */
-//  T_APIMSG_MSGBUF_HEADER_COMM hdr;
+  T_APIMSG_MSGBUF_HEADER_COMM hdr;
   /**
   * \~english  Data
   */
@@ -815,7 +725,7 @@ typedef struct {
   /**
   * \~english  Header
   */
-//  T_APIMSG_MSGBUF_HEADER_COMM stHead;
+  T_APIMSG_MSGBUF_HEADER_COMM stHead;
   /**
   * \~english  Data
   */
@@ -960,62 +870,6 @@ CANIF_RET_API Canif_DeliveryEntry(HANDLE h_app, PCSTR notify_name,
                                   uint8_t can_num, CANID *p_can_id);
 
 /*******************************************************************************
- * MODULE    : Canif_Diag_CWORD29_DeliveryEntry
- ******************************************************************************/
-////////////////////////////////////////////////////////////////////////////////
-/// \ingroup Canif_Diag_CWORD29_DeliveryEntry
-/// \~english @par Brief
-///     Delivery registration of _CWORD29_data
-/// \~english @param [in] h_app
-///     const HANDLE - Handle for application
-/// \~english @param [in] notify_name
-///     const PCSTR - Delivery target thread name
-/// \~english @param [in] opc_num
-///     const uint8_t - Number of delivery registration OPC
-/// \~english @param [in] p_opc
-///     const uint16_t* const - Pointer of delivery registration OPC array
-/// \~english @retval CANIF_RET_NORMAL          Normality
-/// \~english @retval CANIF_RET_ERROR_PARAM     Abnormality of parameter
-/// \~english @retval CANIF_RET_ERROR_CANCEL    Abnormal termination
-/// \~english @par Prerequisite
-///     None
-/// \~english @par Change of internal state
-///     - Change of internal state according to the API does not occur
-/// \~english @par Conditions of processing failure
-///     - h_app is NULL.[CANIF_RET_ERROR_PARAM]
-///     - notify_nameis NULL or the length ofnotify_nameis longer than 15 bytes.
-///       [CANIF_RET_ERROR_PARAM]
-///     - opc_num is 0.[CANIF_RET_ERROR_PARAM]
-///     - OPC pointer is null.[CANIF_RET_ERROR_PARAM]
-///     - malloc failed to get the message queue management information area
-///       for transmission to communication service.  [CANIF_RET_ERROR_CANCEL]
-///     - malloc failed to get the message queue name storage area for
-///       transmission to communication service. [CANIF_RET_ERROR_CANCEL]
-///     - mq_open failed to open the message queue for transmission
-///       to communication service. [CANIF_RET_ERROR_CANCEL]
-///     - The session message queue to communication service is full.
-///       [CANIF_RET_ERROR_CANCEL]
-///     - The transmission file descriptor of the session
-///       message to communication service is invalid. [CANIF_RET_ERROR_CANCEL]
-///     - The interruption by the system call (signal) occurred while
-///       transmitting the session message to communication service.
-///       [CANIF_RET_ERROR_CANCEL]
-///     - Any error occurred in the transmission of the session message
-///       to communication service. [CANIF_RET_ERROR_CANCEL]
-///     - It failed to access to the shared memory for the transmission of
-///       session message to communication service. [CANIF_RET_ERROR_CANCEL]
-/// \~english @par Classification
-///     Public
-/// \~english @par Type
-///     Sync
-/// \~english @par Detail
-///     - Delivery registration of _CWORD29_data. \n
-/// \~english @see None
-////////////////////////////////////////////////////////////////////////////////
-CANIF_RET_API Canif_Diag_CWORD29_DeliveryEntry(const HANDLE h_app, const PCSTR notify_name,
-                                            const uint8_t opc_num, const uint16_t* const p_opc);
-
-/*******************************************************************************
  * MODULE    : Canif_TransmissionStart
  ******************************************************************************/
 ////////////////////////////////////////////////////////////////////////////////
@@ -1046,6 +900,8 @@ CANIF_RET_API Canif_Diag_CWORD29_DeliveryEntry(const HANDLE h_app, const PCSTR n
 ///     - Transmission data pointer is null.[CANIF_RET_ERROR_PARAM]
 ///     - DLC size is bigger than 8 bytes.[CANIF_RET_ERROR_PARAM]
 ///     - The upper 3bits of CAN ID are not 0.[CANIF_RET_ERROR_PARAM]
+///     - CAN ID is not defined in the _CWORD108_ bit asignment table
+///       [CANIF_RET_ERROR_PARAM]
 ///     - malloc failed to get the message queue management information area
 ///       for transmission to communication service.  [CANIF_RET_ERROR_CANCEL]
 ///     - malloc failed to get the message queue name storage area for
@@ -1073,122 +929,6 @@ CANIF_RET_API Canif_Diag_CWORD29_DeliveryEntry(const HANDLE h_app, const PCSTR n
 ////////////////////////////////////////////////////////////////////////////////
 CANIF_RET_API Canif_TransmissionStart(HANDLE h_app, PCSTR notify_name,
                                       uint8_t rid, uint16_t freq, CAN_DATA *p_data);
-
-/*******************************************************************************
- * MODULE    : Canif_TransmissionStop
- ******************************************************************************/
-////////////////////////////////////////////////////////////////////////////////
-/// \ingroup Canif_TransmissionStop
-/// \~english @par Brief
-///     CAN data regular transmission stop
-/// \~english @param [in] h_app
-///     HANDLE - Handle for application
-/// \~english @param [in] notify_name
-///     PCSTR - Delivery target thread name
-/// \~english @param [in] can_id
-///     CANID - CAN ID
-/// \~english @retval CANIF_RET_NORMAL          Normality
-/// \~english @retval CANIF_RET_ERROR_PARAM     Abnormality of parameter
-/// \~english @retval CANIF_RET_ERROR_CANCEL    Abnormal termination
-/// \~english @par Prerequisite
-///     None
-/// \~english @par Change of internal state
-///     - Change of internal state according to the API does not occur
-/// \~english @par Conditions of processing failure
-///     - h_app is NULL.[CANIF_RET_ERROR_PARAM]
-///     -notify_nameis NULL or the length ofnotify_nameis longer than 15 bytes.
-///       [CANIF_RET_ERROR_PARAM]
-///     - The upper 3bits of CAN ID are not 0.[CANIF_RET_ERROR_PARAM]
-///     - malloc failed to get the message queue management information area
-///       for transmission to communication service.  [CANIF_RET_ERROR_CANCEL]
-///     - malloc failed to get the message queue name storage area for
-///       transmission to communication service. [CANIF_RET_ERROR_CANCEL]
-///     - mq_open failed to open the message queue for transmission
-///       to communication service. [CANIF_RET_ERROR_CANCEL]
-///     - The session message queue to communication service is full.
-///       [CANIF_RET_ERROR_CANCEL]
-///     - The transmission file descriptor of the session
-///       message to communication service is invalid. [CANIF_RET_ERROR_CANCEL]
-///     - The interruption by the system call (signal) occurred while
-///       transmitting the session message to communication service.
-///       [CANIF_RET_ERROR_CANCEL]
-///     - Any error occurred in the transmission of the session message
-///       to communication service. [CANIF_RET_ERROR_CANCEL]
-///     - It failed to access to the shared memory for the transmission of
-///       session message to communication service. [CANIF_RET_ERROR_CANCEL]
-/// \~english @par Classification
-///     Public
-/// \~english @par Type
-///     Sync
-/// \~english @par Detail
-///     - CAN data regular transmission stop. \n
-/// \~english @see None
-////////////////////////////////////////////////////////////////////////////////
-CANIF_RET_API Canif_TransmissionStop(HANDLE h_app, PCSTR notify_name, CANID can_id);
-
-/*******************************************************************************
- * MODULE    : Canif_Diag_CWORD29_Transmission
- ******************************************************************************/
-////////////////////////////////////////////////////////////////////////////////
-/// \ingroup Canif_Diag_CWORD29_Transmission
-/// \~english @par Brief
-///     Transmission of CAN data (_CWORD29_) transmission
-/// \~english @param [in] h_app
-///     HANDLE - Handle for application
-/// \~english @param [in] notify_name
-///     PCSTR - Delivery target thread name
-/// \~english @param [in] opc
-///     const uint16_t - OPC
-/// \~english @param [in] rid
-///     uint8_t - Resource ID
-/// \~english @param [in] data_size
-///     uint32_t - Data size
-/// \~english @param [in] p_data
-///     uint8_t* - Pointer of transmission data
-/// \~english @retval CANIF_RET_NORMAL          Normality
-/// \~english @retval CANIF_RET_ERROR_PARAM     Abnormality of parameter
-/// \~english @retval CANIF_RET_ERROR_CANCEL    Abnormal termination
-/// \~english @par Prerequisite
-///     None
-/// \~english @par Change of internal state
-///     - Change of internal state according to the API does not occur
-/// \~english @par Conditions of processing failure
-///     - h_app is NULL.[CANIF_RET_ERROR_PARAM]
-///     -notify_nameis NULL or the length ofnotify_nameis longer than 15 bytes.
-///       [CANIF_RET_ERROR_PARAM]
-///     - Transmission data pointer is null.[CANIF_RET_ERROR_PARAM]
-///     - DLC size is bigger than 8 bytes.[CANIF_RET_ERROR_PARAM]
-///     - malloc failed to get the message queue management information area
-///       for transmission to communication service.  [CANIF_RET_ERROR_CANCEL]
-///     - malloc failed to get the message queue name storage area for
-///       transmission to communication service. [CANIF_RET_ERROR_CANCEL]
-///     - mq_open failed to open the message queue for transmission
-///       to communication service. [CANIF_RET_ERROR_CANCEL]
-///     - The session message queue to communication service is full.
-///       [CANIF_RET_ERROR_CANCEL]
-///     - The transmission file descriptor of the session
-///       message to communication service is invalid. [CANIF_RET_ERROR_CANCEL]
-///     - The interruption by the system call (signal) occurred while
-///       transmitting the session message to communication service.
-///       [CANIF_RET_ERROR_CANCEL]
-///     - Any error occurred in the transmission of the session message
-///       to communication service. [CANIF_RET_ERROR_CANCEL]
-///     - It failed to access to the shared memory for the transmission of
-///       session message to communication service. [CANIF_RET_ERROR_CANCEL]
-/// \~english @par Classification
-///     Public
-/// \~english @par Type
-///     ASync
-/// \~english @par Detail
-///     - Transmission of CAN data (_CWORD29_) transmission notification. \n
-/// \~english @see None
-////////////////////////////////////////////////////////////////////////////////
-CANIF_RET_API Canif_Diag_CWORD29_Transmission(HANDLE h_app,
-                                           PCSTR notify_name,
-                                           const uint16_t opc,
-                                           uint8_t rid,
-                                           uint32_t data_size,
-                                           uint8_t *p_data);
 
 /*******************************************************************************
  * MODULE    : Canif_CommandCtrl
@@ -1329,6 +1069,8 @@ CANIF_RET_API Canif_CommWatch(HANDLE h_app, PCSTR notify_name, CANID can_id,
 ///     - CAN ID is NULL.[CANIF_RET_ERROR_PARAM]
 ///     - Mask Data is NULL.[CANIF_RET_ERROR_PARAM]
 ///     - Transmission Data is NULL.[CANIF_RET_ERROR_PARAM]
+///     - CAN ID is not defined in the _CWORD108_ bit asignment table
+///       [CANIF_RET_ERROR_PARAM]
 ///     - The upper 3bits of CAN ID are not 0.[CANIF_RET_ERROR_PARAM]
 ///     - malloc failed to get the message queue management information area
 ///       for transmission to communication service.  [CANIF_RET_ERROR_CANCEL]
@@ -1359,107 +1101,13 @@ CANIF_RET_API Canif_TransStart(HANDLE h_app, CANID can_id, CAN_DATA_MASK *mask,
                                CAN_DATA_BIT *dat, uint32_t freq);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \ingroup Canif_TransStop
-/// \~english @par Brief
-///     Stop periodic transmission of CAN Command
-/// \~english @param [in] h_app
-///     HANDLE - Handle for application
-/// \~english @param [in] can_id
-///     CANID - CAN ID
-/// \~english @retval CANIF_RET_NORMAL          Normality
-/// \~english @retval CANIF_RET_ERROR_PARAM     Abnormality of parameter
-/// \~english @retval CANIF_RET_ERROR_CANCEL    Abnormal termination
-/// \~english @par Prerequisite
-///     None
-/// \~english @par Change of internal state
-///     - Change of internal state according to the API does not occur
-/// \~english @par Conditions of processing failure
-///     - h_app is NULL.[CANIF_RET_ERROR_PARAM]
-///     - can_id is NULL.[CANIF_RET_ERROR_PARAM]
-///     - The upper 3bits of CAN ID are not 0.[CANIF_RET_ERROR_PARAM]
-///     - malloc failed to get the message queue management information area
-///       for transmission to communication service.  [CANIF_RET_ERROR_CANCEL]
-///     - malloc failed to get the message queue name storage area for
-///       transmission to communication service. [CANIF_RET_ERROR_CANCEL]
-///     - mq_open failed to open the message queue for transmission
-///       to communication service. [CANIF_RET_ERROR_CANCEL]
-///     - The session message queue to communication service is full.
-///       [CANIF_RET_ERROR_CANCEL]
-///     - The transmission file descriptor of the session
-///       message to communication service is invalid. [CANIF_RET_ERROR_CANCEL]
-///     - The interruption by the system call (signal) occurred while
-///       transmitting the session message to communication service.
-///       [CANIF_RET_ERROR_CANCEL]
-///     - Any error occurred in the transmission of the session message
-///       to communication service. [CANIF_RET_ERROR_CANCEL]
-///     - It failed to access to the shared memory for the transmission of
-///       session message to communication service. [CANIF_RET_ERROR_CANCEL]
-/// \~english @par Classification
-///     Public
-/// \~english @par Type
-///     Sync
-/// \~english @par Detail
-///     - Stop periodic Transmission of CAN Command API. \n
-/// \~english @see None
-////////////////////////////////////////////////////////////////////////////////
-CANIF_RET_API Canif_TransStop(HANDLE h_app, CANID can_id);
-
-////////////////////////////////////////////////////////////////////////////////
-/// \ingroup Canif_Send
-/// \~english @par Brief
-///     Transmission CAN Command(for OpeningMovie)
-/// \~english @param [in] can_id
-///     CANID - CAN ID
-/// \~english @param [in] mask
-///     CAN_DATA_MASK* - Mask Data
-/// \~english @param [in] dat
-///     CAN_DATA_BIT* - Transmission Data
-/// \~english @retval CANIF_RET_NORMAL          Normality
-/// \~english @retval CANIF_RET_ERROR_PARAM     Abnormality of parameter
-/// \~english @retval CANIF_RET_ERROR_CANCEL    Abnormal termination
-/// \~english @par Prerequisite
-///     None
-/// \~english @par Change of internal state
-///     - Change of internal state according to the API does not occur
-/// \~english @par Conditions of processing failure
-///     - h_app is NULL.[CANIF_RET_ERROR_PARAM]
-///     - Mask Data is NULL.[CANIF_RET_ERROR_PARAM]
-///     - Transmission Data is NULL.[CANIF_RET_ERROR_PARAM]
-///     - The upper 3bits of CAN ID are not 0.[CANIF_RET_ERROR_PARAM]
-///     - malloc failed to get the message queue management information area
-///       for transmission to communication service.  [CANIF_RET_ERROR_CANCEL]
-///     - malloc failed to get the message queue name storage area for
-///       transmission to communication service. [CANIF_RET_ERROR_CANCEL]
-///     - mq_open failed to open the message queue for transmission
-///       to communication service. [CANIF_RET_ERROR_CANCEL]
-///     - The session message queue to communication service is full.
-///       [CANIF_RET_ERROR_CANCEL]
-///     - The transmission file descriptor of the session
-///       message to communication service is invalid. [CANIF_RET_ERROR_CANCEL]
-///     - The interruption by the system call (signal) occurred while
-///       transmitting the session message to communication service.
-///       [CANIF_RET_ERROR_CANCEL]
-///     - Any error occurred in the transmission of the session message
-///       to communication service. [CANIF_RET_ERROR_CANCEL]
-///     - It failed to access to the shared memory for the transmission of
-///       session message to communication service. [CANIF_RET_ERROR_CANCEL]
-/// \~english @par Classification
-///     Public
-/// \~english @par Type
-///     ASync
-/// \~english @par Detail
-///     - CAN Command Send API. \n
-/// \~english @see None
-////////////////////////////////////////////////////////////////////////////////
-CANIF_RET_API Canif_Send(CANID can_id, CAN_DATA_MASK *mask, CAN_DATA_BIT *dat);
-
-#ifdef CAN_DEBUG
-////////////////////////////////////////////////////////////////////////////////
-/// \ingroup Canif_Debug_Delete_AllDeliveryEntryList
+/// \ingroup Canif_DeliveryEraseAll
 /// \~english @par Brief
 ///     Delete all delivery entry
 /// \~english @param [in] h_app
 ///     HANDLE - Handle for application
+/// \~english @param [in] notify_name
+///     PCSTR - Delivery target thread name
 /// \~english @retval CANIF_RET_NORMAL          Normality
 /// \~english @retval CANIF_RET_ERROR_PARAM     Abnormality of parameter
 /// \~english @retval CANIF_RET_ERROR_CANCEL    Abnormal termination
@@ -1469,6 +1117,8 @@ CANIF_RET_API Canif_Send(CANID can_id, CAN_DATA_MASK *mask, CAN_DATA_BIT *dat);
 ///     - Change of internal state according to the API does not occur
 /// \~english @par Conditions of processing failure
 ///     - h_app is NULL.[CANIF_RET_ERROR_PARAM]
+///     -notify_nameis NULL or the length ofnotify_nameis longer than 15 bytes.
+///       [CANIF_RET_ERROR_PARAM]
 ///     - malloc failed to get the message queue management information area
 ///       for transmission to communication service.  [CANIF_RET_ERROR_CANCEL]
 ///     - malloc failed to get the message queue name storage area for
@@ -1494,8 +1144,7 @@ CANIF_RET_API Canif_Send(CANID can_id, CAN_DATA_MASK *mask, CAN_DATA_BIT *dat);
 ///     - Delete all delivery entry. \n
 /// \~english @see None
 ////////////////////////////////////////////////////////////////////////////////
-CANIF_RET_API Canif_Debug_Delete_AllDeliveryEntryList(HANDLE h_app);
-#endif
+CANIF_RET_API Canif_DeliveryEraseAll(HANDLE h_app, PCSTR notify_name);
 
 /** @}*/  // end of CAN
 /** @}*/  // end of communication
