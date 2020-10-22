@@ -1,5 +1,5 @@
 #
-# @copyright Copyright (c) 2017-2019 TOYOTA MOTOR CORPORATION.
+# @copyright Copyright (c) 2017-2020 TOYOTA MOTOR CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,8 +24,10 @@ INST_HEADERS = VP_GetEnv.h env_vehicle.h \
 
 libvp_SRCS = VP_FuncCheck_CanRcv.c VP_GetEnv.c
 
-CPPFLAGS += -I./include
+LDLIBS += -Wl,--no-as-needed
+LDLIBS += -Wl,-Bdynamic -lns_backup
 
+CPPFLAGS += -I./include
 CPPFLAGS += -Werror=implicit-function-declaration
 CPPFLAGS += -Werror=format-security
 CPPFLAGS += -Wconversion
@@ -33,5 +35,6 @@ CPPFLAGS += -Wpointer-to-int-cast
 CPPFLAGS += -Wint-to-pointer-cast
 CPPFLAGS += -Wpointer-arith
 CPPFLAGS += -Wformat
+CPPFLAGS += -DVP_FUNCCHECK_CANRCV_CANRCV_ACTIVATE
 
 include ../../other_service.mk

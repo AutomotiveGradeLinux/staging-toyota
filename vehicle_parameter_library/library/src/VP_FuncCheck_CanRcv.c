@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -84,6 +84,7 @@ typedef enum VPFuncTableFuncTypeIndexTag{
     VP_FUNC_TABLE_FUNC_TYPE_INDEX_WIFI_HOTSPOT         , /**< Wifi Hotspot                               */
     VP_FUNC_TABLE_FUNC_TYPE_INDEX_RESTRICT_FUNCTION    , /**< Travel Restriction                         */
     VP_FUNC_TABLE_FUNC_TYPE_INDEX_HD_DATA              , /**< HD Data                                    */
+    VP_FUNC_TABLE_FUNC_TYPE_INDEX_WIFI_5G              , /**< Wifi 5G                                    */
 
     VP_FUNC_TABLE_FUNC_TYPE_INDEX_MAX                    /**< Number of choices (index maximum value: 1) */
 } VP_FUNC_TABLE_FUNC_TYPE;
@@ -99,7 +100,7 @@ typedef enum CANFuncCheckSwitchTag{
 
 /**< Definition of number of functions (required for initial definition of function availability table) */
 
-#define VP_FUNC_TABLE_FUNCTION_INDEX_MAX      ((unsigned int)6)
+#define VP_FUNC_TABLE_FUNCTION_INDEX_MAX      ((unsigned int)7)
 
 /* ====================================================================== */
 /* Macro definitions                                                      */
@@ -108,7 +109,7 @@ typedef enum CANFuncCheckSwitchTag{
 #define RET_STD_LIB_STRING_STR_CMP_OK ((int)0) /**< The return value of the strncmp. this value is returned when matched. */
 
 /* Default index values */
-#define DEFAULT_TABLE_INDEX_DEST        (VP_FUNC_TABLE_DEST_INDEX_OTHER) /* Initial value changed by the specification which returns the setting of the belonging property when the undefined country code is gotten. */
+#define DEFAULT_TABLE_INDEX_DEST        (VP_FUNC_TABLE_DEST_INDEX_A) /* Initial value changed by the specification which returns the setting of the belonging property when the undefined country code is gotten. */
 #define DEFAULT_TABLE_INDEX_BRAND       (VP_FUNC_TABLE_BRAND_A)
 #define DEFAULT_TABLE_INDEX_GRADE_A     (VP_FUNC_TABLE_GRADE_A1)
 #define DEFAULT_TABLE_INDEX_GRADE_B     (VP_FUNC_TABLE_GRADE_B1)
@@ -168,6 +169,7 @@ u_int8_t VP_FuncCheck_CanRcv( u_int8_t FunctionName )
             case WIFI_HOTSPOT:
             case AREA1_STD_TRAF_LIMIT:
             case HD_DATA:
+            case WIFI_5G:
                 result = FUNCTION_CHECK_RESULT_OK;
                 break;
             default:
@@ -212,7 +214,7 @@ u_int8_t VP_FuncCheck_CanRcv( u_int8_t FunctionName )
     /* Get vehicle parameter */
     VP_GetEnv( VEHICLEPARAMETERLIBRARY_AREA , &(VP_area[0]) );
 
-    DEBUG_PRINTF( "AREA     =  %d; " , VP_area )
+    DEBUG_PRINTF( "AREA     =  %s; " , VP_area )
 
     /* Get feature name index */
     idx_func = getIndexOfFunc( FunctionName );
@@ -304,7 +306,7 @@ MT_STATIC u_int8_t getResult_CanJudge( unsigned int idx_func )
     /* ====================================================================== */
     /* Internal constant definition                                           */
     /* ====================================================================== */
-    static const char MULTIPLE_COUNTRY_CODE_DESIG[] = "^[0-9](;[0-9]);{0,1}"; /**< Regular Expression String for Multiple Countries (Attributes) */
+    static const char MULTIPLE_COUNTRY_CODE_DESIG[] = "^[0-9]{3}(;[0-9]{3})+;{0,1}"; /**< Regular Expression String for Multiple Countries (Attributes). Make sure at least two country codes are stored / delimited */
 
     /* ====================================================================== */
     /* Internal table definitions                                             */
@@ -372,15 +374,15 @@ MT_STATIC u_int8_t getResult_CanJudge( unsigned int idx_func )
          */
         /* Destination A */
         {
-            // Unknown                     ,  XM Audio                ,  _CWORD27_               ,  Wifi HotSpot            ,  Travel Restriction      ,  HD Data
-            { FUNCTION_CHECK_RESULT_UNKNOWN,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK }, // GRADE A1
-            { FUNCTION_CHECK_RESULT_UNKNOWN,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_NG }  // GRADE A2
+            // Unknown                     ,  XM Audio                ,  _CWORD27_               ,  Wifi HotSpot            ,  Travel Restriction      ,  HD Data                    Wifi 5G
+            { FUNCTION_CHECK_RESULT_UNKNOWN,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK }, // GRADE A1
+            { FUNCTION_CHECK_RESULT_UNKNOWN,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_NG,  FUNCTION_CHECK_RESULT_OK }  // GRADE A2
         },
 
         /* Destination B */
         {
-            { FUNCTION_CHECK_RESULT_UNKNOWN,  FUNCTION_CHECK_RESULT_NG,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK }, // GRADE A1
-            { FUNCTION_CHECK_RESULT_UNKNOWN,  FUNCTION_CHECK_RESULT_NG,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_NG }  // GRADE A2
+            { FUNCTION_CHECK_RESULT_UNKNOWN,  FUNCTION_CHECK_RESULT_NG,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK }, // GRADE A1
+            { FUNCTION_CHECK_RESULT_UNKNOWN,  FUNCTION_CHECK_RESULT_NG,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_NG,  FUNCTION_CHECK_RESULT_NG }  // GRADE A2
         }
     };
 
@@ -399,15 +401,15 @@ MT_STATIC u_int8_t getResult_CanJudge( unsigned int idx_func )
          */
         /* Destination A */
         {
-            // Unknown                     ,  XM Audio                ,  _CWORD27_               ,  Wifi HotSpot            ,  Travel Restriction      ,  HD Data
-            { FUNCTION_CHECK_RESULT_UNKNOWN,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK }, // GRADE B1
-            { FUNCTION_CHECK_RESULT_UNKNOWN,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_NG }, // GRADE B2
+            // Unknown                     ,  XM Audio                ,  _CWORD27_               ,  Wifi HotSpot            ,  Travel Restriction      ,  HD Data                 ,  Wifi 5G
+            { FUNCTION_CHECK_RESULT_UNKNOWN,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK }, // GRADE B1
+            { FUNCTION_CHECK_RESULT_UNKNOWN,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_NG,  FUNCTION_CHECK_RESULT_OK }, // GRADE B2
         },
 
         /* Detination B */
         {
-            { FUNCTION_CHECK_RESULT_UNKNOWN,  FUNCTION_CHECK_RESULT_NG,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK }, // GRADE B1
-            { FUNCTION_CHECK_RESULT_UNKNOWN,  FUNCTION_CHECK_RESULT_NG,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_NG }, // GRADE B2
+            { FUNCTION_CHECK_RESULT_UNKNOWN,  FUNCTION_CHECK_RESULT_NG,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK }, // GRADE B1
+            { FUNCTION_CHECK_RESULT_UNKNOWN,  FUNCTION_CHECK_RESULT_NG,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_OK,  FUNCTION_CHECK_RESULT_NG,  FUNCTION_CHECK_RESULT_NG }, // GRADE B2
         }
     };
 
@@ -557,7 +559,8 @@ MT_STATIC unsigned int getIndexOfFunc(  u_int8_t func )
         VP_FUNC_TABLE_FUNC_TYPE_INDEX_VP_CANRCV__CWORD27_  , //#define _CWORD27_                   ((u_int8_t)3)       /* _CWORD27_                                    */
         VP_FUNC_TABLE_FUNC_TYPE_INDEX_WIFI_HOTSPOT         , //#define WIFI_HOTSPOT                ((u_int8_t)4)       /* WiFi HotSpot                                 */
         VP_FUNC_TABLE_FUNC_TYPE_INDEX_RESTRICT_FUNCTION    , //#define AREA1_STD_TRAF_LIMIT        ((u_int8_t)5)       /* Standard Travel Restriction of AREA1         */
-        VP_FUNC_TABLE_FUNC_TYPE_INDEX_HD_DATA                //#define HD_DATA                     ((u_int8_t)6)       /* HD Data (Include traffic)                    */
+        VP_FUNC_TABLE_FUNC_TYPE_INDEX_HD_DATA              , //#define HD_DATA                     ((u_int8_t)6)       /* HD Data (Include traffic)                    */
+        VP_FUNC_TABLE_FUNC_TYPE_INDEX_WIFI_5G                //#define WIFI_5G                     ((u_int8_t)7)       /* WiFi 5G                                      */
 
     };
 
@@ -577,12 +580,13 @@ MT_STATIC unsigned int getIndexOfFunc(  u_int8_t func )
 
     /* Translation tables or the enumeration pair (VP_FUNC_TABLE_FUNC_TYPE) must also be modified when the definition value changes.
        It may also be changed, added, or deleted following asserts as appropriate according to the defined value. */
-    VP_DEBUG_STATIC_ASSERT( XM_AUDIO            == VP_FUNC_TABLE_FUNC_TYPE_INDEX_XM_AUDIO          )
+    VP_DEBUG_STATIC_ASSERT( XM_AUDIO             == VP_FUNC_TABLE_FUNC_TYPE_INDEX_XM_AUDIO            )
 
-    VP_DEBUG_STATIC_ASSERT( VP_CANRCV__CWORD27_   == VP_FUNC_TABLE_FUNC_TYPE_INDEX_VP_CANRCV__CWORD27_ )
-    VP_DEBUG_STATIC_ASSERT( WIFI_HOTSPOT        == VP_FUNC_TABLE_FUNC_TYPE_INDEX_WIFI_HOTSPOT      )
-    VP_DEBUG_STATIC_ASSERT( AREA1_STD_TRAF_LIMIT   == VP_FUNC_TABLE_FUNC_TYPE_INDEX_RESTRICT_FUNCTION )
-    VP_DEBUG_STATIC_ASSERT( HD_DATA             == VP_FUNC_TABLE_FUNC_TYPE_INDEX_HD_DATA           )
+    VP_DEBUG_STATIC_ASSERT( VP_CANRCV__CWORD27_  == VP_FUNC_TABLE_FUNC_TYPE_INDEX_VP_CANRCV__CWORD27_ )
+    VP_DEBUG_STATIC_ASSERT( WIFI_HOTSPOT         == VP_FUNC_TABLE_FUNC_TYPE_INDEX_WIFI_HOTSPOT        )
+    VP_DEBUG_STATIC_ASSERT( AREA1_STD_TRAF_LIMIT == VP_FUNC_TABLE_FUNC_TYPE_INDEX_RESTRICT_FUNCTION   )
+    VP_DEBUG_STATIC_ASSERT( HD_DATA              == VP_FUNC_TABLE_FUNC_TYPE_INDEX_HD_DATA             )
+    VP_DEBUG_STATIC_ASSERT( WIFI_5G              == VP_FUNC_TABLE_FUNC_TYPE_INDEX_WIFI_5G             )
 
 
     /* ====================================================================== */

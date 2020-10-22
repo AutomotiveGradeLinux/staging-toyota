@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,6 +74,10 @@
 
 #define VP__CWORD31__THEME_COLOR "VP__CWORD31__theme_color"
 /**
+* @~english    _CWORD31_ vehicle design vehicle body
+*/
+#define VP__CWORD31__VEHICLE_BODY "VP__CWORD31__vehicle_body"
+/**
 * @~english    _CWORD31_ air conditioner on screen
 */
 #define VP__CWORD31__AC_ONSCREEN "VP__CWORD31__AC_onscreen"
@@ -86,25 +90,9 @@
 */
 #define VP__CWORD31__AC_SCREEN_HOME "VP__CWORD31__AC_screen_home"
 /**
-* @~english     _CWORD31_ air conditioner switch front temperature
-*/
-#define VP__CWORD31__AC_SWITCH_FRONT_TEMP "VP__CWORD31__AC_switch_front_temp"
-/**
-* @~english     _CWORD31_ air conditioner display of outside temperature
-*/
-#define VP__CWORD31__AC_TEMP_DISP_OUTSIDE "VP__CWORD31__AC_temp_disp_outside"
-/**
-* @~english     _CWORD31_ air conditioner setting of display
-*/
-#define VP__CWORD31__AC_TEMP_DISP_SETTING "VP__CWORD31__AC_temp_disp_setting"
-/**
 * @~english     _CWORD31_ air conditioner switch concierge
 */
 #define VP__CWORD31__AC_SWITCH_CONCIERGE "VP__CWORD31__AC_switch_concierge"
-/**
-* @~english     S flow of _CWORD31_ air conditioner switch
-*/
-#define VP__CWORD31__AC_SWITCH_S_FLOW "VP__CWORD31__AC_switch_S_flow"
 /**
 * @~english     _CWORD31_ _CWORD113_
 */
@@ -125,14 +113,6 @@
 * @~english      _CWORD31_ battery position of _CWORD113_
 */
 #define VP__CWORD31___CWORD11__BATTERY_POSITION "VP__CWORD31___CWORD11__battery_position"
-/**
-* @~english     _CWORD31_ battery direction of _CWORD113_
-*/
-#define VP__CWORD31___CWORD11__BATTERY_DIRECTION "VP__CWORD31___CWORD11__battery_direction"
-/**
-* @~english      _CWORD31_ motor position of _CWORD113_
-*/
-#define VP__CWORD31___CWORD11__MOTOR_POSITION "VP__CWORD31___CWORD11__motor_position"
 /**
 * @~english      _CWORD31_ _CWORD112_ trip
 */
@@ -162,6 +142,14 @@
 */
 #define VP__CWORD31__FC_SCALE_HV "VP__CWORD31__FC_scale_HV"
 /**
+* @~english     _CWORD31_ fuel consumption display function scale of fuel consumption (ForFC)
+*/
+#define VP__CWORD31__FC_SCALE_FC "VP__CWORD31__FC_scale_FC"
+/**
+* @~english     _CWORD31_ fuel consumption display function scale of fuel consumption (ForEV)
+*/
+#define VP__CWORD31__FC_SCALE_EV "VP__CWORD31__FC_scale_EV"
+/**
 * @~english     _CWORD31_ FC energy mark
 */
 #define VP__CWORD31__FC_ENERGY_MARK "VP__CWORD31__FC_energy_mark"
@@ -177,10 +165,6 @@
 * @~english     _CWORD31_ display setting screen
 */
 #define VP__CWORD31__DISPLAY_SETTING_SCREEN "VP__CWORD31__display_setting_screen"
-/**
-* @~english     _CWORD31_ VR HVAC control
-*/
-#define VP__CWORD31__VR_HVAC_CONTROL "VP__CWORD31__VR_HVAC_control"
 /**
 * @~english     _CWORD31_ clock type
 */
@@ -214,31 +198,31 @@
 */
 #define VP__CWORD31__DTV_ANTENNA "VP__CWORD31__DTV_antenna"
 /**
+* @~english     _CWORD31_ antenna info antenna available / unavailable
+*/
+#define VP__CWORD31__BEACON_ANTENNA "VP__CWORD31__beacon_antenna"
+/**
 * @~english     _CWORD31_ HF voice quality type
 */
 #define VP__CWORD31__HF_VOICE_QUALITY_TYPE "VP__CWORD31__HF_voice_quality_type"
-/**
-* @~english     _CWORD31_ tune knob push
-*/
-#define VP__CWORD31__TUNE_KNOB_PUSH "VP__CWORD31__tune_knob_push"
-/**
-* @~english     _CWORD31_ screen switch seek
-*/
-#define VP__CWORD31__SCREEN_SWITCH_SEEK "VP__CWORD31__screen_switch_seek"
 /**
 * @~english     _CWORD31_ DAB antenna
 */
 #define VP__CWORD31__DAB_ANTENNA "VP__CWORD31__DAB_antenna"
 /**
+* @~english      _CWORD31_ DAB screen display
+*/
+#define VP__CWORD31__DAB_SCREEN "VP__CWORD31__DAB_screen"
+/**
 * @~english     _CWORD31_ hard switch beep
 */
 #define VP__CWORD31__HARD_SWITCH_BEEP "VP__CWORD31__hard_switch_beep"
 /**
-* @~english      _CWORD31_ screen switch beep
+* @~english      _CWORD31_ beep while hard SW being pressed
 */
 #define VP__CWORD31__SCREEN_SWITCH_BEEP "VP__CWORD31__screen_switch_beep"
 /**
-* @~english      _CWORD31_ steering switch type
+* @~english      _CWORD31_ steering SW type of steering SW
 */
 #define VP__CWORD31__STEERING_SWITCH_TYPE "VP__CWORD31__steering_switch_type"
 /**
@@ -249,14 +233,6 @@
 * @~english     _CWORD31_ class circuit mode
 */
 #define VP__CWORD31__CLASS_CIRCUIT_MODE "VP__CWORD31__class_circuit_mode"
-/**
-* @~english     _CWORD31_ _CWORD67_ warning
-*/
-#define VP__CWORD31___CWORD67__WARNING "VP__CWORD31___CWORD67__warning"
-/**
-* @~english     _CWORD31_ _CWORD67_ accelerator
-*/
-#define VP__CWORD31___CWORD67__ACCELERATOR "VP__CWORD31___CWORD67__accelerator"
 /**
 * @~english     _CWORD31_ panel microcomputer
 */
@@ -270,9 +246,9 @@
 */
 #define VP__CWORD31__GPS_ANTENNA "VP__CWORD31__GPS_antenna"
 /**
-* @~english     _CWORD31_ illumination vehicle signal
+* @~english     _CWORD31_ ILL- available / unavailable
 */
-#define VP__CWORD31__VEHICLE_SIGNAL_ILL "VP__CWORD31__vehicle_signal_ILL"
+#define VP__CWORD31__ILL_SIGNAL "VP__CWORD31__ILL_signal"
 /**
 * @~english     _CWORD31_ switch trigger
 */
@@ -282,21 +258,17 @@
 */
 #define VP__CWORD31__SENSITIVITY_LEVEL "VP__CWORD31__sensitivity_level"
 /**
-* @~english     _CWORD31_ invalidity term
+* @~english     _CWORD31_ hadsfree bluetooth device name / WiFi AP name selection
 */
-#define VP__CWORD31__INVALIDITY_TERM "VP__CWORD31__invalidity_term"
+#define VP__CWORD31__BT_DEVICE_AP_NAME "VP__CWORD31__BT_device_AP_name"
+/**
+* @~english     _CWORD31_ Eco drive max vol setting in D4 model
+*/
+#define VP__CWORD31__ECO_RUN_D4_VOL_MAX "VP__CWORD31__eco_run_D4_VOL_max"
 /**
 * @~english     _CWORD31_ thumbnail type
 */
 #define VP__CWORD31__THUMBNAIL_TYPE "VP__CWORD31__thumbnail_type"
-/**
-* @~english     _CWORD31_ BT device name
-*/
-#define VP__CWORD31__BT_DEVICE_NAME "VP__CWORD31__BT_device_name"
-/**
-* @~english     _CWORD31_ eco drive max volume
-*/
-#define VP__CWORD31__ECO_DRIVE_MAX_VOLUME "VP__CWORD31__eco_drive_max_volume"
 /**
 * @~english     _CWORD31_ EOM function
 */
@@ -310,12 +282,25 @@
 */
 #define VP__CWORD31__MICROPHONE_LOCATION "VP__CWORD31__Microphone_Location"
 /**
+* @~english     _CWORD31_ VR microphone parameter vehicle noize level
+*/
+#define VP__CWORD31__VEHICLE_NOIZE_LEVEL "VP__CWORD31__vehicle_noize_level"
+
+/**
 * @~english     _CWORD31_ wide band FM
 */
 #define VP__CWORD31__WIDE_BAND_FM "VP__CWORD31__Wide_band_FM"
-
+/**
+* @~english     _CWORD31_ map color
+*/
 #define VP__CWORD31__MAP_COLOR "VP__CWORD31__map_color"
+/**
+* @~english     _CWORD31_ cloud eco
+*/
 #define VP__CWORD31__CLOUD_ECO "VP__CWORD31__cloud_eco"
+/**
+* @~english     _CWORD31_ eg type
+*/
 #define VP__CWORD31__EG_TYPE "VP__CWORD31__EG_type"
 
 /**
@@ -335,17 +320,9 @@
 */
 #define VP__CWORD31__CLASS_OPERATION "VP__CWORD31__class_operation"
 /**
-* @~english     _CWORD31_ opening interval
-*/
-#define VP__CWORD31__OPENING_INTERVAL "VP__CWORD31__opening_interval"
-/**
 * @~english     _CWORD31_ DES function
 */
 #define VP__CWORD31__DES_FUNCTION "VP__CWORD31__DES_function"
-/**
-* @~english     _CWORD31_ beep sound keys
-*/
-#define VP__CWORD31__BEEP_SOUND_KEYS "VP__CWORD31__beep_sound_keys"
 
 /** @}*/  // end of vehicle_parameter_library
 /** @}*/  // end of other_service

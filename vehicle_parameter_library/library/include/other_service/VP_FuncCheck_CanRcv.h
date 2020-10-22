@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,12 +48,9 @@
 /**
 * @~english  _CWORD76_
 */
-#define _CWORD76_                             ((u_int8_t)2)
+#define _CWORD76_                       ((u_int8_t)2)
 
-/**
-* @~english HD Data (Include traffic)
-*/
-#define VP_CANRCV__CWORD27_               ((u_int8_t)3)                           /**< _CWORD27_                   */
+#define VP_CANRCV__CWORD27_             ((u_int8_t)3)                           /**< _CWORD27_                   */
 /**
 * @~english  WiFi HotSpot
 */
@@ -61,11 +58,15 @@
 /**
 * @~english standard driving rregulation of AREA1
 */
-#define AREA1_STD_TRAF_LIMIT               ((u_int8_t)5)
+#define AREA1_STD_TRAF_LIMIT            ((u_int8_t)5)
 /**
 * @~english HD Data (Include traffic)
 */
 #define HD_DATA                         ((u_int8_t)6)
+/**
+* @~english WiFi 5G
+*/
+#define WIFI_5G                         ((u_int8_t)7)
 
 /**
 * @~english definiton of return value of API(VP_FuncCheck_CanRcv),which is used to get status of function implemention
@@ -98,6 +99,7 @@ extern "C" {
 /// \~english @retval FUNCTION_CHECK_RESULT_OK: This function is available
 /// \~english @retval FUNCTION_CHECK_RESULT_NG: This function is unavailable
 /// \~english @retval FUNCTION_CHECK_RESULT_UNKNOWN: This function does not exist
+/// \~english @retval FUNCTION_CHECK_RESULT_OUT_OF_AREA1: reference out of Area1
 /// \~english @par Prerequisite
 ///         None
 /// \~english @par Change of internal state

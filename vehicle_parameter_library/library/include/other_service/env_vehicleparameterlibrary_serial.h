@@ -1,5 +1,5 @@
 /*
- * @copyright Copyright (c) 2016-2019 TOYOTA MOTOR CORPORATION.
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,30 +35,9 @@
  */
 
 /**
- * \~english  Enviroment variable serial
- */
-#define VP_VEHICLEPARAMETERLIBRARY_SER_SERIAL "VP_VEHICLEPARAMETERLIBRARY_SER_serial"
-
-/**
  * \~english  Enviroment variable _CWORD49__ID
  */
 #define VP_VEHICLEPARAMETERLIBRARY_SER__CWORD49__ID "VP_VEHICLEPARAMETERLIBRARY_SER__CWORD49__ID"
-/**
- * \~english  Enviroment variable HELPNET_ID
- */
-#define VP_VEHICLEPARAMETERLIBRARY_SER_HELPNET_ID "VP_VEHICLEPARAMETERLIBRARY_SER_HELPNET_ID"
-/**
- * \~english  Enviroment variable map_update_ID
- */
-#define VP_VEHICLEPARAMETERLIBRARY_SER_MAP_UPDATE_ID "VP_VEHICLEPARAMETERLIBRARY_SER_map_update_ID"
-/**
- * \~english  Enviroment variable ship_date
- */
-#define VP_VEHICLEPARAMETERLIBRARY_SER_SHIP_DATE "VP_VEHICLEPARAMETERLIBRARY_SER_ship_date"
-/**
- * \~english  Enviroment variable FACTORY_ID
- */
-#define VP_VEHICLEPARAMETERLIBRARY_SER_FACTORY_ID "VP_VEHICLEPARAMETERLIBRARY_SER_FACTORY_ID"
 
 /** @}*/  // end of vehicle_parameter_library
 /** @}*/  // end of other_service
