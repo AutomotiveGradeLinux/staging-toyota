@@ -1,0 +1,8 @@
+<normal_wakeup>
+  <global_step>
+    <next_trans_condition  cond="INI_INITCOMP_ON_START" />
+  </global_step>
+  <global_step>
+    <next_trans_condition  cond="INI_INITCOMP_NVM_ACCESS" />
+  </global_step>
+</normal_wakeup>

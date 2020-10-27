@@ -1,0 +1,89 @@
+/*
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file
+ *  VehicleSens_Did_GpsNmea_g.cpp
+ * @brief
+ */
+
+/*---------------------------------------------------------------------------------*
+ * Include Files
+ *---------------------------------------------------------------------------------*/
+
+#include <vehicle_service/positioning_base_library.h>
+#include "VehicleSens_DataMaster.h"
+#include "gps_hal.h"
+
+/*---------------------------------------------------------------------------------*
+ * Global Value
+ *---------------------------------------------------------------------------------*/
+static  VEHICLESENS_DATA_MASTER_GPS_FORMAT  gstGpsNmea_g;    // NOLINT(readability/nolint)
+
+/**
+ * @brief
+ *   Vehicle sensor GPS_NMEA initialization processing
+ */
+void VehicleSensInitGpsNmeaG(void) {
+    memset(&gstGpsNmea_g, 0x00, sizeof(VEHICLESENS_DATA_MASTER_GPS_FORMAT));
+    gstGpsNmea_g.ul_did  = POSHAL_DID_GPS_NMEA;
+    gstGpsNmea_g.us_size = VEHICLE_DSIZE_GPS_FORMAT;
+}
+
+/**
+ * @brief
+ *   Vehicle sensor GPS_NMEA SET processing
+ *
+ * @param[in]  Pointer to received message data
+ *
+ * @return     VEHICLESENS_EQ   No data change<BR>
+ *             VEHICLESENS_NEQ Data change
+ */
+u_int8 VehicleSensSetGpsNmeaG(const SENSOR_MSG_GPSDATA_DAT *pst_data) {
+    u_int8 uc_ret;
+    VEHICLESENS_DATA_MASTER_GPS_FORMAT *pst_master;
+
+    pst_master = &gstGpsNmea_g;
+
+    /* Compare data master and received data */
+    uc_ret = VehicleSensmemcmp(pst_master->uc_data, pst_data->uc_data, pst_data->us_size);
+
+    /* Received data is set in the data master. */
+    pst_master->ul_did        = pst_data->ul_did;
+    pst_master->us_size       = pst_data->us_size;
+    pst_master->uc_rcvflag    = VEHICLE_RCVFLAG_ON;
+    memcpy(pst_master->uc_data, pst_data->uc_data, pst_data->us_size);
+
+    return(uc_ret);
+}
+
+/**
+ * @brief
+ *   Vehicle sensor GPS_NMEA GET processing
+ *
+ * @param[out]  pst_data Pointer to the data master acquisition destination
+ */
+void VehicleSensGetGpsNmeaG(SENSOR_MSG_GPSDATA_DAT *pst_data) {
+    const VEHICLESENS_DATA_MASTER_GPS_FORMAT *pst_master;
+
+    pst_master = &gstGpsNmea_g;
+
+    /* Store the data master in the specified destination. */
+    pst_data->ul_did    = pst_master->ul_did;
+    pst_data->us_size    = pst_master->us_size;
+    pst_data->uc_rcv_flag  = pst_master->uc_rcvflag;
+    memcpy(pst_data->uc_data, pst_master->uc_data, pst_master->us_size);  /* Ignore->MISRA-C++:2008 Rule 5-0-5 */
+}

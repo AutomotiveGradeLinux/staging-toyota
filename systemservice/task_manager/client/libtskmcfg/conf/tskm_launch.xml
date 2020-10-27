@@ -1,0 +1,106 @@
+<service_list>
+  <service 
+    svcid="TSKM_SVCID_ACTIVITYMGR"
+    name=MN_ACTIVITYMANAGER
+    path="/usr/agl/bin/acmsrv"
+    prio=PR_ACTIVITYMANAGER_S
+    policy="tss"
+    life_cycle="always"
+    user=""
+    shutdown_wait="yes"  />
+
+  <service 
+    svcid="TSKM_SVCID_TE_RESIDENT"
+    name=MN_RESIDENT_SVC
+    path="/usr/agl/bin/resident"
+    prio=PR_RESIDENT_SVC_S
+    policy="tss"
+    life_cycle="always"
+    user=""
+    shutdown_wait="no"  />
+
+  <service 
+    svcid="TSKM_SVCID_TE_TRANSIENT"
+    name =MN_TRANSIENT_SVC
+    path="/usr/agl/bin/transient"
+    prio=PR_TRANSIENT_SVC_S
+    policy="tss"
+    user=""
+    shutdown_wait="no"   />
+
+ 
+  <service 
+    svcid="TSKM_SVCID__CWORD58_"
+    name =MN__CWORD58_SERVICE
+    path="/usr/agl/bin/_CWORD58_Service"
+    prio=PR__CWORD58_SERVICE_S
+    policy="tss"
+    retry_cnt="-1"
+    user=""
+    shutdown_wait="yes"  />
+
+  <service 
+    svcid="TSKM_SVCID_SYSUPDATE"
+    name =MN_PS_SYSUPDATE
+    path="/usr/bin/sysupdate"
+    prio=PR_PS_SYSUPDATE_S
+    policy="tss"
+    user=""
+    shutdown_wait="no"   />
+
+  <service 
+    svcid="TSKM_SVCID_NANDUPDATE"
+    name =MN_SS_NANDUPDATE
+    path="/usr/bin/nandupdate"
+    prio=PR_SS_NANDUPDATE_S
+    policy="tss"
+    user=""
+    shutdown_wait="no"   />
+
+  <service 
+    svcid="TSKM_SVCID_XMVUPSRV"
+    name =MN_XMVUPSERVICE
+    path="/usr/agl/bin/radio_xm_update"
+    prio=PR_XMVUPSERVICE_S
+    policy="tss"
+    user=""
+    shutdown_wait="no"   />
+    
+  <service 
+    svcid="TSKM_SVCID_BTPHONESRV"
+    name =MN_BTPHONESRV
+    path="/usr/agl/bin/BT_PhoneSrv"
+    prio=PR_BTPHONESRV_S
+    policy="tss"
+    user=""
+    shutdown_wait="no"   />
+
+  <service 
+    svcid="TSKM_SVCID_BTPBKSRV"
+    name =MN_BTPBKSRV
+    path="/usr/agl/bin/BT_PbkSrv"
+    prio=PR_BTPBKSRV_S
+    policy="tss"
+    user=""
+    shutdown_wait="no"   />
+
+  <service 
+    svcid="TSKM_SVCID_BTMSGSRV"
+    name =MN_BTMSGSRV
+    path="/usr/agl/bin/BT_MsgSrv"
+    prio=PR_BTMSGSRV_S
+    policy="tss"
+    user=""
+    shutdown_wait="no"   />
+
+  <service 
+    svcid="TSKM_SVCID_DTVVUPSRV"
+    name =MN_DTVVUPSERVICE
+    path="/usr/agl/bin/DtvVupService"
+    prio=PR_DTVVUPSERVICE_S
+    policy="tss"
+    user=""
+    shutdown_wait="no"   />
+
+</service_list>
+

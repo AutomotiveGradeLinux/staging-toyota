@@ -1,0 +1,83 @@
+<?xml version="1.0" ?>
+
+<!DOCTYPE tskm_cfg [
+  <!ELEMENT tskm_cfg (service_list,normal_wakeup,normal_shutdown,vup_wakeup,vup_shutdown) >
+
+  <!-- service list -->
+  <!ELEMENT service_list (service+) >
+  <!ELEMENT service (subgid_list*) >
+  <!ATTLIST service 
+      svcid         ID               #REQUIRED
+      name          CDATA            #REQUIRED
+      path          CDATA            #REQUIRED
+      type          (native|unknown) "native"
+      prio          CDATA            #REQUIRED
+      policy        (fifo|tss|rr)    #REQUIRED
+      life_cycle    (always|always_recoverable|dynamic) "dynamic"
+      retry_cnt     CDATA            "1"
+      cpu_assign    (cpu0|cpu1|auto) "auto"
+      user          CDATA            #REQUIRED
+      runtime_limit CDATA            #IMPLIED
+      cpu_limit     CDATA            #IMPLIED
+      mem_limit     CDATA            #IMPLIED
+      args          CDATA            #IMPLIED
+      shutdown_wait (yes|no)         #REQUIRED
+  >
+
+  <!ELEMENT subgid_list (subgid+) >
+  <!ELEMENT subgid EMPTY >
+  <!ATTLIST subgid 
+     gid            CDATA            #REQUIRED
+  >
+
+
+  <!-- Starting/terminating of services -->
+  <!ELEMENT  normal_wakeup (global_step+) >
+  <!ELEMENT  normal_shutdown (global_step+) >
+  <!ELEMENT  vup_wakeup (global_step+) >
+  <!ELEMENT  vup_shutdown (global_step+) >
+
+  <!ELEMENT  global_step (exec_list?,request_list?,next_trans_condition?) >
+  <!ATTLIST global_step
+    stepid   ID               #IMPLIED
+  >
+
+  <!ELEMENT  exec_list (exec_svc+) >
+  <!ELEMENT  exec_svc EMPTY >
+
+  <!ATTLIST exec_svc
+    svcid        IDREF           #REQUIRED
+  >
+
+  <!ELEMENT  request_list (request+) >
+  <!ELEMENT  request EMPTY >
+  <!ATTLIST request
+    svcid       IDREF           			#REQUIRED 
+    local_step  (shm|bupchk|1|2|3|4|5|6|7|8|9|last|all)    	#REQUIRED
+  >
+
+  <!ELEMENT  next_trans_condition EMPTY>
+  <!ATTLIST next_trans_condition
+    cond    CDATA           #REQUIRED
+  >
+
+  <!ENTITY service_list_xml SYSTEM   "tskm_launch.xml">
+  <!ENTITY normal_wakeup_xml SYSTEM   "tskm_wakeup.xml">
+  <!ENTITY normal_shutdown_xml SYSTEM "tskm_shutdown.xml">
+  <!ENTITY vup_wakeup_xml SYSTEM   "tskm_wakeup_vup.xml">
+  <!ENTITY vup_shutdown_xml SYSTEM "tskm_shutdown_vup.xml">
+]>
+
+
+<tskm_cfg>
+  &service_list_xml;
+
+  &normal_wakeup_xml;
+
+  &normal_shutdown_xml;
+
+  &vup_wakeup_xml;
+
+  &vup_shutdown_xml;
+
+</tskm_cfg>

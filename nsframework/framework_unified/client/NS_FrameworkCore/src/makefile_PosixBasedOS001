@@ -1,0 +1,214 @@
+#
+# @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+#
+# Standard Module Makefile version 2.0
+#
+
+# Name of the componet (team/domain prefix '_' component name)
+COMPONENT_NAME = NS_FrameworkCore
+
+ifndef PRJ_ROOT
+export PRJ_ROOT = $(CURDIR)/../
+endif
+include $(PRJ_ROOT)cfg/depends.mk
+
+# Name of the componet (team/domain prefix '_' component name)
+#  This must be the same as the RTC Component name and Eclipse Project Name
+COMPONENT_NAME = NS_FrameworkCore
+
+
+# Additive Compile Flags (Flags from initiating make process will still apply)
+DEFS += -D DISPATCHER_PROFILER
+
+# Set local includes and then the reference includes (priority order determines search path)
+# Default pattern are any configuration includes (which would be things like PosixBasedOS001), local (Team) component directories,
+# dependencies includes (other teams)
+# Local (current component references should be in the form of
+#  $(CC_IFLAG)$(TEAM_ROOT)$(COMPONENT_NAME)/directory
+#  Example your public include directory would be
+#  $(CC_IFLAG)$(TEAM_ROOT)$(COMPONENT_NAME)/inc
+# Team references should only be to other's public includes such as
+#  $(CC_IFLAG)$(TEAM_ROOT)NS_MessageCenter/inc
+# Global (non-team) references should be only to other's public includes such
+#  these are found in the depends include file and captured in the (DEPENDS_INCLUDES) variable
+INCLUDES = \
+	$(CFG_INCS) \
+	$(CC_IFLAG)./ \
+	$(CC_IFLAG)$(TEAM_ROOT)NS_MessageQueue/inc \
+	$(CC_IFLAG)$(TEAM_ROOT)NS_MessageCenter/inc \
+	$(CC_IFLAG)$(TEAM_ROOT)NS_UtilityCenter/inc \
+	$(CC_IFLAG)$(TEAM_ROOT)$(COMPONENT_NAME)/inc \
+	$(CC_IFLAG)$(TEAM_ROOT)$(COMPONENT_NAME)/inc/statemachine \
+	$(DEPENDS_INCLUDES) \
+
+# Libraries should be exported to the Domain Root.  However if there is a
+# local static library (3rd Party) go ahead and add it here.
+LIB_PATHS += \
+  $(DEPENDS_LIB_PATHS) \
+
+
+
+# Define binary outputs.  These can be libraries or executables.
+#  Name a variable for each deliverable.  Suffixes should be
+#  EXEC - For Executables -> output to the bin directory
+#TIME_EXEC = $(BIN_PATH)time
+#  LIB - For Static Libraries -> output to lib directory with specific naming
+#MATH_LIB = $(LIB_PATH)$(LIB_PREFIX)math.$(LIB_EXT)
+#  SLIB - For Shared Objects
+#FRMWRK_SLIB = $(SLIB_PATH)frmwrk.$(SO_EXT)
+#  LIB - Define the static library for Message Queue
+#
+#
+ifdef DYNAMIC
+	COMPONENT_LIB = $(SLIB_PATH)$(LIB_PREFIX)$(COMPONENT_NAME)$(DEBUG_EXT).$(SO_EXT)
+else
+	COMPONENT_LIB = $(LIB_PATH)$(LIB_PREFIX)$(COMPONENT_NAME)$(DEBUG_EXT).$(LIB_EXT)
+endif
+
+
+## Sources Section
+
+# Define Library & Executable Sources (on a per deliverable basis)
+#  This includes sources located in subdirectories.
+
+# Define generic line that pulls all c, cc, cpp files
+# since your in the src folder is pull only files from there
+COMPONENT_SRCS = \
+	$(wildcard *.c) \
+	$(wildcard *.cpp)
+
+# Define sources that my not be local to your component
+# here, you can define indivial files or wildcard from
+# a different folder.
+NON_LOCAL_SRCS = \
+	$(wildcard statemachine/*.cpp)
+
+# List of all sources to be built.  Can be assembled from the other defintitions.
+#  This only defines sources for the current directory, so if there are subdirectories
+#  those are not included.  (Those are found in simple subdirectory makefiles that only
+#  direct the building of sources, but no linking into a binary)
+SOURCES = \
+	$(COMPONENT_SRCS) \
+
+
+#
+# Convert the source files to object files with correct folder location.
+#
+#
+C_LANG_OBJECTS = $(addprefix $(BLD_PATH),$(addsuffix .$(OBJ_EXT),$(basename $(filter %.c ,$(SOURCES) ) ) ) )
+CPP_LANG_OBJECTS = $(addprefix $(BLD_PATH),$(addsuffix .$(OBJ_EXT),$(basename $(filter %.cpp %.cc %.cxx,$(SOURCES) ) ) ) )
+
+
+# List of all sources to be generated.  Can be assembled from the other defintitions.
+OBJECTS = \
+	$(C_LANG_OBJECTS) \
+	$(CPP_LANG_OBJECTS)
+
+# assuming all objects should be included in the library.
+ALL_OBJECTS = $(addprefix $(BLD_PATH),$(addsuffix .$(OBJ_EXT),$(notdir $(basename $(NON_LOCAL_SRCS) )) ) ) \
+				$(OBJECTS)
+
+# All headers that are dependencies.  Wildcard is easy to pickup local headers.
+#  This is only to automate the rebuilding, all builds on the servers are cleans
+#  So this is not a huge deal when building on a component level.
+HEADERS = \
+	$(wildcard *.h) \
+	$(wildcard $(TEAM_ROOT)$(COMPONENT_NAME)/inc/*.h) \
+	$(wildcard $(TEAM_ROOT)NativeServices/inc/*.h) \
+	$(wildcard $(TEAM_ROOT)NativeServices/inc/native/*.h) \
+	$(wildcard $(TEAM_ROOT)NativeServices/inc/framework/*.h) \
+
+LIBRARIES = \
+	$(COMPONENT_LIB) \
+
+ifdef DYNAMIC
+	DYNAMIC_LIBS += \
+	NS_MessageCenter$(DEBUG_EXT) \
+	NS_ConfigParser$(DEBUG_EXT) \
+	NS_NPServiceIf$(DEBUG_EXT) \
+	NS_Timer$(DEBUG_EXT)
+else
+	STATIC_LIBS +=
+endif
+
+# Make targets
+#  Standard
+all: banner module_dirs subdirs local library binary
+
+debug:
+	$(MAKE) TARGET=arm DEBUG=TRUE all
+
+base: banner module_dirs subdirs local
+
+# Standard Building of Source Files (Default builds for all objects defined above)
+$(C_LANG_OBJECTS): $(SOURCES) $(HEADERS)
+	$(CC_CMD)
+
+$(CPP_LANG_OBJECTS): $(SOURCES) $(HEADERS)
+	$(CPP_CMD)
+
+local: $(OBJECTS)
+
+# Defines specific for each deliverable
+
+# For a static library
+$(COMPONENT_LIB): $(OBJECTS) $(ALL_OBJECTS)
+ifdef DYNAMIC
+# For a dynamic library
+	$(SLIB_CMD)
+	$(HIDE_ECHO_FLAG)$(OBJCPY) --only-keep-debug $(@) $(@).debug
+	$(HIDE_ECHO_FLAG)$(OBJCPY) --strip-all $(@)
+	$(HIDE_ECHO_FLAG)$(OBJCPY) --add-gnu-debuglink=$(@).debug $(@)
+else
+# For a static library
+	$(AR_CMD)
+endif
+
+# Standard set of derived targets
+library: base \
+	$(LIBRARIES)
+	@echo "***** `date` Done building library: $(COMPONENT_NAME) ******"
+
+binary: base \
+	$(BINARIES)
+
+# Subdirs should be to jump to subdirectories
+#  standard form is of
+#  $(MAKE) -C subdirectory_name $(MAKECMDGOALS)
+subdirs:
+	$(MAKE) -C statemachine $(MAKECMDGOALS)
+clean:
+	-rm -f $(BINARIES)
+	-rm -f $(LIBRARIES)
+	-rm -f $(OBJECTS)
+	-rm -f $(ALL_OBJECTS)
+	-rm -f $(COMPONENT_LIB).map
+	-rm -f $(COMPONENT_LIB).debug
+
+-v:
+	@echo "objs: --> $(OBJECTS)"
+	@echo "sources: --> $(SOURCES)"
+	@echo "headers: --> $(HEADERS)"
+	@echo "includes: --> $(INCLUDES)"
+	@echo "lib paths: --> $(LIB_PATHS)"
+	@echo "static libs: --> $(LD_STATIC_LIBS)"
+	@echo "dynamic libs: --> $(LD_DYNAMIC_LIBS)"
+	@echo "lib: --> $(LIBRARIES)"
+	@echo "bin: --> $(BINARIES)"
+
+
+module_dirs: build_dirs

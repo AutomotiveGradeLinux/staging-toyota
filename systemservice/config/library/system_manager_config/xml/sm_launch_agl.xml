@@ -1,0 +1,35 @@
+<!-- group_id=1 -->
+<group name="CoreModules" wait_time="0" trigger="False" >
+  <launch 
+    name="NS_NPPService" path="/usr/agl/bin/NS_NPPService" priority="25"
+    critical="True" retry_cnt="0" arguments="-a SS_SysManager -r output=0x2"
+    logging_mask="NULL" restart="NULL" is_start_required="False"
+    shutdown_critical="True" shutdown_wait_time="20" fast_shutdown_wait_time="1000"
+    user_name=""
+  />
+  <launch 
+    name="NS_BackupMgr" path="/usr/agl/bin/NS_BackupMgr" priority="25"
+    critical="True" retry_cnt="0" arguments="-l console"
+    logging_mask="NULL" restart="NULL" is_start_required="True"
+    shutdown_critical="True" shutdown_wait_time="15" fast_shutdown_wait_time="1000"
+    user_name=""
+  />
+</group>
+<!-- group_id=2 -->
+<group name="SS_Logger" wait_time="0" trigger="False" >
+  <launch 
+    name="SS_DevDetectSrv" path="/tmp/SS_DeviceDetectionService" priority="20"
+    critical="True" retry_cnt="0" arguments="-l console"
+    logging_mask="NULL" restart="NULL" is_start_required="True"
+    shutdown_critical="False" shutdown_wait_time="1" fast_shutdown_wait_time="1000"
+    user_name=""
+  />
+  <launch 
+    name="SS_LoggerSrv" path="/usr/agl/bin/SS_LoggerService" priority="0"
+    critical="True" retry_cnt="0" arguments="-l console -p thrd=pdg.LogQueReader:30,thrd=pdg.TransmitQueReader:30,thrd=pdg.DumpQueReader:11,thrd=pdg.PerformanceQueReader:11,thrd=pdg.LogQueWriter:30,thrd=pdg.TransmitQueWriter:30,thrd=pdg.EvntLogQue:8,thrd=pdg.UdpQueWriter:10"
+    logging_mask="NULL" restart="NULL" is_start_required="True"
+    shutdown_critical="True" shutdown_wait_time="10" fast_shutdown_wait_time="1000"
+    user_name=""
+  />
+</group>
+

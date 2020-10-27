@@ -1,0 +1,144 @@
+/*
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#
+# libNS_FrameworkUnified version script
+#
+{
+  global:
+    ### .text section ###
+    extern "C++" {
+      Frameworkunified*;
+      SetReqDataIn_CWORD77_DataPool*;
+      GetResp*;
+      SetResp*;
+      CalculateCRC32*;
+      ConvertEndian_*;
+      CFrameworkunifiedAction::*;
+      CFrameworkunifiedVersion::*;
+      operator*CFrameworkunifiedVersion*;
+      CNSSharedMem::*;
+      CNSSharedMemReader::*;
+      CNSRingBuffer::*;
+      CFrameworkunifiedLeafState::*;
+      CFrameworkunified_CWORD77_Service::*;
+      CFrameworkunified_CWORD77_Session::*;
+      CNSConfig*::*;
+      CFrameworkunifiedCompositeState::*;
+      CFrameworkunifiedOrthogonalState::*;
+      CFrameworkunifiedConditionConnector::*;
+      CFrameworkunifiedExternalTransition::*;
+      frameworkunified::framework::CFrameworkunifiedThreadPriorities::*;
+      CMutex::*;
+      CFrameworkunifiedHSM::*;
+      CRWLock::*;
+      NSTimer::*;
+      NsForceClose;
+      CFrameworkunifiedGuard::*;
+      CFrameworkunifiedState::*;
+      CFrameworkunifiedLocalTransition::*;
+      CFrameworkunifiedShallowHistoryState::*;
+      CFrameworkunifiedHistoryState::*;
+      CFrameworkunifiedDeepHistoryState::*;
+      CFrameworkunifiedHSMParentFramework::*;
+      CFrameworkunifiedSyncData::*;
+      IConfigWriter::*;
+      IConfigReader::*;
+    };
+    GetFileList;
+    MSToNS;
+    DoesDirecotryExist;
+    CreateDirectory;
+    Mc*;
+    NP*;
+    NSLog*;
+    NsLogIsPLogEnabled;
+    NsLogData;
+    NsLogTime;
+    NsLog0;
+    NsLog;
+    NsLogSetFrameworkunifiedLogParams;
+    NsLogSetProcessName;
+    NsLogSetControlMask;
+    NsLogIsZoneSet;
+    NsLogGetControlMask;
+    NsLogSetLogMethod;
+    NsLog_EvtCnt;
+    NsLog_Evt;
+    NsLog_Cnt;
+    NsLogDetermineLogMethod;
+    NsLogSetZones;
+    NsLogParseZones;
+    NsRcsSendTraceData;
+    NSLogGetFrameworkunifiedlogFileTotalNum;
+    NSLogGetFrameworkunifiedlogFileName;
+    NsLogGetLogMethod;
+    NsLogSetFrameworkunifiedLogFlag;
+    NsLogGetFrameworkunifiedLogFlag;
+    NsLogSetRealtimeLog;
+    NsLogGetRealtimeLog;
+    NsLogInitialize;
+    NS_Timer*;
+    OpenReceiver;
+    OpenReceiverNotBlocked;
+    CloseSender;
+    CloseReceiver;
+    OpenSender;
+    ReceiveMessage;
+    RemainderMs;
+    SendMessage;
+    SynchronousWritePersistentData;
+    SynchronousMovePersistentData;
+    WholeSeconds;
+    _init;
+    _fini;
+    GetLengthOfDataFromShared;
+
+    ### .data section ###
+    extern "C++" {
+      typeinfo?for?CFrameworkunifiedAction;
+      typeinfo?for?CFrameworkunifiedVersion;
+      typeinfo?for?CNSSharedMem;
+      typeinfo?for?CNSSharedMemReader;
+      typeinfo?for?CNSRingBuffer;
+      typeinfo?for?CFrameworkunifiedLeafState;
+      typeinfo?for?CFrameworkunified_CWORD77_Service;
+      typeinfo?for?CFrameworkunified_CWORD77_Session;
+      typeinfo?for?CNSConfig*;
+      typeinfo?for?CFrameworkunifiedCompositeState;
+      typeinfo?for?CFrameworkunifiedOrthogonalState;
+      typeinfo?for?CFrameworkunifiedConditionConnector;
+      typeinfo?for?CFrameworkunifiedExternalTransition;
+      typeinfo?for?frameworkunified::framework::CFrameworkunifiedThreadPriorities;
+      typeinfo?for?CMutex;
+      typeinfo?for?CFrameworkunifiedHSM;
+      typeinfo?for?CRWLock;
+      typeinfo?for?NSTimer;
+      typeinfo?for?CFrameworkunifiedGuard;
+      typeinfo?for?CFrameworkunifiedState;
+      typeinfo?for?CFrameworkunifiedLocalTransition;
+      typeinfo?for?CFrameworkunifiedShallowHistoryState;
+      typeinfo?for?CFrameworkunifiedHistoryState;
+      typeinfo?for?CFrameworkunifiedDeepHistoryState;
+      typeinfo?for?CFrameworkunifiedHSMParentFramework;
+      typeinfo?for?CFrameworkunifiedSyncData;
+      typeinfo?for?IConfigWriter;
+      typeinfo?for?IConfigReader;
+    };
+  local:
+    *;
+};
+

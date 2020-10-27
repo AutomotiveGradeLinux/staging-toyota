@@ -1,0 +1,6 @@
+<vup_shutdown>
+  <global_step>
+    <next_trans_condition  cond="INI_TERMCOMP_TRANSIENT" />
+  </global_step>
+</vup_shutdown>
+

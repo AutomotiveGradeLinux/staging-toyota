@@ -1,0 +1,64 @@
+/*
+ * @copyright Copyright (c) 2016-2020 TOYOTA MOTOR CORPORATION.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#
+# DiagCodeAPILib version script
+#
+{
+	global:
+		### .text section ###
+		Diag_PutDiagCode;
+		Diag_DeleteDiagCode;
+		Diag_PutDiagCode_Custom;
+		Diag_PutDiagCodeWithSSR_Custom;
+		Diag_DeleteDiagCode_Custom;
+		Diag_DeleteDiagCodeWithSSR_Custom;
+		Diag_CheckExistDiagCode;
+		Diag_GetDiagCodeList;
+		Diag_GetDiagCodeListWithSSR;
+		Diag_DeleteDiagCodeList;
+		Diag_DeleteDiagCodeListWithSSR;
+		Diag_DeleteMakerDiagCodeList;
+		Diag_CheckExistFFData;
+		Diag_GetFFDataList;
+		Diag_DeleteFFDataList;
+
+		Diag_GetServiceCodeNum;
+		Diag_InitDiagCode;
+		Diag_SetDiagCodeMask;
+		Diag_SyncTimeStamp;
+
+		Diag_InhibitPutDiagCode;
+
+		Diag_SubscribeAvailability;
+		Diag_NotifyAvailability;
+		Diag_PutDTCInfo;
+		Diag_PutRoBInfo;
+		Diag_DeleteDTCInfo;
+		Diag_DeleteRoBInfo;
+		Diag_GetDTCInfoList;
+		Diag_GetRoBInfoList;
+		Diag_DeleteDTCInfoList;
+		Diag_DeleteRoBInfoList;
+		Diag_SyncOdometer;
+		Diag_GetDIDList;
+		Diag_StartupAllStatusOfDTC;
+		Diag_ClearAllStatusOfDTC;
+		### .data section ###
+	local:
+		*;
+};
+

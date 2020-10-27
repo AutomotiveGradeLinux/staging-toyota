@@ -1,0 +1,1216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<backup>
+  <category name="D_BK_CA_GID_D" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_GID_D" id="0001" size="1"/>
+  </category>
+  <category name="D_BK_CA_MPT_D" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_MPT_D" id="0002" size="1"/>
+  </category>
+  <category name="D_BK_CA_LPT_D" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LPT_D" id="0003" size="1"/>
+  </category>
+  <category name="D_BK_CA_LSDBKUP" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LSDBKUP" id="0004" size="1"/>
+  </category>
+  <category name="D_BK_CA_GPSINFO" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_GPSINFO" id="0005" size="1"/>
+  </category>
+  <category name="D_BK_CA_MADTIME" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_MADTIME" id="0006" size="1"/>
+  </category>
+  <category name="D_BK_CA_DTI_TEC" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_DTI_TEC" id="0007" size="1"/>
+  </category>
+  <category name="D_BK_CA_HDW_SCL" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_HDW_SCL" id="0008" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_POS" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_POS" id="0009" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_GYRO" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_GYRO" id="0010" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_DIST" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_DIST" id="0011" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_HELP" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_HELP" id="0012" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_TDST" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_TDST" id="0013" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_PSSR" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_PSSR" id="0014" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_GSRV" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_GSRV" id="0015" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_TTBL" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_TTBL" id="0016" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_PLGN" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_PLGN" id="0017" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_CAM" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_CAM" id="0018" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_DIAG" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_DIAG" id="0019" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_SLRN" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_SLRN" id="0020" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_MCKH" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_MCKH" id="0021" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_GSBK" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_GSBK" id="0022" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_RLRN" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_RLRN" id="0023" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_PARK" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_PARK" id="0024" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_SAPA" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_SAPA" id="0025" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_TTJD" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_TTJD" id="0026" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_UPLD" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_UPLD" id="0027" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_TTKH" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_TTKH" id="0028" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_UPNR" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_UPNR" id="0029" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_OFRD" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_OFRD" id="0030" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_OSRS" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_OSRS" id="0031" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_MCIN" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_MCIN" id="0032" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_LCSM" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_LCSM" id="0033" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_LCSR" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_LCSR" id="0034" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_LCS1" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_LCS1" id="0035" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_LCS2" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_LCS2" id="0036" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_LCS3" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_LCS3" id="0037" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_LCS4" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_LCS4" id="0038" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_LCS5" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_LCS5" id="0039" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_LCS6" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_LCS6" id="0040" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_LCS7" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_LCS7" id="0041" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_LCS8" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_LCS8" id="0042" size="1"/>
+  </category>
+  <category name="D_BK_CA_MNT_BK1" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_MNT_BK1" id="0043" size="1"/>
+  </category>
+  <category name="D_BK_CA_MNT_BK2" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_MNT_BK2" id="0044" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_GLCM" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_GLCM" id="0045" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_GLCR" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_GLCR" id="0046" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_GLC1" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_GLC1" id="0047" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_GLC2" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_GLC2" id="0048" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_GLC3" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_GLC3" id="0049" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_GLC4" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_GLC4" id="0050" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_GLC5" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_GLC5" id="0051" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_GLC6" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_GLC6" id="0052" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_GLC7" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_GLC7" id="0053" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_GLC8" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_GLC8" id="0054" size="1"/>
+  </category>
+  <category name="D_BK_CA_GPSCNT" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_GPSCNT" id="0055" size="1"/>
+  </category>
+  <category name="D_BK_CA_MYRT_MNG" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_MYRT_MNG" id="0056" size="1"/>
+  </category>
+  <category name="D_BK_CA_MYRT_RT1" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_MYRT_RT1" id="0057" size="1"/>
+  </category>
+  <category name="D_BK_CA_MYRT_RT2" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_MYRT_RT2" id="0058" size="1"/>
+  </category>
+  <category name="D_BK_CA_MYRT_RT3" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_MYRT_RT3" id="0059" size="1"/>
+  </category>
+  <category name="D_BK_CA_MYRT_RT4" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_MYRT_RT4" id="0060" size="1"/>
+  </category>
+  <category name="D_BK_CA_MYRT_RT5" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_MYRT_RT5" id="0061" size="1"/>
+  </category>
+  <category name="D_BK_CA_HMI_NS1" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_HMI_NS1" id="0062" size="1"/>
+  </category>
+  <category name="D_BK_CA_HMI_NS2" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_HMI_NS2" id="0063" size="1"/>
+  </category>
+  <category name="D_BK_CA_HMI_NS3" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_HMI_NS3" id="0064" size="1"/>
+  </category>
+  <category name="D_BK_CA_AVD_D" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_AVD_D" id="0065" size="1"/>
+  </category>
+  <category name="D_BK_CA_GPT_D" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_GPT_D" id="0066" size="1"/>
+  </category>
+  <category name="D_BK_CA_RTINF_D" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_RTINF_D" id="0067" size="1"/>
+  </category>
+  <category name="D_BK_CA_RDT_D" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_RDT_D" id="0068" size="1"/>
+  </category>
+  <category name="D_BK_CA_ETA_D" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_ETA_D" id="0069" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_GYTP" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_GYTP" id="0070" size="1"/>
+  </category>
+  <category name="D_BK_CA_GID_F" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_GID_F" id="0071" size="1"/>
+  </category>
+  <category name="D_BK_CA_MPT_F" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_MPT_F" id="0072" size="1"/>
+  </category>
+  <category name="D_BK_CA_AVD_F" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_AVD_F" id="0073" size="1"/>
+  </category>
+  <category name="D_BK_CA_LPT_F" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_LPT_F" id="0074" size="1"/>
+  </category>
+  <category name="D_BK_CA_VR_POI" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_VR_POI" id="0075" size="1"/>
+  </category>
+  <category name="D_BK_CA_BKWNRO" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_BKWNRO" id="0076" size="1"/>
+  </category>
+  <category name="D_BK_CA_MPTGRP_D" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_MPTGRP_D" id="0077" size="1"/>
+  </category>
+  <category name="D_BK_CA_MPTGRP_F" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_MPTGRP_F" id="0078" size="1"/>
+  </category>
+  <category name="D_BK_CA_DTI_TFPMMC" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_DTI_TFPMMC" id="0079" size="1"/>
+  </category>
+  <category name="D_BK_CA_DTI_TFPDATA" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_DTI_TFPDATA" id="0080" size="1"/>
+  </category>
+  <category name="D_BK_CA_DTI_BCN" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_DTI_BCN" id="0081" size="1"/>
+  </category>
+  <category name="D_BK_CA_DTI_FM" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_DTI_FM" id="0082" size="1"/>
+  </category>
+  <category name="D_BK_CA_DTI_DSRC" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_DTI_DSRC" id="0083" size="1"/>
+  </category>
+  <category name="D_BK_CA_DTI_DRG" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_DTI_DRG" id="0084" size="1"/>
+  </category>
+  <category name="D_BK_CA_DTI_BRD" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_DTI_BRD" id="0085" size="1"/>
+  </category>
+  <category name="D_BK_CA_MADMNG_RCVINFO" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_MADMNG_RCVINFO" id="0086" size="1"/>
+  </category>
+  <category name="D_BK_CA_MAD_UPDATEINFO" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_MAD_UPDATEINFO" id="0087" size="1"/>
+  </category>
+  <category name="D_BK_CA_NM_NWINF01" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_NM_NWINF01" id="0088" size="1"/>
+  </category>
+  <category name="D_BK_CA_NM_NWINF02" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_NM_NWINF02" id="0089" size="1"/>
+  </category>
+  <category name="D_BK_CA_ND2_SAPA" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_ND2_SAPA" id="0090" size="1"/>
+  </category>
+  <category name="D_BK_CA_SMS_RVS" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_SMS_RVS" id="0091" size="1"/>
+  </category>
+  <category name="D_BK_CA_SMS_VSC" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_SMS_VSC" id="0092" size="1"/>
+  </category>
+  <category name="D_BK_CA_VCJ_CTL1" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_VCJ_CTL1" id="0093" size="1"/>
+  </category>
+  <category name="D_BK_CA_VCJ_MNT1" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_VCJ_MNT1" id="0094" size="1"/>
+  </category>
+  <category name="D_BK_CA_VCJ_CTL2" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_VCJ_CTL2" id="0095" size="1"/>
+  </category>
+  <category name="D_BK_CA_VCJ_MNT2" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_VCJ_MNT2" id="0096" size="1"/>
+  </category>
+  <category name="D_BK_CA_DIC_SDAT" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_DIC_SDAT" id="0097" size="1"/>
+  </category>
+  <category name="D_BK_CA_DIC_UDAT" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_DIC_UDAT" id="0098" size="1"/>
+  </category>
+  <category name="D_BK_CA_DIC_MDAT" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_DIC_MDAT" id="0099" size="1"/>
+  </category>
+  <category name="D_BK_CA_NPMNG_PB" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_NPMNG_PB" id="0100" size="1"/>
+  </category>
+  <category name="D_BK_CA_NPMNG_UP" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_NPMNG_UP" id="0101" size="1"/>
+  </category>
+  <category name="D_BK_CA_NPMNG_CT" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_NPMNG_CT" id="0102" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_EA" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_EA" id="0103" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_ER" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_ER" id="0104" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_EBA" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_EBA" id="0105" size="1"/>
+  </category>
+  <category name="D_BK_CA_LOC_EBD" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LOC_EBD" id="0106" size="1"/>
+  </category>
+  <category name="D_BK_CA_AWYMNG_D" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_AWYMNG_D" id="0107" size="1"/>
+  </category>
+  <category name="D_BK_CA_AWYDT_D" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_AWYDT_D" id="0108" size="1"/>
+  </category>
+  <category name="D_BK_CA_AWYCD_D" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_AWYCD_D" id="0109" size="1"/>
+  </category>
+  <category name="D_BK_CA_PWMPT_D" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_PWMPT_D" id="0110" size="1"/>
+  </category>
+  <category name="D_BK_CA_GPOI_D" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_GPOI_D" id="0111" size="1"/>
+  </category>
+  <category name="D_BK_CA_LFM_REC" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LFM_REC" id="0112" size="1"/>
+  </category>
+  <category name="D_BK_CA_LFM_RUN1" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LFM_RUN1" id="0113" size="1"/>
+  </category>
+  <category name="D_BK_CA_LFM_RUN2" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LFM_RUN2" id="0114" size="1"/>
+  </category>
+  <category name="D_BK_CA_LFM_INIT" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LFM_INIT" id="0115" size="1"/>
+  </category>
+  <category name="D_BK_CA_PWMPT_F" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_PWMPT_F" id="0116" size="1"/>
+  </category>
+  <category name="D_BK_CA_BDMPT_F" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_BDMPT_F" id="0117" size="1"/>
+  </category>
+  <category name="D_BK_CA_GPOI_F" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_GPOI_F" id="0118" size="1"/>
+  </category>
+  <category name="D_BK_CA_ECOLRNJP" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_ECOLRNJP" id="0119" size="1"/>
+  </category>
+  <category name="D_BK_CA_RDTECOJP" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_RDTECOJP" id="0120" size="1"/>
+  </category>
+  <category name="D_BK_CA_NPH_CONF" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_NPH_CONF" id="0121" size="1"/>
+  </category>
+  <category name="D_BK_CA_NPH_ONDATA" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_NPH_ONDATA" id="0122" size="1"/>
+  </category>
+  <category name="D_BK_CA_NPH_CODATA" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_NPH_CODATA" id="0123" size="1"/>
+  </category>
+  <category name="D_BK_CA_NPFU_CND" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_NPFU_CND" id="0124" size="1"/>
+  </category>
+  <category name="D_BK_CA_NPFU_COL" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_NPFU_COL" id="0125" size="1"/>
+  </category>
+  <category name="D_BK_CA_NPFU_STR" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_NPFU_STR" id="0126" size="1"/>
+  </category>
+  <category name="D_BK_CA__CWORD67__ITS" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID__CWORD67__ITS" id="0127" size="1"/>
+  </category>
+  <category name="D_BK_CA_HMI_MS1" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_HMI_MS1" id="0128" size="1"/>
+  </category>
+  <category name="D_BK_CA_HMI_MS2" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_HMI_MS2" id="0129" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_BTN" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_BTN" id="0134" size="1"/>
+  </category>
+  <category name="D_BK_CA_G_PER_CA" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_G_PER_CA" id="0135" size="1"/>
+  </category>
+  <category name="D_BK_CA_G_BR_HIS" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_G_BR_HIS" id="0136" size="1"/>
+  </category>
+  <category name="D_BK_CA_CAR_CDF" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_CAR_CDF" id="0137" size="1"/>
+  </category>
+  <category name="D_BK_CA_ACC_CDF" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_ACC_CDF" id="0138" size="1"/>
+  </category>
+  <category name="D_BK_CA_CEL_CDF" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_CEL_CDF" id="0139" size="1"/>
+  </category>
+  <category name="D_BK_CA_CDF_ONS" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_CDF_ONS" id="0140" size="1"/>
+  </category>
+  <category name="D_BK_CA_CON_CDF1" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_CON_CDF1" id="0141" size="1"/>
+  </category>
+  <category name="D_BK_CA_CON_CDF2" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_CON_CDF2" id="0142" size="1"/>
+  </category>
+  <category name="D_BK_CA_SPFC_D" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_SPFC_D" id="0143" size="1"/>
+  </category>
+  <category name="D_BK_CA_ECORT_D" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_ECORT_D" id="0144" size="1"/>
+  </category>
+  <category name="D_BK_CA_SPFC_F" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_SPFC_F" id="0145" size="1"/>
+  </category>
+  <category name="D_BK_CA_ECORT_F" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_ECORT_F" id="0146" size="1"/>
+  </category>
+  <category name="D_BK_CA_G_BM_D" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_G_BM_D" id="0149" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J09" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J09" id="0150" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J10" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J10" id="0151" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J11" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J11" id="0152" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J12" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J12" id="0153" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J13" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J13" id="0154" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J14" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J14" id="0155" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J15" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J15" id="0156" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J16" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J16" id="0157" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J17" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J17" id="0158" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J18" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J18" id="0159" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J19" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J19" id="0160" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J20" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J20" id="0161" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J21" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J21" id="0162" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J22" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J22" id="0163" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J23" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J23" id="0164" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J24" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J24" id="0165" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J25" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J25" id="0166" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J26" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J26" id="0167" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J27" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J27" id="0168" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J28" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J28" id="0169" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J29" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J29" id="0170" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J30" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J30" id="0171" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J31" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J31" id="0172" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J32" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J32" id="0173" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J33" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J33" id="0174" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J34" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J34" id="0175" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J35" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J35" id="0176" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J36" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J36" id="0177" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J37" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J37" id="0178" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J38" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J38" id="0179" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E01" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E01" id="0180" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E02" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E02" id="0181" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E03" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E03" id="0182" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E04" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E04" id="0183" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E05" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E05" id="0184" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E06" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E06" id="0185" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E07" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E07" id="0186" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E08" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E08" id="0187" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E09" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E09" id="0188" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E10" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E10" id="0189" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E11" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E11" id="0190" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E12" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E12" id="0191" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E13" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E13" id="0192" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E14" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E14" id="0193" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E15" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E15" id="0194" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E16" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E16" id="0195" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E17" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E17" id="0196" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E18" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E18" id="0197" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E19" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E19" id="0198" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E20" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E20" id="0199" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E21" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E21" id="0200" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E22" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E22" id="0201" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E23" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E23" id="0202" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E24" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E24" id="0203" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E25" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E25" id="0204" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E26" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E26" id="0205" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E27" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E27" id="0206" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E28" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E28" id="0207" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E29" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E29" id="0208" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E30" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E30" id="0209" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E31" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E31" id="0210" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E32" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E32" id="0211" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E33" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E33" id="0212" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E34" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E34" id="0213" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E35" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E35" id="0214" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E36" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E36" id="0215" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E37" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E37" id="0216" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_E38" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_E38" id="0217" size="1"/>
+  </category>
+  <category name="D_BK_CA_DAPL_ICN" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_DAPL_ICN" id="0218" size="1"/>
+  </category>
+  <category name="D_BK_CA_MADMNG_MEMCLEAR" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_MADMNG_MEMCLEAR" id="0219" size="1"/>
+  </category>
+  <category name="D_BK_CA_VEHICLE_NAND" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_VEHICLE_STABLE_DATA" id="0227" size="1"/>
+  </category>
+  <category name="D_BK_CA_VEHICLE_DRAM" nand="false" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_VEHICLE_DRAMBKUP_DATA" id="0228" size="1"/>
+  </category>
+  <category name="D_BK_CA_DUMMYREAD_OFFSET" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_DUMMYREAD_OFFSET" id="0229" size="1"/>
+  </category>
+  <category name="D_BK_CA_DPSSERVICE_PARAMETER" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_DPSSERVICE_PARAMETER" id="0230" size="1"/>
+  </category>
+  <category name="D_BK_CA_MEDSRV_RESUME" nand="false" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_MEDSRV_MMCOM_RESUME" id="0231" size="1"/>
+    <item name="D_BK_ID_MEDSRV_ITGP_RESUME" id="0274" size="1"/>
+    <item name="D_BK_ID_MEDSRV_DISC_RESUME" id="0275" size="1"/>
+    <item name="D_BK_ID_MEDSRV__CWORD57__RESUME" id="0276" size="1"/>
+    <item name="D_BK_ID_MEDSRV_BTA_RESUME" id="0277" size="1"/>
+    <item name="D_BK_ID_MEDSRV_CDRIP_RESUME" id="0278" size="1"/>
+    <item name="D_BK_ID_MEDSRV_SDVCOM_RESUME" id="0444" size="1"/>
+  </category>
+  <category name="D_BK_CA_REPROS_UPDATEPARAM" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_REPROS_UPDATEPARAM" id="0232" size="1"/>
+    <item name="D_BK_ID_REPROS_SERVICEFLG" id="0371" size="1"/>
+    <item name="D_BK_ID_REPROS_AUTO_UPDATE_CHECK" id="0372" size="1"/>
+    <item name="D_BK_ID_REPROS_NA03OUT_DLID" id="0373" size="1"/>
+    <item name="D_BK_ID_REPROS_NA03OUT_RESULT" id="0374" size="1"/>
+    <item name="D_BK_ID_REPROS_RESUME_TIME" id="0375" size="1"/>
+    <item name="D_BK_ID_REPROS_NA03OUT_PCGVER" id="0376" size="1"/>
+    <item name="D_BK_ID_REPROS_NA03OUT_UPDATE_TIMING" id="0377" size="1"/>
+    <item name="D_BK_ID_REPROS_NA03OUT_UPDATE_TIMEOUT" id="0378" size="1"/>
+    <item name="D_BK_ID_REPROS_NA05OUT_RESULT" id="0379" size="1"/>
+    <item name="D_BK_ID_REPROS_NA03OUT_DLURL" id="0380" size="1"/>
+    <item name="D_BK_ID_REPROS_NA03OUT_UPDATE_INFO" id="0381" size="1"/>
+    <item name="D_BK_ID_REPROS_CENTERCOMM_STATE" id="0382" size="1"/>
+    <item name="D_BK_ID_REPROS_MAP_VER" id="0383" size="1"/>
+    <item name="D_BK_ID_REPROS_NA07_HISTORY_INFO" id="0385" size="1"/>
+    <item name="D_BK_ID_REPROS_UPDATE_INFO" id="0386" size="1"/>
+    <item name="D_BK_ID_REPROS_NA05_DOWNLOAD_SIZE" id="0387" size="1"/>
+    <item name="D_BK_ID_REPROS_FILE_PATH_INFO" id="0399" size="1"/>
+    <item name="D_BK_ID_REPROS_UPDATE_FILE_EXIST" id="0401" size="1"/>
+    <item name="D_BK_ID_REPROS_START_STATE_INFO" id="0403" size="1"/>
+    <item name="D_BK_ID_REPROS_CHECKFORUPDATE_TIME" id="0404" size="1"/>
+  </category>
+  <category name="D_BK_CA_REPROS_UPDATEHISTORY" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_REPROS_UPDATEHISTORY" id="0233" size="1"/>
+  </category>
+  <category name="D_BK_CA_REPROS_UPDATEINFO" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_REPROS_UPDATEINFO" id="0234" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKB_N" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKB_N" id="0235" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKB_M" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKB_M" id="0236" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKB_G" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKB_G" id="0237" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKB_B" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKB_B" id="0238" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKB_T" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKB_T" id="0239" size="1"/>
+  </category>
+  <category name="D_BK_CA_CLOCK" nand="false" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_CLOCK_OFFSET" id="0240" size="1"/>
+    <item name="D_BK_ID_CLOCK_STATE" id="0241" size="1"/>
+  </category>
+  <category name="D_BK_CA__CWORD76__INFO_SYNC" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID__CWORD76__INFO_SYNC_OFFSET" id="0242" size="1"/>
+  </category>
+  <category name="D_BK_CA__CWORD76__INFO_ASYNC" nand="true" cacheDram="true" sync="false" backupCycle="15" encrypt="false">
+    <item name="D_BK_ID__CWORD76__INFO_ASYNC_OFFSET" id="0243" size="1"/>
+  </category>
+  <category name="D_BK_CA_DIAG_INFORMATION" nand="true" backupDram="true" sync="true" encrypt="true">
+    <item name="D_BK_ID_DIAG_INFORMATION" id="0244" size="1"/>
+  </category>
+  <category name="D_BK_CA_DIAG_UTILIZATION" nand="true" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_DIAG_UTILIZATION" id="0245" size="1"/>
+  </category>
+  <category name="D_BK_CA_VS_VSDSRV_PARAMETER" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_VS_VSDSRV_PARAMETER" id="0246" size="1"/>
+  </category>
+  <category name="D_BK_CA_VS_ACNSRV_PARAMETER" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_VS_ACNSRV_PARAMETER" id="0247" size="1"/>
+  </category>
+  <category name="D_BK_CA_VS_FUCSRV_ASYNC" nand="true" backupDram="true" sync="false" backupCycle="15" encrypt="false">
+    <item name="D_BK_ID_VS_FUCSRV_ASYNC_GRP" id="0248" size="1"/>
+  </category>
+  <category name="D_BK_CA_VS_FUCSRV_SYNC" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_VS_FUCSRV_SYNC_GRP" id="0249" size="1"/>
+  </category>
+  <category name="D_BK_CA_VINFOSRV_PARAMETER" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_VINFOSRV_PARAMETER" id="0250" size="1"/>
+  </category>
+  <category name="D_BK_CA_POS_GPS_FIX_CNT" nand="true" cacheDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_POS_GPS_FIX_CNT" id="0251" size="1"/>
+  </category>
+  <category name="D_BK_CA_POS_GPS_TD_STS" nand="false" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_POS_GPS_TD_STS" id="0252" size="1"/>
+  </category>
+  <category name="D_BK_CA_POS_GPS_ROLLOVER_CNT" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_POS_GPS_ROLLOVER_CNT" id="0253" size="1"/>
+  </category>
+  <category name="D_BK_CA_WLANM_INFO" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_WLANM_INFO" id="0254" size="1"/>
+  </category>
+  <category name="D_BK_CA_BTSTK_LINKKEY" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_BTSTK_LINKKEY" id="0255" size="1"/>
+  </category>
+  <category name="D_BK_CA_EOM_CONTENTS_STATUS" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_EOM_CONTENTS_STATUS" id="0256" size="1"/>
+  </category>
+  <category name="D_BK_CA_UPDSERVICE_PARAMETER" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_UPDSERVICE_PARAMETER" id="0257" size="1"/>
+  </category>
+  <category name="D_BK_CA_RS_WNG_RCV" nand="false" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_RS_WNG_RCV" id="0259" size="1"/>
+  </category>
+  <category name="D_BK_CA_INFS_GENERAL_GRP" nand="true" backupDram="true" sync="true" encrypt="true">
+    <item name="D_BK_ID_INFS_GENERAL_GRP" id="0260" size="1"/>
+  </category>
+  <category name="D_BK_CA_INFS_GENERAL_STARTUPBGM" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_INFS_GENERAL_STARTUPBGM" id="0261" size="1"/>
+  </category>
+  <category name="D_BK_CA_INFS_CLOCK_GRP" nand="true" backupDram="true" sync="true" encrypt="true">
+    <item name="D_BK_ID_INFS_CLOCK_GRP" id="0262" size="1"/>
+  </category>
+  <category name="D_BK_CA_INFS_HOME_GRP" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_INFS_HOME_GRP" id="0263" size="1"/>
+  </category>
+  <category name="D_BK_CA_INFS_VOICE_GRP" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_INFS_VOICE_GRP" id="0264" size="1"/>
+  </category>
+  <category name="D_BK_CA_INFS_VOICE_INTERRUPT_VOL" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_INFS_VOICE_INTERRUPT_VOL" id="0265" size="1"/>
+  </category>
+  <category name="D_BK_CA_INFS_MENU_GRP" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_INFS_MENU_GRP" id="0266" size="1"/>
+  </category>
+  <category name="D_BK_CA_INFS_MENU_UIC_TAB" nand="true" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_INFS_MENU_UIC_TAB" id="0268" size="1"/>
+  </category>
+  <category name="D_BK_CA_INFS_METERCOOP_GRP" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_INFS_METERCOOP_GRP" id="0269" size="1"/>
+  </category>
+  <category name="D_BK_CA_INFS_METERCOOP_MET" nand="true" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_INFS_METERCOOP_MET" id="0270" size="1"/>
+  </category>
+  <category name="D_BK_CA_INFS_UIC_GRP" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_INFS_UIC_GRP" id="0271" size="1"/>
+  </category>
+  <category name="D_BK_CA_INFS_UIC_FILENAME" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_INFS_UIC_FILENAME" id="0272" size="1"/>
+  </category>
+  <category name="D_BK_CA_INFS_SMARTAGENT_GRP" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_INFS_SMARTAGENT_GRP" id="0273" size="1"/>
+  </category>
+  <category name="D_BK_CA_MEDSRV_SETTING" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_MEDSRV_DISC_SETTING" id="0279" size="1"/>
+    <item name="D_BK_ID_MEDSRV_CDRIP_SETTING" id="0280" size="1"/>
+    <item name="D_BK_ID_MEDSRV_COM_SETTING" id="420" size="1"/>
+  </category>
+  <category name="D_BK_CA_GNDB_UPDATE_HISTORY" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_GNDB_UPDATE_HISTORY" id="0281" size="1"/>
+  </category>
+  <category name="D_BK_CA_DIAGCODE_MEM" nand="true" backupDram="true" sync="true" encrypt="true">
+    <item name="D_BK_ID_DIAGCODE_MEM" id="0282" size="1"/>
+  </category>
+  <category name="D_BK_CA_DIAGCODE_EXTINFO" nand="true" backupDram="true" sync="true" encrypt="true">
+    <item name="D_BK_ID_DIAGCODE_EXTINFO" id="0283" size="1"/>
+  </category>
+  <category name="D_BK_CA_DIAGCODE_TRIPCNT" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_DIAGCODE_TRIPCNT" id="0284" size="1"/>
+  </category>
+  <category name="D_BK_CA_PFDREC_FUNC" nand="false" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_PFDREC_FUNC" id="0285" size="1"/>
+  </category>
+  <category name="D_BK_CA_DIAGCODE_WORK_BUF" nand="false" backupDram="true" sync="false" encrypt="true">
+    <item name="D_BK_ID_DIAGCODE_WORK_BUF" id="0286" size="1"/>
+  </category>
+  <category name="D_BK_CA_AS__CWORD76_VOLUME" nand="true" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_AS__CWORD76_VOLUME" id="0287" size="1"/>
+  </category>
+  <category name="D_BK_CA_G_INFO" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_G_INFO" id="0288" size="1"/>
+  </category>
+  <category name="D_BK_CA_G_BM_S" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_G_BM_S" id="0289" size="1"/>
+  </category>
+  <category name="D_BK_CA_F_BR_HIS" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_F_BR_HIS" id="0290" size="1"/>
+  </category>
+  <category name="D_BK_CA_F_COOKIE" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_F_COOKIE" id="0291" size="1"/>
+  </category>
+  <category name="D_BK_CA_F_INFO" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_F_INFO" id="0292" size="1"/>
+  </category>
+  <category name="D_BK_CA_F_USE_INF" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_F_USE_INF" id="0293" size="1"/>
+  </category>
+  <category name="D_BK_CA_F_BM_D" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_F_BM_D" id="0294" size="1"/>
+  </category>
+  <category name="D_BK_CA_F_BM_S" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_F_BM_S" id="0295" size="1"/>
+  </category>
+  <category name="D_BK_CA_KEYBOARD_PARAMETER" nand="true" cacheDram="true" sync="false" backupCycle="60" encrypt="false">
+    <item name="D_BK_ID_KEYBOARD_PARAMETER" id="0296" size="1"/>
+  </category>
+  <category name="D_BK_CA_AUDIOSETTING_PARAMETER" nand="true" cacheDram="true" sync="false" backupCycle="60" encrypt="false">
+    <item name="D_BK_ID_AUDIOSETTING_PARAMETER" id="0297" size="1"/>
+  </category>
+  <category name="D_BK_CA_CONNECTIVITY_LASTAPP" nand="true" cacheDram="true" sync="false" backupCycle="60" encrypt="false">
+    <item name="D_BK_ID_CONNECTIVITY_LASTAPP" id="0298" size="1"/>
+  </category>
+  <category name="D_BK_CA_RADIOAPP_PARAMETER" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_RADIOAPP_PARAMETER" id="0299" size="1"/>
+  </category>
+  <category name="D_BK_CA_TOUCH" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_TOUCH_CONFIG" id="0300" size="1"/>
+    <item name="D_BK_ID_TOUCH_PARAMETER" id="0301" size="1"/>
+  </category>
+  <category name="D_BK_CA_CUSERVICE_DCMFLAG" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_CUSERVICE_DCMFLAG" id="0302" size="1"/>
+  </category>
+  <category name="D_BK_CA_CUSERVICE_SRVFLAG" nand="true" cacheDram="true" sync="false" backupCycle="60" encrypt="false">
+    <item name="D_BK_ID_CUSERVICE_SRVFLAG" id="0303" size="1"/>
+  </category>
+  <category name="D_BK_CA_CUSERVICE_ACCON_CDF" nand="true" cacheDram="true" sync="false" backupCycle="60" encrypt="false">
+    <item name="D_BK_ID_CUSERVICE_ACCON_CDF" id="0304" size="1"/>
+  </category>
+  <category name="D_BK_CA_CUSERVICE_SRVFLAG_CDF" nand="true" cacheDram="true" sync="false" backupCycle="60" encrypt="false">
+    <item name="D_BK_ID_CUSERVICE_SRVFLAG_CDF" id="0305" size="1"/>
+  </category>
+  <category name="D_BK_CA_GRA_AMFMHD_CTRL" nand="false" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_NVM_ID_GRA_AMFMHD_STATION_LIST" id="0321" size="1"/>
+    <item name="D_BK_ID_NVM_ID_GRA_AMFMHD_STATION_LOGO" id="0322" size="1"/>
+  </category>
+  <category name="D_BK_CA_GRA_MSTR_CTRL" nand="true" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_NVM_ID_GRA_MSTR_LSM_DATA" id="0323" size="1"/>
+    <item name="D_BK_ID_NVM_ID_GRA_MSTR_SC_CONFIG_PARAMS" id="0324" size="1"/>
+  </category>
+  <category name="D_BK_CA_GRA_SDARS_CTRL" nand="true" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_NVM_ID_GRA_SDARS_STATION_LIST" id="0326" size="1"/>
+    <item name="D_BK_ID_NVM_ID_GRA_SDARS_CATEGORY_LIST" id="0327" size="1"/>
+    <item name="D_BK_ID_NVM_ID_GRA_SDARS_IMDB_URL_CHN_LOGO" id="0328" size="1"/>
+    <item name="D_BK_ID_NVM_ID_GRA_SDARS_SMS_CFG" id="0365" size="1"/>
+    <item name="D_BK_ID_NVM_ID_GRA_SDARS_RADIO_ID" id="0405" size="1"/>
+    <item name="D_BK_ID_NVM_ID_GRA_SDARS_SUBSCRIPTION_STATUS" id="0439" size="1"/>
+  </category>
+  <category name="D_BK_CA_DAB_TUN" nand="true" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_NVM_ID_DAB_LM_ENS" id="0329" size="1"/>
+    <item name="D_BK_ID_NVM_ID_DAB_LM_ENS_ORDER" id="0330" size="1"/>
+    <item name="D_BK_ID_NVM_ID_DAB_LM_SRVC" id="0331" size="1"/>
+    <item name="D_BK_ID_NVM_ID_DAB_LM_SRV_ORDER" id="0332" size="1"/>
+    <item name="D_BK_ID_NVM_ID_DAB_LM_CMP" id="0333" size="1"/>
+    <item name="D_BK_ID_NVM_ID_DAB_LM_COMP_ORDER" id="0334" size="1"/>
+    <item name="D_BK_ID_NVM_ID_DAB_LM_HARD_LINK" id="0335" size="1"/>
+    <item name="D_BK_ID_NVM_ID_DAB_LM_HARD_LINK_ORDER" id="0336" size="1"/>
+    <item name="D_BK_ID_NVM_ID_DAB_LM_LINK_INFO" id="0337" size="1"/>
+    <item name="D_BK_ID_NVM_ID_DAB_LM_LINK_INFO_ORDER" id="0338" size="1"/>
+    <item name="D_BK_ID_NVM_ID_DAB_TPEG_LIST" id="0339" size="1"/>
+    <item name="D_BK_ID_NVM_ID_DAB_TPEG_LIST_ORDER" id="0340" size="1"/>
+    <item name="D_BK_ID_NVM_ID_DAB_OE_FREQ" id="0341" size="1"/>
+    <item name="D_BK_ID_NVM_ID_DAB_OE_FREQ_ORDER" id="0342" size="1"/>
+    <item name="D_BK_ID_NVM_DAB_OE_EID" id="0343" size="1"/>
+    <item name="D_BK_ID_NVM_DAB_OE_EID_ORDER" id="0344" size="1"/>
+    <item name="D_BK_ID_NVM_ID_DAB_BEST_FM_LINK" id="0440" size="1"/>
+    <item name="D_BK_ID_NVM_ID_DAB_ERROR_COUNT" id="0441" size="1"/>
+  </category>
+  <category name="D_BK_CA_DBG_POSTMORTEM" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_NVM_ID_CPF_POSTMORTEM" id="0345" size="1"/>
+  </category>
+  <category name="D_BK_CA_DBG_FILTER_SET" nand="true" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_NVM_ID_DBG_FILTER_SET" id="0346" size="1"/>
+  </category>
+  <category name="D_BK_CA_DCM_CNCT_EN" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_DCM_CNCT_EN" id="0347" size="1"/>
+  </category>
+  <category name="D_BK_CA_PMG_CLK" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_PMG_CLK" id="0348" size="1"/>
+  </category>
+  <category name="D_BK_CA_PMG_CP" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_PMG_CP" id="0349" size="1"/>
+  </category>
+  <category name="D_BK_CA_PMG_LCTY" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_PMG_LCTY" id="0350" size="1"/>
+  </category>
+  <category name="D_BK_CA_PMG_LPOS" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_PMG_LPOS" id="0351" size="1"/>
+  </category>
+  <category name="D_BK_CA_PMG_SRCA" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_PMG_SRCA" id="0352" size="1"/>
+  </category>
+  <category name="D_BK_CA_MPTMNG_D" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_MPTMNG_D" id="0353" size="1"/>
+  </category>
+  <category name="D_BK_CA_MPTMNG_F" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_MPTMNG_F" id="0354" size="1"/>
+  </category>
+  <category name="D_BK_CA_POS_GPS_TEST_ROLLOVER_CNT" nand="false" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_POS_GPS_TEST_ROLLOVER_CNT" id="0355" size="1"/>
+  </category>
+  <category name="D_BK_CA_PAYD_ODO" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_PAYD_ODO" id="0358" size="1"/>
+  </category>
+  <category name="D_BK_CA_RS_RSDDS_STATS" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_RS_RSDDS_STATS" id="0359" size="1"/>
+  </category>
+  <category name="D_BK_CA_RS_UPDATE_DB_STATS" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_RS_UPDATE_DB_STATS" id="0360" size="1"/>
+  </category>
+  <category name="D_BK_CA_RS_WNG_HISTORY_LIST" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_RS_WNG_HISTORY_LIST" id="0361" size="1"/>
+  </category>
+  <category name="D_BK_CA_RS_WC_INFO" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_RS_WC_INFO" id="0362" size="1"/>
+  </category>
+  <category name="D_BK_CA_RS_VIDCM_DEPLOYMENT_INFO" nand="false" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_RS_VIDCM_DEPLOYMENT_INFO" id="0363" size="1"/>
+  </category>
+  <category name="D_BK_CA_RS_DEALER_INFO" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_RS_DEALER_INFO" id="0384" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J01" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J01" id="0388" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J02" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J02" id="0389" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J03" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J03" id="0390" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J04" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J04" id="0391" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J05" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J05" id="0392" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J06" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J06" id="0393" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J07" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J07" id="0394" size="1"/>
+  </category>
+  <category name="D_BK_CA_SKN_J08" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_SKN_J08" id="0395" size="1"/>
+  </category>
+  <category name="D_BK_CA_MODEMANAGER_LASTMODE" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_MODEMANAGER_LASTMODE" id="0396" size="1"/>
+  </category>
+  <category name="D_BK_CA_MODBPFSG" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_MODBPFSG" id="0397" size="1"/>
+  </category>
+  <category name="D_BK_CA_ASS_PARAMETER" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_ASS_PARAMETER" id="0406" size="1"/>
+  </category>
+  <category name="D_BK_CA_DPSSERVICE_ASPECTSET_N" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_DPSSERVICE_ASPECTSET_N" id="0407" size="1"/>
+  </category>
+  <category name="D_BK_CA_DPSSERVICE_ASPECTSET_D" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_DPSSERVICE_ASPECTSET_D" id="0408" size="1"/>
+  </category>
+  <category name="D_BK_CA_VR_SYNC_NAND" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_VR_INPUT_AUDIO_DUMP" id="0258" size="1"/>
+    <item name="D_BK_ID_VR_PVR_FLAG" id="0364" size="1"/>
+  </category>
+  <category name="D_BK_CA_CUSERVICE_MANAGEINFO" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_CUSERVICE_MANAGEINFO" id="0409" size="1"/>
+  </category>
+  <category name="D_BK_CA_PCSECBK" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_PCSECBK" id="0410" size="1"/>
+  </category>
+  <category name="D_BK_CA_HV_LRN_1" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_HV_LRN_1" id="0412" size="1"/>
+  </category>
+  <category name="D_BK_CA_HV_LRN_2" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_HV_LRN_2" id="0413" size="1"/>
+  </category>
+  <category name="D_BK_CA_HV_LRN_3" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_HV_LRN_3" id="0414" size="1"/>
+  </category>
+  <category name="D_BK_CA_HV_LRN_4" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_HV_LRN_4" id="0415" size="1"/>
+  </category>
+  <category name="D_BK_CA_HV_LRN_5" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_HV_LRN_5" id="0416" size="1"/>
+  </category>
+  <category name="D_BK_CA_HV_HISORY" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_HV_HISORY" id="0417" size="1"/>
+  </category>
+  <category name="D_BK_CA_REPROS_MAPUPDATE_PARAM" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_REPROS_MAPUPDATE_STATUS" id="0418" size="1"/>
+  </category>
+  <category name="D_BK_CA_VS_FUCSRV__CWORD66__SYNC" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_VS_FUCSRV__CWORD66__SYNC_GRP" id="0419" size="1"/>
+  </category>
+  <category name="D_BK_CA_HMI_PNS1" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_HMI_PNS1" id="0421" size="1"/>
+  </category>
+  <category name="D_BK_CA_HMI_PNS2" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_HMI_PNS2" id="0422" size="1"/>
+  </category>
+  <category name="D_BK_CA_HMI_USER" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_HMI_USER" id="0423" size="1"/>
+  </category>
+  <category name="D_BK_CA_PMG_SMAP" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_PMG_SMAP" id="0424" size="1"/>
+  </category>
+  <category name="D_BK_CA_LPT1_F" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LPT1_F" id="0425" size="1"/>
+  </category>
+  <category name="D_BK_CA_LPT2_F" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LPT2_F" id="0426" size="1"/>
+  </category>
+  <category name="D_BK_CA_LPT3_F" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LPT3_F" id="0427" size="1"/>
+  </category>
+  <category name="D_BK_CA_LPT4_F" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LPT4_F" id="0428" size="1"/>
+  </category>
+  <category name="D_BK_CA_LPT5_F" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_LPT5_F" id="0429" size="1"/>
+  </category>
+  <category name="D_BK_CA_MUDINFO" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_MUDINFO" id="0430" size="1"/>
+  </category>
+  <category name="D_BK_CA_CTRRTSRV" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_CTRRTSRV" id="0431" size="1"/>
+  </category>
+  <category name="D_BK_CA_VDU_MNG" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_VDU_MNG" id="0432" size="1"/>
+  </category>
+  <category name="D_BK_CA_VDU_ICON" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_VDU_ICON" id="0433" size="1"/>
+  </category>
+  <category name="D_BK_CA_DIAG_DEVICEINFO" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_DIAG_DEVICEINFO" id="0434" size="1"/>
+  </category>
+  <category name="D_BK_CA_BT_PAIRING" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_BT_PAIRING" id="0435" size="1"/>
+  </category>
+  <category name="D_BK_CA_POS_GPS_SET_TIME" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_POS_GPS_SET_TIME" id="0436" size="1"/>
+  </category>
+  <category name="D_BK_CA_DTSERVICE_WRITE_AT_SHUT_DOWN" nand="true" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_DTSERVICE_FORECAST" id="0221" size="1"/>
+    <item name="D_BK_ID_DTSERVICE_COORDINATE" id="0223" size="1"/>
+    <item name="D_BK_ID_DTSERVICE_AFLIST" id="0224" size="1"/>
+    <item name="D_BK_ID_DTSERVICE_DOPPLER" id="0225" size="1"/>
+  </category>
+  <category name="D_BK_CA_DTSERVICE_WRITE_AT_IMMIEDIATELY" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_DTSERVICE_CITYDB" id="0220" size="1"/>
+    <item name="D_BK_ID_DTSERVICE_SETUP" id="0222" size="1"/>
+    <item name="D_BK_ID_DTSERVICE_WEATHER_HISTORY" id="0226" size="1"/>
+  </category>
+  <category name="D_BK_CA_TCS_LEARN_DICTIONARY" nand="true" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_TCS_LEARN_DICTIONARY" id="437" size="1"/>
+    <item name="D_BK_ID_TCS_WNN_LEARN_DICTIONARY" id="438" size="1"/>
+  </category>
+  <category name="D_BK_CA_POS_GPS_TIME_SET_INFO" nand="false" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_POS_GPS_TIME_SET_INFO" id="0442" size="1"/>
+  </category>
+  <category name="D_BK_CA_POS_GPS_TIME_SET_FLAG" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_POS_GPS_TIME_SET_FLAG" id="0443" size="1"/>
+  </category>
+  <category name="D_BK_CA_GRA_MSTR_CTRL_IMM" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_NVM_ID_GRA_MSTR_PRESET_LIST" id="0325" size="1"/>
+    <item name="D_BK_ID_NVM_ID_GRA_MSTR_PRESET_USER1_LIST" id="0366" size="1"/>
+    <item name="D_BK_ID_NVM_ID_GRA_MSTR_PRESET_USER2_LIST" id="0367" size="1"/>
+    <item name="D_BK_ID_NVM_ID_GRA_MSTR_PRESET_USER3_LIST" id="0368" size="1"/>
+    <item name="D_BK_ID_NVM_ID_GRA_MSTR_PRESET_USER4_LIST" id="0369" size="1"/>
+    <item name="D_BK_ID_NVM_ID_GRA_MSTR_PRESET_USER5_LIST" id="0370" size="1"/>
+  </category>
+  <category name="D_BK_CA_CON_CWORD57__INFO" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_CON_CWORD57__INFO" id="0445" size="1"/>
+  </category>
+  <category name="D_BK_CA_HELP_DATA" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_HELP_DATA" id="0446" size="1"/>
+  </category>
+  <category name="D_BK_CA__CWORD76__INFO_DRAM" nand="false" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID__CWORD76__INFO_DRAM_OFFSET" id="0447" size="1"/>
+  </category>
+  <category name="D_BK_CA_VS_METSRV_PARAMETER" nand="false" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_VS_METSRV_PARAMETER" id="0448" size="1"/>
+  </category>
+  <category name="D_BK_CA_DIAGCODE_MASK" nand="false" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_DIAGCODE_MASK" id="0449" size="1"/>
+  </category>
+  <category name="D_BK_CA_NAVIPROXY" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_NAVIPROXY" id="0450" size="1"/>
+  </category>
+  <category name="D_BK_CA_AWBPROXY" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_AWBPROXY" id="0451" size="1"/>
+  </category>
+  <category name="D_BK_CA_VS_CMRSRV_PARAMETER" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_VS_CMRSRV_PARAMETER" id="0452" size="1"/>
+  </category>
+  <category name="D_BK_CA_DWR_DWRM" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_DWR_DWRM" id="0453" size="1"/>
+  </category>
+  <category name="D_BK_CA_MUDINIT" nand="true" cacheDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_MUDINIT" id="0454" size="1"/>
+  </category>
+  <category name="D_BK_CA__CWORD27__USER_DATA" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID__CWORD27__SETTING" id="0457" size="1"/>
+  </category>
+  <category name="D_BK_CA__CWORD27__SHARED_RAM" nand="false" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID__CWORD27__CONNECTION_MODE" id="0456" size="1"/>
+  </category>
+  <category name="D_BK_CA_DTI_ETCC" nand="true" backupDram="true" sync="false" backupCycle="30" encrypt="false">
+    <item name="D_BK_ID_DTI_ETCC" id="0458" size="1"/>
+  </category>
+  <category name="D_BK_CA_BT_MANAGEMENT" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_BT_POWER" id="0459" size="1"/>
+    <item name="D_BK_ID_BT_PINCODE" id="0460" size="1"/>
+    <item name="D_BK_ID_BT_NAME" id="0461" size="1"/>
+    <item name="D_BK_ID_BT_DEFAULT_NAME" id="0462" size="1"/>
+    <item name="D_BK_ID_BT_ADDRESS" id="0463" size="1"/>
+    <item name="D_BK_ID_BT_AUTOMATIC_CONNECTION" id="0464" size="1"/>
+    <item name="D_BK_ID_BT_PREFERRED_SETTING" id="0465" size="1"/>
+    <item name="D_BK_ID_BT_PHONE_DISPLAY_STATE" id="0466" size="1"/>
+    <item name="D_BK_ID_BT_AUDIOPLAYER_DISPLAY_STATE" id="0467" size="1"/>
+    <item name="D_BK_ID_BT_PROFILE_AVAILABLE" id="0468" size="1"/>
+    <item name="D_BK_ID_BT_DCM_PHONE" id="0469" size="1"/>
+  </category>
+  <category name="D_BK_CA_EOMSERVICE_LOCALSTORAGE" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_EOMSERVICE_LOCALSTORAGE" id="0470" size="1"/>
+  </category>
+  <category name="D_BK_CA_DOA_EXISTENCE" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_DOA_EXISTENCE" id="0471" size="1"/>
+  </category>
+  <category name="D_BK_CA_INFS_VOICE_INTERRUPT_SETTING" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_INFS_VOICE_INTERRUPT_SETTING" id="0472" size="1"/>
+  </category>
+  <category name="D_BK_CA_DIAGCODE_ODOMETER" nand="true" backupDram="true" sync="true" encrypt="true">
+    <item name="D_BK_ID_DIAGCODE_ODOMETER" id="0473" size="1"/>
+  </category>
+  <category name="D_BK_CA_DIAGCODE_DIAGMODE" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_DIAGCODE_DIAGMODE" id="0474" size="1"/>
+  </category>
+  <category name="D_BK_CA_VS_FUCSRV__CWORD66__ASYNC" nand="true" backupDram="true" sync="false" backupCycle="60" encrypt="false">
+    <item name="D_BK_ID_VS_FUCSRV__CWORD66__ASYNC_GRP" id="0475" size="1"/>
+  </category>
+  <category name="D_BK_CA_VS_FUCSRV__CWORD66__1TRIP_ASYNC" nand="true" backupDram="true" sync="false" backupCycle="60" encrypt="true">
+    <item name="D_BK_ID_VS_FUCSRV__CWORD66__1TRIP_ASYNC_GRP" id="0476" size="1"/>
+  </category>
+  <category name="D_BK_CA__CWORD28_AUTO_SHARED_RAM" nand="false" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID__CWORD28_AUTO_CONNECTION_MODE" id="0477" size="1"/>
+  </category>
+  <category name="D_BK_CA__CWORD28_AUTO_USER_DATA" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID__CWORD28_AUTO_SETTING" id="0478" size="1"/>
+  </category>
+  <category name="D_BK_CA__CWORD24_" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID__CWORD24_" id="0479" size="1"/>
+  </category>
+  <category name="D_BK_CA_VS_FUCSRV_HISTORY_ASYNC" nand="true" backupDram="true" sync="false" backupCycle="15" encrypt="true">
+    <item name="D_BK_ID_VS_FUCSRV_HISTORY_ASYNC_GRP" id="0480" size="1"/>
+  </category>
+  <category name="D_BK_CA_VS_FUCSRV_HISTORY_SYNC" nand="true" backupDram="true" sync="true" encrypt="true">
+    <item name="D_BK_ID_VS_FUCSRV_HISTORY_SYNC_GRP" id="0481" size="1"/>
+  </category>
+  <category name="D_BK_CA_VS_FUCSRV__CWORD66__TRIP_ASYNC" nand="true" backupDram="true" sync="false" backupCycle="60" encrypt="true">
+    <item name="D_BK_ID_VS_FUCSRV__CWORD66__TRIP_ASYNC_GRP" id="0482" size="1"/>
+  </category>
+  <category name="D_BK_CA_VINFOSRV_METER_TYPE" nand="false" backupDram="true" sync="false" encrypt="false">
+    <item name="D_BK_ID_VINFOSRV_METER_TYPE" id="0483" size="1"/>
+  </category>
+  <category name="D_BK_CA_ADAS_SETTING" nand="true" backupDram="true" sync="true" encrypt="false">
+    <item name="D_BK_ID_ADAS_SETTING" id="0484" size="1"/>
+  </category>
+</backup>
