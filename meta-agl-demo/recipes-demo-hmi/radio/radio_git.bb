@@ -4,8 +4,7 @@ HOMEPAGE    = "https://gerrit.automotivelinux.org/gerrit/#/admin/projects/apps/r
 SECTION     = "apps"
 
 LICENSE     = "Apache-2.0 & GPLv2+"
-LIC_FILES_CHKSUM = "file://LICENSE;md5=ae6497158920d9524cf208c09cc4c984 \
-                    file://COPYING;md5=751419260aa954499f7abaabaa882bbe"
+LIC_FILES_CHKSUM = "file://LICENSE;md5=ae6497158920d9524cf208c09cc4c984"
 
 SRC_URI = "git://gerrit.automotivelinux.org/gerrit/apps/radio;protocol=https;branch=${AGL_BRANCH} \
            file://presets-ALS.conf \
@@ -19,7 +18,7 @@ S  = "${WORKDIR}/git"
 
 # build-time dependencies
 DEPENDS = "qtquickcontrols2 rtl-sdr"
-DEPENDS += "libhomescreen qlibwindowmanager libqtappfw"
+DEPENDS += "libhomescreen libqtappfw"
 
 inherit qmake5 aglwgt
 
@@ -35,4 +34,4 @@ do_install_append() {
 
 FILES_${PN} += "${sysconfdir}/xdg/AGL/*"
 
-RDEPENDS_${PN} += "agl-service-radio"
+RDEPENDS_${PN} += "agl-service-radio libqtappfw"

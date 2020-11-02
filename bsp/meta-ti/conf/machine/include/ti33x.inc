@@ -20,7 +20,7 @@ MACHINE_GUI_CLASS = "bigscreen"
 MACHINE_KERNEL_PR = "r22"
 
 # Default providers, may need to override for specific machines
-PREFERRED_PROVIDER_virtual/kernel = "linux-ti-staging"
+PREFERRED_PROVIDER_virtual/kernel ?= "linux-ti-staging"
 PREFERRED_PROVIDER_virtual/bootloader = "u-boot-ti-staging"
 PREFERRED_PROVIDER_u-boot = "u-boot-ti-staging"
 
@@ -28,11 +28,12 @@ KERNEL_IMAGETYPE = "zImage"
 
 KERNEL_DEVICETREE = " \
     am335x-evm.dtb am335x-evmsk.dtb \
-    am335x-icev2.dtb am335x-icev2-prueth.dtb \
+    am335x-icev2.dtb \
+    am335x-icev2-prueth.dtb \
     am335x-pocketbeagle.dtb am335x-bone.dtb am335x-boneblue.dtb \
     am335x-bonegreen.dtb am335x-bonegreen-wireless.dtb \
     am335x-boneblack.dtb am335x-boneblack-wireless.dtb \
-    am335x-boneblack-prusuart.dtb am335x-sancloud-bbe.dtb \
+    am335x-sancloud-bbe.dtb \
 "
 
 KERNEL_DEVICETREE += "${@oe.utils.conditional('ENABLE_TI_UIO_DEVICES', '1', 'am335x-icev2-pru-excl-uio.dtb', '', d)}"
@@ -58,3 +59,8 @@ MACHINE_FEATURES = "kernel26 apm usbgadget usbhost vfat ext2 screen alsa etherne
 # Set the list of device targets for ti-pdk class recipes
 TI_PDK_LIMIT_SOCS = "am335x"
 TI_PDK_LIMIT_BOARDS = "evmAM335x icev2AM335x iceAMIC110 bbbAM335x skAM335x"
+
+IMAGE_FSTYPES += "tar.xz wic.xz"
+WKS_FILE ?= "sdimage-2part.wks"
+IMAGE_BOOT_FILES ?= "${SPL_BINARY} u-boot.${UBOOT_SUFFIX}"
+do_image_wic[depends] += "u-boot:do_deploy"

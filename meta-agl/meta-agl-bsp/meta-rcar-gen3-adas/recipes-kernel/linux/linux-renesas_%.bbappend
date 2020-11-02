@@ -5,10 +5,6 @@ SRC_URI_append_ulcb = " \
     file://disable_most.cfg \
 "
 
-SRC_URI_remove_ulcb = " \
-    file://0113-arm64-dts-ulcb-kf-increase-SDIO-frequency-for-WLAN-c.patch \
-"
-
 KERNEL_DEVICETREE_remove_h3ulcb = " \
     renesas/r8a7795-es1-h3ulcb-view.dtb \
     renesas/r8a7795-es1-h3ulcb-had-alfa.dtb \

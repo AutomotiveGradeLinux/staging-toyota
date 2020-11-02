@@ -14,15 +14,15 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=ae6497158920d9524cf208c09cc4c984 \
 DEPENDS += "qtbase \
             qtquickcontrols2 \
             qlibhomescreen \
-            qlibwindowmanager \
             qtlocation \
             libqtappfw \
+            wayland-native \
+            qtwayland-native \
 "
 
 PV = "1.0+git${SRCPV}"
 
 SRC_URI = "git://gerrit.automotivelinux.org/gerrit/apps/tbtnavi;protocol=https;branch=${AGL_BRANCH}"
-#SRCREV  = "4a8b7a6301e4b093c99329d0a16fbee6c535f312"
 SRCREV = "${AGL_APP_REVISION}"
 
 S = "${WORKDIR}/git"

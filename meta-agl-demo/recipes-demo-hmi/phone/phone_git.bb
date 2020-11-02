@@ -16,10 +16,9 @@ S  = "${WORKDIR}/git"
 DEPENDS += "qtquickcontrols2 \
             libqtappfw \
             libhomescreen \
-            qlibwindowmanager \
             gstreamer1.0 \
 "
 
 inherit qmake5 aglwgt
 
-RDEPENDS_${PN} += "agl-service-telephony agl-service-bluetooth-pbap"
+RDEPENDS_${PN} += "agl-service-telephony agl-service-bluetooth-pbap libqtappfw"

@@ -1,5 +1,3 @@
-# ex:ts=4:sw=4:sts=4:et
-# -*- tab-width: 4; c-basic-offset: 4; indent-tabs-mode: nil -*-
 #
 # BitBake 'Build' implementation
 #
@@ -10,25 +8,13 @@
 #
 # Based on Gentoo's portage.py.
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 2 as
-# published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+# SPDX-License-Identifier: GPL-2.0-only
 #
 # Based on functions from the base bb module, Copyright 2003 Holger Schurig
 
 import os
 import sys
 import logging
-import shlex
 import glob
 import time
 import stat
@@ -67,34 +53,20 @@ else:
 builtins['bb'] = bb
 builtins['os'] = os
 
-class FuncFailed(Exception):
-    def __init__(self, name = None, logfile = None):
-        self.logfile = logfile
-        self.name = name
-        if name:
-            self.msg = 'Function failed: %s' % name
-        else:
-            self.msg = "Function failed"
-
-    def __str__(self):
-        if self.logfile and os.path.exists(self.logfile):
-            msg = ("%s (log file is located at %s)" %
-                   (self.msg, self.logfile))
-        else:
-            msg = self.msg
-        return msg
-
 class TaskBase(event.Event):
     """Base class for task events"""
 
-    def __init__(self, t, logfile, d):
+    def __init__(self, t, fn, logfile, d):
         self._task = t
+        self._fn = fn
         self._package = d.getVar("PF")
         self._mc = d.getVar("BB_CURRENT_MC")
         self.taskfile = d.getVar("FILE")
         self.taskname = self._task
         self.logfile = logfile
         self.time = time.time()
+        self.pn = d.getVar("PN")
+        self.pv = d.getVar("PV")
         event.Event.__init__(self)
         self._message = "recipe %s: task %s: %s" % (d.getVar("PF"), t, self.getDisplayName())
 
@@ -111,8 +83,8 @@ class TaskBase(event.Event):
 
 class TaskStarted(TaskBase):
     """Task execution started"""
-    def __init__(self, t, logfile, taskflags, d):
-        super(TaskStarted, self).__init__(t, logfile, d)
+    def __init__(self, t, fn, logfile, taskflags, d):
+        super(TaskStarted, self).__init__(t, fn, logfile, d)
         self.taskflags = taskflags
 
 class TaskSucceeded(TaskBase):
@@ -121,9 +93,9 @@ class TaskSucceeded(TaskBase):
 class TaskFailed(TaskBase):
     """Task execution failed"""
 
-    def __init__(self, task, logfile, metadata, errprinted = False):
+    def __init__(self, task, fn, logfile, metadata, errprinted = False):
         self.errprinted = errprinted
-        super(TaskFailed, self).__init__(task, logfile, metadata)
+        super(TaskFailed, self).__init__(task, fn, logfile, metadata)
 
 class TaskFailedSilent(TaskBase):
     """Task execution failed (silently)"""
@@ -133,8 +105,8 @@ class TaskFailedSilent(TaskBase):
 
 class TaskInvalid(TaskBase):
 
-    def __init__(self, task, metadata):
-        super(TaskInvalid, self).__init__(task, None, metadata)
+    def __init__(self, task, fn, metadata):
+        super(TaskInvalid, self).__init__(task, fn, None, metadata)
         self._message = "No such task '%s'" % task
 
 class TaskProgress(event.Event):
@@ -176,15 +148,33 @@ class LogTee(object):
 
     def __repr__(self):
         return '<LogTee {0}>'.format(self.name)
+
     def flush(self):
         self.outfile.flush()
 
-#
-# pythonexception allows the python exceptions generated to be raised
-# as the real exceptions (not FuncFailed) and without a backtrace at the 
-# origin of the failure.
-#
-def exec_func(func, d, dirs = None, pythonexception=False):
+
+class StdoutNoopContextManager:
+    """
+    This class acts like sys.stdout, but adds noop __enter__ and __exit__ methods.
+    """
+    def __enter__(self):
+        return sys.stdout
+
+    def __exit__(self, *exc_info):
+        pass
+
+    def write(self, string):
+        return sys.stdout.write(string)
+
+    def flush(self):
+        sys.stdout.flush()
+
+    @property
+    def name(self):
+        return sys.stdout.name
+
+
+def exec_func(func, d, dirs = None):
     """Execute a BB 'function'"""
 
     try:
@@ -256,7 +246,7 @@ def exec_func(func, d, dirs = None, pythonexception=False):
 
     with bb.utils.fileslocked(lockfiles):
         if ispython:
-            exec_func_python(func, d, runfile, cwd=adir, pythonexception=pythonexception)
+            exec_func_python(func, d, runfile, cwd=adir)
         else:
             exec_func_shell(func, d, runfile, cwd=adir)
 
@@ -276,7 +266,7 @@ _functionfmt = """
 {function}(d)
 """
 logformatter = bb.msg.BBLogFormatter("%(levelname)s: %(message)s")
-def exec_func_python(func, d, runfile, cwd=None, pythonexception=False):
+def exec_func_python(func, d, runfile, cwd=None):
     """Execute a python BB 'function'"""
 
     code = _functionfmt.format(function=func)
@@ -301,13 +291,7 @@ def exec_func_python(func, d, runfile, cwd=None, pythonexception=False):
         bb.methodpool.insert_method(func, text, fn, lineno - 1)
 
         comp = utils.better_compile(code, func, "exec_python_func() autogenerated")
-        utils.better_exec(comp, {"d": d}, code, "exec_python_func() autogenerated", pythonexception=pythonexception)
-    except (bb.parse.SkipRecipe, bb.build.FuncFailed):
-        raise
-    except:
-        if pythonexception:
-            raise
-        raise FuncFailed(func, None)
+        utils.better_exec(comp, {"d": d}, code, "exec_python_func() autogenerated")
     finally:
         bb.debug(2, "Python function %s finished" % func)
 
@@ -334,6 +318,42 @@ bb_exit_handler() {
 trap 'bb_exit_handler' 0
 set -e
 '''
+
+def create_progress_handler(func, progress, logfile, d):
+    if progress == 'percent':
+        # Use default regex
+        return bb.progress.BasicProgressHandler(d, outfile=logfile)
+    elif progress.startswith('percent:'):
+        # Use specified regex
+        return bb.progress.BasicProgressHandler(d, regex=progress.split(':', 1)[1], outfile=logfile)
+    elif progress.startswith('outof:'):
+        # Use specified regex
+        return bb.progress.OutOfProgressHandler(d, regex=progress.split(':', 1)[1], outfile=logfile)
+    elif progress.startswith("custom:"):
+        # Use a custom progress handler that was injected via OE_EXTRA_IMPORTS or __builtins__
+        import functools
+        from types import ModuleType
+
+        parts = progress.split(":", 2)
+        _, cls, otherargs = parts[0], parts[1], (parts[2] or None) if parts[2:] else None
+        if cls:
+            def resolve(x, y):
+                if not x:
+                    return None
+                if isinstance(x, ModuleType):
+                    return getattr(x, y, None)
+                return x.get(y)
+            cls_obj = functools.reduce(resolve, cls.split("."), bb.utils._context)
+            if not cls_obj:
+                # Fall-back on __builtins__
+                cls_obj = functools.reduce(lambda x, y: x.get(y), cls.split("."), __builtins__)
+            if cls_obj:
+                return cls_obj(d, outfile=logfile, otherargs=otherargs)
+            bb.warn('%s: unknown custom progress handler in task progress varflag value "%s", ignoring' % (func, cls))
+    else:
+        bb.warn('%s: invalid task progress varflag value "%s", ignoring' % (func, progress))
+
+    return logfile
 
 def exec_func_shell(func, d, runfile, cwd=None):
     """Execute a shell function from the metadata
@@ -372,23 +392,13 @@ exit $ret
             cmd = [fakerootcmd, runfile]
 
     if bb.msg.loggerDefaultVerbose:
-        logfile = LogTee(logger, sys.stdout)
+        logfile = LogTee(logger, StdoutNoopContextManager())
     else:
-        logfile = sys.stdout
+        logfile = StdoutNoopContextManager()
 
     progress = d.getVarFlag(func, 'progress')
     if progress:
-        if progress == 'percent':
-            # Use default regex
-            logfile = bb.progress.BasicProgressHandler(d, outfile=logfile)
-        elif progress.startswith('percent:'):
-            # Use specified regex
-            logfile = bb.progress.BasicProgressHandler(d, regex=progress.split(':', 1)[1], outfile=logfile)
-        elif progress.startswith('outof:'):
-            # Use specified regex
-            logfile = bb.progress.OutOfProgressHandler(d, regex=progress.split(':', 1)[1], outfile=logfile)
-        else:
-            bb.warn('%s: invalid task progress varflag value "%s", ignoring' % (func, progress))
+        logfile = create_progress_handler(func, progress, logfile, d)
 
     fifobuffer = bytearray()
     def readfifo(data):
@@ -407,6 +417,8 @@ exit $ret
                     bb.plain(value)
                 elif cmd == 'bbnote':
                     bb.note(value)
+                elif cmd == 'bbverbnote':
+                    bb.verbnote(value)
                 elif cmd == 'bbwarn':
                     bb.warn(value)
                 elif cmd == 'bberror':
@@ -436,13 +448,8 @@ exit $ret
     with open(fifopath, 'r+b', buffering=0) as fifo:
         try:
             bb.debug(2, "Executing shell function %s" % func)
-
-            try:
-                with open(os.devnull, 'r+') as stdin:
-                    bb.process.run(cmd, shell=False, stdin=stdin, log=logfile, extrafiles=[(fifo,readfifo)])
-            except bb.process.CmdError:
-                logfn = d.getVar('BB_LOGFILE')
-                raise FuncFailed(func, logfn)
+            with open(os.devnull, 'r+') as stdin, logfile:
+                bb.process.run(cmd, shell=False, stdin=stdin, log=logfile, extrafiles=[(fifo,readfifo)])
         finally:
             os.unlink(fifopath)
 
@@ -567,11 +574,8 @@ def _exec_task(fn, task, d, quieterr):
 
     try:
         try:
-            event.fire(TaskStarted(task, logfn, flags, localdata), localdata)
+            event.fire(TaskStarted(task, fn, logfn, flags, localdata), localdata)
         except (bb.BBHandledException, SystemExit):
-            return 1
-        except FuncFailed as exc:
-            logger.error(str(exc))
             return 1
 
         try:
@@ -580,16 +584,16 @@ def _exec_task(fn, task, d, quieterr):
             exec_func(task, localdata)
             for func in (postfuncs or '').split():
                 exec_func(func, localdata)
-        except FuncFailed as exc:
+        except bb.BBHandledException:
+            event.fire(TaskFailed(task, fn, logfn, localdata, True), localdata)
+            return 1
+        except Exception as exc:
             if quieterr:
-                event.fire(TaskFailedSilent(task, logfn, localdata), localdata)
+                event.fire(TaskFailedSilent(task, fn, logfn, localdata), localdata)
             else:
                 errprinted = errchk.triggered
                 logger.error(str(exc))
-                event.fire(TaskFailed(task, logfn, localdata, errprinted), localdata)
-            return 1
-        except bb.BBHandledException:
-            event.fire(TaskFailed(task, logfn, localdata, True), localdata)
+                event.fire(TaskFailed(task, fn, logfn, localdata, errprinted), localdata)
             return 1
     finally:
         sys.stdout.flush()
@@ -612,7 +616,7 @@ def _exec_task(fn, task, d, quieterr):
             logger.debug(2, "Zero size logfn %s, removing", logfn)
             bb.utils.remove(logfn)
             bb.utils.remove(loglink)
-    event.fire(TaskSucceeded(task, logfn, localdata), localdata)
+    event.fire(TaskSucceeded(task, fn, logfn, localdata), localdata)
 
     if not localdata.getVarFlag(task, 'nostamp', False) and not localdata.getVarFlag(task, 'selfstamp', False):
         make_stamp(task, localdata)
@@ -814,6 +818,9 @@ def add_tasks(tasklist, d):
         task_deps['parents'][task] = []
         if 'deps' in flags:
             for dep in flags['deps']:
+                # Check and warn for "addtask task after foo" while foo does not exist
+                #if not dep in tasklist:
+                #    bb.warn('%s: dependent task %s for %s does not exist' % (d.getVar('PN'), dep, task))
                 dep = d.expand(dep)
                 task_deps['parents'][task].append(dep)
 

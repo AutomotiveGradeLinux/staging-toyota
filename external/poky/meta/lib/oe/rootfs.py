@@ -1,3 +1,6 @@
+#
+# SPDX-License-Identifier: GPL-2.0-only
+#
 from abc import ABCMeta, abstractmethod
 from oe.utils import execute_pre_post_process
 from oe.package_manager import *
@@ -123,17 +126,16 @@ class Rootfs(object, metaclass=ABCMeta):
             bb.utils.mkdirhier(self.image_rootfs + os.path.dirname(dir))
             shutil.copytree(self.image_rootfs + '-orig' + dir, self.image_rootfs + dir, symlinks=True)
 
-        cpath = oe.cachedpath.CachedPath()
         # Copy files located in /usr/lib/debug or /usr/src/debug
         for dir in ["/usr/lib/debug", "/usr/src/debug"]:
             src = self.image_rootfs + '-orig' + dir
-            if cpath.exists(src):
+            if os.path.exists(src):
                 dst = self.image_rootfs + dir
                 bb.utils.mkdirhier(os.path.dirname(dst))
                 shutil.copytree(src, dst)
 
         # Copy files with suffix '.debug' or located in '.debug' dir.
-        for root, dirs, files in cpath.walk(self.image_rootfs + '-orig'):
+        for root, dirs, files in os.walk(self.image_rootfs + '-orig'):
             relative_dir = root[len(self.image_rootfs + '-orig'):]
             for f in files:
                 if f.endswith('.debug') or '/.debug' in relative_dir:
@@ -354,9 +356,9 @@ class Rootfs(object, metaclass=ABCMeta):
 class RpmRootfs(Rootfs):
     def __init__(self, d, manifest_dir, progress_reporter=None, logcatcher=None):
         super(RpmRootfs, self).__init__(d, progress_reporter, logcatcher)
-        self.log_check_regex = '(unpacking of archive failed|Cannot find package'\
-                               '|exit 1|ERROR: |Error: |Error |ERROR '\
-                               '|Failed |Failed: |Failed$|Failed\(\d+\):)'
+        self.log_check_regex = r'(unpacking of archive failed|Cannot find package'\
+                               r'|exit 1|ERROR: |Error: |Error |ERROR '\
+                               r'|Failed |Failed: |Failed$|Failed\(\d+\):)'
         self.manifest = RpmManifest(d, manifest_dir)
 
         self.pm = RpmPM(d,
@@ -499,7 +501,7 @@ class DpkgOpkgRootfs(Rootfs):
             pkg_depends_list = []
             # filter version requirements like libc (>= 1.1)
             for dep in pkg_depends.split(', '):
-                m_dep = re.match("^(.*) \(.*\)$", dep)
+                m_dep = re.match(r"^(.*) \(.*\)$", dep)
                 if m_dep:
                     dep = m_dep.group(1)
                 pkg_depends_list.append(dep)
@@ -515,21 +517,33 @@ class DpkgOpkgRootfs(Rootfs):
             data = status.read()
             status.close()
             for line in data.split('\n'):
-                m_pkg = re.match("^Package: (.*)", line)
-                m_status = re.match("^Status:.*unpacked", line)
-                m_depends = re.match("^Depends: (.*)", line)
+                m_pkg = re.match(r"^Package: (.*)", line)
+                m_status = re.match(r"^Status:.*unpacked", line)
+                m_depends = re.match(r"^Depends: (.*)", line)
 
+                #Only one of m_pkg, m_status or m_depends is not None at time
+                #If m_pkg is not None, we started a new package
                 if m_pkg is not None:
-                    if pkg_name and pkg_status_match:
-                        pkgs[pkg_name] = _get_pkg_depends_list(pkg_depends)
-
+                    #Get Package name
                     pkg_name = m_pkg.group(1)
+                    #Make sure we reset other variables
                     pkg_status_match = False
                     pkg_depends = ""
                 elif m_status is not None:
+                    #New status matched
                     pkg_status_match = True
                 elif m_depends is not None:
+                    #New depends macthed
                     pkg_depends = m_depends.group(1)
+                else:
+                    pass
+
+                #Now check if we can process package depends and postinst
+                if "" != pkg_name and pkg_status_match:
+                    pkgs[pkg_name] = _get_pkg_depends_list(pkg_depends)
+                else:
+                    #Not enough information
+                    pass
 
         # remove package dependencies not in postinsts
         pkg_names = list(pkgs.keys())
@@ -632,6 +646,7 @@ class DpkgRootfs(DpkgOpkgRootfs):
             if pkg_type in pkgs_to_install:
                 self.pm.install(pkgs_to_install[pkg_type],
                                 [False, True][pkg_type == Manifest.PKG_TYPE_ATTEMPT_ONLY])
+                self.pm.fix_broken_dependencies()
 
         if self.progress_reporter:
             # Don't support attemptonly, so skip that
@@ -735,15 +750,16 @@ class OpkgRootfs(DpkgOpkgRootfs):
         if filecmp.cmp(f1, f2):
             return True
 
-        if self.image_rootfs not in f1:
-            self._prelink_file(f1.replace(key, ''), f1)
+        if bb.data.inherits_class('image-prelink', self.d):
+            if self.image_rootfs not in f1:
+                self._prelink_file(f1.replace(key, ''), f1)
 
-        if self.image_rootfs not in f2:
-            self._prelink_file(f2.replace(key, ''), f2)
+            if self.image_rootfs not in f2:
+                self._prelink_file(f2.replace(key, ''), f2)
 
-        # Both of them are prelinked
-        if filecmp.cmp(f1, f2):
-            return True
+            # Both of them are prelinked
+            if filecmp.cmp(f1, f2):
+                return True
 
         # Not equal
         return False
@@ -759,7 +775,7 @@ class OpkgRootfs(DpkgOpkgRootfs):
         if allow_replace is None:
             allow_replace = ""
 
-        allow_rep = re.compile(re.sub("\|$", "", allow_replace))
+        allow_rep = re.compile(re.sub(r"\|$", r"", allow_replace))
         error_prompt = "Multilib check error:"
 
         files = {}
@@ -878,8 +894,6 @@ class OpkgRootfs(DpkgOpkgRootfs):
             self.progress_reporter.next_stage()
 
         self.pm.update()
-
-        self.pm.handle_bad_recommendations()
 
         if self.progress_reporter:
             self.progress_reporter.next_stage()

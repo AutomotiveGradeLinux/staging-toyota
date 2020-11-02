@@ -14,13 +14,14 @@ S  = "${WORKDIR}/git"
 
 # build-time dependencies
 DEPENDS += "libqtappfw qtquickcontrols2 qt-qrcode"
-DEPENDS += "libhomescreen qlibwindowmanager qtvirtualkeyboard"
+DEPENDS += "libhomescreen qtvirtualkeyboard"
 
 # runtime dependencies
 RDEPENDS_${PN} += " \
 	qt-qrcode \
 	agl-service-bluetooth \
 	agl-service-network \
+	libqtappfw \
 "
 
 inherit qmake5 aglwgt

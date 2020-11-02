@@ -82,7 +82,7 @@
             <para>
                 This section briefly introduces BitBake.
                 If you want more information on BitBake, see the
-                <ulink url='&YOCTO_DOCS_BB_URL;#bitbake-user-manual'>BitBake User Manual</ulink>.
+                <ulink url='&YOCTO_DOCS_BB_URL;'>BitBake User Manual</ulink>.
             </para>
 
             <para>
@@ -924,9 +924,12 @@
                 <title>Source Control Managers (Optional)</title>
 
                 <para>
-                    Another place the build system can get source files from is
-                    through an SCM such as Git or Subversion.
-                    In this case, a repository is cloned or checked out.
+                    Another place from which the build system can get source
+                    files is with
+                    <ulink url='&YOCTO_DOCS_BB_URL;#bb-fetchers'>fetchers</ulink>
+                    employing various Source Control Managers (SCMs) such as
+                    Git or Subversion.
+                    In such cases, a repository is cloned or checked out.
                     The
                     <ulink url='&YOCTO_DOCS_REF_URL;#ref-tasks-fetch'><filename>do_fetch</filename></ulink>
                     task inside BitBake uses
@@ -940,7 +943,7 @@
                         <ulink url='&YOCTO_DOCS_REF_URL;#var-DL_DIR'><filename>DL_DIR</filename></ulink>
                         directory, see the
                         <ulink url='&YOCTO_DOCS_REF_URL;#var-BB_GENERATE_MIRROR_TARBALLS'><filename>BB_GENERATE_MIRROR_TARBALLS</filename></ulink>
-                        variable.
+                        variable in the Yocto Project Reference Manual.
                     </note>
                 </para>
 
@@ -1091,7 +1094,7 @@
                 <note>
                     Separate documentation exists for the BitBake tool.
                     See the
-                    <ulink url='&YOCTO_DOCS_BB_URL;#bitbake-user-manual'>BitBake User Manual</ulink>
+                    <ulink url='&YOCTO_DOCS_BB_URL;'>BitBake User Manual</ulink>
                     for reference material on BitBake.
                 </note>
             </para>

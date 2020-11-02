@@ -38,6 +38,8 @@ python __anonymous () {
         d.setVar("HEADER_FETCH_VER", "3.0")
     elif major == "4":
         d.setVar("HEADER_FETCH_VER", "4.x")
+    elif major == "5":
+        d.setVar("HEADER_FETCH_VER", "5.x")
     else:
         d.setVar("HEADER_FETCH_VER", "2.6")
 }
@@ -89,4 +91,4 @@ RDEPENDS_${PN}-dev = ""
 RRECOMMENDS_${PN}-dbg = "${PN}-dev (= ${EXTENDPKGV})"
 
 INHIBIT_DEFAULT_DEPS = "1"
-DEPENDS += "unifdef-native bison-native"
+DEPENDS += "unifdef-native bison-native rsync-native"

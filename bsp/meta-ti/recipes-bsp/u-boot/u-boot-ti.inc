@@ -13,6 +13,7 @@ UBOOT_LOCALVERSION = "-g${@get_git_revision('${S}').__str__()[:10]}"
 UBOOT_SUFFIX ?= "img"
 SPL_BINARY ?= "MLO"
 
+require ${COREBASE}/meta/recipes-bsp/u-boot/u-boot-common.inc
 require ${COREBASE}/meta/recipes-bsp/u-boot/u-boot.inc
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/u-boot:"
@@ -32,11 +33,12 @@ PV_append = "+git${SRCPV}"
 # u-boot needs devtree compiler to parse dts files
 DEPENDS += "dtc-native bc-native lzop-native flex-native bison-native"
 
-PACKAGECONFIG[atf] = "ATF=${STAGING_DIR_HOST}/boot/bl31.bin,,arm-trusted-firmware"
+PACKAGECONFIG[atf] = "ATF=${STAGING_DIR_HOST}/firmware/bl31.bin,,trusted-firmware-a"
 PACKAGECONFIG[optee] = "TEE=${STAGING_DIR_HOST}/boot/bl32.bin,,optee-os"
 
-# optee-os is not a direct dependency, do not enable optee by default
-PACKAGECONFIG_append_k3 = " atf"
+PACKAGECONFIG_append_aarch64 = " atf optee"
+
+COMPATIBLE_MACHINE = "(ti-soc)"
 
 EXTRA_OEMAKE += "${PACKAGECONFIG_CONFARGS}"
 
@@ -55,6 +57,7 @@ export TI_SECURE_DEV_PKG
 SPL_UART_BINARY = "u-boot-spl.bin"
 SPL_UART_BINARY_keystone = ""
 SPL_UART_BINARY_k3 = ""
+SPL_UART_BINARY_k3r5 = ""
 SPL_UART_BINARY_lego-ev3 = ""
 
 SPL_UART_IMAGE ?= "${SPL_UART_BINARY}-${MACHINE}-${PV}-${PR}"
@@ -256,6 +259,13 @@ do_deploy_append () {
 			ln -sf ${UBOOT_HS_2ND_IMAGE} ${UBOOT_HS_2ND_BINARY}
 		fi
 	fi
+
+	rm ${DEPLOYDIR}/u-boot-initial-env || true
+	rm ${DEPLOYDIR}/${PN}-initial-env || true
+	rm ${DEPLOYDIR}/u-boot-initial-env-${MACHINE} || true
+	rm ${DEPLOYDIR}/${PN}-initial-env-${MACHINE} || true
+	rm ${DEPLOYDIR}/u-boot-initial-env-${MACHINE}-${PV}-${PR} || true
+	rm ${DEPLOYDIR}/${PN}-initial-env-${MACHINE}-${PV}-${PR} || true
 }
 
 do_install_append_keystone () {

@@ -13,14 +13,14 @@ IMAGE_LINGUAS = ""
 
 LICENSE = "MIT"
 
-IMAGE_CLASSES_remove = "image_repo_manifest"
+IMAGE_CLASSES_remove = "image_repo_manifest qemuboot"
 
 IMAGE_FSTYPES = "${INITRAMFS_FSTYPES}"
 
 # Avoid circular dependencies
 EXTRA_IMAGEDEPENDS = ""
 
-inherit core-image
+inherit core-image nopackages
 
 IMAGE_ROOTFS_SIZE = "8192"
 

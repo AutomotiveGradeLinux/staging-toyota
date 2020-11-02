@@ -4,15 +4,9 @@
 #
 # Copyright (c) 2017, Intel Corporation.
 #
-# This program is free software; you can redistribute it and/or modify it
-# under the terms and conditions of the GNU General Public License,
-# version 2, as published by the Free Software Foundation.
+# SPDX-License-Identifier: GPL-2.0-only
 #
-# This program is distributed in the hope it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-# more details.
-#
+
 import argparse
 import json
 import logging
@@ -378,7 +372,7 @@ def print_html_report(data, id_comp, buildstats):
                                chart_opts=chart_opts))
 
 
-def get_buildstats(repo, notes_ref, revs, outdir=None):
+def get_buildstats(repo, notes_ref, notes_ref2, revs, outdir=None):
     """Get the buildstats from git notes"""
     full_ref = 'refs/notes/' + notes_ref
     if not repo.rev_parse(full_ref):
@@ -397,8 +391,13 @@ def get_buildstats(repo, notes_ref, revs, outdir=None):
         for tag in rev.tags:
             log.debug('    %s', tag)
             try:
-                bs_all = json.loads(repo.run_cmd(['notes', '--ref', notes_ref,
-                                                  'show', tag + '^0']))
+                try:
+                    bs_all = json.loads(repo.run_cmd(['notes', '--ref', notes_ref, 'show', tag + '^0']))
+                except GitError:
+                    if notes_ref2:
+                        bs_all = json.loads(repo.run_cmd(['notes', '--ref', notes_ref2, 'show', tag + '^0']))
+                    else:
+                        raise
             except GitError:
                 log.warning("Buildstats not found for %s", tag)
                 bs_all = {}
@@ -595,9 +594,12 @@ def main(argv=None):
     buildstats = None
     if args.dump_buildstats or args.html:
         outdir = 'oe-build-perf-buildstats' if args.dump_buildstats else None
-        notes_ref = 'buildstats/{}/{}/{}'.format(args.hostname, args.branch,
-                                                 args.machine)
-        buildstats = get_buildstats(repo, notes_ref, [rev_l, rev_r], outdir)
+        notes_ref = 'buildstats/{}/{}/{}'.format(args.hostname, args.branch, args.machine)
+        notes_ref2 = None
+        if args.branch2:
+            notes_ref = 'buildstats/{}/{}/{}'.format(args.hostname, args.branch2, args.machine)
+            notes_ref2 = 'buildstats/{}/{}/{}'.format(args.hostname, args.branch, args.machine)
+        buildstats = get_buildstats(repo, notes_ref, notes_ref2, [rev_l, rev_r], outdir)
 
     # Print report
     if not args.html:

@@ -3,15 +3,17 @@ HOMEPAGE = "https://git.ti.com/graphics/ti-gc320-driver"
 LICENSE = "MIT | GPLv2"
 LIC_FILES_CHKSUM = "file://../LICENSE;md5=78d9818a51b9a8e9bb89dea418bac297"
 
-inherit module
+inherit module features_check
 
-MACHINE_KERNEL_PR_append = "e"
+REQUIRED_MACHINE_FEATURES = "gc320"
+
+MACHINE_KERNEL_PR_append = "h"
 PR = "${MACHINE_KERNEL_PR}"
 
 # Need to branch out with ${PV} var
-BRANCH = "ti-${PV}-k4.19"
+BRANCH = "ti-${PV}-k5.4"
 
-SRCREV = "9b59e596b4adefabbb686ce8845edef8114558fd"
+SRCREV = "2a4fbe8353fa56011a613aeeaf69e274cd07a825"
 
 SRC_URI = "git://git.ti.com/graphics/ti-gc320-driver.git;protocol=git;branch=${BRANCH}"
 

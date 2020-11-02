@@ -20,7 +20,7 @@ MACHINE_GUI_CLASS = "bigscreen"
 MACHINE_KERNEL_PR = "r3"
 
 # Default providers, may need to override for specific machines
-PREFERRED_PROVIDER_virtual/kernel = "linux-ti-staging"
+PREFERRED_PROVIDER_virtual/kernel ?= "linux-ti-staging"
 PREFERRED_PROVIDER_virtual/bootloader = "u-boot-ti-staging"
 PREFERRED_PROVIDER_u-boot = "u-boot-ti-staging"
 
@@ -55,3 +55,8 @@ MACHINE_FEATURES = "kernel26 apm usbgadget usbhost vfat ext2 screen alsa etherne
 # Set the list of device targets for ti-pdk class recipes
 TI_PDK_LIMIT_SOCS = "am437x"
 TI_PDK_LIMIT_BOARDS = "evmAM437x idkAM437x skAM437x"
+
+IMAGE_FSTYPES += "tar.xz wic.xz"
+WKS_FILE ?= "sdimage-2part.wks"
+IMAGE_BOOT_FILES ?= "${SPL_BINARY} u-boot.${UBOOT_SUFFIX}"
+do_image_wic[depends] += "u-boot:do_deploy"

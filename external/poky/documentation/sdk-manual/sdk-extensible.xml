@@ -27,8 +27,7 @@
     <para>
         In addition to the functionality available through
         <filename>devtool</filename>, you can alternatively make use of the
-        toolchain directly, for example from Makefile, Autotools, and
-        <trademark class='trade'>Eclipse</trademark>-based projects.
+        toolchain directly, for example from Makefile and Autotools.
         See the
         "<link linkend='sdk-working-projects'>Using the SDK Toolchain Directly</link>"
         chapter for more information.
@@ -119,11 +118,6 @@
                 For information on building the installer, see the
                 "<link linkend='sdk-building-an-sdk-installer'>Building an SDK Installer</link>"
                 section.
-                Another helpful resource for building an installer is the
-                <ulink url='https://wiki.yoctoproject.org/wiki/TipsAndTricks/RunningEclipseAgainstBuiltImage'>Cookbook guide to Making an Eclipse Debug Capable Image</ulink>
-                wiki page.
-                This wiki page focuses on development when using the Eclipse
-                IDE.
             </note>
         </para>
 
@@ -157,7 +151,7 @@
      Poky (Yocto Project Reference Distro) Extensible SDK installer version 2.5
      ==========================================================================
      Enter target directory for SDK (default: ~/poky_sdk):
-     You are about to install the SDK to "/home/scottrif/poky_sdk". Proceed[Y/n]? Y
+     You are about to install the SDK to "/home/scottrif/poky_sdk". Proceed [Y/n]? Y
      Extracting SDK..............done
      Setting it up...
      Extracting buildtools...
@@ -624,7 +618,23 @@
                                 The result is that the command sets up both
                                 the source code and an append file within the
                                 workspace while the recipe remains in its
-                                original location.
+                                original location.</para>
+
+                                <para>Additionally, if you have any non-patch
+                                local files (i.e. files referred to with
+                                <filename>file://</filename> entries in
+                                <filename>SRC_URI</filename> statement excluding
+                                <filename>*.patch/</filename> or
+                                <filename>*.diff</filename>), these files are
+                                copied to an
+                                <filename>oe-local-files</filename> folder
+                                under the newly created source tree.
+                                Copying the files here gives you a convenient
+                                area from which you can modify the files.
+                                Any changes or additions you make to those
+                                files are incorporated into the build the next
+                                time you build the software just as are other
+                                changes you might have made to the source.
                                 </para></listitem>
                             <listitem><para>
                                 <emphasis>Middle</emphasis>:
@@ -639,10 +649,10 @@
                                 </para>
 
                                 <para>The following command tells
-                                <filename>devtool</filename> what recipe with
+                                <filename>devtool</filename> the recipe with
                                 which to work and, in this case, identifies a
                                 local area for the extracted source files that
-                                is outside of the default
+                                exists outside of the default
                                 <filename>devtool</filename> workspace:
                                 <literallayout class='monospaced'>
      $ devtool modify <replaceable>recipe srctree</replaceable>
@@ -656,8 +666,12 @@
                                 the recipe's <filename>SRC_URI</filename>
                                 statements to locate the source files and any
                                 associated patch files.
-                                Once the files are located, the command by
-                                default extracts them into
+                                Non-patch files are copied to an
+                                <filename>oe-local-files</filename> folder
+                                under the newly created source tree.</para>
+
+                                <para>Once the files are located, the command
+                                by default extracts them into
                                 <replaceable>srctree</replaceable>.</para>
 
                                 <para>Within workspace,
@@ -691,9 +705,21 @@
                                 </literallayout>
                                 </para>
 
-                                <para>Once the command finishes, it creates only
-                                an append file for the recipe in the
-                                <filename>devtool</filename> workspace.
+                                <para>If an <filename>oe-local-files</filename>
+                                subdirectory happens to exist and it contains
+                                non-patch files, the files are used.
+                                However, if the subdirectory does not exist and
+                                you run the <filename>devtool finish</filename>
+                                command, any non-patch files that might exist
+                                next to the recipe are removed because it
+                                appears to <filename>devtool</filename> that
+                                you have deleted those files.</para>
+
+                                <para>Once the
+                                <filename>devtool modify</filename> command
+                                finishes, it creates only an append file for
+                                the recipe in the <filename>devtool</filename>
+                                workspace.
                                 The recipe and the source code remain in their
                                 original locations.
                                 </para></listitem>
@@ -784,7 +810,12 @@
                         original recipe in the original layer or the command
                         creates a <filename>.bbappend</filename> file in a
                         different layer as provided by
-                        <replaceable>layer</replaceable>.</para>
+                        <replaceable>layer</replaceable>.
+                        Any work you did in the
+                        <filename>oe-local-files</filename> directory is
+                        preserved in the original files next to the recipe
+                        during the <filename>devtool finish</filename>
+                        command.</para>
 
                         <para>As a final process of the
                         <filename>devtool finish</filename> command, the state
@@ -831,7 +862,9 @@
                 versioning schemes, extract code into or out of the
                 <filename>devtool</filename>
                 <ulink url='&YOCTO_DOCS_REF_URL;#devtool-the-workspace-layer-structure'>workspace</ulink>,
-                and work with any source file forms that the fetchers support.
+                and work with any source file forms that the
+                <ulink url='&YOCTO_DOCS_BB_URL;#bb-fetchers'>fetchers</ulink>
+                support.
             </para>
 
             <para>
@@ -902,7 +935,23 @@
                         files from other developers.
                         The result is that the command sets up the source
                         code, the new version of the recipe, and an append file
-                        all within the workspace.
+                        all within the workspace.</para>
+
+                        <para>Additionally, if you have any non-patch
+                        local files (i.e. files referred to with
+                        <filename>file://</filename> entries in
+                        <filename>SRC_URI</filename> statement excluding
+                        <filename>*.patch/</filename> or
+                        <filename>*.diff</filename>), these files are
+                        copied to an
+                        <filename>oe-local-files</filename> folder
+                        under the newly created source tree.
+                        Copying the files here gives you a convenient
+                        area from which you can modify the files.
+                        Any changes or additions you make to those
+                        files are incorporated into the build the next
+                        time you build the software just as are other
+                        changes you might have made to the source.
                         </para></listitem>
                     <listitem><para>
                         <emphasis>Resolve any Conflicts created by the Upgrade</emphasis>:
@@ -980,10 +1029,18 @@
                         Git repository, moves the new recipe to a more
                         permanent layer, and then resets the recipe so that
                         the recipe is built normally rather than from the
-                        workspace.
+                        workspace.</para>
+
+                        <para>Any work you did in the
+                        <filename>oe-local-files</filename> directory is
+                        preserved in the original files next to the recipe
+                        during the <filename>devtool finish</filename>
+                        command.</para>
+
+                        <para>
                         If you specify a destination layer that is the same as
                         the original source, then the old version of the
-                        recipe and associated files will be removed prior to
+                        recipe and associated files are removed prior to
                         adding the new version.
                         <literallayout class='monospaced'>
      $ devtool finish <replaceable>recipe layer</replaceable>

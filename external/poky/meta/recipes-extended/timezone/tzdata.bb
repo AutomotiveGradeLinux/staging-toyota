@@ -60,12 +60,8 @@ pkg_postinst_${PN} () {
 	if [ -e ${src} ] ; then
 		tz=$(sed -e 's:#.*::' -e 's:[[:space:]]*::g' -e '/^$/d' "${src}")
 	fi
-	
-	if [ -z "${tz}" ] ; then
-		exit 0
-	fi
-	
-	if [ ! -e "$D${datadir}/zoneinfo/${tz}" ] ; then
+
+	if [ ! -z "${tz}" -a ! -e "$D${datadir}/zoneinfo/${tz}" ] ; then
 		echo "You have an invalid TIMEZONE setting in ${src}"
 		echo "Your ${etc_lt} has been reset to Universal; enjoy!"
 		tz="Universal"
@@ -80,9 +76,11 @@ pkg_postinst_${PN} () {
 # Packages primarily organized by directory with a major city
 # in most time zones in the base package
 
-PACKAGES = "tzdata tzdata-misc tzdata-posix tzdata-right tzdata-africa \
+TZ_PACKAGES = " \
+    tzdata-core tzdata-misc tzdata-posix tzdata-right tzdata-africa \
     tzdata-americas tzdata-antarctica tzdata-arctic tzdata-asia \
     tzdata-atlantic tzdata-australia tzdata-europe tzdata-pacific"
+PACKAGES = "${TZ_PACKAGES} ${PN}"
 
 FILES_tzdata-africa += "${datadir}/zoneinfo/Africa/*"
 RPROVIDES_tzdata-africa = "tzdata-africa"
@@ -124,7 +122,6 @@ RPROVIDES_tzdata-posix = "tzdata-posix"
 FILES_tzdata-right += "${datadir}/zoneinfo/right/*"
 RPROVIDES_tzdata-right = "tzdata-right"
 
-
 FILES_tzdata-misc += "${datadir}/zoneinfo/Cuba           \
                 ${datadir}/zoneinfo/Egypt                \
                 ${datadir}/zoneinfo/Eire                 \
@@ -145,8 +142,10 @@ FILES_tzdata-misc += "${datadir}/zoneinfo/Cuba           \
                 ${datadir}/zoneinfo/Turkey"
 RPROVIDES_tzdata-misc = "tzdata-misc"
 
-
-FILES_${PN} += "${datadir}/zoneinfo/Pacific/Honolulu     \
+FILES_tzdata-core += " \
+                ${sysconfdir}/localtime                  \
+                ${sysconfdir}/timezone                   \
+                ${datadir}/zoneinfo/Pacific/Honolulu     \
                 ${datadir}/zoneinfo/America/Anchorage    \
                 ${datadir}/zoneinfo/America/Los_Angeles  \
                 ${datadir}/zoneinfo/America/Denver       \
@@ -201,5 +200,7 @@ FILES_${PN} += "${datadir}/zoneinfo/Pacific/Honolulu     \
                 ${datadir}/zoneinfo/iso3166.tab          \
                 ${datadir}/zoneinfo/Etc/*"
 
-CONFFILES_${PN} += "${@ "${sysconfdir}/timezone" if bb.utils.to_boolean(d.getVar('INSTALL_TIMEZONE_FILE')) else "" }"
-CONFFILES_${PN} += "${sysconfdir}/localtime"
+CONFFILES_tzdata-core = "${sysconfdir}/localtime ${sysconfdir}/timezone"
+
+ALLOW_EMPTY_${PN} = "1"
+RDEPENDS_${PN} = "${TZ_PACKAGES}"

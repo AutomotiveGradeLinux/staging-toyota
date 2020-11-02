@@ -4,7 +4,6 @@ LICENSE = "MIT"
 inherit packagegroup
 
 RDEPENDS_${PN} = "\
-	afb-test \
         strace \
         ldd \
         less \
@@ -25,4 +24,7 @@ RDEPENDS_${PN} = "\
         libxslt-bin \
         agl-service-network-tools \
         gcc-sanitizers \
+        pciutils \
+        pyagl \
+        gcov \
         "

@@ -11,6 +11,7 @@ PR = "r3"
 SRC_URI = "http://www.midnight-commander.org/downloads/${BPN}-${PV}.tar.bz2 \
            file://mc-CTRL.patch \
            file://0001-disable-Ctrl-g-key-and-Ctrl-key.patch \
+           file://0001-Fix-builds-wit-the-gettext-0.20.patch \
            "
 
 SRC_URI[md5sum] = "bdae966244496cd4f6d282d80c9cf3c6"
@@ -22,10 +23,12 @@ EXTRA_OECONF = "--with-screen=ncurses --without-gpm-mouse --without-x --without-
 
 do_install_append () {
 	sed -i -e '1s,#!.*perl,#!${bindir}/env perl,' ${D}${libexecdir}/mc/extfs.d/*
-	sed -i -e '1s,#!.*python,#!${bindir}/env python,' ${D}${libexecdir}/mc/extfs.d/*
+	# These use python2 which is no longer supported
+	rm ${D}${libexecdir}/mc/extfs.d/s3+
+	rm ${D}${libexecdir}/mc/extfs.d/uc1541
 }
 
-PACKAGES =+ "${BPN}-helpers-perl ${BPN}-helpers-python ${BPN}-helpers ${BPN}-fish"
+PACKAGES =+ "${BPN}-helpers-perl ${BPN}-helpers ${BPN}-fish"
 
 SUMMARY_${BPN}-helpers-perl = "Midnight Commander Perl-based helper scripts"
 FILES_${BPN}-helpers-perl = "${libexecdir}/mc/extfs.d/a+ ${libexecdir}/mc/extfs.d/apt+ \
@@ -35,10 +38,6 @@ FILES_${BPN}-helpers-perl = "${libexecdir}/mc/extfs.d/a+ ${libexecdir}/mc/extfs.
                              ${libexecdir}/mc/extfs.d/rpms+ ${libexecdir}/mc/extfs.d/ulib \ 
                              ${libexecdir}/mc/extfs.d/uzip"
 RDEPENDS_${BPN}-helpers-perl = "perl"
-
-SUMMARY_${BPN}-helpers-python = "Midnight Commander Python-based helper scripts"
-FILES_${BPN}-helpers-python = "${libexecdir}/mc/extfs.d/s3+ ${libexecdir}/mc/extfs.d/uc1541"
-RDEPENDS_${BPN}-helpers-python = "python"
 
 SUMMARY_${BPN}-helpers = "Midnight Commander shell helper scripts"
 FILES_${BPN}-helpers = "${libexecdir}/mc/extfs.d/* ${libexecdir}/mc/ext.d/*"

@@ -14,16 +14,16 @@ SRC_URI = "git://github.com/mirror/x264;branch=stable \
            "
 UPSTREAM_CHECK_COMMITS = "1"
 
-SRCREV = "e9a5903edf8ca59ef20e6f4894c196f135af735e"
+SRCREV = "1771b556ee45207f8711744ccbd5d42a3949b14c"
 
-PV = "r2854+git${SRCPV}"
+PV = "r2991+git${SRCPV}"
 
 S = "${WORKDIR}/git"
 
-inherit lib_package pkgconfig perlnative
+inherit lib_package pkgconfig
 
 X264_DISABLE_ASM = ""
-X264_DISABLE_ASM_x86_libc-musl = "--disable-asm"
+X264_DISABLE_ASM_x86 = "--disable-asm"
 X264_DISABLE_ASM_armv4 = "--disable-asm"
 X264_DISABLE_ASM_armv5 = "--disable-asm"
 X264_DISABLE_ASM_powerpc = "${@bb.utils.contains("TUNE_FEATURES", "spe", "--disable-asm", "", d)}"

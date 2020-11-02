@@ -11,6 +11,8 @@ IMAGE_INSTALL = "packagegroup-core-boot packagegroup-core-ssh-openssh packagegro
 
 IMAGE_FEATURES += "x11-base package-management splash"
 
+QB_MEM = '${@bb.utils.contains("DISTRO_FEATURES", "opengl", "-m 512", "-m 256", d)}'
+
 # Ensure there's enough space to do a core-image-sato build, with rm_work enabled
 IMAGE_ROOTFS_EXTRA_SPACE = "41943040"
 
@@ -22,13 +24,14 @@ IMAGE_FSTYPES = "wic.vmdk"
 
 inherit core-image module-base setuptools3
 
-SRCREV ?= "2c5af52109bca8c0452b1539589cf073f6f0064a"
-SRC_URI = "git://git.yoctoproject.org/poky;branch=thud \
+SRCREV ?= "ff7dbd392aced161a79303f5312c2b356f3305dc"
+SRC_URI = "git://git.yoctoproject.org/poky;branch=dunfell \
            file://Yocto_Build_Appliance.vmx \
            file://Yocto_Build_Appliance.vmxf \
            file://README_VirtualBox_Guest_Additions.txt \
            file://README_VirtualBox_Toaster.txt \
           "
+RECIPE_NO_UPDATE_REASON = "Recipe is recursive and handled as part of the release process"
 BA_INCLUDE_SOURCES ??= "0"
 
 IMAGE_CMD_ext4_append () {

@@ -7,12 +7,12 @@ TI_PDK_COMP = "ti.drv.sciclient"
 PE = "1"
 
 LICENSE = "BSD-3-Clause"
-LIC_FILES_CHKSUM = "file://sciclient.h;beginline=1;endline=31;md5=7224b2eeca1444815f1737bfcdfa892a"
+LIC_FILES_CHKSUM = "file://COPYING.txt;md5=99d7639a81c1ba1f16fd070a928ffddb"
 
 COMPATIBLE_MACHINE = "k3"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-PR = "r0"
+PR = "r1"
 
 DEPENDS_append = " osal-rtos common-csl-ip-rtos openssl-native"
 
@@ -24,6 +24,11 @@ SCICLIENT_ROOTPATH = "${SCICLIENT_PACKAGE_BASE}/package/all/pdk_/packages/ti/drv
 
 export PDK_INSTALL_PATH = "${PDK_INSTALL_DIR}/packages"
 export PDK_SCICLIENT_ROOT_PATH = "${SCICLIENT_PACKAGE_BASE}/package/all/pdk_/packages"
+
+BUILD_HS = ""
+BUILD_HS_am65xx-hs-evm = "yes"
+BUILD_HS_j7-hs-evm = "yes"
+export BUILD_HS
 
 # Sciclient for am65x supports mcu1_1 in addition to the default cores in TI_PDK_LIMIT_CORES
 TI_PDK_LIMIT_CORES_append_am65xx = " mcu1_1"
@@ -95,6 +100,14 @@ do_compile_prepend_j7-evm() {
     cd -
 }
 
+do_compile_prepend_j7-hs-evm() {
+
+    cd ${SCICLIENT_ROOTPATH}/tools
+    # Create the .bin file for HS
+    ${SCICLIENT_ROOTPATH}/tools/firmwareHeaderGen.sh j721e-hs ${PDK_INSTALL_DIR}/packages
+    cd -
+}
+
 do_install() {
     cd ${SCICLIENT_ROOTPATH}
     install -d ${D}${PDK_INSTALL_DIR_RECIPE}/packages/ti/drv/sciclient
@@ -106,6 +119,7 @@ FILES_${PN} += "${PDK_INSTALL_DIR_RECIPE}/packages"
 INSANE_SKIP_${PN} = "arch ldflags file-rdeps"
 
 INSANE_SKIP_${PN}-dbg = "arch"
+
+INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
 INHIBIT_PACKAGE_STRIP = "1"
 INHIBIT_SYSROOT_STRIP = "1"
-INHIBIT_PACKAGE_DEBUG_SPLIT = "1"

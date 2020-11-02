@@ -13,9 +13,6 @@ specific to it. For the rest please check:
 2. Overwrite SDIMG_ROOTFS_TYPE in local.conf
     * `SDIMG_ROOTFS_TYPE = "ext3.xz"`
 
-3. Overwrite SDIMG_COMPRESSION in local.conf
-    * `SDIMG_COMPRESSION = "xz"`
-
 Accommodate the values above to your own needs (ex: ext3 / ext4).
 
 ## GPU memory
@@ -33,6 +30,10 @@ Accommodate the values above to your own needs (ex: ext3 / ext4).
   the 256MB/512MB RP. Overrides gpu_mem. Max 944. Default not set.
 
 See: <https://www.raspberrypi.org/documentation/configuration/config-txt/memory.md>
+
+## VC4
+
+By default, each machine uses `vc4` for graphics. This will in turn sets mesa as provider for `gl` libraries. `DISABLE_VC4GRAPHICS` can be set to `1` to disable this behaviour falling back to using `userland`. Be aware that `userland` has not support for 64-bit arch. If you disable `vc4` on a 64-bit Raspberry Pi machine, expect build breakage.
 
 ## Add purchased license codecs
 
@@ -183,6 +184,10 @@ When using device tree kernels, set this variable to enable I2C:
 
     ENABLE_I2C = "1"
 
+Furthermore, to auto-load I2C kernel modules set:
+
+    KERNEL_MODULE_AUTOLOAD_rpi += "i2c-dev i2c-bcm2708"
+
 ## Enable PiTFT support
 
 Basic support for using PiTFT screens can be enabled by adding below in
@@ -203,6 +208,7 @@ modelname should be added as a MACHINE_FEATURES in local.conf like below:
 List of currently supported models:
 * pitft22
 * pitft28r
+* pitft28c
 * pitft35r
 
 ## Misc. display
@@ -222,7 +228,7 @@ needs a fixed core frequency and enable_uart wil set it to the minimum. Certain
 operations - 60fps h264 decode, high quality deinterlace - which aren't
 performed on the ARM may be affected, and we wouldn't want to do that to users
 who don't want to use the serial port. Users who want serial console support on
-RaspberryPi3 will have to explicitly set in local.conf:
+RaspberryPi 0 Wifi or 3 will have to explicitly set in local.conf:
 
     ENABLE_UART = "1"
 
@@ -245,6 +251,27 @@ When using device tree kernels, set this variable to enable the 802.15.4 hat:
     ENABLE_AT86RF = "1"
 
 See: <https://openlabs.co/OSHW/Raspberry-Pi-802.15.4-radio>
+
+## Enable CAN with Pican2
+
+In order to use Pican2 CAN module, set the following variables:
+
+	ENABLE_SPI_BUS = "1"
+	ENABLE_CAN = "1"
+
+See: <http://skpang.co.uk/catalog/pican2-canbus-board-for-raspberry-pi-23-p-1475.html>
+
+## Enable infrared
+
+Users who want to enable infrared support, for example for using LIRC (Linux
+Infrared Remote Control), have to explicitly set in local.conf:
+
+    ENABLE_IR = "1"
+
+This will add device tree overlays gpio-ir and gpio-ir-tx to config.txt.
+Appropriate kernel modules will be also included in the image. By default the
+GPIO pin for gpio-ir is set to 18 and the pin for gpio-ir-tx is 17. Both pins
+can be easily changed by modifying variables `GPIO_IR` and `GPIO_IR_TX`.
 
 ## Manual additions to config.txt
 

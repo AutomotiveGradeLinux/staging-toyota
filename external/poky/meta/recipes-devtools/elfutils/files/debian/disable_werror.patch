@@ -6,12 +6,12 @@ Last-Update: 2018-01-01
 Upstream-Status: Pending [from debian]
 Signed-off-by: Hongxu Jia <hongxu.jia@windriver.com>
 
-Index: elfutils-0.175/config/eu.am
+Index: elfutils-0.176/config/eu.am
 ===================================================================
---- elfutils-0.175.orig/config/eu.am
-+++ elfutils-0.175/config/eu.am
+--- elfutils-0.176.orig/config/eu.am
++++ elfutils-0.176/config/eu.am
 @@ -73,7 +73,6 @@ AM_CFLAGS = -std=gnu99 -Wall -Wshadow -W
- 	    -Wold-style-definition -Wstrict-prototypes \
+ 	    -Wold-style-definition -Wstrict-prototypes -Wtrampolines \
  	    $(LOGICAL_OP_WARNING) $(DUPLICATED_COND_WARNING) \
  	    $(NULL_DEREFERENCE_WARNING) $(IMPLICIT_FALLTHROUGH_WARNING) \
 -	    $(if $($(*F)_no_Werror),,-Werror) \

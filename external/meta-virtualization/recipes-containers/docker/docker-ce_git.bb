@@ -9,8 +9,8 @@ DESCRIPTION = "Linux container runtime \
  large-scale web deployments, database clusters, continuous deployment \
  systems, private PaaS, service-oriented architectures, etc. \
  . \
- This package contains the daemon and client. Using docker.io is \
- officially supported on x86_64 and arm (32-bit) hosts. \
+ This package contains the daemon and client, which are \
+ officially supported on x86_64 and arm hosts. \
  Other architectures are considered experimental. \
  . \
  Also, note that kernel version 3.10 or above is required for proper \
@@ -18,61 +18,35 @@ DESCRIPTION = "Linux container runtime \
  subtle and/or glaring issues. \
  "
 
-SRCREV_docker = "6e632f7fc395d15bce46f426086e91c01598cf59"
-SRCREV_libnetwork = "6da50d1978302f04c3e2089e29112ea24812f05b"
+SRCREV_docker = "afacb8b7f0d8d4f9d2a8e8736e9c993e672b41f3"
+SRCREV_libnetwork = "c7bae399e46fd620b8a006174b7327e4e6e647fd"
 SRC_URI = "\
-	git://github.com/docker/docker-ce.git;branch=18.09;name=docker \
-	git://github.com/docker/libnetwork.git;branch=bump_18.09;name=libnetwork;destsuffix=git/libnetwork \
+	git://github.com/docker/docker-ce.git;branch=19.03;name=docker \
+	git://github.com/docker/libnetwork.git;branch=bump_19.03;name=libnetwork;destsuffix=git/libnetwork \
+	file://0001-libnetwork-use-GO-instead-of-go.patch \
 	file://docker.init \
+	file://0001-imporve-hardcoded-CC-on-cross-compile-docker-ce.patch \
 	"
+
+require docker.inc
 
 # Apache-2.0 for docker
 LICENSE = "Apache-2.0"
-LIC_FILES_CHKSUM = "file://src/import/components/engine/LICENSE;md5=9740d093a080530b5c5c6573df9af45a"
+LIC_FILES_CHKSUM = "file://src/import/components/engine/LICENSE;md5=4859e97a9c7780e77972d989f0823f28"
 
 GO_IMPORT = "import"
 
 S = "${WORKDIR}/git"
 
-DOCKER_VERSION = "18.09.0-ce"
+DOCKER_VERSION = "19.03.8-ce"
 PV = "${DOCKER_VERSION}+git${SRCREV_docker}"
-
-DEPENDS = " \
-    go-cli \
-    go-pty \
-    go-context \
-    go-mux \
-    go-patricia \
-    go-logrus \
-    go-fsnotify \
-    go-dbus \
-    go-capability \
-    go-systemd \
-    btrfs-tools \
-    sqlite3 \
-    go-distribution \
-    compose-file \
-    go-connections \
-    notary \
-    grpc-go \
-    libtool-native \
-    libtool \
-    "
 
 PACKAGES =+ "${PN}-contrib"
 
-DEPENDS_append_class-target = " lvm2"
-RDEPENDS_${PN} = "util-linux util-linux-unshare iptables \
-                  ${@bb.utils.contains('DISTRO_FEATURES', 'aufs', 'aufs-util', '', d)} \
-                  ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', '', 'cgroup-lite', d)} \
-                 "
-RDEPENDS_${PN} += "virtual/containerd virtual/runc"
-
-RRECOMMENDS_${PN} = "kernel-module-dm-thin-pool kernel-module-nf-nat"
-RSUGGESTS_${PN} = "lxc rt-tests"
 DOCKER_PKG="github.com/docker/docker"
+# in order to exclude devicemapper and btrfs - https://github.com/docker/docker/issues/14056
+BUILD_TAGS = "exclude_graphdriver_btrfs exclude_graphdriver_devicemapper"
 
-inherit systemd update-rc.d
 inherit go
 inherit goarch
 inherit pkgconfig
@@ -88,8 +62,6 @@ do_compile() {
 	mkdir -p .gopath/src/"$(dirname "${DOCKER_PKG}")"
 	ln -sf ../../../../components/engine/ .gopath/src/"${DOCKER_PKG}"
 
-	mkdir -p .gopath/src/github.com/docker
-	ln -sf ${WORKDIR}/git/libnetwork .gopath/src/github.com/docker/libnetwork
 	ln -sf ${S}/src/import/components/cli .gopath/src/github.com/docker/cli
 
 	export GOPATH="${S}/src/import/.gopath:${S}/src/import/vendor:${STAGING_DIR_TARGET}/${prefix}/local/go"
@@ -101,19 +73,19 @@ do_compile() {
 	export CGO_ENABLED="1"
 	export CGO_CFLAGS="${CFLAGS} --sysroot=${STAGING_DIR_TARGET}"
 	export CGO_LDFLAGS="${LDFLAGS} --sysroot=${STAGING_DIR_TARGET}"
-	# in order to exclude devicemapper and btrfs - https://github.com/docker/docker/issues/14056
-	export DOCKER_BUILDTAGS='exclude_graphdriver_btrfs exclude_graphdriver_devicemapper'
+	export DOCKER_BUILDTAGS='${BUILD_TAGS} ${PACKAGECONFIG_CONFARGS}'
 
 	export DISABLE_WARN_OUTSIDE_CONTAINER=1
 
 	cd ${S}/src/import/components/engine
 
-	# this is the unsupported build structure
-	# that doesn't rely on an existing docker
-	# to build this:
+	# this is the unsupported build structure that doesn't rely on an
+	# existing docker to build this:
 	VERSION="${DOCKER_VERSION}" DOCKER_GITCOMMIT="${SRCREV_docker}" ./hack/make.sh dynbinary
 
 	# build the proxy
+	cd ${S}/src/import
+	ln -sf ${WORKDIR}/git/libnetwork .gopath/src/github.com/docker/libnetwork
 	cd ${S}/src/import/.gopath/src/github.com/docker/libnetwork
 	oe_runmake cross-local
 
@@ -125,18 +97,10 @@ do_compile() {
 	VERSION="${DOCKER_VERSION}" DOCKER_GITCOMMIT="${SRCREV_docker}" make dynbinary
 }
 
-SYSTEMD_PACKAGES = "${@bb.utils.contains('DISTRO_FEATURES','systemd','${PN}','',d)}"
-SYSTEMD_SERVICE_${PN} = "${@bb.utils.contains('DISTRO_FEATURES','systemd','docker.service','',d)}"
-SYSTEMD_AUTO_ENABLE_${PN} = "enable"
-
-INITSCRIPT_PACKAGES += "${@bb.utils.contains('DISTRO_FEATURES','sysvinit','${PN}','',d)}"
-INITSCRIPT_NAME_${PN} = "${@bb.utils.contains('DISTRO_FEATURES','sysvinit','docker.init','',d)}"
-INITSCRIPT_PARAMS_${PN} = "defaults"
-
 do_install() {
 	mkdir -p ${D}/${bindir}
 	cp ${S}/src/import/components/cli/build/docker ${D}/${bindir}/docker
-	cp ${S}/src/import/components/engine/bundles/latest/dynbinary-daemon/dockerd ${D}/${bindir}/dockerd
+	cp ${S}/src/import/components/engine/bundles/dynbinary-daemon/dockerd ${D}/${bindir}/dockerd
 	cp ${WORKDIR}/git/libnetwork/bin/docker-proxy* ${D}/${bindir}/docker-proxy
 
 	if ${@bb.utils.contains('DISTRO_FEATURES','systemd','true','false',d)}; then
@@ -144,24 +108,24 @@ do_install() {
 		install -m 644 ${S}/src/import/components/engine/contrib/init/systemd/docker.* ${D}/${systemd_unitdir}/system
 		# replaces one copied from above with one that uses the local registry for a mirror
 		install -m 644 ${S}/src/import/components/engine/contrib/init/systemd/docker.service ${D}/${systemd_unitdir}/system
+		rm -f ${D}/${systemd_unitdir}/system/docker.service.rpm
 	else
 		install -d ${D}${sysconfdir}/init.d
 		install -m 0755 ${WORKDIR}/docker.init ${D}${sysconfdir}/init.d/docker.init
+	fi
+	# TLS key that docker creates at run-time if not found is what resides here
+	if ${@bb.utils.contains('PACKAGECONFIG','transient-config','true','false',d)}; then
+		install -d ${D}${sysconfdir}
+		ln -s ..${localstatedir}/run/docker ${D}${sysconfdir}/docker
+	else
+		install -d ${D}${sysconfdir}/docker
 	fi
 
 	mkdir -p ${D}${datadir}/docker/
 	install -m 0755 ${S}/src/import/components/engine/contrib/check-config.sh ${D}${datadir}/docker/
 }
 
-inherit useradd
-USERADD_PACKAGES = "${PN}"
-GROUPADD_PARAM_${PN} = "-r docker"
-
-FILES_${PN} += "${systemd_unitdir}/system/*"
+FILES_${PN} += "${systemd_unitdir}/system/* ${sysconfdir}/docker"
 
 FILES_${PN}-contrib += "${datadir}/docker/check-config.sh"
 RDEPENDS_${PN}-contrib += "bash"
-
-# DO NOT STRIP docker
-INHIBIT_PACKAGE_STRIP = "1"
-INSANE_SKIP_${PN} += "ldflags"

@@ -1,21 +1,7 @@
-# ex:ts=4:sw=4:sts=4:et
-# -*- tab-width: 4; c-basic-offset: 4; indent-tabs-mode: nil -*-
 #
 # Copyright (c) 2014, Intel Corporation.
-# All rights reserved.
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 2 as
-# published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+# SPDX-License-Identifier: GPL-2.0-only
 #
 # DESCRIPTION
 # This implements the 'rootfs' source plugin class for 'wic'
@@ -85,7 +71,7 @@ class RootfsPlugin(SourcePlugin):
 
         new_rootfs = None
         # Handle excluded paths.
-        if part.exclude_path is not None:
+        if part.exclude_path or part.include_path:
             # We need a new rootfs directory we can delete files from. Copy to
             # workdir.
             new_rootfs = os.path.realpath(os.path.join(cr_workdir, "rootfs%d" % part.lineno))
@@ -95,7 +81,10 @@ class RootfsPlugin(SourcePlugin):
 
             copyhardlinktree(part.rootfs_dir, new_rootfs)
 
-            for orig_path in part.exclude_path:
+            for path in part.include_path or []:
+                copyhardlinktree(path, new_rootfs)
+
+            for orig_path in part.exclude_path or []:
                 path = orig_path
                 if os.path.isabs(path):
                     logger.error("Must be relative: --exclude-path=%s" % orig_path)

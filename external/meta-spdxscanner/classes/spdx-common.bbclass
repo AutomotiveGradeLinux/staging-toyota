@@ -15,8 +15,13 @@ SPDXEPENDENCY += " tar-native:do_populate_sysroot"
 
 SPDX_DEPLOY_DIR ??= "${DEPLOY_DIR}/spdx"
 SPDX_TOPDIR ?= "${WORKDIR}/spdx_sstate_dir"
-SPDX_OUTDIR = "${SPDX_TOPDIR}/${TARGET_SYS}/${PF}/"
-SPDX_WORKDIR = "${WORKDIR}/spdx_temp/"
+SPDX_OUTDIR ?= "${SPDX_TOPDIR}/${TARGET_SYS}/${PF}/"
+SPDX_WORKDIR ?= "${WORKDIR}/spdx_temp/"
+
+SPDX_EXCLUDE_NATIVE ??= "1"
+SPDX_EXCLUDE_SDK ??= "1"
+SPDX_EXCLUDE_PACKAGES ??= ""
+
 
 do_spdx[dirs] = "${WORKDIR}"
 
@@ -27,6 +32,46 @@ LICENSELISTVERSION = "2.6"
 SPDX_S ?= "${S}"
 
 addtask do_spdx before do_configure after do_patch
+
+# Exclude package based on variables.
+# SPDX_EXCLUDE_NATIVE ??= "1"
+# SPDX_EXCLUDE_SDK ??= "1"
+# SPDX_EXCLUDE_PACKAGES ??= ""
+def excluded_package(d, pn):
+    assume_provided = (d.getVar("ASSUME_PROVIDED") or "").split()
+    if pn in assume_provided:
+        for p in d.getVar("PROVIDES").split():
+            if p != pn:
+                pn = p
+                break
+    if d.getVar('BPN') in ['gcc', 'libgcc']:
+        #bb.debug(1, 'spdx: There is a bug in the scan of %s, skip it.' % pn)
+        return True
+    # The following: do_fetch, do_unpack and do_patch tasks have been deleted,
+    # so avoid archiving do_spdx here.
+    # -native is for the host aka during the build
+    if pn.endswith('-native') and d.getVar("SPDX_EXCLUDE_NATIVE") == "1":
+        return True
+    # nativesdk- is for the developer SDK
+    if pn.startswith('nativesdk-') and d.getVar("SPDX_EXCLUDE_SDK") == "1":
+        return True
+    # packagegroups have no files to scan
+    if pn.startswith('packagegroup'):
+        return True
+    if pn.startswith('glibc-locale'):
+        return True
+    for p in d.getVar("SPDX_EXCLUDE_PACKAGES").split():
+        if p in pn:
+            return True
+    return False
+
+def exclude_useless_paths(tarinfo):
+    if tarinfo.isdir():
+        if tarinfo.name.endswith('/temp') or tarinfo.name.endswith('/patches') or tarinfo.name.endswith('/.pc'):
+            return None
+        elif tarinfo.name == 'temp' or tarinfo.name == 'patches' or tarinfo.name == '.pc':
+            return None
+    return tarinfo
 
 def spdx_create_tarball(d, srcdir, suffix, ar_outdir):
     """
@@ -49,9 +94,9 @@ def spdx_create_tarball(d, srcdir, suffix, ar_outdir):
         filename = '%s.tar.gz' % d.getVar('PF')
     tarname = os.path.join(ar_outdir, filename)
 
-    bb.note('Creating %s' % tarname)
+    bb.warn('Creating %s' % tarname)
     tar = tarfile.open(tarname, 'w:gz')
-    tar.add(srcdir, arcname=os.path.basename(srcdir))
+    tar.add(srcdir, arcname=os.path.basename(srcdir), filter=exclude_useless_paths)
     tar.close()
     #shutil.rmtree(srcdir)
     return tarname
@@ -118,9 +163,76 @@ def get_cached_spdx( sstatefile ):
     cached_spdx_info=output.decode('utf-8').split(': ')
     return cached_spdx_info[1]
 
+#Find InfoInLicenseFile and fill into PackageLicenseInfoInLicenseFile.
+def find_infoinlicensefile(sstatefile):
+    import subprocess
+    import linecache
+    import re
+
+    info_in_license_file = ""
+    line_nums = []
+    key_words = ["NOTICE", "README", "readme", "COPYING", "LICENSE"]
+
+    for key_word in key_words:
+        search_cmd = "grep -n 'FileName: .*" + key_word + "' " + sstatefile 
+        search_output = subprocess.Popen(search_cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
+        bb.note("Search result: " + str(search_output))
+        if search_output:
+            bb.note("Found " + key_word +" file.")
+            for line in search_output.decode('utf-8').splitlines():
+                num = line.split(":")[0]
+                line_nums.append(num)
+        else:
+            bb.note("No license info files found.")
+    for line_num in line_nums:
+        line_spdx = linecache.getline(sstatefile, int(line_num))
+        file_path = line_spdx.split(": ")[1]
+        base_file_name = os.path.basename(file_path)
+        if base_file_name.startswith("NOTICE"):
+            bb.note("Found NOTICE file " + base_file_name)
+        elif base_file_name.startswith("readme"):
+            bb.note("Found readme file " + base_file_name)
+        elif base_file_name.startswith("README"):
+            bb.note("Found README file " + base_file_name)
+        elif base_file_name.startswith("COPYING") or base_file_name.endswith("COPYING"):
+            bb.note("Found COPYING file " + base_file_name)
+        elif base_file_name.startswith("LICENSE"):
+            bb.note("Found LICENSE file: " + base_file_name)
+        else:
+            continue
+        linecache.clearcache()
+        line_no = int(line_num) + 1
+        line_spdx = linecache.getline(sstatefile, line_no)
+        while not re.match(r'[a-zA-Z]',line_spdx) is None:
+            if not line_spdx.startswith("LicenseInfoInFile"):
+                line_no = line_no + 1
+                linecache.clearcache()
+                line_spdx = linecache.getline(sstatefile, int(line_no))
+                continue
+            license = line_spdx.split(": ")[1]
+            license = license.split("\n")[0]
+            file_path = file_path.split("\n")[0]
+            path_list = file_path.split('/')
+            if len(file_path.split('/')) < 4:
+                file_path_simple = file_path.split('/',1)[1]
+            else:
+                file_path_simple = file_path.split('/',2)[2]
+            
+            #license_in_file = file_path + ": " + license
+            license_in_file = "%s%s%s%s" % ("PackageLicenseInfoInLicenseFile: ",file_path_simple,": ",license)
+            license_in_file.replace('\n', '').replace('\r', '')
+            info_in_license_file = info_in_license_file + license_in_file + "\n"
+            line_no = line_no + 1
+            linecache.clearcache()
+            line_spdx = linecache.getline(sstatefile, int(line_no))
+    linecache.clearcache()
+    return info_in_license_file
+            
 ## Add necessary information into spdx file
 def write_cached_spdx( info,sstatefile, ver_code ):
     import subprocess
+
+    infoinlicensefile=""
 
     def sed_replace(dest_sed_cmd,key_word,replace_info):
         dest_sed_cmd = dest_sed_cmd + "-e 's#^" + key_word + ".*#" + \
@@ -132,12 +244,16 @@ def write_cached_spdx( info,sstatefile, ver_code ):
             + r"/a\\" + new_line + "' "
         return dest_sed_cmd
 
+    ## Delet ^M in doc format
+    subprocess.call("sed -i -e 's#\r##g' %s" % sstatefile, shell=True)
     ## Document level information
-    sed_cmd = r"sed -i -e 's#\r$##' " 
+    sed_cmd = r"sed -i " 
     spdx_DocumentComment = "<text>SPDX for " + info['pn'] + " version " \ 
         + info['pv'] + "</text>"
-    sed_cmd = sed_replace(sed_cmd,"DocumentComment",spdx_DocumentComment)
-    
+    sed_cmd = sed_replace(sed_cmd,"DocumentComment: ",spdx_DocumentComment)
+    sed_cmd = sed_insert(sed_cmd,"SPDXID:","DocumentName: " + info['pn']+"-"+info['pv'])
+    sed_cmd = sed_insert(sed_cmd,"SPDXID:","DocumentNamespace: http://spdx.org/spdxdocs/SPDXRef-" + info['creator']['Tool']+"-"+info['pn']+"_"+info['pv'])
+
     ## Creator information
     sed_cmd = sed_replace(sed_cmd,"Creator: Tool: ",info['creator']['Tool'])
 
@@ -147,17 +263,24 @@ def write_cached_spdx( info,sstatefile, ver_code ):
     sed_cmd = sed_replace(sed_cmd, "PackageDownloadLocation: ",info['package_download_location'])
     sed_cmd = sed_insert(sed_cmd, "PackageDownloadLocation: ", "PackageHomePage: " + info['package_homepage'])
     sed_cmd = sed_insert(sed_cmd, "PackageDownloadLocation: ", "PackageSummary: " + "<text>" + info['package_summary'] + "</text>")
-    sed_cmd = sed_insert(sed_cmd, "PackageCopyrightText: ", "PackageComment: <text>\\nModificationRecord: " + info['modified'] + "\\n</text>")
     sed_cmd = sed_replace(sed_cmd, "PackageVerificationCode: ",ver_code)
     sed_cmd = sed_insert(sed_cmd, "PackageVerificationCode: ", "PackageDescription: " + 
         "<text>" + info['pn'] + " version " + info['pv'] + "</text>")
+    sed_cmd = sed_insert(sed_cmd, "PackageVerificationCode: ", "PackageComment: <text>\\nModificationRecord: " + info['modified'] + "\\n" + "</text>")
     for contain in info['package_contains'].split( ):
         sed_cmd = sed_insert(sed_cmd, "PackageComment:"," \\n\\n## Relationships\\nRelationship: " + info['pn'] + " CONTAINS " + contain)
     for static_link in info['package_static_link'].split( ):
         sed_cmd = sed_insert(sed_cmd, "PackageComment:"," \\n\\n## Relationships\\nRelationship: " + info['pn'] + " STATIC_LINK " + static_link)
     sed_cmd = sed_cmd + sstatefile
-
     subprocess.call("%s" % sed_cmd, shell=True)
+    
+    infoinlicensefile = find_infoinlicensefile(sstatefile)
+    for oneline_infoinlicensefile in infoinlicensefile.splitlines():
+        bb.note("find_infoinlicensefile: " + oneline_infoinlicensefile)
+        sed_cmd = r"sed -i -e 's#\r$##' "
+        sed_cmd = sed_insert(sed_cmd, "ModificationRecord: ", oneline_infoinlicensefile)
+        sed_cmd = sed_cmd + sstatefile
+        subprocess.call("%s" % sed_cmd, shell=True)
 
 def is_work_shared(d):
     pn = d.getVar('PN')

@@ -10,26 +10,27 @@ LIC_FILES_CHKSUM = " \
     file://COPYING;md5=9fa7f895f96bde2d47fd5b7d95b6ba4d \
 "
 
-PV = "0.10+git${SRCPV}"
-SRCREV = "b3a68ac89d7ed955546eae91954b184ec1583ce3"
-BRANCH = "ti-jailhouse-0.10"
+PV = "0.12+git${SRCPV}"
+SRCREV = "8fd88c37ae1a4f7130ef40899c0eadd737c64832"
+BRANCH = "ti-jailhouse-0.12"
 
 SRC_URI = " \
     git://git.ti.com/jailhouse/ti-jailhouse.git;protocol=git;branch=${BRANCH} \
+    file://0001-tools-update-shebang-in-helper-scripts-for-python3.patch \
 "
 
-DEPENDS = "virtual/kernel dtc-native python-mako-native python-mako make-native"
+DEPENDS = "virtual/kernel dtc-native python3-mako-native python3-mako make-native"
 RDEPENDS_${PN} += "\
-	python-curses\
-	python-datetime\
-	python-argparse\
-	python-mmap\
+	python3-curses\
+	python3-datetime\
+	python3-mmap\
 "
-
-S = "${WORKDIR}/git"
 
 require jailhouse-arch.inc
-inherit module pythonnative bash-completion deploy setuptools
+inherit module python3native bash-completion deploy setuptools3
+
+S = "${WORKDIR}/git"
+B = "${S}"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 COMPATIBLE_MACHINE = "(ti-soc)"
@@ -40,37 +41,33 @@ CELL_DIR ?= "${JH_DATADIR}/cells"
 CELLCONF_DIR ?= "${JH_DATADIR}/configs"
 INMATES_DIR ?= "${JH_DATADIR}/inmates"
 
-JH_CONFIG ?= "${S}/ci/jailhouse-config-x86.h"
-JH_CONFIG_k3 ?= "${S}/ci/jailhouse-config-k3.h"
-
 JH_CELL_FILES ?= "*.cell"
 JH_CELL_FILES_k3 ?= "k3-*.cell"
 
 JH_INMATE_DTB ?= ""
 JH_INMATE_DTB_am65xx ?= "inmate-k3-am654-idk.dtb"
-JH_INMATE_DTB_j7-evm ?= "inmate-k3-j721e-evm.dtb"
+JH_INMATE_DTB_j7 ?= "inmate-k3-j721e-evm.dtb"
 
 JH_LINUX_DEMO_CELL ?= ""
 JH_LINUX_DEMO_CELL_am65xx ?= "k3-am654-idk-linux-demo.cell"
-JH_LINUX_DEMO_CELL_j7-evm ?= "k3-j721e-evm-linux-demo.cell"
+JH_LINUX_DEMO_CELL_j7 ?= "k3-j721e-evm-linux-demo.cell"
 
 JH_SYSCONFIG_CELL ?= ""
 JH_SYSCONFIG_CELL_am65xx ?= "k3-am654-idk.cell"
-JH_SYSCONFIG_CELL_j7-evm ?= "k3-j721e-evm.cell"
+JH_SYSCONFIG_CELL_j7 ?= "k3-j721e-evm.cell"
 
 INITRAMFS_IMAGE ?= ""
 JH_RAMFS_IMAGE ?= "${INITRAMFS_IMAGE}"
 
 JH_CMDLINE ?= ""
-JH_CMDLINE_k3 ?= "console=ttyS1,115200n8"
+JH_CMDLINE_am65xx ?= "console=ttyS1,115200n8"
+JH_CMDLINE_j7 ?= "console=ttyS3,115200n8"
 
 do_configure() {
 	if [ -d ${STAGING_DIR_HOST}/${CELLCONF_DIR} ]; 
 	then
 		cp ${STAGING_DIR_HOST}/${CELLCONF_DIR}/*.c ${S}/configs/
 	fi
-
-	cp -av ${JH_CONFIG} ${S}/include/jailhouse/config.h
 }
 
 USER_SPACE_CFLAGS = '${CFLAGS} -DLIBEXECDIR=\\\"${libexecdir}\\\" \
@@ -88,12 +85,12 @@ do_compile() {
 
 do_install() {
 	# Install pyjailhouse python modules needed by the tools
-	distutils_do_install
+	distutils3_do_install
 
 	# We want to install the python tools, but we do not want to use pip...
 	# At least with v0.10, we can work around this with
 	# 'PIP=":" PYTHON_PIP_USEABLE=yes'
-	oe_runmake PIP=: PYTHON_PIP_USEABLE=yes DESTDIR=${D} install
+	oe_runmake PIP=: PYTHON=python3 PYTHON_PIP_USEABLE=yes DESTDIR=${D} install
 
 	install -d ${D}${CELL_DIR}
 	install -m 0644 ${B}/configs/${JH_ARCH}/${JH_CELL_FILES} ${D}${CELL_DIR}/
@@ -141,8 +138,8 @@ FILES_${PN} = "${base_libdir}/firmware ${libexecdir} ${sbindir} ${JH_DATADIR} /b
 FILES_pyjailhouse = "${PYTHON_SITEPACKAGES_DIR}"
 FILES_${PN}-tools = "${libexecdir}/${BPN}/${BPN}-*"
 
-RDEPENDS_${PN}-tools = "pyjailhouse python-mmap python-math python-argparse python-datetime python-curses python-compression"
-RDEPENDS_pyjailhouse = "python-core python-ctypes python-fcntl python-shell"
+RDEPENDS_${PN}-tools = "pyjailhouse python3-mmap python3-math python3-datetime python3-curses python3-compression"
+RDEPENDS_pyjailhouse = "python3-core python3-ctypes python3-fcntl python3-shell"
 
 RRECOMMENDS_${PN} = "${PN}-tools"
 

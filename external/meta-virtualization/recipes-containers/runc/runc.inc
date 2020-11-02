@@ -14,10 +14,11 @@ inherit go
 inherit goarch
 inherit pkgconfig
 
-PACKAGECONFIG ??= ""
+PACKAGECONFIG ??= "static"
 PACKAGECONFIG[seccomp] = "seccomp,,libseccomp"
+# This PACKAGECONFIG serves the purpose of whether building runc as static or not
+PACKAGECONFIG[static] = ""
 
-RRECOMMENDS_${PN} = "lxc docker"
 PROVIDES += "virtual/runc"
 RPROVIDES_${PN} = "virtual/runc"
 
@@ -55,7 +56,11 @@ do_compile() {
 	export CFLAGS=""
 	export LDFLAGS=""
 
-	oe_runmake static
+	if ${@bb.utils.contains('PACKAGECONFIG', 'static', 'true', 'false', d)}; then
+		oe_runmake static
+	else
+		oe_runmake runc
+	fi
 }
 
 do_install() {
@@ -65,4 +70,3 @@ do_install() {
 	ln -sf runc ${D}/${bindir}/docker-runc
 }
 
-INHIBIT_PACKAGE_STRIP = "1"

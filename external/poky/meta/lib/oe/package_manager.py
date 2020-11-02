@@ -1,3 +1,7 @@
+#
+# SPDX-License-Identifier: GPL-2.0-only
+#
+
 from abc import ABCMeta, abstractmethod
 import os
 import glob
@@ -29,15 +33,16 @@ def opkg_query(cmd_output):
     a dictionary with the information of the packages. This is used
     when the packages are in deb or ipk format.
     """
-    verregex = re.compile(' \([=<>]* [^ )]*\)')
+    verregex = re.compile(r' \([=<>]* [^ )]*\)')
     output = dict()
     pkg = ""
     arch = ""
     ver = ""
     filename = ""
     dep = []
+    prov = []
     pkgarch = ""
-    for line in cmd_output.splitlines():
+    for line in cmd_output.splitlines()+['']:
         line = line.rstrip()
         if ':' in line:
             if line.startswith("Package: "):
@@ -60,6 +65,10 @@ def opkg_query(cmd_output):
                     dep.append("%s [REC]" % recommend)
             elif line.startswith("PackageArch: "):
                 pkgarch = line.split(": ")[1]
+            elif line.startswith("Provides: "):
+                provides = verregex.sub('', line.split(": ")[1])
+                for provide in provides.split(", "):
+                    prov.append(provide)
 
         # When there is a blank line save the package information
         elif not line:
@@ -68,19 +77,14 @@ def opkg_query(cmd_output):
                 filename = "%s_%s_%s.ipk" % (pkg, ver, arch)
             if pkg:
                 output[pkg] = {"arch":arch, "ver":ver,
-                        "filename":filename, "deps": dep, "pkgarch":pkgarch }
+                        "filename":filename, "deps": dep, "pkgarch":pkgarch, "provs": prov}
             pkg = ""
             arch = ""
             ver = ""
             filename = ""
             dep = []
+            prov = []
             pkgarch = ""
-
-    if pkg:
-        if not filename:
-            filename = "%s_%s_%s.ipk" % (pkg, ver, arch)
-        output[pkg] = {"arch":arch, "ver":ver,
-                "filename":filename, "deps": dep }
 
     return output
 
@@ -94,6 +98,8 @@ def generate_locale_archive(d, rootfs, target_arch, localedir):
     # Pretty sure we don't need this for locale archive generation but
     # keeping it to be safe...
     locale_arch_options = { \
+        "arc": ["--uint32-align=4", "--little-endian"],
+        "arceb": ["--uint32-align=4", "--big-endian"],
         "arm": ["--uint32-align=4", "--little-endian"],
         "armeb": ["--uint32-align=4", "--big-endian"],
         "aarch64": ["--uint32-align=4", "--little-endian"],
@@ -101,6 +107,7 @@ def generate_locale_archive(d, rootfs, target_arch, localedir):
         "sh4": ["--uint32-align=4", "--big-endian"],
         "powerpc": ["--uint32-align=4", "--big-endian"],
         "powerpc64": ["--uint32-align=4", "--big-endian"],
+        "powerpc64le": ["--uint32-align=4", "--little-endian"],
         "mips": ["--uint32-align=4", "--big-endian"],
         "mipsisa32r6": ["--uint32-align=4", "--big-endian"],
         "mips64": ["--uint32-align=4", "--big-endian"],
@@ -125,7 +132,7 @@ def generate_locale_archive(d, rootfs, target_arch, localedir):
     env = dict(os.environ)
     env["LOCALEARCHIVE"] = oe.path.join(localedir, "locale-archive")
 
-    for name in os.listdir(localedir):
+    for name in sorted(os.listdir(localedir)):
         path = os.path.join(localedir, name)
         if os.path.isdir(path):
             cmd = ["cross-localedef", "--verbose"]
@@ -211,7 +218,7 @@ class OpkgIndexer(Indexer):
                 if not os.path.exists(pkgs_file):
                     open(pkgs_file, "w").close()
 
-                index_cmds.add('%s -r %s -p %s -m %s' %
+                index_cmds.add('%s --checksum md5 --checksum sha256 -r %s -p %s -m %s' %
                                   (opkg_index_cmd, pkgs_file, pkgs_file, pkgs_dir))
 
                 index_sign_files.add(pkgs_file)
@@ -250,8 +257,8 @@ class DpkgIndexer(Indexer):
             with open(os.path.join(self.d.expand("${STAGING_ETCDIR_NATIVE}"),
                 "apt", "apt.conf.sample")) as apt_conf_sample:
                 for line in apt_conf_sample.read().split("\n"):
-                    line = re.sub("#ROOTFS#", "/dev/null", line)
-                    line = re.sub("#APTCONF#", self.apt_conf_dir, line)
+                    line = re.sub(r"#ROOTFS#", "/dev/null", line)
+                    line = re.sub(r"#APTCONF#", self.apt_conf_dir, line)
                     apt_conf.write(line + "\n")
 
     def write_index(self):
@@ -292,7 +299,7 @@ class DpkgIndexer(Indexer):
                 release.write("Label: %s\n" % arch)
 
             cmd += "PSEUDO_UNLOAD=1 %s release . >> Release" % apt_ftparchive
-            
+
             index_cmds.append(cmd)
 
             deb_dirs_found = True
@@ -318,7 +325,7 @@ class PkgsList(object, metaclass=ABCMeta):
 
 class RpmPkgsList(PkgsList):
     def list_pkgs(self):
-        return RpmPM(self.d, self.rootfs_dir, self.d.getVar('TARGET_VENDOR')).list_installed()
+        return RpmPM(self.d, self.rootfs_dir, self.d.getVar('TARGET_VENDOR'), needfeed=False).list_installed()
 
 class OpkgPkgsList(PkgsList):
     def __init__(self, d, rootfs_dir, config_file):
@@ -354,7 +361,7 @@ class DpkgPkgsList(PkgsList):
                "--admindir=%s/var/lib/dpkg" % self.rootfs_dir,
                "-W"]
 
-        cmd.append("-f=Package: ${Package}\nArchitecture: ${PackageArch}\nVersion: ${Version}\nFile: ${Package}_${Version}_${Architecture}.deb\nDepends: ${Depends}\nRecommends: ${Recommends}\n\n")
+        cmd.append("-f=Package: ${Package}\nArchitecture: ${PackageArch}\nVersion: ${Version}\nFile: ${Package}_${Version}_${Architecture}.deb\nDepends: ${Depends}\nRecommends: ${Recommends}\nProvides: ${Provides}\n\n")
 
         try:
             cmd_output = subprocess.check_output(cmd, stderr=subprocess.STDOUT).strip().decode("utf-8")
@@ -406,7 +413,7 @@ class PackageManager(object, metaclass=ABCMeta):
         with open(postinst_intercept_hook) as intercept:
             registered_pkgs = None
             for line in intercept.read().split("\n"):
-                m = re.match("^##PKGS:(.*)", line)
+                m = re.match(r"^##PKGS:(.*)", line)
                 if m is not None:
                     registered_pkgs = m.group(1).strip()
                     break
@@ -437,6 +444,11 @@ class PackageManager(object, metaclass=ABCMeta):
                 self._postpone_to_first_boot(script_full)
                 continue
 
+            if populate_sdk == 'host' and self.d.getVar('SDK_OS') == 'mingw32':
+                bb.note("The postinstall intercept hook '%s' could not be executed due to missing wine support, details in %s/log.do_%s"
+                                % (script, self.d.getVar('T'), self.d.getVar('BB_CURRENTTASK')))
+                continue
+
             bb.note("> Executing %s intercept ..." % script)
 
             try:
@@ -445,10 +457,10 @@ class PackageManager(object, metaclass=ABCMeta):
             except subprocess.CalledProcessError as e:
                 bb.note("Exit code %d. Output:\n%s" % (e.returncode, e.output.decode("utf-8")))
                 if populate_sdk == 'host':
-                    bb.warn("The postinstall intercept hook '%s' failed, details in %s/log.do_%s" % (script, self.d.getVar('T'), self.d.getVar('BB_CURRENTTASK')))
+                    bb.fatal("The postinstall intercept hook '%s' failed, details in %s/log.do_%s" % (script, self.d.getVar('T'), self.d.getVar('BB_CURRENTTASK')))
                 elif populate_sdk == 'target':
                     if "qemuwrapper: qemu usermode is not supported" in e.output.decode("utf-8"):
-                        bb.warn("The postinstall intercept hook '%s' could not be executed due to missing qemu usermode support, details in %s/log.do_%s"
+                        bb.note("The postinstall intercept hook '%s' could not be executed due to missing qemu usermode support, details in %s/log.do_%s"
                                 % (script, self.d.getVar('T'), self.d.getVar('BB_CURRENTTASK')))
                     else:
                         bb.fatal("The postinstall intercept hook '%s' failed, details in %s/log.do_%s" % (script, self.d.getVar('T'), self.d.getVar('BB_CURRENTTASK')))
@@ -559,6 +571,8 @@ class PackageManager(object, metaclass=ABCMeta):
 
             for lang in split_linguas:
                 globs += " *-locale-%s" % lang
+                for complementary_linguas in (self.d.getVar('IMAGE_LINGUAS_COMPLEMENTARY') or "").split():
+                    globs += (" " + complementary_linguas) % lang
 
         if globs is None:
             return
@@ -567,6 +581,11 @@ class PackageManager(object, metaclass=ABCMeta):
         # oe-pkgdata-util reads it from a file
         with tempfile.NamedTemporaryFile(mode="w+", prefix="installed-pkgs") as installed_pkgs:
             pkgs = self.list_installed()
+
+            provided_pkgs = set()
+            for pkg in pkgs.values():
+                provided_pkgs |= set(pkg.get('provs', []))
+
             output = oe.utils.format_pkg_list(pkgs, "arch")
             installed_pkgs.write(output)
             installed_pkgs.flush()
@@ -578,10 +597,15 @@ class PackageManager(object, metaclass=ABCMeta):
             if exclude:
                 cmd.extend(['--exclude=' + '|'.join(exclude.split())])
             try:
-                bb.note("Installing complementary packages ...")
                 bb.note('Running %s' % cmd)
                 complementary_pkgs = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode("utf-8")
-                self.install(complementary_pkgs.split(), attempt_only=True)
+                complementary_pkgs = set(complementary_pkgs.split())
+                skip_pkgs = sorted(complementary_pkgs & provided_pkgs)
+                install_pkgs = sorted(complementary_pkgs - provided_pkgs)
+                bb.note("Installing complementary packages ... %s (skipped already provided packages %s)" % (
+                    ' '.join(install_pkgs),
+                    ' '.join(skip_pkgs)))
+                self.install(install_pkgs, attempt_only=True)
             except subprocess.CalledProcessError as e:
                 bb.fatal("Could not compute complementary packages list. Command "
                          "'%s' returned %d:\n%s" %
@@ -644,7 +668,7 @@ def create_packages_dir(d, subrepo_dir, deploydir, taskname, filterbydependencie
     pn = d.getVar("PN")
     seendirs = set()
     multilibs = {}
-   
+
     bb.utils.remove(subrepo_dir, recurse=True)
     bb.utils.mkdirhier(subrepo_dir)
 
@@ -722,7 +746,8 @@ class RpmPM(PackageManager):
                  arch_var=None,
                  os_var=None,
                  rpm_repo_workdir="oe-rootfs-repo",
-                 filterbydependencies=True):
+                 filterbydependencies=True,
+                 needfeed=True):
         super(RpmPM, self).__init__(d, target_rootfs)
         self.target_vendor = target_vendor
         self.task_name = task_name
@@ -735,8 +760,9 @@ class RpmPM(PackageManager):
         else:
             self.primary_arch = self.d.getVar('MACHINE_ARCH')
 
-        self.rpm_repo_dir = oe.path.join(self.d.getVar('WORKDIR'), rpm_repo_workdir)
-        create_packages_dir(self.d, oe.path.join(self.rpm_repo_dir, "rpm"), d.getVar("DEPLOY_DIR_RPM"), "package_write_rpm", filterbydependencies)
+        if needfeed:
+            self.rpm_repo_dir = oe.path.join(self.d.getVar('WORKDIR'), rpm_repo_workdir)
+            create_packages_dir(self.d, oe.path.join(self.rpm_repo_dir, "rpm"), d.getVar("DEPLOY_DIR_RPM"), "package_write_rpm", filterbydependencies)
 
         self.saved_packaging_data = self.d.expand('${T}/saved_packaging_data/%s' % self.task_name)
         if not os.path.exists(self.d.expand('${T}/saved_packaging_data')):
@@ -753,6 +779,8 @@ class RpmPM(PackageManager):
         # This prevents accidental matching against libsolv's built-in policies
         if len(archs) <= 1:
             archs = archs + ["bogusarch"]
+        # This architecture needs to be upfront so that packages using it are properly prioritized
+        archs = ["sdk_provides_dummy_target"] + archs
         confdir = "%s/%s" %(self.target_rootfs, "etc/dnf/vars/")
         bb.utils.mkdirhier(confdir)
         open(confdir + "arch", 'w').write(":".join(archs))
@@ -860,7 +888,7 @@ class RpmPM(PackageManager):
 
         failed_scriptlets_pkgnames = collections.OrderedDict()
         for line in output.splitlines():
-            if line.startswith("Non-fatal POSTIN scriptlet failure in rpm package"):
+            if line.startswith("Error in POSTIN scriptlet in rpm package"):
                 failed_scriptlets_pkgnames[line.split()[-1]] = True
 
         if len(failed_scriptlets_pkgnames) > 0:
@@ -962,13 +990,14 @@ class RpmPM(PackageManager):
         os.environ['RPM_ETCCONFIGDIR'] = self.target_rootfs
 
         dnf_cmd = bb.utils.which(os.getenv('PATH'), "dnf")
-        standard_dnf_args = ["-v", "--rpmverbosity=debug", "-y",
+        standard_dnf_args = ["-v", "--rpmverbosity=info", "-y",
                              "-c", oe.path.join(self.target_rootfs, "etc/dnf/dnf.conf"),
                              "--setopt=reposdir=%s" %(oe.path.join(self.target_rootfs, "etc/yum.repos.d")),
-                             "--repofrompath=oe-repo,%s" % (self.rpm_repo_dir),
                              "--installroot=%s" % (self.target_rootfs),
                              "--setopt=logdir=%s" % (self.d.getVar('T'))
                             ]
+        if hasattr(self, "rpm_repo_dir"):
+            standard_dnf_args.append("--repofrompath=oe-repo,%s" % (self.rpm_repo_dir))
         cmd = [dnf_cmd] + standard_dnf_args + dnf_args
         bb.note('Running %s' % ' '.join(cmd))
         try:
@@ -992,8 +1021,8 @@ class RpmPM(PackageManager):
     def load_old_install_solution(self):
         if not os.path.exists(self.solution_manifest):
             return []
-
-        return open(self.solution_manifest, 'r').read().split()
+        with open(self.solution_manifest, 'r') as fd:
+            return fd.read().split()
 
     def _script_num_prefix(self, path):
         files = os.listdir(path)
@@ -1108,10 +1137,7 @@ class OpkgDpkgPM(PackageManager):
         tmp_dir = tempfile.mkdtemp()
         current_dir = os.getcwd()
         os.chdir(tmp_dir)
-        if self.d.getVar('IMAGE_PKGTYPE') == 'deb':
-            data_tar = 'data.tar.xz'
-        else:
-            data_tar = 'data.tar.gz'
+        data_tar = 'data.tar.xz'
 
         try:
             cmd = [ar_cmd, 'x', pkg_path]
@@ -1212,7 +1238,7 @@ class OpkgPM(OpkgDpkgPM):
                 priority += 5
 
             for line in (self.d.getVar('IPK_FEED_URIS') or "").split():
-                feed_match = re.match("^[ \t]*(.*)##([^ \t]*)[ \t]*$", line)
+                feed_match = re.match(r"^[ \t]*(.*)##([^ \t]*)[ \t]*$", line)
 
                 if feed_match is not None:
                     feed_name = feed_match.group(1)
@@ -1286,6 +1312,8 @@ class OpkgPM(OpkgDpkgPM):
         rootfs_config = os.path.join('%s/etc/opkg/base-feeds.conf'
                                   % self.target_rootfs)
 
+        os.makedirs('%s/etc/opkg' % self.target_rootfs, exist_ok=True)
+
         feed_uris = self.construct_uris(feed_uris.split(), feed_base_paths.split())
         archs = self.pkg_archs.split() if feed_archs is None else feed_archs.split()
 
@@ -1329,6 +1357,8 @@ class OpkgPM(OpkgDpkgPM):
         cmd = "%s %s" % (self.opkg_cmd, self.opkg_args)
         for exclude in (self.d.getVar("PACKAGE_EXCLUDE") or "").split():
             cmd += " --add-exclude %s" % exclude
+        for bad_recommendation in (self.d.getVar("BAD_RECOMMENDATIONS") or "").split():
+            cmd += " --add-ignore-recommends %s" % bad_recommendation
         cmd += " install "
         cmd += " ".join(pkgs)
 
@@ -1396,45 +1426,6 @@ class OpkgPM(OpkgDpkgPM):
 
     def list_installed(self):
         return OpkgPkgsList(self.d, self.target_rootfs, self.config_file).list_pkgs()
-
-    def handle_bad_recommendations(self):
-        bad_recommendations = self.d.getVar("BAD_RECOMMENDATIONS") or ""
-        if bad_recommendations.strip() == "":
-            return
-
-        status_file = os.path.join(self.opkg_dir, "status")
-
-        # If status file existed, it means the bad recommendations has already
-        # been handled
-        if os.path.exists(status_file):
-            return
-
-        cmd = "%s %s info " % (self.opkg_cmd, self.opkg_args)
-
-        with open(status_file, "w+") as status:
-            for pkg in bad_recommendations.split():
-                pkg_info = cmd + pkg
-
-                try:
-                    output = subprocess.check_output(pkg_info.split(), stderr=subprocess.STDOUT).strip().decode("utf-8")
-                except subprocess.CalledProcessError as e:
-                    bb.fatal("Cannot get package info. Command '%s' "
-                             "returned %d:\n%s" % (pkg_info, e.returncode, e.output.decode("utf-8")))
-
-                if output == "":
-                    bb.note("Ignored bad recommendation: '%s' is "
-                            "not a package" % pkg)
-                    continue
-
-                for line in output.split('\n'):
-                    if line.startswith("Status:"):
-                        status.write("Status: deinstall hold not-installed\n")
-                    else:
-                        status.write(line + "\n")
-
-                # Append a blank line after each package entry to ensure that it
-                # is separated from the following entry
-                status.write("\n")
 
     def dummy_install(self, pkgs):
         """
@@ -1520,7 +1511,7 @@ class OpkgPM(OpkgDpkgPM):
                      "trying to extract the package."  % pkg)
 
         tmp_dir = super(OpkgPM, self).extract(pkg, pkg_info)
-        bb.utils.remove(os.path.join(tmp_dir, "data.tar.gz"))
+        bb.utils.remove(os.path.join(tmp_dir, "data.tar.xz"))
 
         return tmp_dir
 
@@ -1592,7 +1583,7 @@ class DpkgPM(OpkgDpkgPM):
 
         with open(status_file, "r") as status:
             for line in status.read().split('\n'):
-                m = re.match("^Package: (.*)", line)
+                m = re.match(r"^Package: (.*)", line)
                 if m is not None:
                     installed_pkgs.append(m.group(1))
 
@@ -1643,7 +1634,7 @@ class DpkgPM(OpkgDpkgPM):
 
         os.environ['APT_CONFIG'] = self.apt_conf_file
 
-        cmd = "%s %s install --force-yes --allow-unauthenticated %s" % \
+        cmd = "%s %s install --force-yes --allow-unauthenticated --no-remove %s" % \
               (self.apt_get_cmd, self.apt_args, ' '.join(pkgs))
 
         try:
@@ -1657,13 +1648,13 @@ class DpkgPM(OpkgDpkgPM):
         # rename *.dpkg-new files/dirs
         for root, dirs, files in os.walk(self.target_rootfs):
             for dir in dirs:
-                new_dir = re.sub("\.dpkg-new", "", dir)
+                new_dir = re.sub(r"\.dpkg-new", "", dir)
                 if dir != new_dir:
                     os.rename(os.path.join(root, dir),
                               os.path.join(root, new_dir))
 
             for file in files:
-                new_file = re.sub("\.dpkg-new", "", file)
+                new_file = re.sub(r"\.dpkg-new", "", file)
                 if file != new_file:
                     os.rename(os.path.join(root, file),
                               os.path.join(root, new_file))
@@ -1728,7 +1719,7 @@ class DpkgPM(OpkgDpkgPM):
                     sources_file.write("deb %s ./\n" % uri)
 
     def _create_configs(self, archs, base_archs):
-        base_archs = re.sub("_", "-", base_archs)
+        base_archs = re.sub(r"_", r"-", base_archs)
 
         if os.path.exists(self.apt_conf_dir):
             bb.utils.remove(self.apt_conf_dir, True)
@@ -1782,7 +1773,7 @@ class DpkgPM(OpkgDpkgPM):
         with open(self.apt_conf_file, "w+") as apt_conf:
             with open(self.d.expand("${STAGING_ETCDIR_NATIVE}/apt/apt.conf.sample")) as apt_conf_sample:
                 for line in apt_conf_sample.read().split("\n"):
-                    match_arch = re.match("  Architecture \".*\";$", line)
+                    match_arch = re.match(r"  Architecture \".*\";$", line)
                     architectures = ""
                     if match_arch:
                         for base_arch in base_arch_list:
@@ -1790,8 +1781,8 @@ class DpkgPM(OpkgDpkgPM):
                         apt_conf.write("  Architectures {%s};\n" % architectures);
                         apt_conf.write("  Architecture \"%s\";\n" % base_archs)
                     else:
-                        line = re.sub("#ROOTFS#", self.target_rootfs, line)
-                        line = re.sub("#APTCONF#", self.apt_conf_dir, line)
+                        line = re.sub(r"#ROOTFS#", self.target_rootfs, line)
+                        line = re.sub(r"#APTCONF#", self.apt_conf_dir, line)
                         apt_conf.write(line + "\n")
 
         target_dpkg_dir = "%s/var/lib/dpkg" % self.target_rootfs
@@ -1805,8 +1796,7 @@ class DpkgPM(OpkgDpkgPM):
             open(os.path.join(target_dpkg_dir, "available"), "w+").close()
 
     def remove_packaging_data(self):
-        bb.utils.remove(os.path.join(self.target_rootfs,
-                                     self.d.getVar('opkglibdir')), True)
+        bb.utils.remove(self.target_rootfs + self.d.getVar('opkglibdir'), True)
         bb.utils.remove(self.target_rootfs + "/var/lib/dpkg/", True)
 
     def fix_broken_dependencies(self):

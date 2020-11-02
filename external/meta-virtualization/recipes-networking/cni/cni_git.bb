@@ -9,11 +9,12 @@ Because of this focus, CNI has a wide range of support and the specification \
 is simple to implement. \
 "
 
-SRCREV_cni = "cc562d1b44b3d00b8c341250d49a8a0823a1c085"
-SRCREV_plugins = "9abd20edd6c83385ff6c2a6e6ff265158059e723"
+SRCREV_cni = "4cfb7b568922a3c79a23e438dc52fe537fc9687e"
+# Version 0.8.5
+SRCREV_plugins = "1f33fb729ae2b8900785f896df2dc1f6fe5e8239"
 SRC_URI = "\
 	git://github.com/containernetworking/cni.git;nobranch=1;name=cni \
-        git://github.com/containernetworking/plugins.git;nobranch=1;destsuffix=plugins;name=plugins \
+        git://github.com/containernetworking/plugins.git;nobranch=1;destsuffix=${S}/src/github.com/containernetworking/plugins;name=plugins \
 	"
 
 RPROVIDES_${PN} += "kubernetes-cni"
@@ -23,76 +24,47 @@ LIC_FILES_CHKSUM = "file://src/import/LICENSE;md5=fa818a259cbed7ce8bc2a22d35a464
 
 GO_IMPORT = "import"
 
-PV = "0.6.0+git${SRCREV_cni}"
+PV = "0.7.1+git${SRCREV_cni}"
 
 inherit go
 inherit goarch
 
 do_compile() {
-	export GOARCH="${TARGET_GOARCH}"
-	export GOROOT="${STAGING_LIBDIR_NATIVE}/${TARGET_SYS}/go"
-	export GOPATH="${S}/src/import:${S}/src/import/vendor"
+	mkdir -p ${S}/src/github.com/containernetworking
+	ln -sfr ${S}/src/import ${S}/src/github.com/containernetworking/cni
 
-	# Pass the needed cflags/ldflags so that cgo
-	# can find the needed headers files and libraries
-	export CGO_ENABLED="1"
-	export CFLAGS=""
-	export LDFLAGS=""
-	export CGO_CFLAGS="${BUILDSDK_CFLAGS} --sysroot=${STAGING_DIR_TARGET}"
-	export CGO_LDFLAGS="${BUILDSDK_LDFLAGS} --sysroot=${STAGING_DIR_TARGET}"
+	cd ${B}/src/github.com/containernetworking/cni/libcni
+	${GO} build
 
-	# link fixups for compilation
-	rm -f ${S}/src/import/vendor/src
-	mkdir -p ${S}/src/import/vendor/
-	ln -sf ./ ${S}/src/import/vendor/src
-	rm -rf ${S}/src/import/plugins
-	rm -rf ${S}/src/import/vendor/github.com/containernetworking/plugins
+	cd ${B}/src/github.com/containernetworking/cni/cnitool
+	${GO} build
 
-	mkdir -p ${S}/src/import/vendor/github.com/containernetworking/cni
-
-	ln -sf ../../../../libcni ${S}/src/import/vendor/github.com/containernetworking/cni/libcni
-	ln -sf ../../../../pkg ${S}/src/import/vendor/github.com/containernetworking/cni/pkg
-	ln -sf ../../../../cnitool ${S}/src/import/vendor/github.com/containernetworking/cni/cnitool
-	ln -sf ${WORKDIR}/plugins ${S}/src/import/vendor/github.com/containernetworking/plugins
-
-	export GOPATH="${S}/src/import/.gopath:${S}/src/import/vendor:${STAGING_DIR_TARGET}/${prefix}/local/go"
-	export GOROOT="${STAGING_DIR_NATIVE}/${nonarch_libdir}/${HOST_SYS}/go"
-
-	# Pass the needed cflags/ldflags so that cgo
-	# can find the needed headers files and libraries
-	export CGO_ENABLED="1"
-	export CGO_CFLAGS="${CFLAGS} --sysroot=${STAGING_DIR_TARGET}"
-	export CGO_LDFLAGS="${LDFLAGS} --sysroot=${STAGING_DIR_TARGET}"
-
-	cd ${S}/src/import/vendor/github.com/containernetworking/cni/libcni
-	go build
-
-	cd ${S}/src/import/vendor/github.com/containernetworking/cni/cnitool
-	go build
-
-	cd ${S}/src/import/vendor/github.com/containernetworking/plugins/
-	PLUGINS="$(ls -d plugins/meta/*; ls -d plugins/main/* | grep -v windows)"
-	mkdir -p ${WORKDIR}/plugins/bin/
+	cd ${B}/src/github.com/containernetworking/plugins
+	PLUGINS="$(ls -d plugins/meta/*; ls -d plugins/ipam/*; ls -d plugins/main/* | grep -v windows)"
+	mkdir -p ${B}/plugins/bin/
 	for p in $PLUGINS; do
 	    plugin="$(basename "$p")"
 	    echo "building: $p"
-	    go build -o ${WORKDIR}/plugins/bin/$plugin github.com/containernetworking/plugins/$p
+	    ${GO} build -mod=vendor -o ${B}/plugins/bin/$plugin github.com/containernetworking/plugins/$p
 	done
 }
 
 do_install() {
-    localbindir="/opt/cni/bin"
+    localbindir="${libexecdir}/cni/"
 
     install -d ${D}${localbindir}
     install -d ${D}/${sysconfdir}/cni/net.d
 
     install -m 755 ${S}/src/import/cnitool/cnitool ${D}/${localbindir}
-    install -m 755 -D ${WORKDIR}/plugins/bin/* ${D}/${localbindir}
+    install -m 755 -D ${B}/plugins/bin/* ${D}/${localbindir}
+
+    # Parts of k8s expect the cni binaries to be available in /opt/cni
+    install -d ${D}/opt/cni
+    ln -sf ${libexecdir}/cni/ ${D}/opt/cni/bin
 }
 
-FILES_${PN} += "/opt/cni/bin/*"
+FILES_${PN} += "${libexecdir}/cni/* /opt/cni/bin"
 
-INHIBIT_PACKAGE_STRIP = "1"
 INSANE_SKIP_${PN} += "ldflags already-stripped"
 
 deltask compile_ptest_base

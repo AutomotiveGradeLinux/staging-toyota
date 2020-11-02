@@ -18,9 +18,8 @@ DEPENDS += "qtquickcontrols2 \
             qtcharts \
             libqtappfw \
             libhomescreen \
-            qlibwindowmanager \
 "
 
 inherit qmake5 aglwgt
 
-RDEPENDS_${PN} += "agl-service-taskmanager"
+RDEPENDS_${PN} += "agl-service-taskmanager libqtappfw"

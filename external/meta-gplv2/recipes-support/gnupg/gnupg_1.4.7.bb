@@ -19,7 +19,8 @@ SRC_URI = "${GNUPG_MIRROR}/gnupg/gnupg-${PV}.tar.bz2 \
            file://CVE-2013-4576.patch \
            file://CVE-2013-4242.patch \
            file://fix-ustar-check-issue.patch \
-	  "
+           file://0001-Make-it-build-with-gettext-0.20.patch \
+          "
 
 SRC_URI[md5sum] = "b06a141cca5cd1a55bbdd25ab833303c"
 SRC_URI[sha256sum] = "69d18b7d193f62ca27ed4febcb4c9044aa0c95305d3258fe902e2fae5fc6468d"
@@ -84,6 +85,7 @@ EXTRA_OECONF = "--disable-ldap \
                "
 
 # Force gcc's traditional handling of inline to avoid issues with gcc 5
+BUILD_CFLAGS += "-fgnu89-inline"
 CFLAGS += "-fgnu89-inline"
 
 do_install () {
@@ -95,6 +97,8 @@ do_install () {
 
 # split out gpgv from main package
 RDEPENDS_${PN} = "gpgv"
+RDEPENDS_${PN}_class-native = ""
+
 PACKAGES =+ "gpgv"
 FILES_gpgv = "${bindir}/gpgv"
 
@@ -104,3 +108,5 @@ FILES_${PN} = "${bindir}/* ${datadir}/${BPN} ${libexecdir}/${BPN}/*"
 PACKAGECONFIG ??= ""
 PACKAGECONFIG[curl] = "--with-libcurl=${STAGING_LIBDIR},--without-libcurl,curl"
 PACKAGECONFIG[libusb] = "--with-libusb=${STAGING_LIBDIR},--without-libusb,libusb-compat"
+
+BBCLASSEXTEND += "native"

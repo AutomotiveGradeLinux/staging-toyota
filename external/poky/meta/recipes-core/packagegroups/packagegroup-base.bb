@@ -7,7 +7,6 @@ PR = "r83"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 inherit packagegroup
-inherit bluetooth
 
 PROVIDES = "${PACKAGES}"
 PACKAGES = ' \
@@ -21,7 +20,6 @@ PACKAGES = ' \
             ${@bb.utils.contains("MACHINE_FEATURES", "apm", "packagegroup-base-apm", "", d)} \
             ${@bb.utils.contains("MACHINE_FEATURES", "ext2", "packagegroup-base-ext2", "", d)} \
             ${@bb.utils.contains("MACHINE_FEATURES", "vfat", "packagegroup-base-vfat", "", d)} \
-            ${@bb.utils.contains("MACHINE_FEATURES", "irda", "packagegroup-base-irda", "",d)} \
             ${@bb.utils.contains("MACHINE_FEATURES", "keyboard", "packagegroup-base-keyboard", "", d)} \
             ${@bb.utils.contains("MACHINE_FEATURES", "pci", "packagegroup-base-pci", "",d)} \
             ${@bb.utils.contains("MACHINE_FEATURES", "pcmcia", "packagegroup-base-pcmcia", "", d)} \
@@ -63,7 +61,6 @@ RDEPENDS_packagegroup-base = "\
     ${@bb.utils.contains('COMBINED_FEATURES', 'alsa', 'packagegroup-base-alsa', '',d)} \
     ${@bb.utils.contains('COMBINED_FEATURES', 'ext2', 'packagegroup-base-ext2', '',d)} \
     ${@bb.utils.contains('COMBINED_FEATURES', 'vfat', 'packagegroup-base-vfat', '',d)} \
-    ${@bb.utils.contains('COMBINED_FEATURES', 'irda', 'packagegroup-base-irda', '',d)} \
     ${@bb.utils.contains('COMBINED_FEATURES', 'pci', 'packagegroup-base-pci', '',d)} \
     ${@bb.utils.contains('COMBINED_FEATURES', 'pcmcia', 'packagegroup-base-pcmcia', '',d)} \
     ${@bb.utils.contains('COMBINED_FEATURES', 'usbgadget', 'packagegroup-base-usbgadget', '',d)} \
@@ -201,8 +198,7 @@ RRECOMMENDS_packagegroup-base-pcmcia = "\
 
 SUMMARY_packagegroup-base-bluetooth = "Bluetooth support"
 RDEPENDS_packagegroup-base-bluetooth = "\
-    ${BLUEZ} \
-    ${@bb.utils.contains('COMBINED_FEATURES', 'alsa', bb.utils.contains('BLUEZ', 'bluez4', 'libasound-module-bluez', '', d), '',d)} \
+    bluez5 \
     "
 
 RRECOMMENDS_packagegroup-base-bluetooth = "\
@@ -220,23 +216,6 @@ RRECOMMENDS_packagegroup-base-bluetooth = "\
     ${@bb.utils.contains('COMBINED_FEATURES', 'pcmcia', 'kernel-module-bluetoothuart-cs', '',d)} \
     ${@bb.utils.contains('COMBINED_FEATURES', 'pcmcia', 'kernel-module-dtl1-cs', '',d)} \
     "
-
-SUMMARY_packagegroup-base-irda = "IrDA support"
-RDEPENDS_packagegroup-base-irda = "\
-    irda-utils"
-
-RRECOMMENDS_packagegroup-base-irda = "\
-    kernel-module-pxaficp-ir \
-    kernel-module-irda \
-    kernel-module-ircomm \
-    kernel-module-ircomm-tty \
-    kernel-module-irlan \
-    ${@bb.utils.contains('DISTRO_FEATURES', 'ppp', 'kernel-module-irnet', '',d)} \
-    kernel-module-irport \
-    kernel-module-irtty \
-    kernel-module-irtty-sir \
-    kernel-module-sir-dev \
-    ${@bb.utils.contains('COMBINED_FEATURES', 'usbhost', 'kernel-module-ir-usb', '',d)} "
 
 SUMMARY_packagegroup-base-usbgadget = "USB gadget support"
 RRECOMMENDS_packagegroup-base-usbgadget = "\
@@ -290,6 +269,7 @@ RRECOMMENDS_packagegroup-base-ipsec = "\
 SUMMARY_packagegroup-base-wifi = "WiFi support"
 RDEPENDS_packagegroup-base-wifi = "\
     iw \
+    wireless-regdb-static \
     wpa-supplicant"
 
 RRECOMMENDS_packagegroup-base-wifi = "\

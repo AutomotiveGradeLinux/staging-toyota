@@ -1,4 +1,7 @@
 SUMMARY = "GNOME configuration system"
+DESCRIPTION = "GConf is a system for storing application preferences. \
+It is intended for user preferences; not configuration of something like \
+Apache, or arbitrary data storage."
 SECTION = "x11/gnome"
 HOMEPAGE = "https://projects.gnome.org/gconf/"
 LICENSE = "LGPLv2+"
@@ -22,12 +25,11 @@ S = "${WORKDIR}/GConf-${PV}"
 EXTRA_OECONF = "--enable-shared --disable-static \
                 --disable-orbit --with-openldap=no --disable-gtk"
 
-# Disable PolicyKit by default
-PACKAGECONFIG ??= ""
-# We really don't want PolicyKit for native
+PACKAGECONFIG ??= "${@bb.utils.filter('DISTRO_FEATURES', 'polkit', d)}"
+# We really don't want Polkit for native
 PACKAGECONFIG_class-native = ""
 
-PACKAGECONFIG[policykit] = "--enable-defaults-service,--disable-defaults-service,polkit"
+PACKAGECONFIG[polkit] = "--enable-defaults-service,--disable-defaults-service,polkit"
 PACKAGECONFIG[debug] = "--enable-debug=yes, --enable-debug=minimum"
 
 do_install_append() {

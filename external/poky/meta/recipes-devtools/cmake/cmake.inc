@@ -2,11 +2,15 @@
 # Released under the MIT license (see packages/COPYING)
 
 SUMMARY = "Cross-platform, open-source make system"
+DESCRIPTION = "CMake is used to control the software compilation process \
+using simple platform and compiler independent configuration files. CMake \
+generates native makefiles and workspaces that can be used in the compiler \
+environment of your choice."
 HOMEPAGE = "http://www.cmake.org/"
 BUGTRACKER = "http://public.kitware.com/Bug/my_view_page.php"
 SECTION = "console/utils"
-LICENSE = "BSD"
-LIC_FILES_CHKSUM = "file://Copyright.txt;md5=f61f5f859bc5ddba2b050eb10335e013 \
+LICENSE = "BSD-3-Clause"
+LIC_FILES_CHKSUM = "file://Copyright.txt;md5=622747147b46f22e1953876a7cba3323 \
                     file://Source/cmake.h;md5=4494dee184212fc89c469c3acd555a14;beginline=1;endline=3 \
                     "
 
@@ -18,7 +22,7 @@ SRC_URI = "https://cmake.org/files/v${CMAKE_MAJOR_VERSION}/cmake-${PV}.tar.gz \
            file://0004-Fail-silently-if-system-Qt-installation-is-broken.patch \
 "
 
-SRC_URI[md5sum] = "6e7c550cfa1c2e216b35903dc70d80af"
-SRC_URI[sha256sum] = "0f97485799e51a7070cc11494f3e02349b0fc3a24cc12b082e737bf67a0581a4"
+SRC_URI[md5sum] = "d86ccaf3d2462b6b5947919abe5b9f15"
+SRC_URI[sha256sum] = "5f760b50b8ecc9c0c37135fae5fbf00a2fef617059aa9d61c1bb91653e5a8bfc"
 
 UPSTREAM_CHECK_REGEX = "cmake-(?P<pver>\d+(\.\d+)+)\.tar"

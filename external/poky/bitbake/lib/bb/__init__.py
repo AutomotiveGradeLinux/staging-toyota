@@ -1,5 +1,3 @@
-# ex:ts=4:sw=4:sts=4:et
-# -*- tab-width: 4; c-basic-offset: 4; indent-tabs-mode: nil -*-
 #
 # BitBake Build System Python Library
 #
@@ -8,24 +6,14 @@
 #
 # Based on Gentoo's portage.py.
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 2 as
-# published by the Free Software Foundation.
+# SPDX-License-Identifier: GPL-2.0-only
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-__version__ = "1.40.0"
+__version__ = "1.46.0"
 
 import sys
-if sys.version_info < (3, 4, 0):
-    raise RuntimeError("Sorry, python 3.4.0 or later is required for this version of bitbake")
+if sys.version_info < (3, 5, 0):
+    raise RuntimeError("Sorry, python 3.5.0 or later is required for this version of bitbake")
 
 
 class BBHandledException(Exception):
@@ -55,7 +43,13 @@ class BBLogger(Logger):
         Logger.__init__(self, name)
 
     def bbdebug(self, level, msg, *args, **kwargs):
-        return self.log(logging.DEBUG - level + 1, msg, *args, **kwargs)
+        loglevel = logging.DEBUG - level + 1
+        if not bb.event.worker_pid:
+            if self.name in bb.msg.loggerDefaultDomains and loglevel > (bb.msg.loggerDefaultDomains[self.name]):
+                return
+            if loglevel > bb.msg.loggerDefaultLogLevel:
+                return
+        return self.log(loglevel, msg, *args, **kwargs)
 
     def plain(self, msg, *args, **kwargs):
         return self.log(logging.INFO + 1, msg, *args, **kwargs)

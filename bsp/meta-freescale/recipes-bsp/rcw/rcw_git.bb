@@ -1,30 +1,32 @@
 SUMMARY = "Reset Configuration Word"
 DESCRIPTION = "Reset Configuration Word - hardware boot-time parameters for the QorIQ targets"
 LICENSE = "BSD"
-LIC_FILES_CHKSUM = "file://LICENSE;md5=45a017ee5f4cfe64b1cddf2eb06cffc7"
+LIC_FILES_CHKSUM = "file://LICENSE;md5=44a0d0fad189770cc022af4ac6262cbe"
 
-DEPENDS += "change-file-endianess-native tcl-native"
+DEPENDS += "tcl-native"
 
 inherit deploy siteinfo
 
 SRC_URI = "git://source.codeaurora.org/external/qoriq/qoriq-components/rcw;nobranch=1"
-SRCREV = "17254ac35250197877c6321f9d13e33b1f85388a"
+SRCREV = "e0fab6d9b61003caef577f7474c2fac61e6ba2ff"
 
 S = "${WORKDIR}/git"
 
-export PYTHON = "${USRBINPATH}/python2"
+export PYTHON = "${USRBINPATH}/python3"
 
-M="${@d.getVar('MACHINE', True).replace('-64b','').replace('-32b','').replace('-${SITEINFO_ENDIANNESS}','')}"
+M="${@d.getVar('MACHINE').replace('-64b','').replace('-32b','').replace('-${SITEINFO_ENDIANNESS}','')}"
+
+BOARD_TARGETS="${M}"
+BOARD_TARGETS_ls2088ardb="${M} ${M}_rev1.1"
+BOARD_TARGETS_ls1088ardb-pb="ls1088ardb"
+BOARD_TARGETS_lx2160ardb = "${M} ${M}_rev2"
+
+do_compile () {
+    oe_runmake BOARDS="${BOARD_TARGETS}" DESTDIR=${D}/boot/rcw/
+}
 
 do_install () {
-    if [ ${M} = ls2088ardb ]; then
-        oe_runmake BOARDS=${M} DESTDIR=${D}/boot/rcw/ install
-        oe_runmake BOARDS=${M}_rev1.1  DESTDIR=${D}/boot/rcw/ install
-    elif [ ${M} = ls1088ardb-pb ]; then
-        oe_runmake BOARDS=ls1088ardb DESTDIR=${D}/boot/rcw/ install
-    else
-        oe_runmake BOARDS=${M} DESTDIR=${D}/boot/rcw/ install
-    fi
+    oe_runmake BOARDS="${BOARD_TARGETS}" DESTDIR=${D}/boot/rcw/ install
 }
 
 do_deploy () {

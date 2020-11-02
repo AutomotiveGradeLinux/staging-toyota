@@ -17,6 +17,7 @@ SRC_URI = "http://snapshot.debian.org/archive/debian/20050312T000000Z/pool/main/
            file://net-tools-1.60-sctp3-addrs.patch \
            file://0001-lib-inet6.c-INET6_rresolve-various-fixes.patch \
            file://net-tools-fix-building-with-linux-4.8.patch \
+           file://0001-added-ull-prefix-to-unsigned-long-long-constants-to-.patch \
           "
 
 # for this package we're mostly interested in tracking debian patches,
@@ -95,7 +96,7 @@ do_compile() {
 
 do_install() {
 	# We don't need COPTS or LOPTS, but let's be consistent.
-	oe_runmake COPTS="$CFLAGS" LOPTS="$LDFLAGS" 'BASEDIR=${D}' install
+	oe_runmake COPTS="$CFLAGS" LOPTS="$LDFLAGS" BASEDIR=${D} INSTALLNLSDIR=${D}${datadir}/locale mandir=${mandir} install
 
 	if [ "${base_bindir}" != "/bin" ]; then
 		mkdir -p ${D}/${base_bindir}

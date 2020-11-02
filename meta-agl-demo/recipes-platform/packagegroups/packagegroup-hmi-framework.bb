@@ -9,15 +9,24 @@ PR = "2"
 
 inherit packagegroup
 
-RDEPENDS_${PN} += " \
-  agl-service-windowmanager \
+PROVIDES = "${PACKAGES}"
+PACKAGES = "\
+    packagegroup-hmi-framework \
+    packagegroup-hmi-framework-devel \
+    "
+
+RDEPENDS_${PN} = " \
   agl-service-homescreen \
   homescreen \
-  libwindowmanager \
-  qlibwindowmanager \
   libhomescreen \
   qlibhomescreen \
-  runxdg \
   hmi-debug \
   launcher \
+"
+# NOTE: Currently no coverage versions of these widgets, they should
+#       be added here when available.
+RDEPENDS_${PN}-devel = " \
+  agl-service-homescreen-dbg \
+  homescreen-dbg \
+  launcher-dbg \
 "

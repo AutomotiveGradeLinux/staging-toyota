@@ -16,7 +16,7 @@ RDEPENDS_${PN}_class-target += "af-binder-tools nss-localuser cynagoauth"
 
 PACKAGE_WRITE_DEPS_append_with-lsm-smack = " smack-native libcap-native"
 
-EXTRA_OECMAKE_class-native  = "\
+EXTRA_OECMAKE_append_class-native  = "\
 	-DUSE_LIBZIP=1 \
 	-DUSE_SIMULATION=1 \
 	-DUSE_SDK=1 \
@@ -26,7 +26,7 @@ EXTRA_OECMAKE_class-native  = "\
 	-Dafm_datadir=${afm_datadir} \
 "
 
-EXTRA_OECMAKE = "\
+EXTRA_OECMAKE_append_class-target = "\
 	-DUSE_LIBZIP=1 \
 	-DUSE_SIMULATION=0 \
 	-DUSE_SDK=0 \
@@ -85,9 +85,6 @@ do_install_append_class-target() {
         ln -sf ../afm-system-daemon.service ${D}${systemd_system_unitdir}/multi-user.target.wants/afm-system-daemon.service
         ln -sf ../afm-system-daemon.socket ${D}${systemd_system_unitdir}/sockets.target.wants/afm-system-daemon.socket
     fi
-
-    DEFAULT_WM_SHELL="${@bb.utils.contains('DISTRO_FEATURES', 'agl-compositor', 'xdg-shell-v6', 'ivi-shell', d)}"
-    echo "QT_WAYLAND_SHELL_INTEGRATION=${DEFAULT_WM_SHELL}" > ${D}${afm_confdir}/unit.env.d/qt-shell
 }
 
 pkg_postinst_ontarget_${PN}() {
@@ -114,6 +111,7 @@ pkg_postinst_ontarget_${PN}_append_with-lsm-smack() {
     chsmack -a 'System::Shared' -t $D${afm_datadir}/icons
 }
 FILES_${PN} += "${systemd_units_root}/* ${systemd_system_unitdir} ${systemd_user_unitdir}"
+FILES_${PN}_append_agl-sign-wgts = " ${datadir}/afm"
 
 PACKAGES =+ "${PN}-binding ${PN}-binding-dbg"
 FILES_${PN}-binding = " ${afb_binding_dir}/afm-main-binding.so "

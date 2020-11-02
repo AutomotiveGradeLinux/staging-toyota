@@ -2,12 +2,6 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/linux:"
 
 DEPENDS += "kern-tools-native"
 
-# canbus qdisc pfifo change
-SRC_URI_append = " file://net-sch_generic-Use-pfifo_fast-as-fallback-scheduler.patch"
-
-# bbe target has this upstream patch already
-SRC_URI_remove_bbe = " file://net-sch_generic-Use-pfifo_fast-as-fallback-scheduler.patch"
-
 # returns all the elements from the src uri that are .cfg files
 def find_cfgs(d):
     sources=src_patches(d, True)
@@ -20,6 +14,9 @@ def find_cfgs(d):
 
 do_configure_append () {
     [ ! -f .config ] && cp -a ${WORKDIR}/defconfig .config
+    # Need to clear CONFIG_LSM for 5.1+ kernels to ensure it'll get
+    # regenerated to reflect configuration changes (e.g. SMACK).
+    sed -i '/^CONFIG_LSM/d' .config
     merge_config.sh -m .config ${@" ".join(find_cfgs(d))}
     yes '' | make oldconfig
 }
@@ -36,10 +33,13 @@ SRC_URI_append = "\
             file://drm.cfg \
             file://btusb.cfg \
             file://usbaudio.cfg \
-	    file://usbmodem.cfg \
-	    file://i2c-led.cfg \
-	    file://nfc.cfg \
-            "
+            file://usbmodem.cfg \
+            file://i2c-led.cfg \
+            file://nfc.cfg \
+        "
+
+SRC_URI_append = " ${@bb.utils.contains('AGL_XEN_GUEST_WANTED','1','file://xen_domu.cfg','',d)}"
+
 KERNEL_CONFIG_FRAGMENTS_append = " ${WORKDIR}/can-bus.cfg"
 # Enable support for usb video class for usb camera devices
 KERNEL_CONFIG_FRAGMENTS_append = " ${WORKDIR}/uvc.cfg"
@@ -58,15 +58,17 @@ KERNEL_CONFIG_FRAGMENTS_append = " ${WORKDIR}/usbaudio.cfg"
 KERNEL_CONFIG_FRAGMENTS_append = " ${WORKDIR}/i2c-led.cfg"
 # Enable NFC devices
 KERNEL_CONFIG_FRAGMENTS_append = " ${WORKDIR}/nfc.cfg"
+# Enable XEN support of the guest
+KERNEL_CONFIG_FRAGMENTS_append = " ${@bb.utils.contains('AGL_XEN_GUEST_WANTED','1','${WORKDIR}/xen_domu.cfg','',d)}"
 
 # Enable required features for the agl-netboot feature
 SRC_URI_append_netboot = " file://nbd.cfg \
 	file://ramdisk.cfg"
 KERNEL_CONFIG_FRAGMENTS_append_netboot = " ${WORKDIR}/nbd.cfg ${WORKDIR}/ramdisk.cfg"
 
-# Enable support for TP-Link TL-W722N USB Wifi adapter
-SRC_URI_append = " file://ath9k_htc.cfg"
-KERNEL_CONFIG_FRAGMENTS_append = " ${WORKDIR}/ath9k_htc.cfg"
+# Enable support for TP-Link TL-W722N USB Wifi adapter (rev 1 and 2)
+SRC_URI_append = " file://wifi.cfg"
+KERNEL_CONFIG_FRAGMENTS_append = " ${WORKDIR}/wifi.cfg"
 
 # Enable support for RTLSDR
 SRC_URI_append = " file://rtl_sdr.cfg"
@@ -78,6 +80,22 @@ OVERRIDES_prepend_qemux86 = "virtualmachine:"
 OVERRIDES_prepend_qemux86-64 = "virtualmachine:"
 SRC_URI_append_virtualmachine = " file://vbox-vmware-sata.cfg"
 KERNEL_CONFIG_FRAGMENTS_append_virtualmachine = " ${WORKDIR}/vbox-vmware-sata.cfg"
+
+# Extra configuration for using qemux86-64 image on physical hardware
+SRC_URI_append_qemux86-64 = "\
+    file://x86-extra-graphic-devices.cfg \
+    file://x86-net-devices.cfg \
+    file://x86-security-tpm.cfg \
+    file://x86-usb-devices.cfg \
+    file://x86-upsquare.cfg \
+"
+KERNEL_CONFIG_FRAGMENTS_append_qemux86-64 = "\
+    ${WORKDIR}/x86-extra-graphic-devices.cfg \
+    ${WORKDIR}/x86-net-devices.cfg \
+    ${WORKDIR}/x86-security-tpm.cfg \
+    ${WORKDIR}/x86-usb-devices.cfg \
+    ${WORKDIR}/x86-upsquare.cfg \
+"
 
 # Enable support for smack
 KERNEL_CONFIG_FRAGMENTS_append_with-lsm-smack = "\
@@ -101,3 +119,7 @@ KERNEL_CONFIG_FRAGMENTS_append = " ${WORKDIR}/rtc.cfg"
 # netfilter options
 SRC_URI_append = " file://netfilter.cfg"
 KERNEL_CONFIG_FRAGMENTS_append = " ${WORKDIR}/netfilter.cfg"
+
+# Enable support for SystemTap
+SRC_URI_append = " ${@bb.utils.contains('DISTRO_FEATURES', 'agl-devel', 'file://systemtap.cfg', '', d)}"
+KERNEL_CONFIG_FRAGMENTS_append = " ${@bb.utils.contains('DISTRO_FEATURES', 'agl-devel', '${WORKDIR}/systemtap.cfg', '', d)}"

@@ -1,6 +1,8 @@
+#
 # Copyright (c) 2013-2014 Intel Corporation
 #
-# Released under the MIT license (see COPYING.MIT)
+# SPDX-License-Identifier: MIT
+#
 
 # DESCRIPTION
 # This module is mainly used by scripts/oe-selftest and modules under meta/oeqa/selftest
@@ -93,7 +95,9 @@ class Command(object):
         # reason, the main process will still exit, which will then
         # kill the write thread.
         if self.data:
-            threading.Thread(target=writeThread, daemon=True).start()
+            thread = threading.Thread(target=writeThread, daemon=True)
+            thread.start()
+            self.threads.append(thread)
         if self.process.stderr:
             thread = threading.Thread(target=readStderrThread)
             thread.start()
@@ -170,8 +174,11 @@ def runCmd(command, ignore_status=False, timeout=None, assert_error=True,
     if native_sysroot:
         extra_paths = "%s/sbin:%s/usr/sbin:%s/usr/bin" % \
                       (native_sysroot, native_sysroot, native_sysroot)
+        extra_libpaths = "%s/lib:%s/usr/lib" % \
+                         (native_sysroot, native_sysroot)
         nenv = dict(options.get('env', os.environ))
         nenv['PATH'] = extra_paths + ':' + nenv.get('PATH', '')
+        nenv['LD_LIBRARY_PATH'] = extra_libpaths + ':' + nenv.get('LD_LIBRARY_PATH', '')
         options['env'] = nenv
 
     cmd = Command(command, timeout=timeout, output_log=output_log, **options)
@@ -310,15 +317,15 @@ def runqemu(pn, ssh=True, runqemuparams='', image_fstype=None, launch_cmd=None, 
     try:
         tinfoil.logger.setLevel(logging.WARNING)
         import oeqa.targetcontrol
-        tinfoil.config_data.setVar("TEST_LOG_DIR", "${WORKDIR}/testimage")
-        tinfoil.config_data.setVar("TEST_QEMUBOOT_TIMEOUT", "1000")
+        recipedata = tinfoil.parse_recipe(pn)
+        recipedata.setVar("TEST_LOG_DIR", "${WORKDIR}/testimage")
+        recipedata.setVar("TEST_QEMUBOOT_TIMEOUT", "1000")
         # Tell QemuTarget() whether need find rootfs/kernel or not
         if launch_cmd:
-            tinfoil.config_data.setVar("FIND_ROOTFS", '0')
+            recipedata.setVar("FIND_ROOTFS", '0')
         else:
-            tinfoil.config_data.setVar("FIND_ROOTFS", '1')
+            recipedata.setVar("FIND_ROOTFS", '1')
 
-        recipedata = tinfoil.parse_recipe(pn)
         for key, value in overrides.items():
             recipedata.setVar(key, value)
 
@@ -335,8 +342,8 @@ def runqemu(pn, ssh=True, runqemuparams='', image_fstype=None, launch_cmd=None, 
         qemu.deploy()
         try:
             qemu.start(params=qemuparams, ssh=ssh, runqemuparams=runqemuparams, launch_cmd=launch_cmd, discard_writes=discard_writes)
-        except bb.build.FuncFailed:
-            msg = 'Failed to start QEMU - see the logs in %s' % logdir
+        except Exception as e:
+            msg = str(e) + '\nFailed to start QEMU - see the logs in %s' % logdir
             if os.path.exists(qemu.qemurunnerlog):
                 with open(qemu.qemurunnerlog, 'r') as f:
                     msg = msg + "Qemurunner log output from %s:\n%s" % (qemu.qemurunnerlog, f.read())
@@ -346,10 +353,7 @@ def runqemu(pn, ssh=True, runqemuparams='', image_fstype=None, launch_cmd=None, 
 
     finally:
         targetlogger.removeHandler(handler)
-        try:
-            qemu.stop()
-        except:
-            pass
+        qemu.stop()
 
 def updateEnv(env_file):
     """

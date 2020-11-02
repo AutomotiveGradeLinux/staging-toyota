@@ -8,7 +8,7 @@ BASEDEPENDS = ""
 S = "${WORKDIR}/git"
 
 SRC_URI = "git://source.codeaurora.org/external/qoriq/qoriq-components/aiopsl;nobranch=1"
-SRCREV = "ec0e50b9bfe794b78bf0d91789f2a77dc4e8ceb4"
+SRCREV = "87d83d8e99770325cc7ad9e10965c9959e7cb828"
 
 do_configure[noexec] = "1"
 do_compile[noexec] = "1"
@@ -18,11 +18,10 @@ DEMOS_PATH_ls1088a = "LS1088A"
 
 do_install () {
     install -d ${D}/usr/aiop/bin
-    install -d ${D}/usr/aiop/scripts
-    install -d ${D}/usr/aiop/traffic_files
-    install -m 755 ${S}/demos/images/${DEMOS_PATH}/*.elf ${D}/usr/aiop/bin
-    install -m 755 ${S}/misc/setup/scripts/dynamic_aiop_*.sh ${D}/usr/aiop/scripts
-    install -m 644 ${S}/misc/setup/traffic_files/classifier.pcap ${D}/usr/aiop/traffic_files
+    install -d ${D}/usr/aiop/
+    cp -rf ${S}/demos/images/*  ${D}/usr/aiop/bin
+    cp -rf ${S}/misc/setup/scripts ${D}/usr/aiop/
+    cp -rf ${S}/misc/setup/traffic_files/ ${D}/usr/aiop/
 }
 
 FILES_${PN} += "/usr/aiop/*"

@@ -10,7 +10,7 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 inherit packagegroup
 
-PROFILE_TOOLS_X = "${@bb.utils.contains('DISTRO_FEATURES', 'x11', 'sysprof', '', d)}"
+PROFILE_TOOLS_X = ""
 # sysprof doesn't support aarch64 and nios2
 PROFILE_TOOLS_X_aarch64 = ""
 PROFILE_TOOLS_X_nios2 = ""
@@ -37,17 +37,16 @@ SYSTEMTAP_riscv64 = ""
 
 # lttng-ust uses sched_getcpu() which is not there on for some platforms.
 LTTNGUST = "lttng-ust"
-LTTNGUST_libc-musl = ""
-LTTNGUST_riscv64 = ""
+LTTNGUST_arc = ""
 
 LTTNGTOOLS = "lttng-tools"
-LTTNGTOOLS_libc-musl = ""
-LTTNGTOOLS_riscv64 = ""
+LTTNGTOOLS_arc = ""
 
 LTTNGMODULES = "lttng-modules"
-LTTNGMODULES_riscv64 = ""
+LTTNGMODULES_arc = ""
 
 BABELTRACE = "babeltrace"
+BABELTRACE2 = "babeltrace2"
 
 # valgrind does not work on the following configurations/architectures
 
@@ -71,6 +70,7 @@ RDEPENDS_${PN} = "\
     ${LTTNGTOOLS} \
     ${LTTNGMODULES} \
     ${BABELTRACE} \
+    ${BABELTRACE2} \
     ${SYSTEMTAP} \
     ${VALGRIND} \
     "

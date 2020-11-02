@@ -2,7 +2,7 @@ SUMMARY = "The New Curses library"
 DESCRIPTION = "SVr4 and XSI-Curses compatible curses library and terminfo tools including tic, infocmp, captoinfo. Supports color, multiple highlights, forms-drawing characters, and automatic recognition of keypad and function-key sequences. Extensions include resizable windows and mouse support on both xterm and Linux console using the gpm library."
 HOMEPAGE = "http://www.gnu.org/software/ncurses/ncurses.html"
 LICENSE = "MIT"
-LIC_FILES_CHKSUM = "file://ncurses/base/version.c;beginline=1;endline=27;md5=cbc180a8c44ca642e97c35452fab5f66"
+LIC_FILES_CHKSUM = "file://ncurses/base/version.c;beginline=1;endline=27;md5=5526f2f3a29edc95538b368a4771edda"
 SECTION = "libs"
 DEPENDS = "ncurses-native"
 DEPENDS_class-native = ""
@@ -87,6 +87,7 @@ ncurses_configure() {
 	        --disable-rpath-hack \
 		${EXCONFIG_ARGS} \
 	        --with-manpage-format=normal \
+	        --without-manpage-renames \
 	        --disable-stripping \
 	        "$@" || return 1
 	cd ..
@@ -260,9 +261,9 @@ python populate_packages_prepend () {
     libdir = d.expand("${libdir}")
     base_libdir = d.expand("${base_libdir}")
     pnbase = d.expand("${PN}-lib%s")
-    do_split_packages(d, libdir, '^lib(.*)\.so\..*', pnbase, 'ncurses %s library', prepend=True, extra_depends = '', allow_links=True)
+    do_split_packages(d, libdir, r'^lib(.*)\.so\..*', pnbase, 'ncurses %s library', prepend=True, extra_depends = '', allow_links=True)
     if libdir is not base_libdir:
-        do_split_packages(d, base_libdir, '^lib(.*)\.so\..*', pnbase, 'ncurses %s library', prepend=True, extra_depends = '', allow_links=True)
+        do_split_packages(d, base_libdir, r'^lib(.*)\.so\..*', pnbase, 'ncurses %s library', prepend=True, extra_depends = '', allow_links=True)
 }
 
 

@@ -11,7 +11,7 @@ LIC_FILES_CHKSUM = "file://debian/copyright;md5=aeb420429b1659507e0a5a1b123e8308
 DEPENDS = ""
 DEPENDS_class-native = "openssl-native"
 DEPENDS_class-nativesdk = "openssl-native"
-# Need c_rehash from openssl and run-parts from debianutils
+# Need rehash from openssl and run-parts from debianutils
 PACKAGE_WRITE_DEPS += "openssl-native debianutils-native"
 
 SRCREV = "c28799b138b044c963d24c4a69659b6e5486e3be"
@@ -23,6 +23,7 @@ SRC_URI = "git://salsa.debian.org/debian/ca-certificates.git;protocol=https \
            file://default-sysroot.patch \
            file://sbindir.patch \
            file://0003-update-ca-certificates-use-relative-symlinks-from-ET.patch \
+           file://0001-certdata2pem.py-use-python3.patch \
            "
 
 S = "${WORKDIR}/git"
@@ -53,7 +54,7 @@ do_install () {
         echo "# Lines starting with ! will remove certificate on next update"
         echo "#"
         find ${D}${datadir}/ca-certificates -type f -name '*.crt' | \
-            sed 's,^${D}${datadir}/ca-certificates/,,'
+            sed 's,^${D}${datadir}/ca-certificates/,,' | sort
     } >${D}${sysconfdir}/ca-certificates.conf
 }
 
@@ -82,6 +83,8 @@ do_install_append_class-native () {
     SYSROOT="${D}${base_prefix}" ${D}${sbindir}/update-ca-certificates
 }
 
-RDEPENDS_${PN} += "openssl"
+RDEPENDS_${PN}_class-target = "openssl-bin"
+RDEPENDS_${PN}_class-native = "openssl-native"
+RDEPENDS_${PN}_class-nativesdk = "nativesdk-openssl-bin"
 
 BBCLASSEXTEND = "native nativesdk"

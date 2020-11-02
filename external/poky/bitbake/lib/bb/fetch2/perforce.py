@@ -1,5 +1,3 @@
-# ex:ts=4:sw=4:sts=4:et
-# -*- tab-width: 4; c-basic-offset: 4; indent-tabs-mode: nil -*-
 """
 BitBake 'Fetch' implementation for perforce
 
@@ -8,23 +6,11 @@ BitBake 'Fetch' implementation for perforce
 # Copyright (C) 2003, 2004  Chris Larson
 # Copyright (C) 2016 Kodak Alaris, Inc.
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 2 as
-# published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+# SPDX-License-Identifier: GPL-2.0-only
 #
 # Based on functions from the base bb module, Copyright 2003 Holger Schurig
 
 import os
-import logging
 import bb
 from   bb.fetch2 import FetchMethod
 from   bb.fetch2 import FetchError
@@ -118,7 +104,7 @@ class Perforce(FetchMethod):
         if command == 'changes':
             p4cmd = '%s%s changes -m 1 //%s' % (ud.basecmd, p4opt, pathnrev)
         elif command == 'print':
-            if depot_filename != None:
+            if depot_filename is not None:
                 p4cmd = '%s%s print -o "p4/%s" "%s"' % (ud.basecmd, p4opt, filename, depot_filename)
             else:
                 raise FetchError('No depot file name provided to p4 %s' % command, ud.url)

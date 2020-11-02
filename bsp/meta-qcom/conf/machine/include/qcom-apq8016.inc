@@ -23,8 +23,12 @@ PREFERRED_PROVIDER_virtual/xserver ?= "xserver-xorg"
 PREFERRED_PROVIDER_virtual/kernel ?= "linux-linaro-qcomlt"
 
 MACHINE_ESSENTIAL_EXTRA_RRECOMMENDS += " \
-    qrtr-apps \
+    qrtr \
     rmtfs \
+"
+
+MACHINE_EXTRA_RRECOMMENDS += " \
+    fastrpc \
 "
 
 # Fastboot expects an ext4 image, which needs to be 4096 aligned
@@ -33,6 +37,3 @@ IMAGE_ROOTFS_ALIGNMENT = "4096"
 
 QCOM_BOOTIMG_KERNEL_BASE ?= "0x80000000"
 QCOM_BOOTIMG_PAGE_SIZE ?= "2048"
-
-KERNEL_MODULE_PROBECONF += "qcom_q6v5_pil"
-module_conf_qcom_q6v5_pil = "blacklist qcom_q6v5_pil"

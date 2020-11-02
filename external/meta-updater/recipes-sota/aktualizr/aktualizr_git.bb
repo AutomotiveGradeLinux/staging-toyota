@@ -10,14 +10,14 @@ DEPENDS_append = "${@bb.utils.contains('PTEST_ENABLED', '1', ' coreutils-native 
 RDEPENDS_${PN}_class-target = "${PN}-configs ${PN}-hwid lshw"
 RDEPENDS_${PN}-host-tools = "aktualizr aktualizr-cert-provider ${@bb.utils.contains('PACKAGECONFIG', 'sota-tools', 'garage-deploy garage-push', '', d)}"
 
-RDEPENDS_${PN}-ptest += "bash cmake curl python3-misc python3-modules openssl-bin sqlite3 valgrind"
+RDEPENDS_${PN}-ptest += "bash cmake curl net-tools python3-core python3-misc python3-modules openssl-bin sqlite3 valgrind"
 
 PRIVATE_LIBS_${PN}-ptest = "libaktualizr.so libaktualizr_secondary.so"
 
 PV = "1.0+git${SRCPV}"
 PR = "7"
 
-GARAGE_SIGN_PV = "0.7.0-87-g905dc3c"
+GARAGE_SIGN_PV = "0.7.1-10-ga0a099a"
 
 SRC_URI = " \
   gitsm://github.com/advancedtelematic/aktualizr;branch=${BRANCH};name=aktualizr \
@@ -26,13 +26,13 @@ SRC_URI = " \
   file://aktualizr-secondary.service \
   file://aktualizr-serialcan.service \
   file://10-resource-control.conf \
-  ${@ d.expand("https://ats-tuf-cli-releases.s3-eu-central-1.amazonaws.com/cli-${GARAGE_SIGN_PV}.tgz;unpack=0;name=garagesign") if d.getVar('GARAGE_SIGN_AUTOVERSION') != '1' else ''} \
+  ${@ d.expand("https://tuf-cli-releases.ota.here.com/cli-${GARAGE_SIGN_PV}.tgz;unpack=0;name=garagesign") if not oe.types.boolean(d.getVar('GARAGE_SIGN_AUTOVERSION')) else ''} \
   "
 
-SRC_URI[garagesign.md5sum] = "064b408c60676dcf282aa9209bff7dac"
-SRC_URI[garagesign.sha256sum] = "75c9b3cf24eb31dacb127d3b3d073359082e2b4ee4eeb27d75e792664800ba82"
+SRC_URI[garagesign.md5sum] = "e2354fb75ae56c2d253be26617b2bd10"
+SRC_URI[garagesign.sha256sum] = "2ddb26b19090a42d7aeeda287ed40123ffa3ab55b5dcc4ea4c9320d0a0fd59a0"
 
-SRCREV = "f90e8996e826d130976a7b7f1835947b7e631025"
+SRCREV = "4169157a1874fca3fb55571c60507c1aefd4e1e5"
 BRANCH ?= "master"
 
 S = "${WORKDIR}/git"
@@ -49,7 +49,7 @@ SYSTEMD_SERVICE_${PN}-secondary = "aktualizr-secondary.service"
 
 EXTRA_OECMAKE = "-DCMAKE_BUILD_TYPE=Release ${@bb.utils.contains('PTEST_ENABLED', '1', '-DTESTSUITE_VALGRIND=on', '', d)}"
 
-GARAGE_SIGN_OPS = "${@ d.expand('-DGARAGE_SIGN_ARCHIVE=${WORKDIR}/cli-${GARAGE_SIGN_PV}.tgz') if d.getVar('GARAGE_SIGN_AUTOVERSION') != '1' else ''}"
+GARAGE_SIGN_OPS = "${@ d.expand('-DGARAGE_SIGN_ARCHIVE=${WORKDIR}/cli-${GARAGE_SIGN_PV}.tgz') if not oe.types.boolean(d.getVar('GARAGE_SIGN_AUTOVERSION')) else ''}"
 PKCS11_ENGINE_PATH = "${libdir}/engines-1.1/pkcs11.so"
 
 PACKAGECONFIG ?= "ostree ${@bb.utils.filter('SOTA_CLIENT_FEATURES', 'hsm serialcan ubootenv', d)}"
@@ -132,21 +132,23 @@ PACKAGESPLITFUNCS_prepend = "split_hosttools_packages "
 python split_hosttools_packages () {
     bindir = d.getVar('bindir')
 
-    # Split all binaries to their own packages except aktualizr-info,
-    # aktualizr-info should stay in main package aktualizr.
-    do_split_packages(d, bindir, r'^((?!(aktualizr-info)).*)$', '%s', 'Aktualizr tool - %s', extra_depends='aktualizr-configs', prepend=False)
+    # Split all binaries to their own packages.
+    do_split_packages(d, bindir, '^(.*)$', '%s', 'Aktualizr tool - %s', extra_depends='aktualizr-configs', prepend=False)
 }
 
 PACKAGES_DYNAMIC = "^aktualizr-.* ^garage-.*"
 
-PACKAGES =+ "${PN}-host-tools ${PN}-lib ${PN}-resource-control ${PN}-configs ${PN}-secondary ${PN}-secondary-lib ${PN}-sotatools-lib"
+PACKAGES =+ "${PN}-host-tools ${PN}-info ${PN}-lib ${PN}-resource-control ${PN}-configs ${PN}-secondary ${PN}-secondary-lib ${PN}-sotatools-lib"
 
 ALLOW_EMPTY_${PN}-host-tools = "1"
 
 FILES_${PN} = " \
                 ${bindir}/aktualizr \
-                ${bindir}/aktualizr-info \
                 ${systemd_unitdir}/system/aktualizr.service \
+                "
+
+FILES_${PN}-info = " \
+                ${bindir}/aktualizr-info \
                 "
 
 FILES_${PN}-lib = " \

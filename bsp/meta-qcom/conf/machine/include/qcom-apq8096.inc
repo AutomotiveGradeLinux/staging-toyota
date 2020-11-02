@@ -1,6 +1,6 @@
 SOC_FAMILY = "apq8096"
 require conf/machine/include/soc-family.inc
-require conf/machine/include/arm/arch-armv8.inc
+require conf/machine/include/arm/arch-armv8a.inc
 
 XSERVER_OPENGL ?= " \
     xf86-video-modesetting \
@@ -24,8 +24,12 @@ PREFERRED_PROVIDER_virtual/xserver ?= "xserver-xorg"
 PREFERRED_PROVIDER_virtual/kernel ?= "linux-linaro-qcomlt"
 
 MACHINE_ESSENTIAL_EXTRA_RRECOMMENDS += " \
-    qrtr-apps \
+    qrtr \
     rmtfs \
+"
+
+MACHINE_EXTRA_RRECOMMENDS += " \
+    fastrpc \
 "
 
 # Fastboot expects an ext4 image, which needs to be 4096 aligned

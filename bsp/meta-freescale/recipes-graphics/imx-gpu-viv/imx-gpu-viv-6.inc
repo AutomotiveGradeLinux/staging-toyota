@@ -1,12 +1,12 @@
 # Copyright (C) 2012-2016 Freescale Semiconductor
 # Copyright (C) 2012-2018 O.S. Systems Software LTDA.
-# Copyright 2017-2018 NXP
+# Copyright 2017-2020 NXP
 # Released under the MIT license (see COPYING.MIT for the terms)
 
 DESCRIPTION = "GPU driver and apps for i.MX"
 SECTION = "libs"
 LICENSE = "Proprietary"
-LIC_FILES_CHKSUM = "file://COPYING;md5=5ab1a30d0cd181e3408077727ea5a2db"
+LIC_FILES_CHKSUM = "file://COPYING;md5=fd4b227530cd88a82af6a5982cfb724d"
 
 DEPENDS += " \
     ${@bb.utils.contains('DISTRO_FEATURES', 'wayland', 'wayland', \
@@ -18,6 +18,7 @@ DEPENDS += " \
                                                        '', d)} \
 "
 DEPENDS_append_imxdrm = " libdrm wayland"
+DEPENDS_append_mx8 = " patchelf-native"
 
 # imx-gpu-viv does not provide everything it needs to for virtual/libgl
 # on x11 backend or on Wayland backend with XWayland support.
@@ -26,16 +27,18 @@ DEPENDS += "${@bb.utils.contains('DISTRO_FEATURES', 'x11', 'mesa', '', d)}"
 
 EXTRA_PROVIDES = ""
 EXTRA_PROVIDES_append_imxgpu3d = " \
-    virtual/libgl \
+    ${@bb.utils.contains('DISTRO_FEATURES', 'wayland', 'virtual/libgl', \
+       bb.utils.contains('DISTRO_FEATURES',     'x11', 'virtual/libgl', \
+                                                       '', d), d)} \
     virtual/libgles1 \
     virtual/libgles2 \
 "
 EXTRA_PROVIDES_append_mx8 = " \
     virtual/libgbm \
 "
-EXTRA_PROVIDES_append_mx8qm = " \
-    virtual/libopenvx \
-"
+PROVIDES_OPENVX       = ""
+PROVIDES_OPENVX_mx8   = "virtual/libopenvx"
+PROVIDES_OPENVX_mx8mm = ""
 PROVIDES += " \
     imx-gpu-viv \
     libgal-imx \
@@ -44,6 +47,7 @@ PROVIDES += " \
     virtual/libopenvg \
     virtual/opencl-headers \
     virtual/opencl-icd \
+    ${PROVIDES_OPENVX} \
     ${EXTRA_PROVIDES} \
 "
 
@@ -51,11 +55,11 @@ RPROVIDES_${PN}_imxgpu3d += "imx-gpu-viv"
 
 PE = "1"
 
-inherit fsl-eula-unpack distro_features_check
+inherit fsl-eula-unpack features_check
 
 REQUIRED_DISTRO_FEATURES_mx8 = "wayland"
 
-SRC_URI = "${FSL_MIRROR}/${PN}-${PV}.bin;fsl-eula=true"
+SRC_URI = "${FSL_MIRROR}/${BPN}-${PV}.bin;fsl-eula=true"
 
 # Note : If you add a package here, to prevent a naming conflict see the python_anonymous() futher below
 IMX_PACKAGES_GBM     = ""
@@ -80,9 +84,10 @@ PACKAGES =+ "libclc-imx libclc-imx-dev \
 	imx-gpu-viv-demos \
 	libvulkan-imx libvulkan-imx-dev \
 	libopenvx-imx libopenvx-imx-dev \
+	libnn-imx libnn-imx-dev \
 "
 python __anonymous () {
-        has_vivante_kernel_driver_support = (d.getVar('MACHINE_HAS_VIVANTE_KERNEL_DRIVER_SUPPORT', True) or '0')
+        has_vivante_kernel_driver_support = (d.getVar('MACHINE_HAS_VIVANTE_KERNEL_DRIVER_SUPPORT') or '0')
         if has_vivante_kernel_driver_support != '1':
                 raise bb.parse.SkipPackage('The kernel of machine needs to have Vivante kernel driver support for this recipe to be used.')
 }
@@ -93,6 +98,7 @@ USE_WL = "${@bb.utils.contains("DISTRO_FEATURES", "wayland", "yes", "no", d)}"
 # Inhibit warnings about files being stripped.
 INHIBIT_PACKAGE_STRIP = "1"
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
+INSANE_SKIP_${BPN} += "already-stripped"
 
 # FIXME: The provided binary doesn't provide soname. If in future BSP
 # release the libraries are fixed, we can drop this hack.
@@ -102,7 +108,7 @@ SOLIBS = "${SOLIBSDEV}"
 python __anonymous() {
     # FIXME: All binaries lack GNU_HASH in elf binary but as we don't have
     # the source we cannot fix it. Disable the insane check for now.
-    packages = d.getVar('PACKAGES', True).split()
+    packages = d.getVar('PACKAGES').split()
     for p in packages:
         d.appendVar("INSANE_SKIP_%s" % p, " ldflags")
 
@@ -139,8 +145,9 @@ HAS_GBM     = "false"
 HAS_GBM_mx8 = "true"
 
 GLES3_HEADER_REMOVALS        = "gl31.h gl32.h"
-GLES3_HEADER_REMOVALS_mx8mq  = "gl32.h"
-GLES3_HEADER_REMOVALS_mx8qxp = "gl32.h"
+GLES3_HEADER_REMOVALS_mx8m   = "gl32.h"
+GLES3_HEADER_REMOVALS_mx8mm  = "gl31.h gl32.h"
+GLES3_HEADER_REMOVALS_mx8qxp = ""
 GLES3_HEADER_REMOVALS_mx8qm  = ""
 
 do_install () {
@@ -153,7 +160,7 @@ do_install () {
     cp -r ${S}/gpu-demos/opt ${D}
     cp -r ${S}/gpu-tools/gmem-info/usr/bin/* ${D}${bindir}
 
-    # Use vulkan header from vulkan recipe to support vkmark
+    # Use vulkan header from vulkan-headers recipe to support vkmark
     rm -rf ${D}${includedir}/vulkan/
 
     install -d ${D}${libdir}/pkgconfig
@@ -207,10 +214,12 @@ do_install () {
 
     # We'll only have one backend here so we rename it to generic name
     # and avoid rework in other packages, when possible
-    mv ${D}${libdir}/libGL.so.1.2 ${D}${libdir}/libGL.so.1.2.0
-    ln -sf libGL.so.1.2.0 ${D}${libdir}/libGL.so.1.2
-    ln -sf libGL.so.1.2.0 ${D}${libdir}/libGL.so.1
-    ln -sf libGL.so.1.2.0 ${D}${libdir}/libGL.so
+    if [ "${USE_WL}" = "yes" -o "${USE_X11}" = "yes" ]; then
+        cp ${S}/gpu-core/usr/lib/libGL-${backend}.so ${D}${libdir}/libGL.so.1.2.0
+        ln -sf libGL.so.1.2.0 ${D}${libdir}/libGL.so.1.2
+        ln -sf libGL.so.1.2.0 ${D}${libdir}/libGL.so.1
+        ln -sf libGL.so.1.2.0 ${D}${libdir}/libGL.so
+    fi
     mv ${D}${libdir}/libEGL-${backend}.so ${D}${libdir}/libEGL.so.1.0
     ln -sf libEGL.so.1.0 ${D}${libdir}/libEGL.so.1
     ln -sf libEGL.so.1.0 ${D}${libdir}/libEGL.so
@@ -233,12 +242,10 @@ do_install () {
     ln -sf libGLESv2.so.2.0.0 ${D}${libdir}/libGLESv2.so
 
     if [ "${IS_MX8}" = "1" ]; then
-        # Install the vulkan driver in a sub-folder. When installed in the same
-        # folder as the vulkan loader layer library, an incorrect linkage is
-        # created from libvulkan.so.1 to our library instead of the loader
-        # layer library.
-        install -d ${D}${libdir}/vulkan
-        mv ${D}${libdir}/libvulkan-${backend}.so ${D}${libdir}/vulkan/libvulkan_VSI.so
+        # Change libvulkon.so driver soname, so that it does not clash with the
+        # vulkan-loader libvulkan.so
+        patchelf --set-soname libvulkan_VSI.so.1 ${D}${libdir}/libvulkan-${backend}.so
+        mv ${D}${libdir}/libvulkan-${backend}.so ${D}${libdir}/libvulkan_VSI.so
     fi
     for header in ${GLES3_HEADER_REMOVALS}; do
         rm -f ${D}${includedir}/GLES3/${header}
@@ -283,10 +290,6 @@ do_install () {
 
 ALLOW_EMPTY_${PN} = "1"
 
-# FIXME: Remove the following lines after adding libopenvx package
-INSANE_SKIP_imx-gpu-viv-dev += "dev-elf"
-INSANE_SKIP_libclc-imx += "dev-deps"
-
 FILES_libclc-imx = "${libdir}/libCLC${SOLIBS}"
 FILES_libclc-imx-dev = "${includedir}/CL ${libdir}/libCLC${SOLIBSDEV}"
 
@@ -298,21 +301,26 @@ FILES_libegl-imx-dev = "${includedir}/EGL ${includedir}/KHR ${libdir}/pkgconfig/
 FILES_libgal-imx = "${libdir}/libGAL${SOLIBS} ${libdir}/libGAL_egl${SOLIBS}"
 FILES_libgal-imx-dev = "${libdir}/libGAL${SOLIBSDEV} ${includedir}/HAL"
 RDEPENDS_libgal-imx += "kernel-module-imx-gpu-viv"
+RSUGGESTS_libgal-imx += "valgrind"
 RPROVIDES_libgal-imx += "libgal-imx"
 INSANE_SKIP_libgal-imx += "build-deps"
 
 FILES_libvsc-imx = "${libdir}/libVSC${SOLIBS}"
 
-FILES_libgbm-imx_mx8           = "${libdir}/libgbm${SOLIBS} ${libdir}/gbm_viv${SOLIBS}"
+FILES_libgbm-imx_mx8           = "${libdir}/libgbm*${SOLIBS}"
 FILES_libgbm-imx-dev_mx8       = "${libdir}/pkgconfig/gbm.pc ${includedir}/gbm.h ${libdir}/libgbm${SOLIBSDEV}"
 RDEPENDS_libgbm-imx_append_mx8 = " libdrm"
 
-FILES_libvulkan-imx = "${libdir}/vulkan/libvulkan_VSI${SOLIBS}"
-FILES_libvulkan-imx-dev = "${includedir}/vulkan ${libdir}/vulkan/libvulkan_VSI${SOLIBSDEV}"
-INSANE_SKIP_libvulkan-imx += "dev-deps dev-so"
+FILES_libvulkan-imx = "${libdir}/libvulkan_VSI${SOLIBS} ${libdir}/libSPIRV_viv${SOLIBS}"
+FILES_libvulkan-imx-dev = "${includedir}/vulkan ${libdir}/libvulkan_VSI${SOLIBSDEV}"
 
-FILES_libopenvx-imx = "${libdir}/libOpenVX${SOLIBS} ${libdir}/libOpenVXC${SOLIBS} ${libdir}/libOpenVXU${SOLIBS}"
-FILES_libopenvx-imx-dev = "${includedir}/VX ${libdir}/libopenVX${SOLIBSDEV}"
+FILES_libopenvx-imx = " \
+        ${libdir}/libOpenVX*${SOLIBS} \
+        ${libdir}/libOvx*${SOLIBS} \
+        ${libdir}/libovx*${SOLIBS} \
+        "
+FILES_libopenvx-imx-dev = "${includedir}/VX ${includedir}/OVXLIB"
+RDEPENDS_libopenvx-imx = "libnn-imx"
 
 FILES_libgl-imx = "${libdir}/libGL${REALSOLIBS}"
 FILES_libgl-imx-dev = "${libdir}/libGL${SOLIBSDEV} ${includedir}/GL"
@@ -340,6 +348,7 @@ FILES_libglslc-imx-dev = "${includedir}/CL ${libdir}/libGLSLC${SOLIBSDEV}"
 
 FILES_libopencl-imx = "${libdir}/libOpenCL${SOLIBS} \
                        ${libdir}/libVivanteOpenCL${SOLIBS} \
+                       ${libdir}/libLLVM_viv${SOLIBS} \
                        ${sysconfdir}/OpenCL/vendors/Vivante.icd"
 FILES_libopencl-imx-dev = "${includedir}/CL ${libdir}/libOpenCL${SOLIBSDEV}"
 RDEPENDS_libopencl-imx= "libclc-imx"
@@ -368,5 +377,8 @@ FILES_imx-gpu-viv-tools = "${bindir}/gmem_info"
 
 FILES_imx-gpu-viv-demos = "/opt"
 INSANE_SKIP_imx-gpu-viv-demos += "rpaths dev-deps"
+
+FILES_libnn-imx = "${libdir}/libNN*${SOLIBS} ${libdir}/libnn*${SOLIBS} ${libdir}/libneuralnetworks${SOLIBS}"
+FILES_libnn-imx-dev = "${includedir}/nnrt"
 
 # COMPATIBLE_MACHINE = "(mx6q|mx6dl|mx6sx|mx6sl|mx8)"

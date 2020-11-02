@@ -1,14 +1,18 @@
 SUMMARY = "An Internet printing system for Unix"
+DESCRIPTION = "The Common UNIX Printing System is a printing system and \
+general replacement for lpd and the like. It supports the Internet Printing \
+Protocol (IPP), and has its own filtering driver model for handling various \
+document types."
 HOMEPAGE = "https://www.cups.org/"
 SECTION = "console/utils"
-LICENSE = "GPLv2 & LGPLv2"
-DEPENDS = "gnutls libpng jpeg dbus dbus-glib zlib libusb1"
+LICENSE = "Apache-2.0"
+DEPENDS = "gnutls libpng jpeg dbus zlib libusb1"
 
 SRC_URI = "https://github.com/apple/cups/releases/download/v${PV}/${BP}-source.tar.gz \
-           file://use_echo_only_in_init.patch \
-           file://0001-don-t-try-to-run-generated-binaries.patch \
-           file://cups_serverbin.patch \
-           file://cups-avoid-install-file-conflicts.patch \
+           file://0001-use-echo-only-in-init.patch \
+           file://0002-don-t-try-to-run-generated-binaries.patch \
+           file://0003-cups_1.4.6.bb-Fix-build-on-ppc64.patch \
+           file://0004-cups-fix-multilib-install-file-conflicts.patch\
            "
 
 UPSTREAM_CHECK_URI = "https://github.com/apple/cups/releases"
@@ -18,7 +22,7 @@ LEAD_SONAME = "libcupsdriver.so"
 
 CLEANBROKEN = "1"
 
-inherit autotools-brokensep binconfig useradd systemd pkgconfig
+inherit autotools-brokensep binconfig useradd systemd pkgconfig multilib_script
 
 USERADD_PACKAGES = "${PN}"
 GROUPADD_PARAM_${PN} = "--system lpadmin"
@@ -29,7 +33,7 @@ PACKAGECONFIG ??= "${@bb.utils.contains('DISTRO_FEATURES', 'zeroconf', 'avahi', 
                    ${@bb.utils.filter('DISTRO_FEATURES', 'pam systemd', d)}"
 PACKAGECONFIG[avahi] = "--enable-avahi,--disable-avahi,avahi"
 PACKAGECONFIG[acl] = "--enable-acl,--disable-acl,acl"
-PACKAGECONFIG[pam] = "--enable-pam, --disable-pam, libpam"
+PACKAGECONFIG[pam] = "--enable-pam --with-pam-module=unix, --disable-pam, libpam"
 PACKAGECONFIG[systemd] = "--with-systemd=${systemd_system_unitdir},--without-systemd,systemd"
 PACKAGECONFIG[xinetd] = "--with-xinetd=${sysconfdir}/xinetd.d,--without-xinetd,xinetd"
 
@@ -41,10 +45,6 @@ EXTRA_OECONF = " \
                --enable-debug \
                --disable-relro \
                --enable-libusb \
-               --without-php \
-               --without-perl \
-               --without-python \
-               --without-java \
                DSOFLAGS='${LDFLAGS}' \
                "
 
@@ -67,7 +67,7 @@ do_install () {
 
 	# Remove /var/run from package as cupsd will populate it on startup
 	rm -fr ${D}/${localstatedir}/run
-	rmdir ${D}/${libdir}/${BPN}/driver
+	rmdir ${D}/${libexecdir}/${BPN}/driver
 
 	# Fix the pam configuration file permissions
 	if ${@bb.utils.contains('DISTRO_FEATURES', 'pam', 'true', 'false', d)}; then
@@ -84,12 +84,7 @@ do_install () {
 PACKAGES =+ "${PN}-lib ${PN}-libimage"
 
 RDEPENDS_${PN} += "${@bb.utils.contains('DISTRO_FEATURES', 'sysvinit', 'procps', '', d)}"
-FILES_${PN} += "${libdir}/cups/backend \
-		${libdir}/cups/cgi-bin \
-		${libdir}/cups/filter \
-		${libdir}/cups/monitor \
-		${libdir}/cups/notifier \
-		${libdir}/cups/daemon \
+FILES_${PN} += "${libexecdir}/cups/ \
 	       "
 
 FILES_${PN}-lib = "${libdir}/libcups.so.*"
@@ -105,7 +100,9 @@ FILES_${PN} += "${datadir}/doc/cups/images \
                "
 CONFFILES_${PN} += "${sysconfdir}/cups/cupsd.conf"
 
+MULTILIB_SCRIPTS = "${PN}-dev:${bindir}/cups-config"
+
 SYSROOT_PREPROCESS_FUNCS += "cups_sysroot_preprocess"
 cups_sysroot_preprocess () {
-	sed -i ${SYSROOT_DESTDIR}${bindir_crossscripts}/cups-config -e 's:cups_datadir=.*:cups_datadir=${datadir}/cups:' -e 's:cups_serverbin=.*:cups_serverbin=${libdir}/cups:'
+	sed -i ${SYSROOT_DESTDIR}${bindir_crossscripts}/cups-config -e 's:cups_datadir=.*:cups_datadir=${datadir}/cups:' -e 's:cups_serverbin=.*:cups_serverbin=${libexecdir}/cups:'
 }

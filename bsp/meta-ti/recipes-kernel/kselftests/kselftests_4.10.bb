@@ -185,3 +185,6 @@ INSANE_SKIP_${PN}-exec = "ldflags"
 INSANE_SKIP_${PN}-ipc = "ldflags"
 INSANE_SKIP_${PN}-mount = "ldflags"
 INSANE_SKIP_${PN}-vm = "ldflags"
+
+COMPATIBLE_MACHINE_riscv64 = "(null)"
+COMPATIBLE_MACHINE_riscv32 = "(null)"

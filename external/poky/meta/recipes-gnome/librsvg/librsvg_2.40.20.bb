@@ -1,6 +1,10 @@
 SUMMARY = "Library for rendering SVG files"
-HOMEPAGE = "http://ftp.gnome.org/pub/GNOME/sources/librsvg/"
-BUGTRACKER = "https://bugzilla.gnome.org/"
+DESCRIPTION = "A small library to render Scalable Vector Graphics (SVG), \
+associated with the GNOME Project. It renders SVG files to Cairo surfaces. \
+Cairo is the 2D, antialiased drawing library that GNOME uses to draw things to \
+the screen or to generate output for printing."
+HOMEPAGE = "https://gitlab.gnome.org/GNOME/librsvg"
+BUGTRACKER = "https://gitlab.gnome.org/GNOME/librsvg/issues"
 
 RECIPE_NO_UPDATE_REASON = "Versions from 2.41.0 requires Rust compiler to build it"
 
@@ -14,16 +18,15 @@ BBCLASSEXTEND = "native"
 
 inherit gnomebase gtk-doc pixbufcache upstream-version-is-even gobject-introspection
 
-SRC_URI += "file://gtk-option.patch"
+SRC_URI += "file://gtk-option.patch \
+            file://0001-Auto-detect-Bsymbolic-fixes-configure-on-macOS.patch \
+            file://0001-Remove-non-reproducible-SRCDIR.patch \
+"
 
 SRC_URI[archive.md5sum] = "4949d313b0c5d9161a5c259104af5568"
 SRC_URI[archive.sha256sum] = "cff4dd3c3b78bfe99d8fcfad3b8ba1eee3289a0823c0e118d78106be6b84c92b"
 
 CACHED_CONFIGUREVARS = "ac_cv_path_GDK_PIXBUF_QUERYLOADERS=${STAGING_LIBDIR_NATIVE}/gdk-pixbuf-2.0/gdk-pixbuf-query-loaders"
-
-# The older ld (2.22) on the host (Centos 6.5) doesn't have the
-# -Bsymbolic-functions option, we can disable it for native.
-EXTRA_OECONF_append_class-native = " --enable-Bsymbolic=auto"
 
 PACKAGECONFIG ??= "gdkpixbuf"
 # The gdk-pixbuf loader

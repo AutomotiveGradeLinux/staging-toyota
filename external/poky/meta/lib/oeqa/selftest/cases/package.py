@@ -1,9 +1,13 @@
+#
+# SPDX-License-Identifier: MIT
+#
+
 from oeqa.selftest.case import OESelftestTestCase
-from oeqa.core.decorator.oeid import OETestID
 from oeqa.utils.commands import bitbake, get_bb_vars, get_bb_var, runqemu
 import stat
 import subprocess, os
 import oe.path
+import re
 
 class VersionOrdering(OESelftestTestCase):
     # version1, version2, sort order
@@ -36,7 +40,6 @@ class VersionOrdering(OESelftestTestCase):
         self.bindir = type(self).bindir
         self.libdir = type(self).libdir
 
-    @OETestID(1880)
     def test_dpkg(self):
         for ver1, ver2, sort in self.tests:
             op = { -1: "<<", 0: "=", 1: ">>" }[sort]
@@ -53,7 +56,6 @@ class VersionOrdering(OESelftestTestCase):
             status = subprocess.call((oe.path.join(self.bindir, "dpkg"), "--compare-versions", ver1, op, ver2))
             self.assertNotEqual(status, 0, "%s %s %s failed" % (ver1, op, ver2))
 
-    @OETestID(1881)
     def test_opkg(self):
         for ver1, ver2, sort in self.tests:
             op = { -1: "<<", 0: "=", 1: ">>" }[sort]
@@ -70,7 +72,6 @@ class VersionOrdering(OESelftestTestCase):
             status = subprocess.call((oe.path.join(self.bindir, "opkg"), "compare-versions", ver1, op, ver2))
             self.assertNotEqual(status, 0, "%s %s %s failed" % (ver1, op, ver2))
 
-    @OETestID(1882)
     def test_rpm(self):
         # Need to tell the Python bindings where to find its configuration
         env = os.environ.copy()
@@ -134,10 +135,10 @@ class PackageTests(OESelftestTestCase):
                     return False
 
                 # Check debugging symbols works correctly
-                elif "Breakpoint 1, main () at hello.c:4" in l:
+                elif re.match(r"Breakpoint 1.*hello\.c.*4", l):
                     return True
 
-            self.logger.error("GDB result:\n%s: %s" % output)
+            self.logger.error("GDB result:\n%d: %s", status, output)
             return False
 
         with runqemu('core-image-minimal') as qemu:

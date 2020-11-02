@@ -1,13 +1,13 @@
 SUMMARY = "Various tools relating to the Simple Network Management Protocol"
 HOMEPAGE = "http://www.net-snmp.org/"
 SECTION = "net"
-LICENSE = "BSD"
+LICENSE = "BSD & MIT"
 
-LIC_FILES_CHKSUM = "file://README;beginline=3;endline=8;md5=7f7f00ba639ac8e8deb5a622ea24634e"
+LIC_FILES_CHKSUM = "file://COPYING;md5=9d100a395a38584f2ec18a8275261687"
 
 DEPENDS = "openssl libnl pciutils"
 
-SRC_URI = "${SOURCEFORGE_MIRROR}/net-snmp/net-snmp-${PV}.zip \
+SRC_URI = "${SOURCEFORGE_MIRROR}/net-snmp/net-snmp-${PV}.tar.gz \
            file://init \
            file://snmpd.conf \
            file://snmptrapd.conf \
@@ -24,15 +24,18 @@ SRC_URI = "${SOURCEFORGE_MIRROR}/net-snmp/net-snmp-${PV}.zip \
            file://0004-configure-fix-incorrect-variable.patch \
            file://net-snmp-5.7.2-fix-engineBoots-value-on-SIGHUP.patch \
            file://net-snmp-fix-for-disable-des.patch \
-           file://0001-remove-configure-options-from-versioninfo.patch \
+           file://reproducibility-have-printcap.patch \
+           file://reproducibility-accept-configure-options-from-env.patch \
+           file://0001-net-snmp-fix-compile-error-disable-des.patch \
+           file://0001-Add-pkg-config-support-for-building-applications-and.patch \
            "
-SRC_URI[md5sum] = "6aae5948df7efde626613d6a4b3cd9d4"
-SRC_URI[sha256sum] = "c6291385b8ed84f05890fe4197005daf7e7ee7b082c2e390fa114a9477a56042"
+SRC_URI[md5sum] = "63bfc65fbb86cdb616598df1aff6458a"
+SRC_URI[sha256sum] = "b2fc3500840ebe532734c4786b0da4ef0a5f67e51ef4c86b3345d697e4976adf"
 
 UPSTREAM_CHECK_URI = "https://sourceforge.net/projects/net-snmp/files/net-snmp/"
 UPSTREAM_CHECK_REGEX = "/net-snmp/(?P<pver>\d+(\.\d+)+)/"
 
-inherit autotools-brokensep update-rc.d siteinfo systemd pkgconfig perlnative ptest
+inherit autotools-brokensep update-rc.d siteinfo systemd pkgconfig perlnative ptest multilib_script multilib_header
 
 EXTRA_OEMAKE = "INSTALL_PREFIX=${D} OTHERLDFLAGS='${LDFLAGS}' HOST_CPPFLAGS='${BUILD_CPPFLAGS}'"
 
@@ -41,15 +44,15 @@ CCACHE = ""
 
 TARGET_CC_ARCH += "${LDFLAGS}"
 
-PACKAGECONFIG ??= ""
+PACKAGECONFIG ??= "${@bb.utils.filter('DISTRO_FEATURES', 'ipv6', d)} des"
 PACKAGECONFIG[elfutils] = "--with-elf, --without-elf, elfutils"
 PACKAGECONFIG[libnl] = "--with-nl, --without-nl, libnl"
 
-PACKAGECONFIG ??= "${@bb.utils.filter('DISTRO_FEATURES', 'ipv6', d)}"
 PACKAGECONFIG[ipv6] = "--enable-ipv6,--disable-ipv6,,"
 
 PACKAGECONFIG[perl] = "--enable-embedded-perl --with-perl-modules=yes, --disable-embedded-perl --with-perl-modules=no,\
-                       perl, perl perl-lib"
+                       perl,"
+PACKAGECONFIG[des] = "--enable-des,--disable-des"
 
 EXTRA_OECONF = "--enable-shared \
                 --disable-manuals \
@@ -68,11 +71,16 @@ CACHED_CONFIGUREVARS = " \
     ac_cv_header_valgrind_memcheck_h=no \
     ac_cv_ETC_MNTTAB=/etc/mtab \
     lt_cv_shlibpath_overrides_runpath=yes \
+    ac_cv_path_UNAMEPROG=${base_bindir}/uname \
+    ac_cv_file__etc_printcap=no \
+    NETSNMP_CONFIGURE_OPTIONS= \
 "
 export PERLPROG="${bindir}/env perl"
 PERLPROG_append = "${@bb.utils.contains('PACKAGECONFIG', 'perl', ' -I${WORKDIR}', '', d)}"
 
 HAS_PERL = "${@bb.utils.contains('PACKAGECONFIG', 'perl', '1', '0', d)}"
+
+PTEST_BUILD_HOST_FILES += "net-snmp-config gen-variables"
 
 do_configure_prepend() {
     sed -i -e "s|I/usr/include|I${STAGING_INCDIR}|g" \
@@ -81,8 +89,8 @@ do_configure_prepend() {
 
     if [ "${HAS_PERL}" = "1" ]; then
         # this may need to be changed when package perl has any change.
-        cp -f ${STAGING_DIR_TARGET}/usr/lib*/perl/*/Config.pm ${WORKDIR}/
-        cp -f ${STAGING_DIR_TARGET}/usr/lib*/perl/*/Config_heavy.pl ${WORKDIR}/
+        cp -f ${STAGING_DIR_TARGET}/usr/lib*/perl?/*/Config.pm ${WORKDIR}/
+        cp -f ${STAGING_DIR_TARGET}/usr/lib*/perl?/*/*/Config_heavy.pl ${WORKDIR}/
         sed -e "s@libpth => '/usr/lib.*@libpth => '${STAGING_DIR_TARGET}/${libdir} ${STAGING_DIR_TARGET}/${base_libdir}',@g" \
             -e "s@privlibexp => '/usr@privlibexp => '${STAGING_DIR_TARGET}/usr@g" \
             -e "s@scriptdir => '/usr@scriptdir => '${STAGING_DIR_TARGET}/usr@g" \
@@ -114,11 +122,16 @@ do_install_append() {
     install -m 0644 ${WORKDIR}/snmptrapd.service ${D}${systemd_unitdir}/system
     sed    -e "s@^NSC_SRCDIR=.*@NSC_SRCDIR=.@g" \
         -i ${D}${bindir}/net-snmp-create-v3-user
-    sed    -e "s@^NSC_SRCDIR=.*@NSC_SRCDIR=.@g" \
-           -e "s@\([^ ]*-fdebug-prefix-map=[^ ]*\)\1*@@g" \
-           -e "s@\([^ ]*--sysroot=[^ ]*\)\1*@@g" \
-           -e "s@\([^ ]*--with-libtool-sysroot=[^ ]*\)\1*@@g" \
-           -e "s@\([^ ]*--with-install-prefix=[^ ]*\)\1*@@g" \
+    sed -e 's@^NSC_SRCDIR=.*@NSC_SRCDIR=.@g' \
+        -e 's@[^ ]*-fdebug-prefix-map=[^ "]*@@g' \
+        -e 's@[^ ]*-fmacro-prefix-map=[^ "]*@@g' \
+        -e 's@[^ ]*--sysroot=[^ "]*@@g' \
+        -e 's@[^ ]*--with-libtool-sysroot=[^ "]*@@g' \
+        -e 's@[^ ]*--with-install-prefix=[^ "]*@@g' \
+        -e 's@[^ ]*PKG_CONFIG_PATH=[^ "]*@@g' \
+        -e 's@[^ ]*PKG_CONFIG_LIBDIR=[^ "]*@@g' \
+        -e 's@-L${STAGING_DIR_HOST}${libdir}@@g' \
+        -e 's@-I${STAGING_DIR_HOST}${includedir}@@g' \
         -i ${D}${bindir}/net-snmp-config
 
     if [ "${HAS_PERL}" = "1" ]; then
@@ -126,6 +139,8 @@ do_install_append() {
             -e "s@^NSC_LIBDIR=-L.*@NSC_LIBDIR=-L\$\{libdir\}@g" \
             -i ${D}${bindir}/net-snmp-config
     fi
+
+    oe_multilib_header net-snmp/net-snmp-config.h
 }
 
 do_install_ptest() {
@@ -169,12 +184,6 @@ net_snmp_sysroot_preprocess () {
     fi
 }
 
-PACKAGE_PREPROCESS_FUNCS += "net_snmp_package_preprocess"
-net_snmp_package_preprocess () {
-    sed -e 's@${RECIPE_SYSROOT}@@g' \
-       -i ${PKGD}${bindir}/net-snmp-config
-}
-
 PACKAGES += "${PN}-libs ${PN}-mibs ${PN}-server ${PN}-client \
              ${PN}-server-snmpd ${PN}-server-snmptrapd \
              ${PN}-lib-netsnmp ${PN}-lib-agent ${PN}-lib-helpers \
@@ -187,7 +196,8 @@ ALLOW_EMPTY_${PN} = "1"
 ALLOW_EMPTY_${PN}-server = "1"
 ALLOW_EMPTY_${PN}-libs = "1"
 
-FILES_${PN}-perl-modules = "${libdir}/perl/*"
+FILES_${PN}-perl-modules = "${libdir}/perl?/*"
+RDEPENDS_${PN}-perl-modules = "perl"
 
 FILES_${PN}-libs = ""
 FILES_${PN}-mibs = "${datadir}/snmp/mibs"
@@ -211,7 +221,11 @@ FILES_${PN}-lib-trapd = "${libdir}/libnetsnmptrapd${SOLIBS}"
 FILES_${PN} = ""
 FILES_${PN}-client = "${bindir}/* ${datadir}/snmp/"
 FILES_${PN}-dbg += "${libdir}/.debug/ ${sbindir}/.debug/ ${bindir}/.debug/"
-FILES_${PN}-dev += "${bindir}/mib2c ${bindir}/mib2c-update"
+FILES_${PN}-dev += "${bindir}/mib2c \
+                    ${bindir}/mib2c-update \
+                    ${bindir}/net-snmp-config \
+                    ${bindir}/net-snmp-create-v3-user \
+"
 
 CONFFILES_${PN}-server-snmpd = "${sysconfdir}/snmp/snmpd.conf"
 CONFFILES_${PN}-server-snmptrapd = "${sysconfdir}/snmp/snmptrapd.conf"
@@ -259,3 +273,5 @@ RREPLACES_${PN}-server-snmptrapd += "${PN}-server-snmptrapd-systemd"
 RCONFLICTS_${PN}-server-snmptrapd += "${PN}-server-snmptrapd-systemd"
 
 LEAD_SONAME = "libnetsnmp.so"
+
+MULTILIB_SCRIPTS = "${PN}-dev:${bindir}/net-snmp-config"

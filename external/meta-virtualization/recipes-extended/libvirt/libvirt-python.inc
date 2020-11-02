@@ -1,11 +1,11 @@
-inherit pythonnative python-dir
+inherit python3native python3-dir
 
 export STAGING_INCDIR
 export STAGING_LIBDIR
 export BUILD_SYS 
 export HOST_SYS
 
-RDEPENDS_${PN}-python += "python"
+RDEPENDS_${PN}-python += "python3"
 PACKAGECONFIG_${PN}-python[xen] = ",,,xen-python"
 
 PACKAGES += "${PN}-python-staticdev ${PN}-python-dev ${PN}-python-dbg ${PN}-python"
@@ -16,10 +16,9 @@ FILES_${PN}-python-dbg += "${PYTHON_SITEPACKAGES_DIR}/.debug/"
 FILES_${PN}-python = "${bindir}/* ${libdir}/* ${libdir}/${PYTHON_DIR}/*"
 
 SRC_URI += "http://libvirt.org/sources/python/libvirt-python-${PV}.tar.gz;name=libvirt_python"
-SRC_URI += "file://libvirt_api_xml_path.patch;patchdir=../libvirt-python-${PV}"
 
-SRC_URI[libvirt_python.md5sum] = "32cf281199367aec2881c96d1bd80dc6"
-SRC_URI[libvirt_python.sha256sum] = "e36fee5898de3550ed7e63d5d0a8447f9d78f06574634855dee59eae27930908"
+SRC_URI[libvirt_python.md5sum] = "2834626b07da6ac4ca1559abfd55c118"
+SRC_URI[libvirt_python.sha256sum] = "be644f4809c0e1d368e3ac065df3c66a26dcfe61ecb607ee9706e1799f22c35a"
 
 export LIBVIRT_API_PATH = "${S}/docs/libvirt-api.xml"
 export LIBVIRT_CFLAGS = "-I${S}/include"
@@ -41,15 +40,23 @@ python __anonymous () {
 
 do_compile_append() {
 	if [ "${LIBVIRT_PYTHON_ENABLE}" = "1" ]; then
+		# we need the python bindings to look into our source dir, not
+		# the syroot staged pkgconfig entries. So we clear the sysroot
+		# for just this portion.
+		export PKG_CONFIG_SYSROOT_DIR=
 		cd ${WORKDIR}/${BPN}-python-${PV} && \
-		  ${STAGING_BINDIR_NATIVE}/python-native/python setup.py build
+		  ${STAGING_BINDIR_NATIVE}/python3-native/python3 setup.py build
 	fi
 }
 
 do_install_append() {
 	if [ "${LIBVIRT_PYTHON_ENABLE}" = "1" ]; then
+		# we need the python bindings to look into our source dir, not
+		# the syroot staged pkgconfig entries. So we clear the sysroot
+		# for just this portion.
+		export PKG_CONFIG_SYSROOT_DIR=
 		cd ${WORKDIR}/${BPN}-python-${PV} && \
-		  ${STAGING_BINDIR_NATIVE}/python-native/python setup.py install \
+		  ${STAGING_BINDIR_NATIVE}/python3-native/python3 setup.py install \
                        --install-lib=${D}/${PYTHON_SITEPACKAGES_DIR} ${LIBVIRT_INSTALL_ARGS}
 	fi
 }

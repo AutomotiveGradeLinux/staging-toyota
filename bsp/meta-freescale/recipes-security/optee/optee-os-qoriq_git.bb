@@ -4,17 +4,21 @@ DESCRIPTION = "OPTEE OS"
 LICENSE = "BSD"
 LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=69663ab153298557a59c67a60a743e5b"
 
-DEPENDS = "python-pycrypto-native"
+DEPENDS = "python3-pycrypto-native"
 
-inherit deploy pythonnative
+inherit deploy python3native
 
-SRCREV = "e93f053213c574ec1b97f9e56b2f31692cd3723c"
+SRCREV = "4e8d2e5307b99a91a0cac3ea3560ecb7d62898d6"
 SRC_URI = "git://source.codeaurora.org/external/qoriq/qoriq-components/optee_os;nobranch=1 \
            file://0001-allow-setting-sysroot-for-libgcc-lookup.patch \
+           file://0001-Fix-alignment-of-data-for-mempool_alloc_pool.patch \
+           file://0001-use-python3-instead-of-python.patch \
           "
 S = "${WORKDIR}/git"
 
 OPTEEMACHINE ?= "${MACHINE}"
+OPTEEMACHINE_ls1088ardb-pb = "ls1088ardb"
+OPTEEMACHINE_ls1046afrwy = "ls1046ardb"
 
 EXTRA_OEMAKE = "PLATFORM=ls-${OPTEEMACHINE} CFG_ARM64_core=y \
                 ARCH=arm \

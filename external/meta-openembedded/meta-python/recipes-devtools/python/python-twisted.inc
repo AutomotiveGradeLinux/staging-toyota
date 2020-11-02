@@ -5,10 +5,15 @@ HOMEPAGE = "http://www.twistedmatrix.com"
 
 #twisted/topfiles/NEWS:655: - Relicensed: Now under the MIT license, rather than LGPL.
 LICENSE = "MIT"
-LIC_FILES_CHKSUM = "file://LICENSE;md5=04e7730aecedc79d805625a91bc06145"
+LIC_FILES_CHKSUM = "file://LICENSE;md5=1743f12d8b8f5aec625c0569a058f0a6"
 
-SRC_URI[sha256sum] = "a4cc164a781859c74de47f17f0e85f4bce8a3321a9d0892c015c8f80c4158ad9"
-SRC_URI[md5sum] = "da8142ad4e9971a75fe751ac96a33b95"
+# allow for common patches for python- and python3-twisted
+FILESEXTRAPATHS_prepend := "${THISDIR}/python-twisted:"
+
+SRC_URI += "file://0001-fix-MemoryReactor-import-in-test_runner-to-be-from-t.patch"
+
+SRC_URI[sha256sum] = "7394ba7f272ae722a74f3d969dcf599bc4ef093bc392038748a490f1724a515d"
+SRC_URI[md5sum] = "f2d70f7a66ecdf54152310164cceadfe"
 
 PYPI_PACKAGE = "Twisted"
 PYPI_PACKAGE_EXT = "tar.bz2"
@@ -35,7 +40,6 @@ PACKAGES += "\
 "
 
 PACKAGES =+ "\
-    ${PN}-src \
     ${PN}-bin \
 "
 
@@ -57,9 +61,20 @@ RDEPENDS_${PN} = "\
     ${PN}-zsh \
 "
 
-RDEPENDS_${PN}-core = "${PYTHON_PN}-core ${PYTHON_PN}-zopeinterface ${PYTHON_PN}-incremental ${PYTHON_PN}-constantly ${PYTHON_PN}-hyperlink ${PYTHON_PN}-automat"
+RDEPENDS_${PN}-core = "${PYTHON_PN}-appdirs \
+                       ${PYTHON_PN}-automat \
+                       ${PYTHON_PN}-constantly \
+                       ${PYTHON_PN}-core \ 
+                       ${PYTHON_PN}-debugger \
+                       ${PYTHON_PN}-hyperlink \
+                       ${PYTHON_PN}-incremental \
+                       ${PYTHON_PN}-pyhamcrest \
+                       ${PYTHON_PN}-pyserial \
+                       ${PYTHON_PN}-unixadmin \
+                       ${PYTHON_PN}-zopeinterface \
+"
 RDEPENDS_${PN}-test = "${PN}"
-RDEPENDS_${PN}-conch = "${PN}-core ${PN}-protocols"
+RDEPENDS_${PN}-conch = "${PN}-core ${PN}-protocols ${PYTHON_PN}-bcrypt ${PYTHON_PN}-cryptography ${PYTHON_PN}-pyasn1 ${PYTHON_PN}-pickle"
 RDEPENDS_${PN}-mail = "${PN}-core ${PN}-protocols"
 RDEPENDS_${PN}-names = "${PN}-core"
 RDEPENDS_${PN}-news = "${PN}-core ${PN}-protocols"
@@ -242,9 +257,10 @@ FILES_${PN}-doc += " \
     ${libdir}/${PYTHON_DIR}/site-packages/twisted/python/_pydoctortemplates/ \
 "
 
-RDEPENDS_{PN}-src = "${PN}"
+RDEPENDS_${PN}-src = "${PN}"
 FILES_${PN}-src = " \
     ${libdir}/${PYTHON_DIR}/site-packages/twisted/*.py \
     ${libdir}/${PYTHON_DIR}/site-packages/twisted/*/*.py \
     ${libdir}/${PYTHON_DIR}/site-packages/twisted/*/*/*.py \
 "
+

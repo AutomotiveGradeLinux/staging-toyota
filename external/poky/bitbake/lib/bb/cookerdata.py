@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# ex:ts=4:sw=4:sts=4:et
-# -*- tab-width: 4; c-basic-offset: 4; indent-tabs-mode: nil -*-
 #
 # Copyright (C) 2003, 2004  Chris Larson
 # Copyright (C) 2003, 2004  Phil Blundell
@@ -9,18 +6,8 @@
 # Copyright (C) 2005        ROAD GmbH
 # Copyright (C) 2006        Richard Purdie
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 2 as
-# published by the Free Software Foundation.
+# SPDX-License-Identifier: GPL-2.0-only
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import logging
 import os
@@ -135,6 +122,7 @@ class CookerConfiguration(object):
         self.profile = False
         self.nosetscene = False
         self.setsceneonly = False
+        self.skipsetscene = False
         self.invalidate_stamp = False
         self.dump_signatures = []
         self.dry_run = False
@@ -282,11 +270,11 @@ class CookerDataBuilder(object):
     def parseBaseConfiguration(self):
         data_hash = hashlib.sha256()
         try:
-            bb.parse.init_parser(self.basedata)
             self.data = self.parseConfigurationFiles(self.prefiles, self.postfiles)
 
             if self.data.getVar("BB_WORKERCONTEXT", False) is None:
                 bb.fetch.fetcher_init(self.data)
+            bb.parse.init_parser(self.data)
             bb.codeparser.parser_cache_init(self.data)
 
             bb.event.fire(bb.event.ConfigParsed(), self.data)
@@ -358,14 +346,24 @@ class CookerDataBuilder(object):
             data = parse_config_file(layerconf, data)
 
             layers = (data.getVar('BBLAYERS') or "").split()
+            broken_layers = []
 
             data = bb.data.createCopy(data)
             approved = bb.utils.approved_variables()
+
+            # Check whether present layer directories exist
             for layer in layers:
                 if not os.path.isdir(layer):
-                    parselog.critical("Layer directory '%s' does not exist! "
-                                      "Please check BBLAYERS in %s" % (layer, layerconf))
-                    sys.exit(1)
+                    broken_layers.append(layer)
+
+            if broken_layers:
+                parselog.critical("The following layer directories do not exist:")
+                for layer in broken_layers:
+                    parselog.critical("   %s", layer)
+                parselog.critical("Please check BBLAYERS in %s" % (layerconf))
+                sys.exit(1)
+
+            for layer in layers:
                 parselog.debug(2, "Adding layer %s", layer)
                 if 'HOME' in approved and '~' in layer:
                     layer = os.path.expanduser(layer)
@@ -395,7 +393,11 @@ class CookerDataBuilder(object):
                 bb.fatal("BBFILES_DYNAMIC entries must be of the form <collection name>:<filename pattern>, not:\n    %s" % "\n    ".join(invalid))
 
             layerseries = set((data.getVar("LAYERSERIES_CORENAMES") or "").split())
+            collections_tmp = collections[:]
             for c in collections:
+                collections_tmp.remove(c)
+                if c in collections_tmp:
+                    bb.fatal("Found duplicated BBFILE_COLLECTIONS '%s', check bblayers.conf or layer.conf to fix it." % c)
                 compat = set((data.getVar("LAYERSERIES_COMPAT_%s" % c) or "").split())
                 if compat and not (compat & layerseries):
                     bb.fatal("Layer %s is not compatible with the core layer which only supports these series: %s (layer is compatible with %s)"

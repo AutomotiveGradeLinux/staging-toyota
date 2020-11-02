@@ -8,8 +8,7 @@ require agl-demo-platform.bb
 
 LICENSE = "MIT"
 
-IMAGE_FEATURES_append = " dev-pkgs"
-IMAGE_INSTALL_append = " kernel-dev kernel-devsrc"
+require recipes-platform/images/agl-image-graphical-qt5-crosssdk.inc
 
 inherit populate_sdk populate_sdk_qt5
 
@@ -17,45 +16,6 @@ inherit populate_sdk populate_sdk_qt5
 # Both exec "createrepo" on the same directory, and so one of them
 # can failed (randomly).
 addtask do_populate_sdk after do_rootfs
-
-# native tools to support Chromium build inside SDK (SPEC-942)
-TOOLCHAIN_HOST_TASK += " \
-    nativesdk-gn \
-    nativesdk-ninja \
-    nativesdk-gperf \
-    nativesdk-zlib \
-    nativesdk-xz \
-    nativesdk-nspr-dev \
-    nativesdk-nss-dev \
-    nativesdk-lua \
-    "
-
-# required dependencies for Chromium build inside SDK (SPEC-942)
-TOOLCHAIN_TARGET_TASK += " \
-    pciutils-dev \
-    ${@bb.utils.contains('DISTRO_FEATURES', 'pulseaudio', 'pulseaudio-dev' , '', d)} \
-    cairo-dev \
-    nss-dev \
-    cups-dev \
-    gconf-dev \
-    libexif-dev \
-    pango-dev \
-    libdrm-dev  \
-    lua-dev \
-    lua-staticdev \
-    libafb-helpers-staticdev \
-    libafb-helpers-qt-staticdev \
-    libappcontroller-staticdev \
-    ${@bb.utils.contains('LICENSE_FLAGS_WHITELIST', 'commercial', 'ffmpeg-dev', '', d)} \
-    "
-
-# Add wayland-scanner to SDK (SPEC-945)
-# Use TOOLCHAIN_HOST_TASK instead of adding to the packagegroup
-# wayland-scanner is in nativesdk-wayland-dev !
-# option: add also nativesdk-qtwayland-tools
-TOOLCHAIN_HOST_TASK_append = " nativesdk-wayland nativesdk-wayland-dev"
-
-TOOLCHAIN_HOST_TASK_append = " nativesdk-perl-modules "
 
 # Add mosquitto to support building the telematics demo application.
 # This is currently required for CI, as it uses agl-demo-platform-crosssdk
@@ -79,3 +39,17 @@ TOOLCHAIN_TARGET_TASK += "libstdc++-staticdev"
 # AddressSanitizer support to detect use-after-frees along with other
 # memory issue.
 TOOLCHAIN_TARGET_TASK += "gcc-sanitizers"
+
+# Add azure-iot-sdk-c to support building agl-service-cloudproxy
+# and other users of Azure sdk.
+TOOLCHAIN_TARGET_TASK += "azure-iot-sdk-c umock-c"
+
+# Add mbedTLS to support building aws-iot-device-sdk-embedded-c
+TOOLCHAIN_TARGET_TASK += "mbedtls"
+
+# Add aws-iot-device-embedded-c sdk to support building agl-service-cloudproxy
+# and other users of AWS sdk.
+# These packages are required to add static library and headers:
+TOOLCHAIN_TARGET_TASK += "aws-iot-device-sdk-embedded-c-staticdev"
+TOOLCHAIN_TARGET_TASK += "aws-iot-device-sdk-embedded-c-dev"
+

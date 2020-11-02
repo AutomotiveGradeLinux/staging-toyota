@@ -7,7 +7,7 @@ require conf/machine/include/tune-cortexa15.inc
 # Increase this everytime you change something in the kernel
 MACHINE_KERNEL_PR = "r7"
 
-PREFERRED_PROVIDER_virtual/kernel = "linux-ti-staging"
+PREFERRED_PROVIDER_virtual/kernel ?= "linux-ti-staging"
 PREFERRED_PROVIDER_virtual/bootloader = "u-boot-ti-staging"
 PREFERRED_PROVIDER_u-boot = "u-boot-ti-staging"
 
@@ -36,4 +36,9 @@ MACHINE_GUI_CLASS = "smallscreen"
 UBI_VOLNAME = "rootfs"
 
 # List common SoC features, may need to add touchscreen for specific machines
-MACHINE_FEATURES = "kernel26 apm usbgadget usbhost vfat ext2 screen alsa ethernet gpu mmip dsp"
+MACHINE_FEATURES = "kernel26 apm usbgadget usbhost vfat ext2 screen alsa ethernet gpu mmip dsp gc320"
+
+IMAGE_FSTYPES += "tar.xz wic.xz"
+WKS_FILE ?= "sdimage-2part.wks"
+IMAGE_BOOT_FILES ?= "${SPL_BINARY} u-boot.${UBOOT_SUFFIX}"
+do_image_wic[depends] += "u-boot:do_deploy"

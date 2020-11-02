@@ -1,5 +1,5 @@
 # Copyright (C) 2013-2016 Freescale Semiconductor
-# Copyright 2017-2018 NXP
+# Copyright (C) 2017-2019 NXP
 # Copyright 2018 (C) O.S. Systems Software LTDA.
 
 SUMMARY = "Nand boot write source"
@@ -9,11 +9,10 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=393a5ca445f6965873eca0259a17f833"
 
 PV = "5.5+git${SRCPV}"
 SRC_URI = "git://github.com/NXPmicro/imx-kobs.git;protocol=https \
-           file://0001-Add-missing-includes-as-pointed-out-by-musl.patch \
 "
-SRCREV = "a0e9adce2fb7fcd57e794d7f9a5deba0f94f521b"
+SRCREV = "cee66d0e956a64d03cc866fa8819da5b798c7f1b"
 S = "${WORKDIR}/git"
 
 inherit autotools pkgconfig
 
-COMPATIBLE_MACHINE = "(imx)"
+COMPATIBLE_MACHINE = "(imx|use-mainline-bsp)"

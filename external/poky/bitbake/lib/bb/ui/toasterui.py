@@ -7,18 +7,8 @@
 # Copyright (C) 2006-2012 Richard Purdie
 # Copyright (C) 2013      Intel Corporation
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 2 as
-# published by the Free Software Foundation.
+# SPDX-License-Identifier: GPL-2.0-only
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 from __future__ import division
 import time
@@ -186,7 +176,7 @@ def main(server, eventHandler, params):
         if error:
             logger.error("Command '%s' failed: %s" % (cmdline, error))
             return 1
-        elif ret != True:
+        elif not ret:
             logger.error("Command '%s' failed: returned %s" % (cmdline, ret))
             return 1
 

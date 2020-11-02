@@ -127,7 +127,7 @@
                     (e.g. Cygwin, the BSDs, and so forth).
                     </para></listitem>
                 <listitem><para>
-                    Be self contained, rather than tightly
+                    Be self-contained, rather than tightly
                     integrated into the build machine's root
                     filesystem.
                     </para></listitem>
@@ -221,6 +221,8 @@
                         them</para></listitem>
                     <listitem><para>How to configure and compile the
                         source code</para></listitem>
+                    <listitem><para>How to assemble the generated artifacts into
+                        one or more installable packages</para></listitem>
                     <listitem><para>Where on the target machine to install the
                         package or packages created</para></listitem>
                 </itemizedlist>
@@ -229,7 +231,7 @@
             <para>
                 Within the context of BitBake, or any project utilizing BitBake
                 as its build system, files with the <filename>.bb</filename>
-                extension are referred to as recipes.
+                extension are referred to as <firstterm>recipes</firstterm>.
                 <note>
                     The term "package" is also commonly used to describe recipes.
                     However, since the same word is used to describe packaged
@@ -252,9 +254,9 @@
                 various configuration variables that govern the project's build
                 process.
                 These files fall into several areas that define
-                machine configuration options, distribution configuration
-                options, compiler tuning options, general common
-                configuration options, and user configuration options.
+                machine configuration, distribution configuration,
+                possible compiler tuning, general common
+                configuration, and user configuration.
                 The main configuration file is the sample
                 <filename>bitbake.conf</filename> file, which is
                 located within the BitBake source tree
@@ -292,7 +294,7 @@
                 Layers allow you to isolate different types of
                 customizations from each other.
                 While you might find it tempting to keep everything in one layer
-                when working on a single project, the more modular you organize
+                when working on a single project, the more modular
                 your metadata, the easier it is to cope with future changes.
             </para>
 
@@ -300,8 +302,8 @@
                 To illustrate how you can use layers to keep things modular,
                 consider customizations you might make to support a specific target machine.
                 These types of customizations typically reside in a special layer,
-                rather than a general layer, called a Board Support Package (BSP)
-                Layer.
+                rather than a general layer, called a <firstterm>Board Support Package</firstterm> (BSP)
+                layer.
                 Furthermore, the machine customizations should be isolated from
                 recipes and metadata that support a new GUI environment, for
                 example.
@@ -448,7 +450,7 @@
                 <listitem><para><emphasis>Using the BitBake that Comes With Your
                     Build Checkout:</emphasis>
                     A final possibility for getting a copy of BitBake is that it
-                    already comes with your checkout of a larger Bitbake-based build
+                    already comes with your checkout of a larger BitBake-based build
                     system, such as Poky.
                     Rather than manually checking out individual layers and
                     gluing them together yourself, you can check
@@ -692,14 +694,9 @@
                 </para>
 
                 <para>
-                    When you generate a dependency graph, BitBake writes three files
+                    When you generate a dependency graph, BitBake writes two files
                     to the current working directory:
                     <itemizedlist>
-                        <listitem><para>
-                            <emphasis><filename>recipe-depends.dot</filename>:</emphasis>
-                            Shows dependencies between recipes (i.e. a collapsed version of
-                            <filename>task-depends.dot</filename>).
-                            </para></listitem>
                         <listitem><para>
                             <emphasis><filename>task-depends.dot</filename>:</emphasis>
                             Shows dependencies between tasks.
@@ -781,7 +778,7 @@
                     target, you must also enable BitBake to perform multiple
                     configuration builds.
                     Enabling is accomplished by setting the
-                    <link linkend='var-BBMULTICONFIG'><filename>BBMULTICONFIG</filename></link>
+                    <link linkend='var-bb-BBMULTICONFIG'><filename>BBMULTICONFIG</filename></link>
                     variable in the <filename>local.conf</filename>
                     configuration file.
                     As an example, suppose you had configuration files
@@ -791,7 +788,7 @@
                     The following statement in the
                     <filename>local.conf</filename> file both enables
                     BitBake to perform multiple configuration builds and
-                    specifies the two multiconfigs:
+                    specifies the two extra multiconfigs:
                     <literallayout class='monospaced'>
      BBMULTICONFIG = "target1 target2"
                     </literallayout>
@@ -803,13 +800,13 @@
                     builds, use the following command form to start the
                     builds:
                     <literallayout class='monospaced'>
-     $ bitbake [multiconfig:<replaceable>multiconfigname</replaceable>:]<replaceable>target</replaceable> [[[multiconfig:<replaceable>multiconfigname</replaceable>:]<replaceable>target</replaceable>] ... ]
+     $ bitbake [mc:<replaceable>multiconfigname</replaceable>:]<replaceable>target</replaceable> [[[mc:<replaceable>multiconfigname</replaceable>:]<replaceable>target</replaceable>] ... ]
                     </literallayout>
-                    Here is an example for two multiconfigs:
+                    Here is an example for two extra multiconfigs:
                     <filename>target1</filename> and
                     <filename>target2</filename>:
                     <literallayout class='monospaced'>
-     $ bitbake multiconfig:target1:<replaceable>target</replaceable> multiconfig:target2:<replaceable>target</replaceable>
+     $ bitbake mc::<replaceable>target</replaceable> mc:target1:<replaceable>target</replaceable> mc:target2:<replaceable>target</replaceable>
                     </literallayout>
                 </para>
             </section>
@@ -837,13 +834,13 @@
                     build, you must declare the dependencies in the recipe
                     using the following statement form:
                     <literallayout class='monospaced'>
-     <replaceable>task_or_package</replaceable>[mcdepends] = "multiconfig:<replaceable>from_multiconfig</replaceable>:<replaceable>to_multiconfig</replaceable>:<replaceable>recipe_name</replaceable>:<replaceable>task_on_which_to_depend</replaceable>"
+     <replaceable>task_or_package</replaceable>[mcdepends] = "mc:<replaceable>from_multiconfig</replaceable>:<replaceable>to_multiconfig</replaceable>:<replaceable>recipe_name</replaceable>:<replaceable>task_on_which_to_depend</replaceable>"
                     </literallayout>
                     To better show how to use this statement, consider an
                     example with two multiconfigs: <filename>target1</filename>
                     and <filename>target2</filename>:
                     <literallayout class='monospaced'>
-     <replaceable>image_task</replaceable>[mcdepends] = "multiconfig:target1:target2:<replaceable>image2</replaceable>:<replaceable>rootfs_task</replaceable>"
+     <replaceable>image_task</replaceable>[mcdepends] = "mc:target1:target2:<replaceable>image2</replaceable>:<replaceable>rootfs_task</replaceable>"
                     </literallayout>
                     In this example, the
                     <replaceable>from_multiconfig</replaceable> is "target1" and
@@ -859,7 +856,7 @@
                    Once you set up this dependency, you can build the
                    "target1" multiconfig using a BitBake command as follows:
                    <literallayout class='monospaced'>
-     $ bitbake multiconfig:target1:<replaceable>image1</replaceable>
+     $ bitbake mc:target1:<replaceable>image1</replaceable>
                    </literallayout>
                    This command executes all the tasks needed to create
                    <replaceable>image1</replaceable> for the "target1"
@@ -875,7 +872,7 @@
                    Consider this change to the statement in the
                    <replaceable>image1</replaceable> recipe:
                    <literallayout class='monospaced'>
-     <replaceable>image_task</replaceable>[mcdepends] = "multiconfig:target1:target2:<replaceable>image2</replaceable>:<replaceable>image_task</replaceable>"
+     <replaceable>image_task</replaceable>[mcdepends] = "mc:target1:target2:<replaceable>image2</replaceable>:<replaceable>image_task</replaceable>"
                    </literallayout>
                    In this case, BitBake must create
                    <replaceable>image2</replaceable> for the "target2"

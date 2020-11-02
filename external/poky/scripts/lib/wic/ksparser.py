@@ -1,21 +1,8 @@
-#!/usr/bin/env python -tt
-# ex:ts=4:sw=4:sts=4:et
-# -*- tab-width: 4; c-basic-offset: 4; indent-tabs-mode: nil -*-
+#!/usr/bin/env python3
 #
 # Copyright (c) 2016 Intel, Inc.
 #
-# This program is free software; you can redistribute it and/or modify it
-# under the terms of the GNU General Public License as published by the Free
-# Software Foundation; version 2 of the License
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-# for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc., 59
-# Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+# SPDX-License-Identifier: GPL-2.0-only
 #
 # DESCRIPTION
 # This module provides parser for kickstart format
@@ -28,13 +15,29 @@
 import os
 import shlex
 import logging
+import re
 
 from argparse import ArgumentParser, ArgumentError, ArgumentTypeError
 
 from wic.engine import find_canned
 from wic.partition import Partition
+from wic.misc import get_bitbake_var
 
 logger = logging.getLogger('wic')
+
+__expand_var_regexp__ = re.compile(r"\${[^{}@\n\t :]+}")
+
+def expand_line(line):
+    while True:
+        m = __expand_var_regexp__.search(line)
+        if not m:
+            return line
+        key = m.group()[2:-1]
+        val = get_bitbake_var(key)
+        if val is None:
+            logger.warning("cannot expand variable %s" % key)
+            return line
+        line = line[:m.start()] + val + line[m.end():]
 
 class KickStartError(Exception):
     """Custom exception."""
@@ -134,6 +137,7 @@ class KickStart():
         part.add_argument('--active', action='store_true')
         part.add_argument('--align', type=int)
         part.add_argument('--exclude-path', nargs='+')
+        part.add_argument('--include-path', nargs='+')
         part.add_argument("--extra-space", type=sizetype)
         part.add_argument('--fsoptions', dest='fsopts')
         part.add_argument('--fstype', default='vfat',
@@ -148,6 +152,8 @@ class KickStart():
         part.add_argument('--part-name')
         part.add_argument('--part-type')
         part.add_argument('--rootfs-dir')
+        part.add_argument('--type', default='primary',
+                choices = ('primary', 'logical'))
 
         # --size and --fixed-size cannot be specified together; options
         # ----extra-space and --overhead-factor should also raise a parser
@@ -190,6 +196,7 @@ class KickStart():
                 line = line.strip()
                 lineno += 1
                 if line and line[0] != '#':
+                    line = expand_line(line)
                     try:
                         line_args = shlex.split(line)
                         parsed = parser.parse_args(line_args)
@@ -239,6 +246,11 @@ class KickStart():
                     elif line.startswith('bootloader'):
                         if not self.bootloader:
                             self.bootloader = parsed
+                            # Concatenate the strings set in APPEND
+                            append_var = get_bitbake_var("APPEND")
+                            if append_var:
+                                self.bootloader.append = ' '.join(filter(None, \
+                                                         (self.bootloader.append, append_var)))
                         else:
                             err = "%s:%d: more than one bootloader specified" \
                                       % (confpath, lineno)

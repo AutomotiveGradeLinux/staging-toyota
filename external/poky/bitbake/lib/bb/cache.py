@@ -1,5 +1,3 @@
-# ex:ts=4:sw=4:sts=4:et
-# -*- tab-width: 4; c-basic-offset: 4; indent-tabs-mode: nil -*-
 #
 # BitBake Cache implementation
 #
@@ -15,25 +13,15 @@
 # Copyright (C) 2005        Holger Hans Peter Freyther
 # Copyright (C) 2005        ROAD GmbH
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 2 as
-# published by the Free Software Foundation.
+# SPDX-License-Identifier: GPL-2.0-only
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import os
-import sys
 import logging
 import pickle
 from collections import defaultdict
 import bb.utils
+import re
 
 logger = logging.getLogger("BitBake.Cache")
 
@@ -95,20 +83,20 @@ class CoreRecipeInfo(RecipeInfoCommon):
         self.appends = self.listvar('__BBAPPEND', metadata)
         self.nocache = self.getvar('BB_DONT_CACHE', metadata)
 
-        self.skipreason = self.getvar('__SKIPPED', metadata)
-        if self.skipreason:
-            self.pn = self.getvar('PN', metadata) or bb.parse.BBHandler.vars_from_file(filename,metadata)[0]
-            self.skipped = True
-            self.provides  = self.depvar('PROVIDES', metadata)
-            self.rprovides = self.depvar('RPROVIDES', metadata)
-            return
-
-        self.tasks = metadata.getVar('__BBTASKS', False)
-
-        self.pn = self.getvar('PN', metadata)
+        self.provides  = self.depvar('PROVIDES', metadata)
+        self.rprovides = self.depvar('RPROVIDES', metadata)
+        self.pn = self.getvar('PN', metadata) or bb.parse.vars_from_file(filename,metadata)[0]
         self.packages = self.listvar('PACKAGES', metadata)
         if not self.packages:
             self.packages.append(self.pn)
+        self.packages_dynamic = self.listvar('PACKAGES_DYNAMIC', metadata)
+
+        self.skipreason = self.getvar('__SKIPPED', metadata)
+        if self.skipreason:
+            self.skipped = True
+            return
+
+        self.tasks = metadata.getVar('__BBTASKS', False)
 
         self.basetaskhashes = self.taskvar('BB_BASEHASH', self.tasks, metadata)
         self.hashfilename = self.getvar('BB_HASHFILENAME', metadata)
@@ -125,11 +113,8 @@ class CoreRecipeInfo(RecipeInfoCommon):
         self.stampclean = self.getvar('STAMPCLEAN', metadata)
         self.stamp_extrainfo = self.flaglist('stamp-extra-info', self.tasks, metadata)
         self.file_checksums = self.flaglist('file-checksums', self.tasks, metadata, True)
-        self.packages_dynamic = self.listvar('PACKAGES_DYNAMIC', metadata)
         self.depends          = self.depvar('DEPENDS', metadata)
-        self.provides         = self.depvar('PROVIDES', metadata)
         self.rdepends         = self.depvar('RDEPENDS', metadata)
-        self.rprovides        = self.depvar('RPROVIDES', metadata)
         self.rrecommends      = self.depvar('RRECOMMENDS', metadata)
         self.rprovides_pkg    = self.pkgvar('RPROVIDES', self.packages, metadata)
         self.rdepends_pkg     = self.pkgvar('RDEPENDS', self.packages, metadata)
@@ -223,10 +208,10 @@ class CoreRecipeInfo(RecipeInfoCommon):
 
         # Collect files we may need for possible world-dep
         # calculations
-        if self.not_world:
-            logger.debug(1, "EXCLUDE FROM WORLD: %s", fn)
-        else:
+        if not self.not_world:
             cachedata.possible_world.append(fn)
+        #else:
+        #    logger.debug(2, "EXCLUDE FROM WORLD: %s", fn)
 
         # create a collection of all targets for sanity checking
         # tasks, such as upstream versions, license, and tools for
@@ -235,7 +220,7 @@ class CoreRecipeInfo(RecipeInfoCommon):
 
         cachedata.hashfn[fn] = self.hashfilename
         for task, taskhash in self.basetaskhashes.items():
-            identifier = '%s.%s' % (fn, task)
+            identifier = '%s:%s' % (fn, task)
             cachedata.basetaskhash[identifier] = taskhash
 
         cachedata.inherits[fn] = self.inherits
@@ -249,7 +234,7 @@ def virtualfn2realfn(virtualfn):
     Convert a virtual file name to a real one + the associated subclass keyword
     """
     mc = ""
-    if virtualfn.startswith('multiconfig:'):
+    if virtualfn.startswith('mc:'):
         elems = virtualfn.split(':')
         mc = elems[1]
         virtualfn = ":".join(elems[2:])
@@ -270,7 +255,7 @@ def realfn2virtual(realfn, cls, mc):
     if cls:
         realfn = "virtual:" + cls + ":" + realfn
     if mc:
-        realfn = "multiconfig:" + mc + ":" + realfn
+        realfn = "mc:" + mc + ":" + realfn
     return realfn
 
 def variant2virtual(realfn, variant):
@@ -279,11 +264,11 @@ def variant2virtual(realfn, variant):
     """
     if variant == "":
         return realfn
-    if variant.startswith("multiconfig:"):
+    if variant.startswith("mc:"):
         elems = variant.split(":")
         if elems[2]:
-            return "multiconfig:" + elems[1] + ":virtual:" + ":".join(elems[2:]) + ":" + realfn
-        return "multiconfig:" + elems[1] + ":" + realfn
+            return "mc:" + elems[1] + ":virtual:" + ":".join(elems[2:]) + ":" + realfn
+        return "mc:" + elems[1] + ":" + realfn
     return "virtual:" + variant + ":" + realfn
 
 def parse_recipe(bb_data, bbfile, appends, mc=''):
@@ -361,7 +346,7 @@ class NoCache(object):
             bb_data = self.databuilder.mcdata[mc].createCopy()
             newstores = parse_recipe(bb_data, bbfile, appends, mc)
             for ns in newstores:
-                datastores["multiconfig:%s:%s" % (mc, ns)] = newstores[ns]
+                datastores["mc:%s:%s" % (mc, ns)] = newstores[ns]
 
         return datastores
 
@@ -385,6 +370,7 @@ class Cache(NoCache):
         self.data_fn = None
         self.cacheclean = True
         self.data_hash = data_hash
+        self.filelist_regex = re.compile(r'(?:(?<=:True)|(?<=:False))\s+')
 
         if self.cachedir in [None, '']:
             self.has_cache = False
@@ -410,6 +396,15 @@ class Cache(NoCache):
             logger.info("Out of date cache found, rebuilding...")
         else:
             logger.debug(1, "Cache file %s not found, building..." % self.cachefile)
+
+        # We don't use the symlink, its just for debugging convinience
+        symlink = os.path.join(self.cachedir, "bb_cache.dat")
+        if os.path.exists(symlink):
+            bb.utils.remove(symlink)
+        try:
+            os.symlink(os.path.basename(self.cachefile), symlink)
+        except OSError:
+            pass
 
     def load_cachefile(self):
         cachesize = 0
@@ -614,20 +609,12 @@ class Cache(NoCache):
         if hasattr(info_array[0], 'file_checksums'):
             for _, fl in info_array[0].file_checksums.items():
                 fl = fl.strip()
-                while fl:
-                    # A .split() would be simpler but means spaces or colons in filenames would break
-                    a = fl.find(":True")
-                    b = fl.find(":False")
-                    if ((a < 0) and b) or ((b > 0) and (b < a)):
-                        f = fl[:b+6]
-                        fl = fl[b+7:]
-                    elif ((b < 0) and a) or ((a > 0) and (a < b)):
-                        f = fl[:a+5]
-                        fl = fl[a+6:]
-                    else:
-                        break
-                    fl = fl.strip()
-                    if "*" in f:
+                if not fl:
+                    continue
+                # Have to be careful about spaces and colons in filenames
+                flist = self.filelist_regex.split(fl)
+                for f in flist:
+                    if not f or "*" in f:
                         continue
                     f, exist = f.split(":")
                     if (exist == "True" and not os.path.exists(f)) or (exist == "False" and os.path.exists(f)):
@@ -887,5 +874,58 @@ class MultiProcessCache(object):
         with open(self.cachefile, "wb") as f:
             p = pickle.Pickler(f, -1)
             p.dump([data, self.__class__.CACHE_VERSION])
+
+        bb.utils.unlockfile(glf)
+
+
+class SimpleCache(object):
+    """
+    BitBake multi-process cache implementation
+
+    Used by the codeparser & file checksum caches
+    """
+
+    def __init__(self, version):
+        self.cachefile = None
+        self.cachedata = None
+        self.cacheversion = version
+
+    def init_cache(self, d, cache_file_name=None, defaultdata=None):
+        cachedir = (d.getVar("PERSISTENT_DIR") or
+                    d.getVar("CACHE"))
+        if not cachedir:
+            return defaultdata
+
+        bb.utils.mkdirhier(cachedir)
+        self.cachefile = os.path.join(cachedir,
+                                      cache_file_name or self.__class__.cache_file_name)
+        logger.debug(1, "Using cache in '%s'", self.cachefile)
+
+        glf = bb.utils.lockfile(self.cachefile + ".lock")
+
+        try:
+            with open(self.cachefile, "rb") as f:
+                p = pickle.Unpickler(f)
+                data, version = p.load()
+        except:
+            bb.utils.unlockfile(glf)
+            return defaultdata
+
+        bb.utils.unlockfile(glf)
+
+        if version != self.cacheversion:
+            return defaultdata
+
+        return data
+
+    def save(self, data):
+        if not self.cachefile:
+            return
+
+        glf = bb.utils.lockfile(self.cachefile + ".lock")
+
+        with open(self.cachefile, "wb") as f:
+            p = pickle.Pickler(f, -1)
+            p.dump([data, self.cacheversion])
 
         bb.utils.unlockfile(glf)

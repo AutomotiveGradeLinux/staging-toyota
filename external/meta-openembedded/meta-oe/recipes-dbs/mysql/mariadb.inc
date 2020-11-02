@@ -2,12 +2,9 @@ SUMMARY = "A robust, scalable, and reliable SQL server"
 HOMEPAGE = "http://mariadb.org"
 SECTION = "libs"
 LICENSE = "GPLv2"
-LIC_FILES_CHKSUM = "file://COPYING;md5=751419260aa954499f7abaabaa882bbe"
+LIC_FILES_CHKSUM = "file://COPYING;md5=b1becf0cfa3366e0f4d854d1d264f311"
 
-SRC_URI = "http://archive.mariadb.org/${BP}/source/${BP}.tar.gz \
-           file://fix-cmake-module-path.patch \
-           file://remove-bad-path.patch \
-           file://fix-mysqlclient-r-version.patch \
+SRC_URI = "https://downloads.mariadb.org/interstitial/${BP}/source/${BP}.tar.gz \
            file://my.cnf \
            file://mysqld.service \
            file://install_db.service \
@@ -15,11 +12,17 @@ SRC_URI = "http://archive.mariadb.org/${BP}/source/${BP}.tar.gz \
            file://mysql-systemd-start \
            file://configure.cmake-fix-valgrind.patch \
            file://fix-a-building-failure.patch \
-           file://change-cc-to-cc-version.patch \
+           file://support-files-CMakeLists.txt-fix-do_populate_sysroot.patch \
+           file://sql-CMakeLists.txt-fix-gen_lex_hash-not-found.patch \
            file://0001-disable-ucontext-on-musl.patch \
+           file://c11_atomics.patch \
+           file://clang_version_header_conflict.patch \
+           file://fix-arm-atomic.patch \
+           file://0001-Fix-build-breakage-from-lock_guard-error-6161.patch \
+           file://0001-Fix-library-LZ4-lookup.patch \
           "
-SRC_URI[md5sum] = "03968ae08cff3038e2420921ef257550"
-SRC_URI[sha256sum] = "c103f3c54741b296980d6be48b221340eebaa97c6bd95a02fd8d530a5df5c343"
+SRC_URI[md5sum] = "97d7c0f508c04a31c138fdb24e95dbc4"
+SRC_URI[sha256sum] = "fef1e1d38aa253dd8a51006bd15aad184912fce31c446bb69434fcde735aa208"
 
 UPSTREAM_CHECK_URI = "https://github.com/MariaDB/server/releases"
 
@@ -27,7 +30,9 @@ S = "${WORKDIR}/mariadb-${PV}"
 
 BINCONFIG_GLOB = "mysql_config"
 
-inherit cmake gettext binconfig update-rc.d useradd systemd
+inherit cmake gettext binconfig update-rc.d useradd systemd multilib_script
+
+MULTILIB_SCRIPTS = "${PN}-server:${bindir}/mysql_install_db ${PN}-server:${bindir}/mysqld_safe"
 
 INITSCRIPT_PACKAGES = "${PN}-server ${PN}-setupdb"
 INITSCRIPT_NAME_${PN}-server = "mysqld"
@@ -55,14 +60,13 @@ PACKAGECONFIG ??= "${@bb.utils.filter('DISTRO_FEATURES', 'pam', d)} setupdb"
 PACKAGECONFIG_class-native = ""
 PACKAGECONFIG[pam] = ",-DWITHOUT_AUTH_PAM=TRUE,libpam"
 PACKAGECONFIG[valgrind] = "-DWITH_VALGRIND=TRUE,-DWITH_VALGRIND=FALSE,valgrind"
-PACKAGECONFIG[libedit] = "-DLIBEDIT_INTERFACE=TRUE,-DLIBEDIT_INTERFACE=FALSE,libedit"
 PACKAGECONFIG[krb5] = ", ,krb5"
 PACKAGECONFIG[setupdb] = ", ,,${PN}-setupdb"
 
 # MariaDB doesn't link properly with gold
 # https://mariadb.atlassian.net/browse/MDEV-5982
 TARGET_CFLAGS += "-fuse-ld=bfd"
-
+LDFLAGS += " -pthread"
 BUILD_CFLAGS += "-fuse-ld=bfd"
 BUILD_CXXFLAGS += "-fuse-ld=bfd"
 
@@ -120,6 +124,11 @@ do_compile_prepend_class-target () {
             echo "#endif" >>${B}/include/openssl/kssl.h
         fi
     fi
+    # workaround to handle out-of-source build from source package
+    yacc_files="sql_yacc.hh sql_yacc.cc sql_yacc_ora.hh sql_yacc_ora.cc"
+    for yacc_file in ${yacc_files}; do
+        cp ${S}/sql/${yacc_file} ${B}/sql/${yacc_file}
+    done
 }
 
 SYSROOT_PREPROCESS_FUNCS += "mariadb_sysroot_preprocess"
@@ -159,6 +168,10 @@ do_install() {
     if [ -f ${D}${datadir}/doc/README ]; then
         mv ${D}${datadir}/doc/README ${D}${datadir}/doc/${PN}/
     fi
+    if ${@bb.utils.contains('DISTRO_FEATURES', 'pam', 'true', 'false', d)}; then
+        mv ${D}/lib/security ${D}/${libdir}
+        rmdir --ignore-fail-on-non-empty ${D}/lib
+    fi
 }
 
 PACKAGES = "${PN}-dbg ${PN} \
@@ -181,13 +194,13 @@ RDEPENDS_${PN}-client = "perl perl-module-getopt-long perl-module-file-temp \
 RDEPENDS_${PN}-server = "perl perl-module-getopt-long perl-module-data-dumper \
     perl-module-file-basename perl-module-file-path perl-module-sys-hostname \
     perl-module-file-copy perl-module-file-temp perl-module-posix \
-    ${PN}-client libdbi-perl libdbd-mysql-perl"
+    ${PN}-client ${PN}-setupdb libdbi-perl libdbd-mysql-perl"
 RDEPENDS_${PN}-leftovers = "perl perl-module-cwd perl-module-benchmark perl-module-getopt-long \
     perl-module-posix perl-module-data-dumper perl-module-sigtrap perl-module-threads \
     perl-module-threads-shared perl-module-io-socket perl-module-sys-hostname perl-module-file-copy \
     perl-module-file-spec perl-module-file-find perl-module-file-basename perl-module-file-path \
     perl-module-constant perl-module-lib perl-module-file-temp perl-module-file-spec-functions \
-    perl-module-io-socket-inet perl-module-io-select"
+    perl-module-io-socket-inet perl-module-io-select bash"
 RDEPENDS_${PN}-setupdb = "coreutils"
 
 # Allow old code to link to the backward compatible library
@@ -195,10 +208,12 @@ RDEPENDS_libmysqlclient-dev = "libmysqlclient-r-dev"
 
 FILES_libmysqlclient = "\
     ${libdir}/libmysqlclient.so.* \
+    ${libdir}/libmariadb.so.* \
     ${sysconfdir}/my.cnf.d/client.cnf"
 FILES_libmysqlclient-dev = " \
     ${includedir}/mysql/ \
     ${libdir}/libmysqlclient.so \
+    ${libdir}/libmariadb.so \
     ${sysconfdir}/aclocal \
     ${bindir}/mysql_config"
 FILES_libmysqlclient-staticdev = "\
@@ -215,9 +230,11 @@ FILES_libmysqlclient-r-dev = "\
 FILES_libmysqlclient-r-staticdev = "${libdir}/libmysqlclient_r.a"
 
 FILES_libmysqld = "\
-    ${libdir}/libmysqld.so.*"
+    ${libdir}/libmysqld.so.* \
+    ${libdir}/libmariadbd.so.*"
 FILES_libmysqld-dev = "\
-    ${libdir}/libmysqld.so"
+    ${libdir}/libmysqld.so \
+    ${libdir}/libmariadbd.so"
 
 FILES_${PN}-client = "\
     ${bindir}/myisam_ftdump \
@@ -286,11 +303,14 @@ FILES_${PN}-server = "\
     ${sbindir}/ndbd \
     ${sbindir}/ndb_mgmd \
     ${libdir}/plugin/*.so \
+    ${libdir}/security/*.so \
+    ${libdir}/plugin/auth_pam_tool_dir/auth_pam_tool \
     ${datadir}/mysql/ \
     ${localstatedir}/mysql/ \
     ${sysconfdir}/init.d/mysqld \
     ${sysconfdir}/my.cnf \
     ${sysconfdir}/my.cnf.d/server.cnf \
+    ${sysconfdir}/security/user_map.conf \
     ${sysconfdir}/tmpfiles.d"
 
 DESCRIPTION_${PN}-leftovers = "unpackaged and probably unneeded files for ${PN}"

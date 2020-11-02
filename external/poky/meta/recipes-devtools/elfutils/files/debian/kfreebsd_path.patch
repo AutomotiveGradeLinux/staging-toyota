@@ -1,5 +1,6 @@
 Upstream-Status: Pending [from debian]
 Signed-off-by: Hongxu Jia <hongxu.jia@windriver.com>
+
 Index: b/tests/run-native-test.sh
 ===================================================================
 --- a/tests/run-native-test.sh

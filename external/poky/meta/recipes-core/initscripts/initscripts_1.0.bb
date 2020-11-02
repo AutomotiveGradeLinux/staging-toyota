@@ -40,6 +40,7 @@ SRC_URI = "file://functions \
 S = "${WORKDIR}"
 
 SRC_URI_append_arm = " file://alignment.sh"
+SRC_URI_append_armeb = " file://alignment.sh"
 
 KERNEL_VERSION = ""
 
@@ -168,7 +169,7 @@ MASKED_SCRIPTS = " \
   urandom"
 
 pkg_postinst_${PN} () {
-	if ${@bb.utils.contains('DISTRO_FEATURES','systemd','true','false',d)}; then
+	if type systemctl >/dev/null 2>/dev/null; then
 		if [ -n "$D" ]; then
 			OPTS="--root=$D"
 		fi

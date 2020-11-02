@@ -17,16 +17,16 @@ MOST_DRIVERS ??= " \
     most \
     "
 # These boards use different kernels - needs to be checked
-MOST_DRIVERS_dra7xx-evm ?= ""
 MOST_DRIVERS_dragonboard-410c ?= ""
+MOST_DRIVERS_cyclone5 ?= ""
 
 
 # HVAC dependencies
 ###################
-LIN_DRIVERS ??= " sllin sllin-virtual"
+LIN_DRIVERS ??= " sllin"
 # These boards use different kernels - needs to be checked
-LIN_DRIVERS_dra7xx-evm ?= "sllin-virtual"
-LIN_DRIVERS_dragonboard-410c ?= "sllin-virtual"
+LIN_DRIVERS_dra7xx-evm ?= ""
+LIN_DRIVERS_dragonboard-410c ?= ""
 
 # UNICENS service
 UNICENS ?= " \
@@ -42,16 +42,8 @@ DEMO_ENABLE_BTWILINK ?= ""
 DEMO_PLATFORM_CONF = ""
 DEMO_PLATFORM_CONF_append_ulcb = "${@bb.utils.contains("DEMO_ENABLE_BTWILINK", "true", "", " btwilink-disable-conf", d)}"
 
-SMARTDEVICELINK = "${@bb.utils.contains('DISTRO_FEATURES', 'agl-sdl', \
-    'packagegroup-agl-smartdevicelink', '', d)}"
-
-# removed: now all enablers are in meta-agl-devel/meta-audio-soundmanager-framework
-# old audio package
-# AUDIO-OLD = "audiomanager"
-
 RDEPENDS_${PN} += "\
-    udisks \
-    ${SMARTDEVICELINK} \
+    udisks2 \
     "
 
 # fonts
@@ -60,10 +52,10 @@ TTF_FONTS = " \
     ttf-dejavu-sans \
     ttf-dejavu-sans-mono \
     ttf-dejavu-serif \
+    ttf-noto-emoji-color \
     source-han-sans-cn-fonts \
     source-han-sans-jp-fonts \
     source-han-sans-tw-fonts \
-    noto-emoji \
     "
 
 
@@ -72,7 +64,6 @@ RDEPENDS_${PN} += " \
     linux-firmware-ralink \
     can-utils \
     iproute2 \
-    python-curses \
     dhcp-client \
     ${UNICENS} \
     ${MOST_DRIVERS} \
@@ -81,5 +72,3 @@ RDEPENDS_${PN} += " \
     ${TTF_FONTS} \
     ${@bb.utils.contains('DISTRO_FEATURES', 'webruntime', 'virtual/webruntime', '', d)} \
     "
-
-

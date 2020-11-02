@@ -1,10 +1,15 @@
+#
+# SPDX-License-Identifier: MIT
+#
+
 from oeqa.selftest.case import OESelftestTestCase
 from oeqa.sdk.utils.sdkbuildproject import SDKBuildProject
 from oeqa.utils.commands import bitbake, get_bb_vars, runCmd
-from oeqa.core.decorator.oeid import OETestID
+from oeqa.core.decorator import OETestTag
 import tempfile
 import shutil
 
+@OETestTag("machine")
 class MetaIDE(OESelftestTestCase):
 
     @classmethod
@@ -23,22 +28,19 @@ class MetaIDE(OESelftestTestCase):
         shutil.rmtree(cls.tmpdir_metaideQA, ignore_errors=True)
         super(MetaIDE, cls).tearDownClass()
 
-    @OETestID(1982)
     def test_meta_ide_had_installed_meta_ide_support(self):
         self.assertExists(self.environment_script_path)
 
-    @OETestID(1983)
     def test_meta_ide_can_compile_c_program(self):
         runCmd('cp %s/test.c %s' % (self.tc.files_dir, self.tmpdir_metaideQA))
         runCmd("cd %s; . %s; $CC test.c -lm" % (self.tmpdir_metaideQA, self.environment_script_path))
         compiled_file = '%s/a.out' % self.tmpdir_metaideQA
         self.assertExists(compiled_file)
 
-    @OETestID(1984)
     def test_meta_ide_can_build_cpio_project(self):
         dl_dir = self.td.get('DL_DIR', None)
         self.project = SDKBuildProject(self.tmpdir_metaideQA + "/cpio/", self.environment_script_path,
-                        "https://ftp.gnu.org/gnu/cpio/cpio-2.12.tar.gz",
+                        "https://ftp.gnu.org/gnu/cpio/cpio-2.13.tar.gz",
                         self.tmpdir_metaideQA, self.td['DATETIME'], dl_dir=dl_dir)
         self.project.download_archive()
         self.assertEqual(self.project.run_configure(), 0,

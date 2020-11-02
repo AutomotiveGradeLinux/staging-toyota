@@ -9,6 +9,7 @@ KERNEL_PROVIDER ?= "linux-altera"
 PREFERRED_PROVIDER_virtual/kernel ?= "${KERNEL_PROVIDER}"
 
 PREFERRED_PROVIDER_virtual/bootloader ?= "u-boot-socfpga"
+PREFERRED_PROVIDER_u-boot ?= "u-boot-socfpga"
 
 # Increase this everytime you change something in the kernel
 MACHINE_KERNEL_PR = "r1"
@@ -19,6 +20,8 @@ UBOOT_LOADADDRESS = "0x80008000"
 KERNEL_IMAGETYPE ?= "zImage"
 MACHINE_EXTRA_RRECOMMENDS = " kernel-modules"
 MACHINE_FEATURES = "kernel26"
+
+KBUILD_DEFCONFIG ?= "socfpga_defconfig"
 
 # file system images required
 IMAGE_FSTYPES ?= "cpio ext3 tar.gz jffs2"

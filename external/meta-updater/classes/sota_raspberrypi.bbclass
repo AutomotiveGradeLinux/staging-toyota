@@ -13,7 +13,7 @@ UBOOT_DTBO_LOADADDRESS = "0x06000000"
 IMAGE_INSTALL_append = " fit-conf"
 
 DEV_MATCH_DIRECTIVE_pn-networkd-dhcp-conf = "Driver=smsc95xx lan78xx"
-IMAGE_INSTALL_append_sota = " virtual/network-configuration "
+IMAGE_INSTALL_append_sota = " network-configuration "
 
 PREFERRED_PROVIDER_virtual/bootloader_sota ?= "u-boot"
 UBOOT_ENTRYPOINT_sota ?= "0x00080000"
@@ -39,14 +39,15 @@ def make_dtb_boot_files(d):
 
     return ' '.join([transform(dtb) for dtb in alldtbs.split(' ') if dtb])
 
-IMAGE_BOOT_FILES_sota = "bcm2835-bootfiles/* \
+IMAGE_BOOT_FILES_sota = "${BOOTFILES_DIR_NAME}/* \
                          u-boot.bin;${SDIMG_KERNELIMAGE} \
                          "
 
-# OSTree puts its own boot.scr to bcm2835-bootfiles
-# raspberrypi4 needs dtb in /boot partition so that they can be read by the
-# firmware
-IMAGE_BOOT_FILES_append_sota_raspberrypi4 = "${@make_dtb_boot_files(d)}"
+# OSTree puts its own boot.scr in ${BOOTFILES_DIR_NAME} (historically
+# bcm2835-bootfiles, now just bootfiles).
+# rpi4 and recent rpi3 firmwares needs dtb in /boot partition
+# so that they can be read by the firmware
+IMAGE_BOOT_FILES_append_sota = "${@make_dtb_boot_files(d)}"
 
 # Just the overlays that will be used should be listed
 KERNEL_DEVICETREE_raspberrypi2_sota ?= " bcm2709-rpi-2-b.dtb "

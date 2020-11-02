@@ -12,9 +12,17 @@ IMAGE_INSTALL += " \
     kernel-module-xen-netback \
     ${@bb.utils.contains('MACHINE_FEATURES', 'pci', "${XEN_PCIBACK_MODULE}", '', d)} \
     kernel-module-xen-wdt \
-    xen-base \
+    xen-tools \
     qemu \
     "
+
+# The hypervisor may not be within the dom0 filesystem image but at least
+# ensure that it is deployable:
+do_build[depends] += "xen:do_deploy"
+
+# Networking for HVM-mode guests (x86/64 only) requires the tun kernel module
+IMAGE_INSTALL_append_x86    = "kernel-module-tun"
+IMAGE_INSTALL_append_x86-64 = "kernel-module-tun"
 
 # Linux kernel option CONFIG_XEN_PCIDEV_BACKEND depends on X86
 XEN_PCIBACK_MODULE = ""
@@ -64,3 +72,16 @@ build_syslinux_cfg () {
 	echo "  APPEND /xen.gz ${SYSLINUX_XEN_ARGS} --- /vmlinuz ${SYSLINUX_KERNEL_ARGS} --- /initrd" >> ${SYSLINUX_CFG}
 }
 
+# Enable runqemu. eg: runqemu xen-image-minimal nographic slirp
+WKS_FILE_x86-64 = "directdisk-xen.wks"
+QB_MEM = "-m 400"
+QB_DEFAULT_KERNEL = ""
+QB_DEFAULT_FSTYPE = "wic"
+QB_FSINFO = "wic:kernel-in-fs"
+# qemux86-64 machine does not include 'wic' in IMAGE_FSTYPES, which is needed
+# to boot this image, so add it here:
+IMAGE_FSTYPES_qemux86-64 += "wic"
+# Networking: the qemuboot.bbclass default virtio network device works ok
+# and so does the emulated e1000 -- choose according to the network device
+# drivers that are present in your dom0 Linux kernel. To switch to e1000:
+# QB_NETWORK_DEVICE = "-device e1000,netdev=net0,mac=@MAC@"

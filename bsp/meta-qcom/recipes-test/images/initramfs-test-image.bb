@@ -2,20 +2,28 @@ DESCRIPTION = "Small ramdisk image for running tests (bootrr, etc)"
 
 PACKAGE_INSTALL = " \
     ${ROOTFS_BOOTSTRAP_INSTALL} \
+    bluez5 \
     busybox \
     base-passwd \
-    devmem2 \
+    dhcp-client \
     diag \
+    e2fsprogs \
+    e2fsprogs-e2fsck \
+    e2fsprogs-mke2fs \
+    e2fsprogs-resize2fs \
+    e2fsprogs-tune2fs \
     ethtool \
     gptfdisk \
-    iperf2 \
-    iperf3 \
     lava-test-shell \
     packagegroup-core-boot \
-    qrtr-apps \
+    pciutils \
+    pd-mapper \
+    qrtr \
     rmtfs \
-    tcpdump \
+    tqftpserv \
     udev \
+    usbutils \
+    wpa-supplicant \
 "
 
 # Do not pollute the initrd image with rootfs features

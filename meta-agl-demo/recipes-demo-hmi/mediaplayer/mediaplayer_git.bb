@@ -17,9 +17,8 @@ DEPENDS += "qtquickcontrols2 \
             qtwebsockets \
             libqtappfw \
             libhomescreen \
-            qlibwindowmanager \
 "
 
 inherit qmake5 aglwgt
 
-RDEPENDS_${PN} += "agl-service-mediaplayer"
+RDEPENDS_${PN} += "agl-service-mediaplayer libqtappfw"

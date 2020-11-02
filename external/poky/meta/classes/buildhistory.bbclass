@@ -40,6 +40,7 @@ BUILDHISTORY_SDK_FILES ?= "conf/local.conf conf/bblayers.conf conf/auto.conf con
 BUILDHISTORY_COMMIT ?= "1"
 BUILDHISTORY_COMMIT_AUTHOR ?= "buildhistory <buildhistory@${DISTRO}>"
 BUILDHISTORY_PUSH_REPO ?= ""
+BUILDHISTORY_TAG ?= "build"
 
 SSTATEPOSTINSTFUNCS_append = " buildhistory_emit_pkghistory"
 # We want to avoid influencing the signatures of sstate tasks - first the function itself:
@@ -60,15 +61,34 @@ SSTATEPOSTUNPACKFUNCS[vardepvalueexclude] .= "| buildhistory_emit_outputsigs"
 # When extending build history, derive your class from buildhistory.bbclass
 # and extend this list here with the additional files created by the derived
 # class.
-BUILDHISTORY_PRESERVE = "latest latest_srcrev"
+BUILDHISTORY_PRESERVE = "latest latest_srcrev sysroot"
 
 PATCH_GIT_USER_EMAIL ?= "buildhistory@oe"
 PATCH_GIT_USER_NAME ?= "OpenEmbedded"
 
 #
+# Write out the contents of the sysroot
+#
+buildhistory_emit_sysroot() {
+	mkdir --parents ${BUILDHISTORY_DIR_PACKAGE}
+	case ${CLASSOVERRIDE} in
+	class-native|class-cross|class-crosssdk)
+		BASE=${SYSROOT_DESTDIR}/${STAGING_DIR_NATIVE}
+		;;
+	*)
+		BASE=${SYSROOT_DESTDIR}
+		;;
+	esac
+	buildhistory_list_files_no_owners $BASE ${BUILDHISTORY_DIR_PACKAGE}/sysroot
+}
+
+#
 # Write out metadata about this package for comparison when writing future packages
 #
 python buildhistory_emit_pkghistory() {
+    if d.getVar('BB_CURRENTTASK') in ['populate_sysroot', 'populate_sysroot_setscene']:
+        bb.build.exec_func("buildhistory_emit_sysroot", d)
+
     if not d.getVar('BB_CURRENTTASK') in ['packagedata', 'packagedata_setscene']:
         return 0
 
@@ -261,7 +281,7 @@ python buildhistory_emit_pkghistory() {
             last_pkgr = lastversion.pkgr
             r = bb.utils.vercmp((pkge, pkgv, pkgr), (last_pkge, last_pkgv, last_pkgr))
             if r < 0:
-                msg = "Package version for package %s went backwards which would break package feeds from (%s:%s-%s to %s:%s-%s)" % (pkg, last_pkge, last_pkgv, last_pkgr, pkge, pkgv, pkgr)
+                msg = "Package version for package %s went backwards which would break package feeds (from %s:%s-%s to %s:%s-%s)" % (pkg, last_pkge, last_pkgv, last_pkgr, pkge, pkgv, pkgr)
                 package_qa_handle_error("version-going-backwards", msg, d)
 
         pkginfo = PackageInfo(pkg)
@@ -406,8 +426,8 @@ def buildhistory_list_installed(d, rootfs_type="image"):
     from oe.sdk import sdk_list_installed_packages
     from oe.utils import format_pkg_list
 
-    process_list = [('file', 'bh_installed_pkgs.txt'),\
-                    ('deps', 'bh_installed_pkgs_deps.txt')]
+    process_list = [('file', 'bh_installed_pkgs_%s.txt' % os.getpid()),\
+                    ('deps', 'bh_installed_pkgs_deps_%s.txt' % os.getpid())]
 
     if rootfs_type == "image":
         pkgs = image_list_installed_packages(d)
@@ -437,9 +457,10 @@ buildhistory_get_installed() {
 
 	# Get list of installed packages
 	pkgcache="$1/installed-packages.tmp"
-	cat ${WORKDIR}/bh_installed_pkgs.txt | sort > $pkgcache && rm ${WORKDIR}/bh_installed_pkgs.txt
+	cat ${WORKDIR}/bh_installed_pkgs_${PID}.txt | sort > $pkgcache && rm ${WORKDIR}/bh_installed_pkgs_${PID}.txt
 
 	cat $pkgcache | awk '{ print $1 }' > $1/installed-package-names.txt
+
 	if [ -s $pkgcache ] ; then
 		cat $pkgcache | awk '{ print $2 }' | xargs -n1 basename > $1/installed-packages.txt
 	else
@@ -448,8 +469,8 @@ buildhistory_get_installed() {
 
 	# Produce dependency graph
 	# First, quote each name to handle characters that cause issues for dot
-	sed 's:\([^| ]*\):"\1":g' ${WORKDIR}/bh_installed_pkgs_deps.txt > $1/depends.tmp &&
-		rm ${WORKDIR}/bh_installed_pkgs_deps.txt
+	sed 's:\([^| ]*\):"\1":g' ${WORKDIR}/bh_installed_pkgs_deps_${PID}.txt > $1/depends.tmp &&
+		rm ${WORKDIR}/bh_installed_pkgs_deps_${PID}.txt
 	# Remove lines with rpmlib(...) and config(...) dependencies, change the
 	# delimiter from pipe to "->", set the style for recommend lines and
 	# turn versioned dependencies into edge labels.
@@ -519,12 +540,28 @@ buildhistory_get_sdk_installed_target() {
 
 buildhistory_list_files() {
 	# List the files in the specified directory, but exclude date/time etc.
-	# This awk script is somewhat messy, but handles where the size is not printed for device files under pseudo
+	# This is somewhat messy, but handles where the size is not printed for device files under pseudo
+	( cd $1
+	find_cmd='find . ! -path . -printf "%M %-10u %-10g %10s %p -> %l\n"'
 	if [ "$3" = "fakeroot" ] ; then
-		( cd $1 && ${FAKEROOTENV} ${FAKEROOTCMD} find . ! -path . -printf "%M %-10u %-10g %10s %p -> %l\n" | sort -k5 | sed 's/ * -> $//' > $2 )
+		eval ${FAKEROOTENV} ${FAKEROOTCMD} $find_cmd
 	else
-		( cd $1 && find . ! -path . -printf "%M %-10u %-10g %10s %p -> %l\n" | sort -k5 | sed 's/ * -> $//' > $2 )
-	fi
+		eval $find_cmd
+	fi | sort -k5 | sed 's/ * -> $//' > $2 )
+}
+
+buildhistory_list_files_no_owners() {
+	# List the files in the specified directory, but exclude date/time etc.
+	# Also don't output the ownership data, but instead output just - - so
+	# that the same parsing code as for _list_files works.
+	# This is somewhat messy, but handles where the size is not printed for device files under pseudo
+	( cd $1
+	find_cmd='find . ! -path . -printf "%M -          -          %10s %p -> %l\n"'
+	if [ "$3" = "fakeroot" ] ; then
+		eval ${FAKEROOTENV} ${FAKEROOTCMD} "$find_cmd"
+	else
+		eval "$find_cmd"
+	fi | sort -k5 | sed 's/ * -> $//' > $2 )
 }
 
 buildhistory_list_pkg_files() {
@@ -670,12 +707,29 @@ def buildhistory_get_build_id(d):
     statusheader = d.getVar('BUILDCFG_HEADER')
     return('\n%s\n%s\n' % (statusheader, '\n'.join(statuslines)))
 
+def buildhistory_get_modified(path):
+    # copied from get_layer_git_status() in image-buildinfo.bbclass
+    import subprocess
+    try:
+        subprocess.check_output("""cd %s; export PSEUDO_UNLOAD=1; set -e;
+                                git diff --quiet --no-ext-diff
+                                git diff --quiet --no-ext-diff --cached""" % path,
+                                shell=True,
+                                stderr=subprocess.STDOUT)
+        return ""
+    except subprocess.CalledProcessError as ex:
+        # Silently treat errors as "modified", without checking for the
+        # (expected) return code 1 in a modified git repo. For example, we get
+        # output and a 129 return code when a layer isn't a git repo at all.
+        return " -- modified"
+
 def buildhistory_get_metadata_revs(d):
     # We want an easily machine-readable format here, so get_layers_branch_rev isn't quite what we want
     layers = (d.getVar("BBLAYERS") or "").split()
-    medadata_revs = ["%-17s = %s:%s" % (os.path.basename(i), \
+    medadata_revs = ["%-17s = %s:%s%s" % (os.path.basename(i), \
         base_get_metadata_git_branch(i, None).strip(), \
-        base_get_metadata_git_revision(i, None)) \
+        base_get_metadata_git_revision(i, None), \
+        buildhistory_get_modified(i)) \
             for i in layers]
     return '\n'.join(medadata_revs)
 
@@ -772,9 +826,9 @@ END
 		if [ ! -e .git ] ; then
 			git init -q
 		else
-			git tag -f build-minus-3 build-minus-2 > /dev/null 2>&1 || true
-			git tag -f build-minus-2 build-minus-1 > /dev/null 2>&1 || true
-			git tag -f build-minus-1 > /dev/null 2>&1 || true
+			git tag -f ${BUILDHISTORY_TAG}-minus-3 ${BUILDHISTORY_TAG}-minus-2 > /dev/null 2>&1 || true
+			git tag -f ${BUILDHISTORY_TAG}-minus-2 ${BUILDHISTORY_TAG}-minus-1 > /dev/null 2>&1 || true
+			git tag -f ${BUILDHISTORY_TAG}-minus-1 > /dev/null 2>&1 || true
 		fi
 
 		check_git_config
@@ -820,11 +874,15 @@ python buildhistory_eventhandler() {
             if e.data.getVar("BUILDHISTORY_COMMIT") == "1":
                 bb.note("Writing buildhistory")
                 bb.build.exec_func("buildhistory_write_sigs", d)
+                import time
+                start=time.time()
                 localdata = bb.data.createCopy(e.data)
                 localdata.setVar('BUILDHISTORY_BUILD_FAILURES', str(e._failures))
                 interrupted = getattr(e, '_interrupted', 0)
                 localdata.setVar('BUILDHISTORY_BUILD_INTERRUPTED', str(interrupted))
                 bb.build.exec_func("buildhistory_commit", localdata)
+                stop=time.time()
+                bb.note("Writing buildhistory took: %s seconds" % round(stop-start))
             else:
                 bb.note("No commit since BUILDHISTORY_COMMIT != '1'")
 }
@@ -896,7 +954,7 @@ def write_latest_srcrev(d, pkghistdir):
             if orig_srcrev != 'INVALID':
                 f.write('# SRCREV = "%s"\n' % orig_srcrev)
             if len(srcrevs) > 1:
-                for name, srcrev in srcrevs.items():
+                for name, srcrev in sorted(srcrevs.items()):
                     orig_srcrev = d.getVar('SRCREV_%s' % name, False)
                     if orig_srcrev:
                         f.write('# SRCREV_%s = "%s"\n' % (name, orig_srcrev))
@@ -904,7 +962,7 @@ def write_latest_srcrev(d, pkghistdir):
             else:
                 f.write('SRCREV = "%s"\n' % next(iter(srcrevs.values())))
             if len(tag_srcrevs) > 0:
-                for name, srcrev in tag_srcrevs.items():
+                for name, srcrev in sorted(tag_srcrevs.items()):
                     f.write('# tag_%s = "%s"\n' % (name, srcrev))
                     if name in old_tag_srcrevs and old_tag_srcrevs[name] != srcrev:
                         pkg = d.getVar('PN')

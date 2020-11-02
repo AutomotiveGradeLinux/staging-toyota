@@ -81,6 +81,7 @@ RDEPENDS_packagegroup-core-full-cmdline-utils = "\
     gawk \
     gmp \
     grep \
+    less \
     makedevs \
     mc \
     mc-fish \
@@ -94,7 +95,6 @@ RDEPENDS_packagegroup-core-full-cmdline-utils = "\
     tar \
     time \
     util-linux \
-    zlib \
     "
 
 RDEPENDS_packagegroup-core-full-cmdline-extended = "\
@@ -112,9 +112,6 @@ RDEPENDS_packagegroup-core-full-cmdline-dev-utils = "\
     patch \
     "
 
-VIRTUAL-RUNTIME_initscripts ?= "initscripts"
-VIRTUAL-RUNTIME_init_manager ?= "sysvinit"
-VIRTUAL-RUNTIME_login_manager ?= "busybox"
 VIRTUAL-RUNTIME_syslog ?= "sysklogd"
 RDEPENDS_packagegroup-core-full-cmdline-initscripts = "\
     ${VIRTUAL-RUNTIME_initscripts} \
@@ -136,6 +133,5 @@ RDEPENDS_packagegroup-core-full-cmdline-sys-services = "\
     at \
     cronie \
     logrotate \
-    nfs-utils \
-    rpcbind \
+    ${@bb.utils.contains('DISTRO_FEATURES', 'nfs', 'nfs-utils rpcbind', '', d)} \
     "

@@ -3,18 +3,8 @@
 #
 # Copyright (C) 2010 Bob Foerster <robert@erafx.com>
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 2 as
-# published by the Free Software Foundation.
+# SPDX-License-Identifier: GPL-2.0-only
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 """
     This module implements a multiprocessing.Process based server for bitbake.
@@ -57,8 +47,9 @@ class ProcessServer(multiprocessing.Process):
         self.next_heartbeat = time.time()
 
         self.event_handle = None
+        self.hadanyui = False
         self.haveui = False
-        self.lastui = False
+        self.maxuiwait = 30
         self.xmlrpc = False
 
         self._idlefuns = {}
@@ -165,6 +156,7 @@ class ProcessServer(multiprocessing.Process):
                 print("No timeout, exiting.")
                 self.quit = True
 
+        self.lastui = time.time()
         while not self.quit:
             if self.sock in ready:
                 while select.select([self.sock],[],[],0)[0]:
@@ -197,13 +189,21 @@ class ProcessServer(multiprocessing.Process):
                     self.command_channel_reply = writer
 
                     self.haveui = True
+                    self.hadanyui = True
 
                 except (EOFError, OSError):
                     disconnect_client(self, fds)
 
-            if not self.timeout == -1.0 and not self.haveui and self.lastui and self.timeout and \
+            if not self.timeout == -1.0 and not self.haveui and self.timeout and \
                     (self.lastui + self.timeout) < time.time():
                 print("Server timeout, exiting.")
+                self.quit = True
+
+            # If we don't see a UI connection within maxuiwait, its unlikely we're going to see
+            # one. We have had issue with processes hanging indefinitely so timing out UI-less
+            # servers is useful.
+            if not self.hadanyui and not self.xmlrpc and not self.timeout and (self.lastui + self.maxuiwait) < time.time():
+                print("No UI connection within max timeout, exiting to avoid infinite loop.")
                 self.quit = True
 
             if self.command_channel in ready:
@@ -230,10 +230,13 @@ class ProcessServer(multiprocessing.Process):
 
         print("Exiting")
         # Remove the socket file so we don't get any more connections to avoid races
-        os.unlink(self.sockname)
+        try:
+            os.unlink(self.sockname)
+        except:
+            pass
         self.sock.close()
 
-        try: 
+        try:
             self.cooker.shutdown(True)
             self.cooker.notifier.stop()
             self.cooker.confignotifier.stop()
@@ -253,7 +256,7 @@ class ProcessServer(multiprocessing.Process):
                 lock = bb.utils.lockfile(lockfile, shared=False, retry=False, block=True)
                 if lock:
                     # We hold the lock so we can remove the file (hide stale pid data)
-                    bb.utils.remove(lockfile)
+                    # via unlockfile.
                     bb.utils.unlockfile(lock)
                     return
 
@@ -341,7 +344,9 @@ class ServerCommunicator():
     def runCommand(self, command):
         self.connection.send(command)
         if not self.recv.poll(30):
-            raise ProcessTimeout("Timeout while waiting for a reply from the bitbake server")
+            logger.info("No reply from server in 30s")
+            if not self.recv.poll(30):
+                raise ProcessTimeout("Timeout while waiting for a reply from the bitbake server (60s)")
         return self.recv.get()
 
     def updateFeatureSet(self, featureset):
@@ -466,7 +471,10 @@ class BitBakeServer(object):
         self.configuration.setServerRegIdleCallback(server.register_idle_function)
         os.close(self.readypipe)
         writer = ConnectionWriter(self.readypipein)
-        self.cooker = bb.cooker.BBCooker(self.configuration, self.featureset)
+        try:
+            self.cooker = bb.cooker.BBCooker(self.configuration, self.featureset)
+        except bb.BBHandledException:
+            return None
         writer.send("r")
         writer.close()
         server.cooker = self.cooker

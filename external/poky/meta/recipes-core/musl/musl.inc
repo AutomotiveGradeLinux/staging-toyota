@@ -9,15 +9,9 @@ standards-conformance and safety."
 HOMEPAGE = "http://www.musl-libc.org/"
 LICENSE = "MIT"
 SECTION = "libs"
-LIC_FILES_CHKSUM = "file://COPYRIGHT;md5=8a4bb28f771c817fe57d3a7c4240e3aa"
-
-PATH_prepend = "${STAGING_BINDIR_TOOLCHAIN}.${STAGINGCC}:"
+LIC_FILES_CHKSUM = "file://COPYRIGHT;md5=f95ee848a08ad253c04723da00cedb01"
 
 INHIBIT_DEFAULT_DEPS = "1"
-
-STAGINGCC = "gcc-cross-initial-${TARGET_ARCH}"
-STAGINGCC_class-nativesdk = "gcc-crosssdk-initial-${SDK_SYS}"
-
 
 FILES_SOLIBSDEV = ""
 FILES_${PN} += "${libdir}/lib*${SOLIBSDEV}"
@@ -31,3 +25,7 @@ MIPS_INSTRUCTION_SET = "mips"
 ARM_INSTRUCTION_SET_armv5 = "arm"
 ARM_INSTRUCTION_SET_armv4 = "arm"
 
+# Enable out of tree build
+B = "${WORKDIR}/build"
+
+do_configure[cleandirs] = "${B}"

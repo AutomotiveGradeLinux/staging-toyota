@@ -1,13 +1,12 @@
-# ex:ts=4:sw=4:sts=4:et
-# -*- tab-width: 4; c-basic-offset: 4; indent-tabs-mode: nil -*-
+#
+# SPDX-License-Identifier: GPL-2.0-only
+#
 """
 Bitbake "Fetch" implementation for osc (Opensuse build service client).
 Based on the svn "Fetch" implementation.
 
 """
 
-import  os
-import  sys
 import logging
 import  bb
 from    bb.fetch2 import FetchMethod
@@ -42,7 +41,7 @@ class Osc(FetchMethod):
         else:
             pv = d.getVar("PV", False)
             rev = bb.fetch2.srcrev_internal_helper(ud, d)
-            if rev and rev != True:
+            if rev:
                 ud.revision = rev
             else:
                 ud.revision = ""

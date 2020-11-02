@@ -24,4 +24,3 @@ SRC_URI_append = "\
     file://0010-Added-manifest-file-according-to-smack-3-domain-mode.patch \
     "
 
-SRC_URI_append = " file://0099_qtwayland_no_evdev.patch "

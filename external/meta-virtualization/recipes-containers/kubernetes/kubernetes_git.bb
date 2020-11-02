@@ -5,12 +5,10 @@ applications across multiple hosts, providing basic mechanisms for deployment, \
 maintenance, and scaling of applications. \
 "
 
-# Note: 1.11+ requires go 1.10.2+, so the following must be set
-#       in your configuration: GOVERSION = "1.10%"
-PV = "1.12.0+git${SRCREV_kubernetes}"
-SRCREV_kubernetes = "d93ba8b6d1e2afcb30da3e354928ed00e6682223"
+PV = "v1.17.1-beta+git${SRCREV_kubernetes}"
+SRCREV_kubernetes = "f45fc1861acab22eb6a4697e3fb831e85ef5ff9c"
 
-SRC_URI = "git://github.com/kubernetes/kubernetes.git;branch=release-1.12;name=kubernetes \
+SRC_URI = "git://github.com/kubernetes/kubernetes.git;branch=release-1.17;name=kubernetes \
            file://0001-hack-lib-golang.sh-use-CC-from-environment.patch \
            file://0001-cross-don-t-build-tests-by-default.patch \
           "
@@ -28,42 +26,34 @@ inherit systemd
 inherit go
 inherit goarch
 
+COMPATIBLE_HOST = '(x86_64.*|arm.*|aarch64.*)-linux'
+
 do_compile() {
-	export GOARCH="${TARGET_GOARCH}"
-	export GOOS="${TARGET_GOOS}"
-	export GOROOT="${STAGING_LIBDIR_NATIVE}/${TARGET_SYS}/go"
-	export GOPATH="${S}/src/import:${S}/src/import/vendor"
-
-	# Pass the needed cflags/ldflags so that cgo
-	# can find the needed headers files and libraries
-	export CGO_ENABLED="1"
-	export CFLAGS=""
-	export LDFLAGS=""
-	export CGO_CFLAGS="${BUILDSDK_CFLAGS} --sysroot=${STAGING_DIR_TARGET}"
-	export CGO_LDFLAGS="${BUILDSDK_LDFLAGS} --sysroot=${STAGING_DIR_TARGET}"
-
 	# link fixups for compilation
 	rm -f ${S}/src/import/vendor/src
 	ln -sf ./ ${S}/src/import/vendor/src
 
 	export GOPATH="${S}/src/import/.gopath:${S}/src/import/vendor:${STAGING_DIR_TARGET}/${prefix}/local/go"
-	export GOROOT="${STAGING_DIR_NATIVE}/${nonarch_libdir}/${HOST_SYS}/go"
+	cd ${S}/src/import
 
-	# Pass the needed cflags/ldflags so that cgo
-	# can find the needed headers files and libraries
+	# Build the host tools first, using the host compiler
+	export GOARCH="${BUILD_GOARCH}"
+	# Pass the needed cflags/ldflags so that cgo can find the needed headers files and libraries
+	export CGO_ENABLED="1"
+	export CFLAGS=""
+	export LDFLAGS=""
+	export CGO_CFLAGS="${BUILDSDK_CFLAGS} --sysroot=${STAGING_DIR_TARGET}"
+	export CGO_LDFLAGS="${BUILDSDK_LDFLAGS} --sysroot=${STAGING_DIR_TARGET}"
+	make generated_files KUBE_BUILD_PLATFORMS="${HOST_GOOS}/${BUILD_GOARCH}"
+
+	# Build the target binaries
+	export GOARCH="${TARGET_GOARCH}"
+	# Pass the needed cflags/ldflags so that cgo can find the needed headers files and libraries
 	export CGO_ENABLED="1"
 	export CGO_CFLAGS="${CFLAGS} --sysroot=${STAGING_DIR_TARGET}"
 	export CGO_LDFLAGS="${LDFLAGS} --sysroot=${STAGING_DIR_TARGET}"
-
-	cd ${S}/src/import
-	# Build the host tools first, using the host compiler
-	export GOARCH="${BUILD_GOARCH}"
-	make generated_files KUBE_BUILD_PLATFORMS="${HOST_GOOS}/${BUILD_GOARCH}"
-
-	# Reset GOARCH to the target one
-	export GOARCH="${TARGET_GOARCH}"
 	# to limit what is built, use 'WHAT', i.e. make WHAT=cmd/kubelet
-	make cross KUBE_BUILD_PLATFORMS=${GOOS}/${GOARCH}
+	make cross KUBE_BUILD_PLATFORMS=${GOOS}/${GOARCH} GOLDFLAGS=""
 }
 
 do_install() {
@@ -106,6 +96,5 @@ FILES_kubectl = "${bindir}/kubectl"
 FILES_kube-proxy = "${bindir}/kube-proxy"
 FILES_${PN}-misc = "${bindir}"
 
-INHIBIT_PACKAGE_STRIP = "1"
 
 deltask compile_ptest_base

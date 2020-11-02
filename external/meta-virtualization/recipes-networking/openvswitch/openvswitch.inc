@@ -16,7 +16,7 @@ DEPENDS += "bridge-utils openssl python3 perl python3-six-native coreutils-nativ
 RDEPENDS_${PN} += "util-linux-uuidgen util-linux-libuuid coreutils \
         python3 perl perl-module-strict ${PN}-switch \
         bash python3-twisted python3-six"
-RDEPENDS_${PN}-testcontroller = "${PN} lsb ${PN}-pki"
+RDEPENDS_${PN}-testcontroller = "${PN} ${PN}-pki"
 RDEPENDS_${PN}-switch = "${PN} openssl procps util-linux-uuidgen"
 RDEPENDS_${PN}-pki = "${PN}"
 RDEPENDS_${PN}-brcompat = "${PN} ${PN}-switch"
@@ -128,6 +128,9 @@ do_install_append() {
 		${D}/${systemd_unitdir}/system/openvswitch.service
 	install -m 644 ${S}/rhel/usr_lib_systemd_system_ovsdb-server.service \
 		${D}/${systemd_unitdir}/system/ovsdb-server.service
+
+	install -d ${D}/usr/share/openvswitch/scripts/
+	install -m 755 ${S}/rhel/usr_share_openvswitch_scripts_ovs-systemd-reload ${D}/usr/share/openvswitch/scripts/ovs-systemd-reload
 
 	oe_runmake modules_install INSTALL_MOD_PATH=${D}
 	install -d ${D}${libdir}/python${PYTHON_BASEVERSION}/site-packages
